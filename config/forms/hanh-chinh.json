@@ -1,0 +1,11 @@
+{
+  "id": "hanh_chinh",
+  "title": "Thông tin hành chính (giả)",
+  "mode": "single",
+  "fields": [
+    { "id": "ho_ten", "label": "Họ tên", "type": "text", "required": false, "hint": "Tên giả", "ai_fill": false },
+    { "id": "tuoi", "label": "Tuổi", "type": "number", "required": false, "hint": "Dưới 1 tuổi nhập số thập phân, ví dụ 0.5", "ai_fill": false },
+    { "id": "gioi", "label": "Giới", "type": "select", "options": ["Nam", "Nữ"], "required": false, "hint": "", "ai_fill": false },
+    { "id": "can_nang", "label": "Cân nặng (kg)", "type": "number", "required": false, "hint": "Dùng để kiểm tra liều trẻ em", "ai_fill": false }
+  ]
+}

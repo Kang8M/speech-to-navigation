@@ -7,5 +7,14 @@
   "soft": "#EEF6FB",
   "ink": "#2B2B2B",
   "muted": "#6B7280",
-  "warn": "#E67E22"
+  "warn": "#E67E22",
+  "emr_blue": "#2B78B8",
+  "emr_navy": "#2B5F8A",
+  "emr_orange": "#F28C38",
+  "emr_menu": "#F0A868",
+  "emr_save": "#F0B545",
+  "emr_cyan": "#3CC0D8",
+  "emr_pill_on": "#F5C26B",
+  "ai_tim": "#5B3FB8",
+  "xem": "#D97706"
 }

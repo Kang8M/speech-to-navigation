@@ -20,7 +20,7 @@ function TheMau({ nhanVung, text, theoLyDo }: { nhanVung: string; text: string; 
   };
 
   return (
-    <div className="rounded border border-gray-200 bg-white p-2 text-sm">
+    <div className="rounded border border-gray-200 bg-white p-2 text-[13px]">
       {!theoLyDo && <span className="mb-1 block text-[11px] text-muted">Mẫu chung</span>}
       <p className="leading-7">
         {phan.map((p, index) =>
@@ -32,7 +32,7 @@ function TheMau({ nhanVung, text, theoLyDo }: { nhanVung: string; text: string; 
               aria-label={`Chọn: ${p.luaChon.join(", ")}`}
               value={chon[index] ?? ""}
               onChange={(e) => setChon((prev) => ({ ...prev, [index]: e.target.value }))}
-              className="mx-0.5 max-w-full rounded border border-primary/50 bg-ai px-1 text-sm"
+              className="mx-0.5 max-w-full rounded border border-tim-vien bg-tim-nhat px-1 text-[13px]"
             >
               <option value="">…</option>
               {p.luaChon.map((option) => (
@@ -55,14 +55,14 @@ export function MauCauPanel() {
   const { nhomKhop, theoVung } = goiYMauCau(lyDo, data.mauCau, data.quyTac.phu_dinh);
 
   return (
-    <div className="mt-1.5 rounded border border-primary/40 bg-ai p-2">
+    <div className="mt-1.5 rounded border border-tim-vien bg-tim-nhat p-2">
       <p className="mb-2 text-xs text-muted">
         ✨ AI gợi ý theo lý do khám{nhomKhop.length > 0 ? `: ${nhomKhop.join("; ")}` : " (chưa khớp nhóm nào, đang hiện mẫu chung)"}. Bác sĩ chọn kết quả thực tế ở từng chỗ trống rồi bấm Chèn.
       </p>
       <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
         {VUNG_KHAM.map((vung) => (
           <div key={vung.id} className="space-y-1.5">
-            <h3 className="text-sm font-semibold text-navy">{vung.nhan}</h3>
+            <h3 className="text-[13px] font-semibold text-ink">{vung.nhan}</h3>
             {theoVung[vung.id].map((mau) => (
               <TheMau key={mau.text} nhanVung={vung.nhan} text={mau.text} theoLyDo={mau.theoLyDo} />
             ))}

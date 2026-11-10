@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useEform } from "@/components/eform/EformContext";
-import { BTN_AI, FieldLabel, inputClass } from "@/components/eform/fields";
+import { BTN_AI, FieldLabel, anchorId, inputClass } from "@/components/eform/fields";
 import { GoiYIcdPanel } from "@/components/eform/GoiYIcdPanel";
 
 const SEPARATOR = ",";
@@ -27,7 +27,7 @@ export function IcdField({ id, moTaId, label }: { id: string; moTaId: string; la
   const moTa = get(moTaId);
   return (
     <div className="space-y-2">
-      <div>
+      <div id={anchorId(id)} className="scroll-mt-40">
         <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
           <FieldLabel label={`${label} (ICD10)`} nguon={field.nguon} />
           <GoiYButton open={open} onToggle={() => setOpen((value) => !value)} />
@@ -54,7 +54,7 @@ export function IcdField({ id, moTaId, label }: { id: string; moTaId: string; la
           />
         )}
       </div>
-      <div>
+      <div id={anchorId(moTaId)} className="scroll-mt-40">
         <div className="mb-1">
           <FieldLabel label={`Mô tả ${label.toLowerCase()}`} nguon={moTa.nguon} />
         </div>
@@ -86,7 +86,7 @@ export function IcdMultiField({ id, label, loaiTru }: { id: string; label: strin
   };
 
   return (
-    <div>
+    <div id={anchorId(id)} className="scroll-mt-40">
       <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
         <FieldLabel label={`${label} (ICD10)`} nguon={field.nguon} bcyt />
         <GoiYButton open={open} onToggle={() => setOpen((value) => !value)} />
@@ -94,7 +94,10 @@ export function IcdMultiField({ id, label, loaiTru }: { id: string; label: strin
       {codes.length > 0 && (
         <div className="mb-1.5 flex flex-wrap gap-1.5">
           {codes.map((code) => (
-            <span key={code} className="flex items-center gap-1 rounded bg-soft px-2 py-0.5 text-sm">
+            <span
+              key={code}
+              className={`flex items-center gap-1 rounded-sm px-2 py-0.5 text-[13px] ${field.nguon === "xem" ? "border border-xem bg-xem-nhat" : field.nguon === "ai" ? "bg-tim-nhat" : "bg-gray-100"}`}
+            >
               {code} – {data.icd10.find((item) => item.ma === code)?.ten}
               <button type="button" aria-label={`Bỏ ${code}`} onClick={() => remove(code)} className="text-muted hover:text-warn-text">
                 ×

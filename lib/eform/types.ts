@@ -1,7 +1,9 @@
 // Kiểu dữ liệu của trang mô phỏng eForm ngoại trú.
+import type { CatalogItem, WarningRules } from "../types";
 
-/** cu: dữ liệu có sẵn; ai: AI thêm; sua: dữ liệu cũ hoặc AI đã bị bác sĩ sửa; bs: bác sĩ tự nhập */
-export type Nguon = "cu" | "ai" | "sua" | "bs";
+/** cu: dữ liệu có sẵn; ai: AI thêm; xem: AI thêm nhưng chưa chắc, bác sĩ cần xem lại;
+ * sua: dữ liệu cũ hoặc AI đã bị bác sĩ sửa; bs: bác sĩ tự nhập */
+export type Nguon = "cu" | "ai" | "xem" | "sua" | "bs";
 
 export interface Truong {
   value: string;
@@ -128,4 +130,11 @@ export interface EformData {
   tuyChon: TuyChon;
   quyTac: QuyTacAi;
   mauCau: MauCauData;
+  /** Danh mục dịch vụ và thuốc dùng chung với trang chính, để bác sĩ chọn lại khi AI khớp chưa chắc */
+  danhMuc: { dichVu: CatalogItem[]; thuoc: CatalogItem[] };
+  canhBao: WarningRules;
+  /** Nhà cung cấp AI đang dùng (mock, anthropic, openai) */
+  provider: string;
+  /** Câu mẫu của ca giả này (lấy từ data/cases/ca-11-*.json) để demo nhanh */
+  cauMau: { noi: string; goTat: string };
 }

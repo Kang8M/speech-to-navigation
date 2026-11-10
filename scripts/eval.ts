@@ -1,7 +1,7 @@
 // Chạy toàn bộ ca mẫu qua pipeline, so với expected và in bảng độ chính xác.
 //   npm run eval                     dùng LLM_PROVIDER trong .env.local (mặc định mock)
 //   npm run eval -- --rule-only      chỉ chạy bộ tách bằng quy tắc, làm mốc so sánh
-//   npm run eval -- --provider=anthropic
+//   npm run eval -- --provider=anthropic   (hoặc openai, gemini)
 import { loadCases, loadCatalogs, loadForms, loadRules, loadVietTat } from "../lib/config";
 import { normalizeVi } from "../lib/normalize";
 import { runPipeline } from "../lib/pipeline";

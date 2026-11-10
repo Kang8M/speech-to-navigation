@@ -11,6 +11,8 @@ const LINKS = [
 
 export function Header({ provider }: { provider: string }) {
   const pathname = usePathname();
+  // Trang eForm mô phỏng màn EMR nên không hiện thanh của prototype; nút "Quay lại" dẫn về trang chính
+  if (pathname === "/eform") return null;
   return (
     <header className="flex flex-wrap items-center gap-x-6 gap-y-1 bg-primary px-4 py-2.5 text-white">
       <h1 className="text-lg font-semibold">Trợ lý điền bệnh án TMH – Prototype</h1>

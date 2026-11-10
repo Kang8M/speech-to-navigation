@@ -13,6 +13,19 @@
   --color-warn: var(--warn);
   --color-warn-text: color-mix(in srgb, var(--warn) 68%, black);
   --color-ai: color-mix(in srgb, var(--primary) 9%, white);
+  /* Trang /eform: màu theo giao diện EMR, AI dùng tím để không lẫn với xanh/cam của EMR */
+  --color-emr-blue: var(--emr_blue);
+  --color-emr-navy: var(--emr_navy);
+  --color-emr-orange: var(--emr_orange);
+  --color-emr-menu: var(--emr_menu);
+  --color-emr-save: var(--emr_save);
+  --color-emr-cyan: var(--emr_cyan);
+  --color-emr-pill-on: var(--emr_pill_on);
+  --color-tim: var(--ai_tim);
+  --color-tim-nhat: color-mix(in srgb, var(--ai_tim) 7%, white);
+  --color-tim-vien: color-mix(in srgb, var(--ai_tim) 35%, white);
+  --color-xem: var(--xem);
+  --color-xem-nhat: color-mix(in srgb, var(--xem) 10%, white);
   --font-sans: "Be Vietnam Pro", system-ui, sans-serif;
 }
 

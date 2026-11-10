@@ -48,7 +48,7 @@ function objectJsonSchema(form: FormConfig): Record<string, unknown> {
   };
 }
 
-/** JSON schema cho structured output, dùng được cho cả Anthropic và OpenAI */
+/** JSON schema cho structured output, dùng chung cho Anthropic, OpenAI và Gemini */
 export function buildJsonSchema(forms: FormConfig[]): Record<string, unknown> {
   return {
     type: "object",

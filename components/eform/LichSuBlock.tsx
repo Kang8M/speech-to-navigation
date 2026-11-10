@@ -40,7 +40,7 @@ export function LichSuBlock({ targetId, targetLabel, rows, columnLabel = "Nội 
   return (
     <div className="mt-2">
       <div className="mb-1 flex flex-wrap items-center gap-2">
-        <span className="text-xs font-medium text-muted">Lịch sử</span>
+        <span className="text-xs font-bold text-ink">Thông tin khai thác {targetLabel.toLowerCase()}</span>
         <SourceBadge nguon="cu" />
         <button type="button" className={BTN_AI} onClick={summarize}>
           ✨ AI tóm tắt
@@ -48,7 +48,7 @@ export function LichSuBlock({ targetId, targetLabel, rows, columnLabel = "Nội 
       </div>
 
       {ketQua && (
-        <div className="mb-2 rounded border border-primary/40 bg-ai p-2">
+        <div className="mb-2 rounded border border-tim-vien bg-tim-nhat p-2">
           <div className="mb-1 flex flex-wrap items-center gap-2">
             <SourceBadge nguon="ai" />
             <span className="text-xs text-muted">
@@ -76,13 +76,14 @@ export function LichSuBlock({ targetId, targetLabel, rows, columnLabel = "Nội 
       )}
 
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[32rem] border-collapse text-sm">
+        <table className="w-full min-w-[32rem] border-collapse text-[13px]">
           <thead>
-            <tr className="bg-soft text-left text-navy">
+            <tr className="bg-gray-100 text-left text-ink">
               <th className="whitespace-nowrap px-2 py-1 font-medium">Ngày khám</th>
               <th className="whitespace-nowrap px-2 py-1 font-medium">Bác sĩ</th>
               <th className="whitespace-nowrap px-2 py-1 font-medium">Khoa phòng</th>
               <th className="px-2 py-1 font-medium">{columnLabel}</th>
+              <th className="px-2 py-1" />
             </tr>
           </thead>
           <tbody>
@@ -92,6 +93,11 @@ export function LichSuBlock({ targetId, targetLabel, rows, columnLabel = "Nội 
                 <td className="whitespace-nowrap px-2 py-1">{row.bac_si}</td>
                 <td className="whitespace-nowrap px-2 py-1">{row.khoa}</td>
                 <td className="px-2 py-1">{row.noi_dung}</td>
+                <td className="px-2 py-1">
+                  <button type="button" className={BTN_OUTLINE} onClick={() => append(targetId, row.noi_dung, "cu")}>
+                    Copy
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>

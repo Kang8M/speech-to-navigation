@@ -7,6 +7,7 @@ import {
   BTN_OUTLINE,
   FieldLabel,
   RadioField,
+  anchorId,
   ReadonlyItem,
   Section,
   SourceBadge,
@@ -31,14 +32,14 @@ function KetQuaGroup({ title, items, extra }: { title: string; items: KetQuaTheo
   return (
     <div>
       <div className="mb-1 flex flex-wrap items-center gap-2">
-        <span className="text-sm font-medium text-navy">{title}</span>
+        <span className="text-[13px] font-bold text-ink">{title}</span>
         {items.length > 0 && <SourceBadge nguon="cu" />}
         {extra}
       </div>
-      {items.length === 0 && <p className="text-sm text-muted">Chưa có kết quả.</p>}
+      {items.length === 0 && <p className="text-[13px] text-muted">Chưa có kết quả.</p>}
       <div className="space-y-1">
         {items.map((group) => (
-          <details key={group.ngay} className="rounded border border-gray-200 px-2 py-1 text-sm">
+          <details key={group.ngay} className="rounded border border-gray-200 px-2 py-1 text-[13px]">
             <summary className="cursor-pointer font-medium">{group.ngay}</summary>
             <ul className="mt-1 space-y-0.5">
               {group.muc.map((item) => (
@@ -58,7 +59,7 @@ function DateField({ id, label, type }: { id: string; label: string; type: "date
   const { get, edit } = useEform();
   const field = get(id);
   return (
-    <label className="block">
+    <label id={anchorId(id)} className="block scroll-mt-40">
       <span className="mb-1 block">
         <FieldLabel label={label} nguon={field.nguon} />
       </span>
@@ -105,7 +106,7 @@ function DanhGiaChung() {
     <Section title="1. Đánh giá chung">
       <div>
         <div className="mb-1 flex flex-wrap items-center gap-2">
-          <span className="text-sm font-medium text-navy">Sinh hiệu (từ phiếu điều dưỡng, chỉ đọc)</span>
+          <span className="text-[13px] font-bold text-ink">Sinh hiệu (từ phiếu điều dưỡng, chỉ đọc)</span>
           <SourceBadge nguon="cu" />
         </div>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-8">
@@ -147,8 +148,8 @@ function DanhGiaChung() {
               </legend>
               <div className="flex flex-wrap gap-x-4 gap-y-1">
                 {tuyChon.loai_di_ung.map((loai) => (
-                  <label key={loai} className="flex items-center gap-1.5 text-sm">
-                    <input type="checkbox" checked={dangChon.includes(loai)} onChange={() => toggleLoai(loai)} className="accent-primary" />
+                  <label key={loai} className="flex items-center gap-1.5 text-[13px]">
+                    <input type="checkbox" checked={dangChon.includes(loai)} onChange={() => toggleLoai(loai)} className="accent-emr-blue" />
                     {loai}
                   </label>
                 ))}
@@ -166,9 +167,9 @@ function DanhGiaChung() {
         </div>
         {ca.lich_su.di_ung.length > 0 && (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[36rem] border-collapse text-sm">
+            <table className="w-full min-w-[36rem] border-collapse text-[13px]">
               <thead>
-                <tr className="bg-soft text-left text-navy">
+                <tr className="bg-gray-100 text-left text-ink">
                   {["Ngày cập nhật", "Loại phiếu", "Loại dị ứng", "Thông tin", "Người cập nhật", ""].map((head) => (
                     <th key={head} className="px-2 py-1 font-medium">
                       {head}
@@ -239,7 +240,7 @@ function DanhGiaChung() {
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm font-medium text-navy">Thông tin chẩn đoán xác định từ hệ thống ngoài</span>
+        <span className="text-[13px] font-bold text-ink">Thông tin chẩn đoán xác định từ hệ thống ngoài</span>
         <button type="button" className={BTN_OUTLINE} onClick={() => notify(MO_PHONG)}>
           Lấy kết quả
         </button>
@@ -290,13 +291,13 @@ function ThongTinKhac({ noiSoiEnabled }: { noiSoiEnabled: boolean }) {
         </div>
       </div>
       <div>
-        <label className={`flex items-center gap-1.5 text-sm ${noiSoiEnabled ? "" : "text-muted"}`}>
+        <label className={`flex items-center gap-1.5 text-[13px] ${noiSoiEnabled ? "" : "text-muted"}`}>
           <input
             type="checkbox"
             disabled={!noiSoiEnabled}
             checked={noiSoi.value === "Có"}
             onChange={(e) => edit("chuyen_noi_soi", e.target.checked ? "Có" : "")}
-            className="accent-primary"
+            className="accent-emr-blue"
           />
           Chuyển nội soi
         </label>

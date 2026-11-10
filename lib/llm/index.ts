@@ -1,5 +1,6 @@
 // Chọn nhà cung cấp theo biến LLM_PROVIDER; kiểm tra schema và thử lại 1 lần khi sai.
 import { callAnthropic } from "./anthropic";
+import { callGemini } from "./gemini";
 import { mockExtract, type MockContext } from "./mock";
 import { callOpenAI } from "./openai";
 import type { LlmCall } from "./types";
@@ -12,6 +13,7 @@ const MAX_ATTEMPTS = 2;
 const PROVIDERS: Record<string, LlmCall> = {
   anthropic: callAnthropic,
   openai: callOpenAI,
+  gemini: callGemini,
 };
 
 export interface ExtractOptions {

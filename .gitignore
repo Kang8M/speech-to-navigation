@@ -19,6 +19,8 @@
 
 # production
 /build
+/temp-1
+/.superpowers
 
 # misc
 .DS_Store

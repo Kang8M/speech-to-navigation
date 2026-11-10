@@ -37,17 +37,17 @@ export function BaoCaoDialog({ onClose }: { onClose: () => void }) {
       className="m-auto w-full max-w-2xl rounded-lg p-4 text-ink backdrop:bg-black/40"
     >
       <div className="mb-3 flex items-center justify-between gap-2">
-        <h2 className="text-base font-semibold text-primary">Báo cáo y tế – xem trước (DỮ LIỆU GIẢ)</h2>
+        <h2 className="text-base font-bold text-emr-navy">Báo cáo y tế – xem trước (DỮ LIỆU GIẢ)</h2>
         <button type="button" className={BTN_OUTLINE} onClick={() => ref.current?.close()}>
           Đóng
         </button>
       </div>
-      <div className="space-y-3 text-sm">
+      <div className="space-y-3 text-[13px]">
         {TRUONG_BCYT.map(({ id, label }) => {
           const field = get(id);
           return (
             <div key={id}>
-              <div className="flex items-center gap-1.5 font-medium text-navy">
+              <div className="flex items-center gap-1.5 font-medium text-ink">
                 {label} <SourceBadge nguon={field.nguon} />
               </div>
               <p className="whitespace-pre-wrap">{field.value || <span className="text-muted">(trống)</span>}</p>
@@ -58,7 +58,7 @@ export function BaoCaoDialog({ onClose }: { onClose: () => void }) {
           );
         })}
         <div>
-          <div className="flex items-center gap-1.5 font-medium text-navy">
+          <div className="flex items-center gap-1.5 font-medium text-ink">
             Chẩn đoán kèm theo <SourceBadge nguon={kemTheo.nguon} />
           </div>
           {kemTheo.value ? (

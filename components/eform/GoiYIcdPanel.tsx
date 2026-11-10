@@ -17,11 +17,11 @@ export function GoiYIcdPanel({ loaiTru = [], onPick }: Props) {
   const goiY = goiYIcd(text, data.icd10, data.quyTac, loaiTru);
 
   return (
-    <div className="mt-1.5 rounded border border-primary/40 bg-ai p-2">
+    <div className="mt-1.5 rounded border border-tim-vien bg-tim-nhat p-2">
       <p className="mb-1.5 text-xs text-muted">
         ✨ AI gợi ý từ Bệnh sử và Khám lâm sàng. Độ tin cậy mô phỏng từ điểm khớp từ khóa, không phải xác suất bệnh. Bác sĩ bấm để chọn.
       </p>
-      {goiY.length === 0 && <p className="text-sm text-ink">Chưa đủ dữ kiện để gợi ý.</p>}
+      {goiY.length === 0 && <p className="text-[13px] text-ink">Chưa đủ dữ kiện để gợi ý.</p>}
       <div className="space-y-1">
         {goiY.map(({ item, tinCay, khop }) => {
           const percent = Math.round(tinCay * 100);
@@ -30,14 +30,14 @@ export function GoiYIcdPanel({ loaiTru = [], onPick }: Props) {
               key={item.ma}
               type="button"
               onClick={() => onPick(item.ma)}
-              className="block w-full rounded border border-gray-200 bg-white px-2 py-1 text-left hover:border-primary"
+              className="block w-full rounded border border-gray-200 bg-white px-2 py-1 text-left hover:border-tim"
             >
               <span className="flex flex-wrap items-center gap-x-2">
-                <strong className="text-sm text-navy">{item.ma}</strong>
-                <span className="text-sm">{item.ten}</span>
+                <strong className="text-[13px] text-ink">{item.ma}</strong>
+                <span className="text-[13px]">{item.ten}</span>
                 <span className="ml-auto flex items-center gap-1.5 text-xs text-muted">
                   <span className="block h-1.5 w-16 overflow-hidden rounded bg-gray-200">
-                    <span className="block h-full rounded bg-primary" style={{ width: `${percent}%` }} />
+                    <span className="block h-full rounded bg-tim" style={{ width: `${percent}%` }} />
                   </span>
                   {percent}%
                 </span>

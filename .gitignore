@@ -21,6 +21,8 @@
 /build
 /temp-1
 /.superpowers
+/.playwright-mcp
+/models
 
 # misc
 .DS_Store

@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "eval": "tsx scripts/eval.ts",
-    "cao-du-lieu": "tsx scripts/cao-du-lieu.ts"
+    "cao-du-lieu": "tsx scripts/cao-du-lieu.ts",
+    "tai-model-giong-noi": "tsx scripts/tai-model-giong-noi.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.6.0",
@@ -19,6 +20,7 @@
     "openai": "^7.53.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "sherpa-onnx-node": "^2.0.1",
     "zod": "^4.6.7"
   },
   "devDependencies": {

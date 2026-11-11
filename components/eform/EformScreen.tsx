@@ -9,8 +9,10 @@ import { EformContext, type EformApi } from "@/components/eform/EformContext";
 import { EformForm } from "@/components/eform/EformForm";
 import { EformHeader } from "@/components/eform/EformHeader";
 import { BcytTag, SourceBadge, anchorId } from "@/components/eform/fields";
+import { splitCodes } from "@/components/eform/IcdField";
 import { TroLyAi, type TabId } from "@/components/eform/TroLyAi";
 import { dienPhieu, type DongChiDinh, type DongThuoc, type KetQuaDien } from "@/lib/eform/dien-phieu";
+import { chonBoMau } from "@/lib/eform/goi-y";
 import type { EformData, Nguon, Truong } from "@/lib/eform/types";
 import type { PipelineResult } from "@/lib/pipeline";
 
@@ -150,6 +152,16 @@ export function EformScreen({ data }: { data: EformData }) {
   };
 
   const soDong = { chi_dinh: chiDinh.length, don_thuoc: donThuoc.length, phieu: 0 };
+  // Có bộ mẫu khớp chẩn đoán thì đánh dấu ✨ trên tab, để bác sĩ đang ở phiếu khám biết có gợi ý
+  const boMau = chonBoMau(
+    [...new Set(["icd_ra_vien", "icd_ban_dau", "icd_kem_theo"].flatMap((id) => splitCodes(api.get(id).value)))],
+    data.goiY,
+  ).map((item) => item.mau);
+  const coGoiY = {
+    phieu: false,
+    chi_dinh: boMau.some((mau) => mau.chiDinh.length > 0),
+    don_thuoc: boMau.some((mau) => mau.donThuoc.length > 0),
+  };
 
   return (
     <EformContext.Provider value={api}>
@@ -173,6 +185,11 @@ export function EformScreen({ data }: { data: EformData }) {
                   }`}
                 >
                   {item.nhan}
+                  {coGoiY[item.id] && (
+                    <span className="ml-1 text-tim" title="Có gợi ý theo chẩn đoán">
+                      ✨
+                    </span>
+                  )}
                   {item.id !== "phieu" && soDong[item.id] > 0 && (
                     <span className="ml-1 rounded-full bg-tim px-1.5 text-[11px] text-white">{soDong[item.id]}</span>
                   )}

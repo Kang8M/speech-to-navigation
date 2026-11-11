@@ -2,6 +2,7 @@
 
 import { MO_PHONG, useEform } from "@/components/eform/EformContext";
 import { BTN_OUTLINE, SourceBadge } from "@/components/eform/fields";
+import { GoiYTheoChanDoan } from "@/components/eform/GoiYTheoChanDoan";
 import type { DongChiDinh } from "@/lib/eform/dien-phieu";
 
 const CELL = "w-full rounded-none border border-gray-300 bg-white px-1.5 py-0.5 text-[13px] outline-none focus:border-emr-blue";
@@ -36,6 +37,8 @@ export function ChiDinhTab({ rows, onChange }: { rows: DongChiDinh[]; onChange: 
       </div>
 
       <div className="space-y-3 p-3">
+        <GoiYTheoChanDoan rows={rows} lay={(mau) => mau.chiDinh} onAdd={(moi) => onChange([...rows, ...moi])} />
+
         <label className="block">
           <span className="mb-1 block font-bold">Tìm kiếm dịch vụ</span>
           <select value="" onChange={(e) => add(e.target.value)} className={CELL}>

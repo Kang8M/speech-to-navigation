@@ -1,5 +1,6 @@
 // Kiểu dữ liệu của trang mô phỏng eForm ngoại trú.
 import type { CatalogItem, WarningRules } from "../types";
+import type { MauGoiY } from "./goi-y";
 
 /** cu: dữ liệu có sẵn; ai: AI thêm; xem: AI thêm nhưng chưa chắc, bác sĩ cần xem lại;
  * sua: dữ liệu cũ hoặc AI đã bị bác sĩ sửa; bs: bác sĩ tự nhập */
@@ -133,7 +134,9 @@ export interface EformData {
   /** Danh mục dịch vụ và thuốc dùng chung với trang chính, để bác sĩ chọn lại khi AI khớp chưa chắc */
   danhMuc: { dichVu: CatalogItem[]; thuoc: CatalogItem[] };
   canhBao: WarningRules;
-  /** Nhà cung cấp AI đang dùng (mock, anthropic, openai) */
+  /** Bộ mẫu chỉ định và đơn thuốc theo chẩn đoán, mã đã gán bằng lib/match.ts */
+  goiY: MauGoiY[];
+  /** Nhà cung cấp AI đang dùng (mock, anthropic, openai, gemini) */
   provider: string;
   /** Câu mẫu của ca giả này (lấy từ data/cases/ca-11-*.json) để demo nhanh */
   cauMau: { noi: string; goTat: string };

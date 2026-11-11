@@ -20,6 +20,7 @@ npm run lint
 npm run build
 npm run eval -- --rule-only  # chấm điểm bộ tách quy tắc, không tốn phí API
 npm run cao-du-lieu          # cào lại danh mục thật về data/tham-khao/ (ứng dụng chưa nạp)
+npm run tai-model-giong-noi  # tải model Zipformer về models/, cần cho ASR_PROVIDER=zipformer
 ```
 
 `npm run eval -- --provider=anthropic|openai|gemini` gọi API thật và tốn phí: hỏi trước khi chạy.
@@ -28,7 +29,7 @@ npm run cao-du-lieu          # cào lại danh mục thật về data/tham-khao/
 
 - `config/forms/*.json` sinh ra giao diện, schema gửi LLM và prompt. Thêm trường thì sửa JSON, không hardcode trong component.
 - `lib/pipeline.ts` → `lib/llm/{mock,anthropic,openai,gemini,rules}.ts` → `lib/match.ts` (khớp danh mục) → `lib/metrics.ts`.
-- `lib/eform/` là rule mock cho trang `/eform` (tóm tắt, gợi ý ICD10, mẫu câu), không gọi LLM.
+- `lib/eform/` là rule mock cho trang `/eform` (tóm tắt, gợi ý ICD10, mẫu câu, gợi ý chỉ định và đơn thuốc theo chẩn đoán), không gọi LLM.
 - Thêm trường mới thì bổ sung `expected` trong `data/cases/ca-*.json` để eval không tính là "Thừa".
 
 ## Kiểm tra trước khi báo xong

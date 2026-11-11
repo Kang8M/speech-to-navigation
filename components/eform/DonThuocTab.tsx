@@ -2,23 +2,13 @@
 
 import { useEform } from "@/components/eform/EformContext";
 import { BTN_OUTLINE, SourceBadge } from "@/components/eform/fields";
+import { GoiYTheoChanDoan } from "@/components/eform/GoiYTheoChanDoan";
 import type { DongThuoc } from "@/lib/eform/dien-phieu";
-import { normalizeVi } from "@/lib/normalize";
+import { trungDiUng } from "@/lib/eform/di-ung";
 import type { CatalogItem } from "@/lib/types";
 import { computeTotal } from "@/lib/validate";
 
 const CELL = "w-full rounded-none border border-gray-300 bg-white px-1.5 py-0.5 text-[13px] outline-none focus:border-emr-blue";
-
-/** Nhóm dị ứng → hoạt chất cùng nhóm. Chỉ là ví dụ minh họa, không phải danh sách lâm sàng. */
-const NHOM_DI_UNG: Record<string, string[]> = {
-  penicillin: ["penicillin", "amoxicillin", "ampicillin", "augmentin"],
-};
-
-function trungDiUng(row: DongThuoc, item: CatalogItem | undefined, diUng: string): boolean {
-  const nhom = NHOM_DI_UNG[normalizeVi(diUng)] ?? [normalizeVi(diUng)];
-  const ten = normalizeVi(`${row.ten} ${item?.hoat_chat ?? ""}`);
-  return Boolean(diUng) && nhom.some((chat) => ten.includes(chat));
-}
 
 const COT: { key: keyof DongThuoc; nhan: string; rong: string }[] = [
   { key: "duong_dung", nhan: "Đường dùng", rong: "w-24" },
@@ -28,9 +18,15 @@ const COT: { key: keyof DongThuoc; nhan: string; rong: string }[] = [
   { key: "so_ngay", nhan: "Số ngày", rong: "w-16" },
 ];
 
+function moTaLieu(row: DongThuoc): string {
+  return [row.ham_luong, row.duong_dung, row.lieu_moi_lan && `${row.lieu_moi_lan} × ${row.so_lan_ngay} lần/ngày`, row.thoi_diem, row.so_ngay && `${row.so_ngay} ngày`, row.ghi_chu]
+    .filter(Boolean)
+    .join(" · ");
+}
+
 /** Màn kê đơn theo OH: danh sách thuốc dạng bảng, tổng số lượng tự tính, cảnh báo trùng dị ứng */
 export function DonThuocTab({ rows, onChange }: { rows: DongThuoc[]; onChange: (rows: DongThuoc[]) => void }) {
-  const { data } = useEform();
+  const { data, get, append, notify } = useEform();
   const thuoc = data.danhMuc.thuoc;
   const diUng = data.ca.canh_bao_di_ung;
 
@@ -61,6 +57,40 @@ export function DonThuocTab({ rows, onChange }: { rows: DongThuoc[]; onChange: (
       </div>
 
       <div className="space-y-3 p-3">
+        <GoiYTheoChanDoan
+          rows={rows}
+          lay={(mau) => mau.donThuoc}
+          moTa={moTaLieu}
+          canhBao={(row) =>
+            trungDiUng(row.ten, thuoc.find((t) => t.ma === row.ma), diUng)
+              ? `Bệnh nhân dị ứng ${diUng}: thuốc cùng nhóm, không tích sẵn.`
+              : null
+          }
+          onAdd={(moi) => onChange([...rows, ...moi])}
+          phuTro={(mau) => {
+            if (!mau.loiDan) return null;
+            const daChen = get("loi_dan").value.includes(mau.loiDan);
+            return (
+              <div className="mt-1.5 flex flex-wrap items-start gap-2 border-t border-gray-100 pt-1.5 text-xs">
+                <span className="min-w-0 flex-1">
+                  <span className="font-semibold">Lời dặn mẫu:</span> {mau.loiDan}
+                </span>
+                <button
+                  type="button"
+                  className={BTN_OUTLINE}
+                  disabled={daChen}
+                  onClick={() => {
+                    append("loi_dan", mau.loiDan, "ai");
+                    notify("Đã chèn lời dặn mẫu vào ô Lời dặn & theo dõi ở tab Phiếu khám.");
+                  }}
+                >
+                  {daChen ? "Đã chèn" : "Chèn vào Lời dặn"}
+                </button>
+              </div>
+            );
+          }}
+        />
+
         <label className="block">
           <span className="mb-1 block font-bold">Tìm thuốc</span>
           <select value="" onChange={(e) => add(e.target.value)} className={CELL}>
@@ -99,7 +129,7 @@ export function DonThuocTab({ rows, onChange }: { rows: DongThuoc[]; onChange: (
                       { lieu_moi_lan: row.lieu_moi_lan, so_lan_ngay: row.so_lan_ngay, so_ngay: row.so_ngay },
                       data.canhBao,
                     );
-                    const diUngTrung = trungDiUng(row, item, diUng);
+                    const diUngTrung = trungDiUng(row.ten, item, diUng);
                     return (
                       <tr key={`${row.ma}-${index}`} className={`align-top ${row.nguon === "xem" ? "bg-xem-nhat" : row.nguon === "ai" ? "bg-tim-nhat" : ""}`}>
                         <td className="border border-gray-200 px-2 py-1">

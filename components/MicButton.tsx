@@ -44,7 +44,253 @@ interface Props {
   onText: (text: string) => void;
 }
 
-export function MicButton({ onStart, onText }: Props) {
+const BUTTON = "w-full rounded border py-2 font-medium disabled:cursor-wait disabled:opacity-70";
+const BUTTON_ON = "border-warn bg-warn/10 text-warn-text";
+const BUTTON_OFF = "border-primary text-primary hover:bg-soft";
+
+/** Hỏi server chế độ nhận dạng: zipformer (trên máy) khi ASR_PROVIDER=zipformer và đã có model, còn lại dùng Web Speech */
+export function MicButton(props: Props) {
+  const [mode, setMode] = useState<"dang-kiem" | "zipformer" | "web">("dang-kiem");
+  const [note, setNote] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/asr")
+      .then((res) => res.json())
+      .then((data: { provider: string; sanSang: boolean }) => {
+        if (!active) return;
+        if (data.provider === "zipformer" && data.sanSang) return setMode("zipformer");
+        setMode("web");
+        if (data.provider === "zipformer") setNote("Chưa có model giọng nói trên máy (npm run tai-model-giong-noi), tạm dùng Web Speech.");
+      })
+      .catch(() => active && setMode("web"));
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  if (mode === "dang-kiem") return null;
+  if (mode === "zipformer") return <ZipformerMic {...props} />;
+  return (
+    <>
+      <WebSpeechMic {...props} />
+      {note && <p className="mt-1 text-xs text-muted">{note}</p>}
+    </>
+  );
+}
+
+const SAMPLE_RATE = 16000;
+/** Khớp ASR_MAX_SECONDS ở lib/asr.ts */
+const MAX_SECONDS = 600;
+/** Cứ chừng này mili giây gửi một mẩu âm thanh lên server */
+const CHUNK_MS = 400;
+// AudioWorklet chỉ chuyển từng khối mẫu âm thanh về luồng chính
+const WORKLET = `class GhiAm extends AudioWorkletProcessor {
+  process(inputs) { const ch = inputs[0] && inputs[0][0]; if (ch) this.port.postMessage(ch.slice(0)); return true; }
+}
+registerProcessor("ghi-am", GhiAm);`;
+
+/** Gộp các khối, hạ về 16 kHz nếu cần (nội suy tuyến tính) và đổi sang PCM 16-bit */
+function toPcm16(chunks: Float32Array[], fromRate: number): Int16Array {
+  const total = chunks.reduce((n, c) => n + c.length, 0);
+  const input = new Float32Array(total);
+  let offset = 0;
+  for (const c of chunks) {
+    input.set(c, offset);
+    offset += c.length;
+  }
+  const ratio = fromRate / SAMPLE_RATE;
+  const out = new Int16Array(Math.floor(total / ratio));
+  for (let i = 0; i < out.length; i++) {
+    const pos = i * ratio;
+    const j = Math.floor(pos);
+    const v = input[j] + ((input[j + 1] ?? input[j]) - input[j]) * (pos - j);
+    const clamped = Math.max(-1, Math.min(1, v));
+    out[i] = clamped < 0 ? clamped * 32768 : clamped * 32767;
+  }
+  return out;
+}
+
+interface Recording {
+  id: string;
+  ctx: AudioContext;
+  stream: MediaStream;
+  chunks: Float32Array[];
+  timer: ReturnType<typeof setInterval> | undefined;
+  /** Các mẩu gửi lần lượt theo thứ tự */
+  queue: Promise<void>;
+}
+
+interface KetQuaPhien {
+  chot?: string[];
+  tam?: string;
+  error?: string;
+}
+
+/**
+ * Zipformer chạy trên máy: cứ 0,4 giây gửi một mẩu âm thanh lên /api/asr/[id].
+ * Server trả chữ tạm (câu đang nói dở, hiện in nghiêng) và câu đã chốt khi bác sĩ ngắt nghỉ (đưa vào ô nhập).
+ * Âm thanh không ra khỏi máy chạy prototype và không được lưu.
+ */
+function ZipformerMic({ onStart, onText }: Props) {
+  const [state, setState] = useState<"idle" | "starting" | "recording" | "stopping">("idle");
+  const [seconds, setSeconds] = useState(0);
+  const [interim, setInterim] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const recordingRef = useRef<Recording | null>(null);
+  const onTextRef = useRef(onText);
+
+  useEffect(() => {
+    onTextRef.current = onText;
+  }, [onText]);
+
+  const release = (rec: Recording) => {
+    clearInterval(rec.timer);
+    rec.stream.getTracks().forEach((track) => track.stop());
+    void rec.ctx.close();
+  };
+
+  useEffect(
+    () => () => {
+      const rec = recordingRef.current;
+      recordingRef.current = null;
+      if (rec) {
+        release(rec);
+        void fetch(`/api/asr/${rec.id}`, { method: "DELETE" });
+      }
+    },
+    [],
+  );
+
+  const apply = async (res: Response) => {
+    const data = (await res.json()) as KetQuaPhien;
+    if (!res.ok) throw new Error(data.error ?? "Không nhận dạng được.");
+    for (const cau of data.chot ?? []) onTextRef.current(cau);
+    setInterim(data.tam ?? "");
+  };
+
+  /** Lấy các khối đã thu, đưa vào hàng đợi gửi lên server */
+  const flush = (rec: Recording) => {
+    if (rec.chunks.length === 0) return;
+    const pcm = toPcm16(rec.chunks.splice(0), rec.ctx.sampleRate);
+    rec.queue = rec.queue.then(async () => {
+      const res = await fetch(`/api/asr/${rec.id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/octet-stream" },
+        body: pcm.buffer as ArrayBuffer,
+      });
+      await apply(res);
+    });
+    rec.queue.catch((e: unknown) => {
+      if (recordingRef.current !== rec) return;
+      setError(e instanceof Error ? e.message : "Không nhận dạng được.");
+      void stop();
+    });
+  };
+
+  async function stop() {
+    const rec = recordingRef.current;
+    if (!rec) return;
+    recordingRef.current = null;
+    setState("stopping");
+    flush(rec);
+    release(rec);
+    try {
+      await rec.queue.catch(() => undefined);
+      await apply(await fetch(`/api/asr/${rec.id}`, { method: "DELETE" }));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Không nhận dạng được.");
+    } finally {
+      setInterim("");
+      setState("idle");
+      setSeconds(0);
+    }
+  }
+
+  async function start() {
+    setError(null);
+    setState("starting");
+    let stream: MediaStream | null = null;
+    let ctx: AudioContext | null = null;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true },
+      });
+      const res = await fetch("/api/asr", { method: "POST" });
+      const data = (await res.json()) as { id?: string; error?: string };
+      if (!res.ok || !data.id) throw new Error(data.error ?? "Không mở được nhận dạng giọng nói.");
+
+      // Chrome tự chuyển micro về 16 kHz; trình duyệt nào không cho thì toPcm16 hạ mẫu
+      try {
+        ctx = new AudioContext({ sampleRate: SAMPLE_RATE });
+      } catch {
+        ctx = new AudioContext();
+      }
+      const url = URL.createObjectURL(new Blob([WORKLET], { type: "application/javascript" }));
+      await ctx.audioWorklet.addModule(url);
+      URL.revokeObjectURL(url);
+      const node = new AudioWorkletNode(ctx, "ghi-am");
+      const chunks: Float32Array[] = [];
+      node.port.onmessage = (event: MessageEvent<Float32Array>) => chunks.push(event.data);
+      ctx.createMediaStreamSource(stream).connect(node);
+      // Nối ra loa để trình duyệt chạy worklet; worklet không ghi gì ra đầu ra nên không có tiếng
+      node.connect(ctx.destination);
+
+      const startedAt = Date.now();
+      const rec: Recording = { id: data.id, ctx, stream, chunks, timer: undefined, queue: Promise.resolve() };
+      rec.timer = setInterval(() => {
+        const elapsed = (Date.now() - startedAt) / 1000;
+        setSeconds(Math.floor(elapsed));
+        if (elapsed >= MAX_SECONDS) void stop();
+        else flush(rec);
+      }, CHUNK_MS);
+      recordingRef.current = rec;
+      setState("recording");
+      onStart();
+    } catch (e) {
+      stream?.getTracks().forEach((track) => track.stop());
+      void ctx?.close();
+      setState("idle");
+      setError(
+        e instanceof DOMException && e.name === "NotAllowedError"
+          ? ERROR_MESSAGES["not-allowed"]
+          : e instanceof Error
+            ? e.message
+            : "Không mở được micro.",
+      );
+    }
+  }
+
+  const clock = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+  const label = {
+    idle: "🎤 Nói",
+    starting: "Đang mở micro…",
+    recording: `⏹ Dừng nghe · ${clock}`,
+    stopping: "Đang chốt câu cuối…",
+  }[state];
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={state === "recording" ? () => void stop() : () => void start()}
+        disabled={state === "starting" || state === "stopping"}
+        aria-pressed={state === "recording"}
+        className={`${BUTTON} ${state === "recording" ? BUTTON_ON : BUTTON_OFF}`}
+      >
+        {label}
+      </button>
+      {interim && <p className="mt-1 text-sm text-muted italic">{interim}</p>}
+      <p className="mt-1 text-xs text-muted">Nhận dạng trên máy (Zipformer), âm thanh không gửi ra ngoài. Ngắt nghỉ thì câu được đưa vào ô.</p>
+      {error && (
+        <p role="alert" className="mt-1 text-sm text-warn-text">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function WebSpeechMic({ onStart, onText }: Props) {
   const supported = useSyncExternalStore(subscribe, () => getRecognition() !== null, () => false);
   const [listening, setListening] = useState(false);
   const [interim, setInterim] = useState("");
@@ -113,9 +359,7 @@ export function MicButton({ onStart, onText }: Props) {
         type="button"
         onClick={listening ? stop : start}
         aria-pressed={listening}
-        className={`w-full rounded border py-2 font-medium ${
-          listening ? "border-warn bg-warn/10 text-warn-text" : "border-primary text-primary hover:bg-soft"
-        }`}
+        className={`${BUTTON} ${listening ? BUTTON_ON : BUTTON_OFF}`}
       >
         {listening ? "⏹ Dừng nghe" : "🎤 Nói"}
       </button>

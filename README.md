@@ -31,9 +31,24 @@ Khởi động lại `npm run dev` sau khi sửa `.env.local`. Header của ứn
 
 ## Nhập giọng nói
 
-Dùng Web Speech API của Chrome (`vi-VN`), chạy trên localhost. Trình duyệt không hỗ trợ thì nút 🎤 tự ẩn và chỉ còn ô gõ.
+Có hai chế độ, chọn bằng `ASR_PROVIDER` trong `.env.local`:
 
-**Web Speech gửi âm thanh lên dịch vụ của Google và cần internet, vì vậy chỉ dùng với dữ liệu giả.**
+| `ASR_PROVIDER` | Cách chạy | Ghi chú |
+|---|---|---|
+| `web` (mặc định) | Web Speech API của Chrome (`vi-VN`), hiện chữ ngay khi đang nói | **Gửi âm thanh lên Google, cần internet.** Trình duyệt không hỗ trợ thì nút 🎤 tự ẩn |
+| `zipformer` | Trình duyệt gửi âm thanh mỗi 0,4 giây lên `/api/asr` của chính prototype; model Zipformer tiếng Việt (`sherpa-onnx-zipformer-vi-30M-int8`, ~26 MB) nhận dạng trên máy. Đang nói thì hiện chữ tạm (in nghiêng dưới nút); ngắt nghỉ ~0,5 giây thì Silero VAD chốt câu và đưa vào ô | **Âm thanh không ra khỏi máy và không được lưu**, không cần internet. Tối đa 10 phút mỗi lần bấm |
+
+Bật `zipformer`:
+
+```bash
+npm run tai-model-giong-noi   # tải model về models/ (không đưa lên git), chạy một lần
+```
+
+rồi thêm `ASR_PROVIDER=zipformer` vào `.env.local` và khởi động lại `npm run dev`. Chưa tải model thì nút 🎤 tự quay về Web Speech và báo dưới nút.
+
+Model Zipformer bản tiếng Việt là loại không streaming (nghe hết một đoạn mới nhận dạng), nên chữ tạm có được là nhờ nhận dạng lại phần câu đang nói dở sau mỗi mẩu; mỗi lần chỉ mất vài chục mili giây. Model trả chữ in hoa, không dấu câu; server đổi sang chữ thường, viết hoa chữ đầu và thêm dấu chấm cuối mỗi câu chốt. Gói `sherpa-onnx-node` là gói native, được khai báo ở `serverExternalPackages` trong `next.config.ts`.
+
+**Dù dùng chế độ nào, chỉ dùng với dữ liệu giả.**
 
 ## Thêm hoặc sửa trường form
 
@@ -138,6 +153,14 @@ Chỗ khác với EMR là **cột "✨ Trợ lý AI điền phiếu" bên phải
 | Nói nhiều lần | Lần điền sau chỉ thêm dòng chỉ định/thuốc chưa có (trùng mã thì bỏ qua). |
 | Đơn thuốc | Tổng số lượng tự tính như trang chính. Thuốc cùng nhóm với dị ứng trên header (ví dụ Penicillin → Augmentin, Amoxicillin) hiện cảnh báo đỏ; danh sách nhóm chỉ là minh họa. |
 
+**✨ Gợi ý theo chẩn đoán** nằm đầu tab Chỉ định dịch vụ và tab Đơn thuốc:
+
+- Lấy mã ICD10 đang chọn trên phiếu khám (ra viện, ban đầu, kèm theo; do bác sĩ chọn hoặc Trợ lý AI điền), tìm bộ mẫu khớp trong `data/eform/goi-y-theo-chan-doan.json` và liệt kê dịch vụ, thuốc kèm liều, lời dặn theo từng chẩn đoán. Tab nào có gợi ý thì hiện ✨ trên tên tab.
+- **Không tự thêm gì.** Bác sĩ tích chọn rồi bấm "Thêm N mục đã chọn". Mục đã có trong danh sách hoặc trùng gợi ý phía trên thì làm mờ. Thuốc cùng nhóm dị ứng trên header (ví dụ Augmentin khi dị ứng Penicillin) không được tích sẵn và có cảnh báo đỏ.
+- Lời dặn mẫu có nút "Chèn vào Lời dặn" (thêm vào cuối ô Lời dặn & theo dõi, đánh dấu AI điền).
+- Bộ mẫu chỉ ghi tên dịch vụ và thuốc. Mã do `lib/match.ts` gán khi nạp trang; khớp chưa chắc thì dòng hiện vàng "cần xem lại".
+- Chạy bằng rule, không gọi LLM. **12 bộ mẫu hiện có đều là dữ liệu giả, liều chỉ minh họa**; sẽ thay bằng danh sách bệnh hay gặp do bác sĩ đưa.
+
 Ở chế độ `mock`, câu mẫu của ca `data/cases/ca-11-viem-tai-giua-man-dot-cap.json` (cùng bệnh nhân giả với trang này) trả kết quả soạn sẵn; câu khác được tách bằng quy tắc nên kém hơn LLM thật.
 
 Các điểm AI cũ vẫn nằm ngay tại ô, **đều là mock bằng rule, không gọi LLM**:
@@ -155,6 +178,7 @@ Các nút lấy dữ liệu từ hệ thống khác, Menu, Xem LSKB và In chỉ
 | File trong `data/eform/` | Nội dung |
 |---|---|
 | `ca-gia.json` | Ca giả và lịch sử khám |
+| `goi-y-theo-chan-doan.json` | Bộ mẫu chỉ định, thuốc, lời dặn theo mã ICD10 (giả). Mỗi mẫu: `id`, `ten`, `icd` (danh sách mã), `chi_dinh` (`ten`), `don_thuoc` (`ten`, `ham_luong`, `duong_dung`, `lieu_moi_lan`, `so_lan_ngay`, `thoi_diem`, `so_ngay`, `ghi_chu`), `loi_dan`. Tên phải có trong `data/catalog/` để khớp được mã |
 | `icd10.json` | 28 mã TMH mẫu kèm từ khóa |
 | `mau-cau.json` | Mẫu câu theo nhóm lý do khám, chỗ trống viết dạng `[a\|b]` |
 | `quy-tac.json` | Ngưỡng tóm tắt, cách tính điểm, từ phủ định |
@@ -170,14 +194,16 @@ data/cases/     ca giả
 data/sessions/  kết quả các lượt thử (tự sinh, không đưa lên git)
 data/eform/     ca giả, danh mục và quy tắc của trang eForm
 data/tham-khao/ danh mục thật cào từ nguồn công khai, chỉ để tra cứu (ứng dụng chưa nạp)
-lib/            schema, prompt, khớp danh mục, cảnh báo, đo lường
+lib/            schema, prompt, khớp danh mục, cảnh báo, đo lường, nhận dạng giọng nói trên máy (asr.ts)
 lib/llm/        mock, anthropic, openai, gemini
-lib/eform/      rule tóm tắt, gợi ý ICD10, gợi ý mẫu câu, đổ kết quả AI vào phiếu (dien-phieu.ts)
+lib/eform/      rule tóm tắt, gợi ý ICD10, gợi ý mẫu câu, gợi ý theo chẩn đoán (goi-y.ts), cảnh báo dị ứng (di-ung.ts), đổ kết quả AI vào phiếu (dien-phieu.ts)
 components/     thành phần giao diện
 components/eform/ giao diện trang eForm
 app/            trang và API
 scripts/eval.ts chấm điểm
 scripts/cao-du-lieu.ts cào danh mục công khai về data/tham-khao/
+scripts/tai-model-giong-noi.ts tải model Zipformer và Silero VAD về models/
+models/         model nhận dạng giọng nói (tự tải, không đưa lên git)
 docs/           quan sát thực địa, cấu trúc màn hình EMR, CHANGELOG.md
 .claude/        cấu hình Claude Code: plugin, hook, skill
 ```

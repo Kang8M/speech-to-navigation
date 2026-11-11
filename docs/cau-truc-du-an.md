@@ -64,7 +64,7 @@ src/app ──► src/client ──► src/shared
 Hai lớp chặn:
 
 - **`npm run lint`** báo lỗi ngay khi import sai chiều (luật `no-restricted-imports` trong `eslint.config.mjs`).
-- **`import "server-only"`** ở đầu `server/ai/pipeline.ts`, `server/ai/llm/index.ts`, `server/ai/asr.ts` và cả ba file `server/du-lieu/`: lỡ để một component client kéo theo các file này thì `next build` báo lỗi, API key không thể lọt xuống trình duyệt. Script ngoài Next (`npm run eval`) chạy bằng `tsx --conditions=react-server` để vượt qua dấu này.
+- **`import "server-only"`** ở đầu `server/ai/pipeline.ts`, `server/ai/llm/index.ts`, `server/ai/asr.ts` và các file trong `server/du-lieu/`: lỡ để một component client kéo theo các file này thì `next build` báo lỗi, API key không thể lọt xuống trình duyệt. Script ngoài Next (`npm run eval`) chạy bằng `tsx --conditions=react-server` để vượt qua dấu này.
 
 ## AI nằm ở đâu
 
@@ -73,7 +73,7 @@ Có hai loại "AI", đặt ở hai nơi khác nhau vì chạy ở hai nơi khá
 | Loại | Thư mục | Chạy ở | Gồm |
 |---|---|---|---|
 | **AI thật** (gọi LLM, chạy model) | `src/server/ai/` | server | tách văn bản thành nháp (`pipeline.ts` → `llm/*`), nhận dạng giọng nói (`asr.ts`) |
-| **AI bằng rule** (mock, không gọi LLM) | `src/shared/eform/` | trình duyệt (và server lúc nạp trang) | tóm tắt lịch sử (`tom-tat.ts`), gợi ý ICD10 (`icd.ts`), gợi ý mẫu câu (`mau-cau.ts`), gợi ý theo chẩn đoán (`goi-y.ts`), đổ kết quả AI vào phiếu (`dien-phieu.ts`) |
+| **AI bằng rule** (mock, không gọi LLM) | `src/shared/eform/` | trình duyệt (và server lúc nạp trang) | tóm tắt lịch sử (`tom-tat.ts`), gợi ý ICD10 (`icd.ts`), gợi ý mẫu câu (`mau-cau.ts`), gợi ý theo chẩn đoán (`goi-y.ts`) và theo thói quen từng bác sĩ (`thoi-quen.ts`), đổ kết quả AI vào phiếu (`dien-phieu.ts`); sửa chữ sau nhận dạng giọng nói ở `src/shared/giong-noi/sua-chu.ts` |
 
 `src/server/ai/llm/rules.ts` cũng là rule nhưng nằm ở server vì nó là một "nhà cung cấp" của pipeline (dùng cho `mock` và `--rule-only`).
 
@@ -84,11 +84,13 @@ Muốn thay một tính năng rule bằng LLM thật (ví dụ tóm tắt lịch
 **Điền nháp (cột Trợ lý AI của trang eForm):**
 `TroLyAi.tsx` → `client/api.ts › goiAiDienNhap` → `POST /api/extract` → `server/ai/pipeline.ts › runPipeline` → `llm/index.ts` (chọn theo `LLM_PROVIDER`, kiểm tra zod, thử lại 1 lần) → bỏ trường không `ai_fill` → `shared/match.ts` gán mã → `shared/validate.ts` tính tổng → trả `PipelineResult`.
 
-**Giọng nói Zipformer:** `MicButton.tsx` → `GET /api/asr` (chế độ) → `POST /api/asr` (mở phiên) → `POST /api/asr/[id]` mỗi 0,4 giây (PCM 16 kHz, nhận `{ chot, tam }`) → `DELETE /api/asr/[id]`.
+**Giọng nói Zipformer:** `MicButton.tsx` → `GET /api/asr` (chế độ) → `POST /api/asr` (mở phiên) → `POST /api/asr/[id]` mỗi 0,4 giây (PCM 16 kHz, nhận `{ chot, tam }`) → `DELETE /api/asr/[id]`. Mỗi câu chốt (cả Web Speech) đi qua `shared/giong-noi/sua-chu.ts › suaChu` trong `TroLyAi.tsx` với bảng `data.suaChu` (`config/sua-chu-giong-noi.json`) rồi mới vào ô nhập.
 
-**Nạp trang eForm (`/`):** `src/app/page.tsx` (server) gọi `server/du-lieu/eform.ts › loadEformData` (đọc `data/eform/`, gán mã cho bộ mẫu gợi ý) → truyền xuống `EformScreen` (client). Các gợi ý rule chạy trên trình duyệt với dữ liệu đó, không gọi API.
+**Nạp trang eForm (`/`):** `src/app/page.tsx` (server) đọc `?bs=` rồi gọi `server/du-lieu/eform.ts › loadEformData` (đọc `data/eform/`, gán mã cho bộ mẫu gợi ý, đọc `data/thoi-quen/<tài khoản>.json`) → truyền xuống `EformScreen` (client). Các gợi ý rule chạy trên trình duyệt với dữ liệu đó, không gọi API.
 
 **Đo lượt thử:** `TroLyAi.tsx` báo `onBatDau` (gõ, bấm 🎤, bấm câu mẫu) → `EformScreen` ghi mốc giờ → bấm Lưu lần đầu sau khi AI điền → `shared/eform/do-luong.ts › demLuot` đếm → `client/api.ts › luuLuotThu` → `POST /api/sessions` → `server/du-lieu/sessions.ts` ghi `data/sessions/` → trang `/ket-qua` đọc lại.
+
+**Thói quen kê đơn:** bấm Lưu → `EformScreen › ghiThoiQuen` (có mã ICD10 chính và ít nhất một dòng) → `client/api.ts › luuThoiQuen` → `POST /api/thoi-quen` → `server/du-lieu/thoi-quen.ts` ghi `data/thoi-quen/<tài khoản>.json`. Lần nạp trang sau, `GoiYTheoChanDoan` gọi `shared/eform/thoi-quen.ts › ghepGoiY` để đặt nhóm "Đơn anh/chị đã kê" lên trên bộ mẫu.
 
 ## Cái gì dùng lại được
 
@@ -105,6 +107,8 @@ Muốn thay một tính năng rule bằng LLM thật (ví dụ tóm tắt lịch
 | Hợp đồng API | `shared/api.ts` | route + `client/api.ts` + `MicButton` | Đổi kiểu một chỗ, cả route và nơi gọi cùng báo lỗi nếu lệch |
 | Nạp cấu hình | `server/du-lieu/config.ts` | các trang, route, eval | Đọc lại file mỗi lần gọi, sửa JSON rồi tải lại trang là thấy |
 | Kiểm tra dị ứng | `shared/eform/di-ung.ts` | `DonThuocTab`, `GoiYTheoChanDoan` | Mọi chỗ thêm thuốc nên gọi `trungDiUng` |
+| Sửa chữ giọng nói | `shared/giong-noi/sua-chu.ts` + `config/sua-chu-giong-noi.json` | `TroLyAi`, `scripts/eval-giong-noi.ts` | Màn mới có nút micro thì gọi `suaChu(cau, data.suaChu)` trên từng câu `onText` |
+| Gợi ý theo thói quen | `shared/eform/thoi-quen.ts`, `/api/thoi-quen` | `GoiYTheoChanDoan`, `EformScreen` | `ghepGoiY` trả nhóm thói quen trước, bộ mẫu sau, dùng chung cho tab Chỉ định và Đơn thuốc |
 
 ## Thêm mới thì đặt ở đâu
 

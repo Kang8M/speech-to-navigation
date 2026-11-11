@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useRef, useState, type CSSProperties } from "react";
-import { luuLuotThu } from "@/client/api";
+import { luuLuotThu, luuThoiQuen } from "@/client/api";
 import { BanIn } from "@/client/eform/BanIn";
 import { BaoCaoDialog } from "@/client/eform/BaoCaoDialog";
 import { ChiDinhTab } from "@/client/eform/ChiDinhTab";
@@ -14,7 +14,7 @@ import { splitCodes } from "@/client/eform/IcdField";
 import { TroLyAi, type TabId } from "@/client/eform/TroLyAi";
 import { dienPhieu, type DongChiDinh, type DongThuoc, type KetQuaDien } from "@/shared/eform/dien-phieu";
 import { demLuot } from "@/shared/eform/do-luong";
-import { chonBoMau } from "@/shared/eform/goi-y";
+import { chiGiuCot, COT_CHI_DINH, COT_THUOC, ghepGoiY } from "@/shared/eform/thoi-quen";
 import type { EformData, Nguon, Truong } from "@/shared/eform/types";
 import type { PipelineResult } from "@/shared/api";
 import type { InputMode } from "@/shared/metrics";
@@ -106,6 +106,8 @@ export function EformScreen({ data }: { data: EformData }) {
     daGhi: false,
   });
   const [tab, setTab] = useState<TabId>("phieu");
+  // Một lượt mở phiếu là một lần kê: Lưu lại nhiều lần thì server ghi đè, không đếm thêm vào thói quen
+  const [idLuotKham] = useState(() => crypto.randomUUID());
   const [trangThai, setTrangThai] = useState(data.ca.trang_thai);
   const [lastEdit, setLastEdit] = useState(data.ca.chinh_sua_cuoi);
   const [expanded, setExpanded] = useState(false);
@@ -227,18 +229,39 @@ export function EformScreen({ data }: { data: EformData }) {
     }
   };
 
+  /** Ghi đơn và chỉ định theo chẩn đoán chính vào thói quen của tài khoản đang đăng nhập. Trả câu báo thêm */
+  const ghiThoiQuen = async (): Promise<string> => {
+    const icdChinh = splitCodes(api.get("icd_ra_vien").value)[0] ?? splitCodes(api.get("icd_ban_dau").value)[0];
+    if (!icdChinh || chiDinh.length + donThuoc.length === 0) return "";
+    try {
+      await luuThoiQuen({
+        tai_khoan: data.ca.dang_nhap,
+        don: {
+          id: idLuotKham,
+          icd_chinh: icdChinh,
+          chi_dinh: chiDinh.map((row) => chiGiuCot(row, COT_CHI_DINH)),
+          don_thuoc: donThuoc.map((row) => chiGiuCot(row, COT_THUOC)),
+          loi_dan: api.get("loi_dan").value,
+        },
+      });
+      return "";
+    } catch {
+      return " Chưa ghi được đơn vào gợi ý theo thói quen.";
+    }
+  };
+
   const save = async () => {
     setLastEdit({ nguoi: data.ca.dang_nhap, luc: nowText() });
     setBanLuu({ fields, chiDinh, donThuoc });
-    const ghiChu = await ghiLuot();
+    const ghiChu = (await ghiLuot()) + (await ghiThoiQuen());
     notify("Đã lưu." + ghiChu);
   };
 
   const soDong = { chi_dinh: chiDinh.length, don_thuoc: donThuoc.length, phieu: 0 };
-  // Có bộ mẫu khớp chẩn đoán thì đánh dấu ✨ trên tab, để bác sĩ đang ở phiếu khám biết có gợi ý
-  const boMau = chonBoMau(
+  // Có gợi ý khớp chẩn đoán (đơn đã kê hoặc bộ mẫu) thì đánh dấu ✨ trên tab, để bác sĩ đang ở phiếu khám biết
+  const boMau = ghepGoiY(
     [...new Set(["icd_ra_vien", "icd_ban_dau", "icd_kem_theo"].flatMap((id) => splitCodes(api.get(id).value)))],
-    data.goiY,
+    data,
   ).map((item) => item.mau);
   const coGoiY = {
     phieu: false,

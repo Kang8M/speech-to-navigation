@@ -48,6 +48,30 @@ rồi thêm `ASR_PROVIDER=zipformer` vào `.env.local` và khởi động lại 
 
 Model Zipformer bản tiếng Việt là loại không streaming (nghe hết một đoạn mới nhận dạng), nên chữ tạm có được là nhờ nhận dạng lại phần câu đang nói dở sau mỗi mẩu; mỗi lần chỉ mất vài chục mili giây. Model trả chữ in hoa, không dấu câu; server đổi sang chữ thường, viết hoa chữ đầu và thêm dấu chấm cuối mỗi câu chốt. Gói `sherpa-onnx-node` là gói native, được khai báo ở `serverExternalPackages` trong `next.config.ts`.
 
+### Sửa chữ sau nhận dạng
+
+Mỗi câu chốt (cả Zipformer lẫn Web Speech) đi qua `src/shared/giong-noi/sua-chu.ts` trên trình duyệt trước khi vào ô nhập. Bảng sửa ở `config/sua-chu-giong-noi.json`, sửa rồi tải lại trang là có hiệu lực:
+
+| Khóa | Làm gì |
+|---|---|
+| `thay` | Thay cụm hay nghe nhầm: `sai` (các cách nghe nhầm) thành `dung`. Có `tru_khi_truoc`, `tru_khi_sau` (từ ngay trước/sau thì không thay: "có thai" giữ nguyên) và `chi_khi_sau` (chỉ thay khi từ sau là một trong các từ này: "suốt" thành "sốt" chỉ khi sau là "nhẹ", "cao", số). Áp theo thứ tự trong file |
+| `tu_chuyen_khoa` | Tên thuốc: `dung` là tên chuẩn ghi vào ô, `doc` là cách bác sĩ đọc bằng âm tiết tiếng Việt ("pa ra xê ta mon"). So gần đúng sau khi bỏ dấu và gộp âm gần nhau (x/s, d/gi/r, ph/f…) |
+| `nguong_giong` | Độ giống tối thiểu để thay tên thuốc (0,72; thấp hơn thì bắt đầu sửa nhầm câu đúng) |
+| `dau_hieu_thuoc` | Tên thuốc chỉ được thay khi trong 4 từ phía sau có một từ này hoặc một con số, hoặc từ ngay trước là "đơn", "thuốc". Thiếu điều kiện này thì "thanh quản" bị thay thành "Tanakan" |
+
+Cuối cùng số đọc thành chữ được đổi sang chữ số khi đứng trước đơn vị (ngày, lần, viên, mg, độ…) hoặc là số nhiều chữ: "năm trăm mi li gam" thành "500 mg", "ba mươi tám phẩy năm độ" thành "38,5 độ". "hai bên", "một ít", "năm nay" giữ nguyên.
+
+### Đo nhận dạng giọng nói
+
+```bash
+npm run tao-am-thanh-mau     # Windows: giọng máy đọc 11 ca thành data/giong-noi/<id>.tts.wav
+npm run eval-giong-noi       # thêm --chi-tiet để in từng câu, --nhan-lai để nhận dạng lại từ đầu
+```
+
+Mỗi file `.wav` trong `data/giong-noi/` đi qua đúng luồng VAD của ứng dụng rồi được so với câu `input_noi` của ca cùng id. Script in cho chữ thô và chữ sau khi sửa: **WER** (tỉ lệ từ sai, so cả dấu, số đổi thành chữ ở hai phía), **Mã** (số mã dịch vụ, mã thuốc bộ tách quy tắc vẫn ra đúng so với khi tách câu gốc), **Liều** (số dòng thuốc có liều, số lần/ngày, số ngày trùng câu gốc), và **Sửa nhầm trên câu gốc** (bộ sửa chạy trên câu đúng mà đổi mất bao nhiêu từ, nên bằng 0). Chữ thô được lưu cạnh file âm thanh nên chỉnh bảng sửa rồi chạy lại chỉ mất vài giây. Cách tự ghi âm để đo bằng giọng thật: `data/giong-noi/README.md`.
+
+Kết quả trên giọng máy ngày 2026-11-11: WER 21,4% thành 10,5%, Mã 7/42 thành 22/42, Liều 0/24 thành 11/24, sửa nhầm 0. **Giọng máy khác người thật**, nên các số này chỉ để so trước và sau một lần sửa. Hotword của sherpa-onnx (ưu tiên cụm từ ngay lúc giải mã) đã thử với `modified_beam_search` nhưng không thấy tác dụng trên model này, nên chưa dùng.
+
 **Dù dùng chế độ nào, chỉ dùng với dữ liệu giả.**
 
 ## Thêm hoặc sửa trường form
@@ -115,6 +139,8 @@ Ca mới tự vào eval. Trang eForm chỉ dùng câu mẫu của `ca-11` (cùng
 
 ## Đo lường
 
+Kịch bản cho buổi thử với bác sĩ (lời đọc mẫu, đề bài nói tự do, bảng ghi chép, câu hỏi sau buổi thử) ở `docs/kich-ban-thu-bac-si.md`.
+
 Trên trang eForm, khi AI đã điền ít nhất một lần, lần bấm **Lưu** đầu tiên ghi một lượt thử thành file JSON trong `data/sessions/` (thông báo dưới đáy có câu "Đã ghi số đo lượt thử"). Bấm Lưu nữa thì không ghi thêm; muốn thử lượt mới thì tải lại trang. Chưa để AI điền thì Lưu không ghi gì. File chỉ chứa số đếm (thời gian, số trường AI điền, số trường sửa, số mục khớp danh mục, kiểu nhập), **không chứa nội dung phiếu hay thông tin bệnh nhân**.
 
 Trang **Kết quả thử nghiệm** có bảng các lượt, số liệu trung bình và nút xuất CSV. Lượt dùng "Thử câu mẫu" không có thời gian nhập thật nên mặc định không tính vào số trung bình; có ô đánh dấu để tính cả.
@@ -181,6 +207,8 @@ Chỗ khác với EMR là **cột "✨ Trợ lý AI điền phiếu" bên phải
 - Lời dặn mẫu có nút "Chèn vào Lời dặn" (thêm vào cuối ô Lời dặn & theo dõi, đánh dấu AI điền).
 - Bộ mẫu chỉ ghi tên dịch vụ và thuốc. Mã do `src/shared/match.ts` gán khi nạp trang; khớp chưa chắc thì dòng hiện vàng "cần xem lại".
 - Chạy bằng rule, không gọi LLM. **12 bộ mẫu hiện có đều là dữ liệu giả, liều chỉ minh họa**; sẽ thay bằng danh sách bệnh hay gặp do bác sĩ đưa.
+- **Đơn anh/chị đã kê (theo thói quen từng bác sĩ).** Mỗi lần bấm Lưu khi phiếu đã có mã ICD10 chính (chẩn đoán ra viện, chưa có thì ban đầu) và có ít nhất một dòng chỉ định hoặc thuốc, server ghi lại các dòng đó cùng lời dặn vào `data/thoi-quen/<tài khoản>.json` (không đưa lên git, giữ 200 lần gần nhất). Một lượt mở phiếu là một lần kê: Lưu lại nhiều lần thì ghi đè, không đếm thêm. Lần sau, với cùng mã ICD10 chính, nhóm "Đơn anh/chị đã kê N lần trước" đứng đầu khung gợi ý. Mỗi dòng hiện "kê x/N lần", lấy liều của lần gần nhất. Dòng kê từ một nửa số lần trở lên được tích sẵn; khi đã có nhóm này thì bộ mẫu chung không tích sẵn dòng nào. Mã đã lưu mà không còn trong danh mục thì dòng hiện vàng "cần xem lại". Nhóm này chỉ có sau khi bác sĩ đã Lưu, lần đầu chưa có gì.
+- Tài khoản là `dang_nhap` trong `data/eform/ca-gia.json` (`user_bs01`). Nhiều bác sĩ thử chung một máy thì mở `/?bs=user_bs02`, `/?bs=user_bs03`… để thói quen không lẫn nhau (tên chỉ gồm chữ, số, `_`, `-`). Tên tài khoản hiện ở góc phải header.
 
 Ở chế độ `mock`, câu mẫu của ca `data/cases/ca-11-viem-tai-giua-man-dot-cap.json` (cùng bệnh nhân giả với trang này) trả kết quả soạn sẵn; câu khác được tách bằng quy tắc nên kém hơn LLM thật.
 
@@ -188,13 +216,13 @@ Các điểm AI cũ vẫn nằm ngay tại ô, **đều là mock bằng rule, kh
 
 | Điểm AI | Cách hoạt động | Giới hạn |
 |---|---|---|
-| ✨ AI tóm tắt (Tiền sử bản thân, Tiền sử gia đình, Bệnh sử) | Trích câu có sẵn, gộp câu trùng qua các lần khám. Câu khác bên phải/trái hoặc khác số liệu không bị gộp. Bác sĩ sửa rồi mới chèn. | Không diễn đạt lại, nên rút gọn ít hơn LLM thật |
+| ✨ AI tóm tắt (Tiền sử bản thân, Tiền sử gia đình, Bệnh sử) | Trích câu có sẵn, gộp câu trùng qua các lần khám. Câu khác bên phải/trái hoặc khác số liệu không bị gộp. Bác sĩ sửa rồi mới chèn. **Đang ẩn** cùng các bảng "Thông tin khai thác" (lịch sử tiền sử, bệnh sử, dị ứng kèm nút Copy); đổi `HIEN_THONG_TIN_KHAI_THAC` ở đầu `src/client/eform/EformForm.tsx` thành `true` để hiện lại. | Không diễn đạt lại, nên rút gọn ít hơn LLM thật |
 | ✨ Gợi ý ICD10 (top 3) | Chấm điểm từ khóa trong Bệnh sử và Khám lâm sàng, có xét phủ định ("không sốt"). Đoạn tóm tắt lịch sử cũ và chỗ `[ ]` chưa chọn không được tính. | **Độ tin cậy chỉ là điểm khớp từ khóa, không phải xác suất bệnh** |
 | ✨ Gợi ý mẫu câu | Chọn mẫu Tai/Mũi/Vòm/Họng theo Lý do đến khám. Kết quả khám để trống cho bác sĩ chọn, AI không tự điền. | Chỉ có 7 nhóm lý do khám mẫu |
 
 Nhãn trên giao diện: **✨ AI điền**, **⚠ AI chưa chắc, cần xem lại**, **Đã sửa**, **(Hiển thị trên báo cáo y tế)**. Nút "Báo cáo y tế" cho xem trước báo cáo: khối hành chính (họ tên, giới, PID, thời gian khám, bác sĩ, dị ứng), các trường có nhãn BCYT, chẩn đoán chính (chẩn đoán ra viện, chưa có thì chẩn đoán ban đầu) và chẩn đoán kèm theo. Ảnh chụp EMR chỉ thấy nhãn BCYT ở chẩn đoán kèm theo; việc đưa chẩn đoán chính và hành chính vào là giả định, cần xác nhận với bác sĩ.
 
-Các nút lấy dữ liệu từ hệ thống khác, Menu, Xem LSKB và Quay lại chỉ hiện thông báo mô phỏng. Nút Lưu không ghi nội dung phiếu xuống đĩa (chỉ ghi số đo lượt thử, xem mục Đo lường), tải lại trang là về dữ liệu ban đầu.
+Các nút lấy dữ liệu từ hệ thống khác, Menu, Xem LSKB và Quay lại chỉ hiện thông báo mô phỏng. Nút Lưu không ghi nội dung phiếu xuống đĩa. Nó chỉ ghi số đo lượt thử (xem mục Đo lường) và các dòng chỉ định, thuốc cho gợi ý theo thói quen. Tải lại trang là phiếu về dữ liệu ban đầu.
 
 | File trong `data/eform/` | Nội dung |
 |---|---|
@@ -213,6 +241,8 @@ config/         cấu hình form, màu, viết tắt, cảnh báo
 data/catalog/   danh mục bệnh viện soạn tay (khớp trước danh mục thật)
 data/cases/     ca giả
 data/sessions/  kết quả các lượt thử (tự sinh, không đưa lên git)
+data/thoi-quen/ đơn từng tài khoản bác sĩ đã Lưu, cho gợi ý theo thói quen (tự sinh, không đưa lên git)
+data/giong-noi/ file âm thanh để đo nhận dạng giọng nói (tự sinh hoặc tự ghi, không đưa lên git, trừ README)
 data/eform/     ca giả, danh mục và quy tắc của trang eForm
 data/tham-khao/ danh mục thật cào từ nguồn công khai, ứng dụng nạp kèm data/catalog/
 src/app/        trang và API (định tuyến Next, mỏng)
@@ -220,12 +250,15 @@ src/client/     giao diện chạy trên trình duyệt: chung/ (Header, MicButt
 src/server/ai/  AI thật: pipeline, prompt, schema, llm/ (mock, rules, anthropic, openai, gemini), asr.ts (Zipformer)
 src/server/du-lieu/ nạp config và data, lưu lượt thử
 src/shared/     dùng chung hai phía: kiểu, khớp danh mục, chuẩn hóa, tính tổng, đo lường, api.ts (hợp đồng FE–BE)
-src/shared/eform/ rule của trang eForm: tóm tắt, gợi ý ICD10, mẫu câu, gợi ý theo chẩn đoán, cảnh báo dị ứng, đổ kết quả AI vào phiếu, đếm số đo lượt thử (do-luong.ts)
+src/shared/eform/ rule của trang eForm: tóm tắt, gợi ý ICD10, mẫu câu, gợi ý theo chẩn đoán và theo thói quen (thoi-quen.ts), cảnh báo dị ứng, đổ kết quả AI vào phiếu, đếm số đo lượt thử (do-luong.ts)
+src/shared/giong-noi/ sửa chữ sau nhận dạng giọng nói (sua-chu.ts), đọc số thành chữ để chấm (so.ts)
 scripts/eval.ts chấm điểm
+scripts/eval-giong-noi.ts đo nhận dạng giọng nói trên data/giong-noi/
+scripts/tao-am-thanh-mau.ts (+ tts-windows.ps1) giọng máy Windows đọc các ca thành file âm thanh mẫu
 scripts/cao-du-lieu.ts cào danh mục công khai về data/tham-khao/
 scripts/tai-model-giong-noi.ts tải model Zipformer và Silero VAD về models/
 models/         model nhận dạng giọng nói (tự tải, không đưa lên git)
-docs/           quan sát thực địa, cấu trúc màn hình EMR, CHANGELOG.md
+docs/           quan sát thực địa, cấu trúc màn hình EMR, kịch bản thử với bác sĩ, CHANGELOG.md
 .claude/        cấu hình Claude Code: plugin, hook, skill
 ```
 

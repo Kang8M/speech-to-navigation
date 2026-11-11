@@ -7,6 +7,7 @@ import { BTN_OUTLINE } from "@/client/eform/fields";
 import type { KetQuaDien } from "@/shared/eform/dien-phieu";
 import { goiAiDienNhap } from "@/client/api";
 import type { PipelineResult } from "@/shared/api";
+import { suaChu } from "@/shared/giong-noi/sua-chu";
 import type { InputMode } from "@/shared/metrics";
 
 export type TabId = "phieu" | "chi_dinh" | "don_thuoc";
@@ -109,7 +110,10 @@ export function TroLyAi({ ketQua, onDien, onBatDau, onHoanTac, onGoTo, onOpenTab
             setError(null);
             onBatDau("noi", false);
           }}
-          onText={(chunk) => setText((current) => (current ? `${current} ${chunk}` : chunk))}
+          onText={(chunk) => {
+            const cau = suaChu(chunk, data.suaChu);
+            setText((current) => (current ? `${current} ${cau}` : cau));
+          }}
         />
 
         <div className="relative">

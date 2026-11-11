@@ -4,6 +4,52 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-11
 
+### Gợi ý "Đơn anh/chị đã kê" theo thói quen từng bác sĩ
+- **Loại:** Tính năng
+- **Thay đổi:**
+  - Bấm Lưu khi phiếu có mã ICD10 chính (ra viện, chưa có thì ban đầu) và có ít nhất một dòng chỉ định hoặc thuốc: ghi các dòng đó (bỏ cột nguồn, ứng viên) và lời dặn qua `POST /api/thoi-quen` vào `data/thoi-quen/<tài khoản>.json`. Kiểm tra bằng zod, thời điểm do server ghi, mỗi tài khoản giữ 200 lần gần nhất. Mỗi lượt mở phiếu có một id (`crypto.randomUUID`), Lưu lại thì ghi đè. Lỗi ghi thì thông báo "Chưa ghi được đơn vào gợi ý theo thói quen".
+  - Khung "✨ Gợi ý theo chẩn đoán" ở tab Chỉ định và Đơn thuốc: với mỗi mã ICD đang chọn, nếu tài khoản đã kê cho cùng mã chính thì nhóm "Đơn anh/chị đã kê N lần trước" đứng đầu. Dòng xếp theo số lần kê, liều lấy từ lần gần nhất, có nhãn "kê x/N lần". Dòng kê từ một nửa số lần trở lên được tích sẵn; khi có nhóm này thì bộ mẫu chung không tích sẵn. Mã đã lưu không còn trong danh mục thì bỏ mã, dòng hiện vàng. Dấu ✨ trên tab cũng tính nhóm này. Câu khi trống đổi thành "Chưa có bộ mẫu hay đơn anh/chị đã kê cho …".
+  - Tài khoản là `ca.dang_nhap`; thêm `?bs=<tài khoản>` trên URL để đổi (chỉ nhận chữ, số, `_`, `-`; tên này là tên file).
+- **Lý do:** Bác sĩ xem prototype hỏi kê đơn có cá nhân hóa không, vì mỗi bác sĩ có thói quen kê khác nhau (`docs/tham-khao/phan-hoi-bac-si-prototype-2026-11-11.md`). Chủ dự án duyệt làm.
+- **File:** `src/shared/eform/thoi-quen.ts` (mới), `src/server/du-lieu/thoi-quen.ts` (mới), `src/app/api/thoi-quen/route.ts` (mới), `src/shared/eform/goi-y.ts` (thêm `cuaToi` vào `MauGoiY`), `src/shared/eform/types.ts` (`thoiQuen`), `src/shared/api.ts` (`LuuThoiQuenRequest`), `src/client/api.ts` (`luuThoiQuen`, nhận 204), `src/server/du-lieu/eform.ts`, `src/app/page.tsx` (`searchParams`), `src/client/eform/EformScreen.tsx`, `src/client/eform/GoiYTheoChanDoan.tsx`, `.gitignore`, `README.md`, `docs/cau-truc-du-an.md`
+- **Kiểm tra:** `npx tsc --noEmit`, `npm run lint` sạch. Playwright trên dev server đang chạy, `/?bs=user_test`, không bấm Điền nên không gọi LLM: chọn H66.1, thêm Ciprofloxacin nhỏ tai và Paracetamol bằng ô Tìm thuốc, Lưu → file `data/thoi-quen/user_test.json` có 1 lần kê đúng 2 thuốc. Tải lại, chọn H66.1, tab Đơn thuốc hiện "Đơn anh/chị đã kê 1 lần trước", hai dòng "kê 1/1 lần" được tích sẵn, header hiện `user_test`. Đã xóa file thử. Chưa thử nhiều lần kê khác nhau để xem thứ tự và tích sẵn theo tỉ lệ.
+- **Ảnh hưởng:** Không đổi tách/khớp nên không chạy eval. Bác sĩ thấy nhóm mới chỉ sau khi đã Lưu ít nhất một lần cho cùng chẩn đoán. Liều lưu là liều bác sĩ đã Lưu, kể cả khi chưa sửa chỗ vàng.
+
+### Đo và sửa chữ nhận dạng giọng nói
+- **Loại:** Tính năng
+- **Thay đổi:**
+  - `npm run eval-giong-noi`: đưa từng file `.wav` trong `data/giong-noi/` qua đúng luồng VAD của `server/ai/asr.ts` (gửi mẩu 0,4 giây), so với `input_noi` của ca cùng id (hoặc file `.txt` cùng tên). In WER (so cả dấu, số đổi thành chữ bằng `src/shared/giong-noi/so.ts`), số mã dịch vụ và thuốc bộ tách quy tắc vẫn ra so với câu gốc, số dòng thuốc trùng liều/lần/ngày, và số từ bộ sửa đổi nhầm trên câu gốc. Chữ thô lưu ở `<tên>.tho.json` để chạy lại nhanh (`--nhan-lai` để bỏ, `--chi-tiet` để in từng câu).
+  - `npm run tao-am-thanh-mau` (chỉ Windows): giọng "Microsoft An" đọc `input_noi` của 11 ca thành `<id>.tts.wav` qua `scripts/tts-windows.ps1` (WinRT), tên thuốc đổi sang cách bác sĩ đọc trước khi đọc.
+  - Bước sửa chữ `src/shared/giong-noi/sua-chu.ts` chạy trên trình duyệt cho mọi câu chốt (Zipformer và Web Speech) trong `TroLyAi.tsx`, bảng ở `config/sua-chu-giong-noi.json` (nạp qua `loadSuaChu`, truyền xuống bằng `EformData.suaChu`). Ba bước: thay cụm hay nghe nhầm có điều kiện từ trước/sau ("thai" thành "tai" trừ "có thai", "mang thai"…; "chạy mủ" thành "chảy mủ"; "chẩn" thành "chẩn đoán"…); thay tên thuốc bằng so gần đúng với cách đọc tiếng Việt (bỏ dấu, gộp x/s, d/gi/r, ph/f…, ngưỡng 0,72, chỉ khi gần đó có dấu hiệu kê đơn); đổi số chữ thành chữ số khi đứng trước đơn vị hoặc là số nhiều chữ. Dấu câu cuối từ được tách riêng để quy tắc vẫn khớp với câu Web Speech.
+  - `server/ai/sherpa-onnx-node.d.ts` thêm `readWave`. `.gitignore` bỏ qua `data/giong-noi/*` trừ README.
+- **Lý do:** Bác sĩ nói chỉ cần chuyển giọng nói thành chữ cho tốt là đủ. Trước đó chưa có cách đo độ chính xác, và số do model trả dạng chữ ("năm trăm mi li gam") nên bộ tách không đọc được liều nào.
+- **File:** `CLAUDE.md` (lệnh thường dùng), `scripts/eval-giong-noi.ts` (mới), `scripts/tao-am-thanh-mau.ts` (mới), `scripts/tts-windows.ps1` (mới), `src/shared/giong-noi/sua-chu.ts` (mới), `src/shared/giong-noi/so.ts` (mới), `config/sua-chu-giong-noi.json` (mới), `data/giong-noi/README.md` (mới), `src/server/du-lieu/config.ts`, `src/server/du-lieu/eform.ts`, `src/shared/eform/types.ts`, `src/client/eform/TroLyAi.tsx`, `src/server/ai/sherpa-onnx-node.d.ts`, `package.json`, `.gitignore`, `README.md`, `docs/cau-truc-du-an.md`, `docs/kich-ban-thu-bac-si.md`
+- **Kiểm tra:** `npx tsc --noEmit`, `npm run lint` sạch. `npm run eval-giong-noi` trên 11 file giọng máy: WER 21,4% → 10,5%, Mã 7/42 → 22/42, Liều 0/24 → 11/24, sửa nhầm trên câu gốc 0 từ. Thử ngưỡng 0,66 (sửa nhầm 24 từ, Mã 18/42) và 0,6 (sửa nhầm 57 từ) nên giữ 0,72. Chạy thử các câu "năm 2015", "3 năm nay", "có thai 3 tháng", "130 trên 80", "0,9%", "một ít nước", "thanh quản" thì đều ra đúng. Hotword sherpa-onnx (`modified_beam_search`, tách token qua bpe vocab tự sinh) chạy được nhưng không đổi kết quả kể cả điểm 10, nên không dùng. Chưa thử trên giao diện với micro thật, chưa đo bằng giọng người.
+- **Ảnh hưởng:** Chữ trong ô nhập khác chữ tạm đang hiện lúc nói (chữ tạm chưa sửa). Giọng máy đọc "tai" như "thai" và đọc tên thuốc khác người, nên một phần bảng `thay` có thể chỉ khớp lỗi của giọng máy; cần ghi âm giọng thật (`data/giong-noi/README.md`) để chỉnh. `npm run eval -- --rule-only` không đổi vì không sửa bộ tách.
+
+### Ghi phản hồi của bác sĩ sau khi xem prototype
+- **Loại:** Tài liệu
+- **Thay đổi:** Thêm `docs/tham-khao/phan-hoi-bac-si-prototype-2026-11-11.md`: nhận xét gần nguyên văn (chỉ cần voice-to-text tốt; mức cao hơn là ghi âm cả cuộc trò chuyện; không phải ca nào cũng kê đơn, chỉ định; kê đơn nên cá nhân hóa), bảng ý và việc đã làm, câu hỏi cần hỏi thêm. Thêm dòng vào mục lục `docs/tham-khao/README.md`.
+- **Lý do:** Chủ dự án chụp trang sổ tay ghi nhận xét, duyệt làm mục 1 và 4, không làm mục 3.
+- **File:** `docs/tham-khao/phan-hoi-bac-si-prototype-2026-11-11.md`, `docs/tham-khao/README.md`
+- **Kiểm tra:** Đọc lại, không có tên bác sĩ hay thông tin bệnh nhân. Ảnh sổ tay gốc không đưa vào repo.
+
+### Thêm kịch bản thử với bác sĩ
+- **Loại:** Tài liệu
+- **Thay đổi:** Thêm `docs/kich-ban-thu-bac-si.md`. Phần 1 in ra cho bác sĩ: các bước trên Trợ lý AI, kịch bản A đọc theo mẫu (A1 nói và A2 gõ tắt ca 11, A3 viêm họng có Augmentin trùng dị ứng Penicillin lấy từ ca 3, A4 ù tai lấy từ ca 8; A3, A4 đổi "anh" thành "chị" và bỏ "ừ, à" cho khớp bệnh nhân giả trên phiếu), kịch bản B bác sĩ tự nói 3 ca theo thói quen và một lần "Điền thêm". Phần 2 cho người điều phối: chuẩn bị (`zipformer`, giới hạn 5 lượt/phút của Gemini miễn phí), những chỗ đã biết là yếu (nghe sai tên thuốc, khoảng 29% từ sai khi thử bằng giọng đọc máy; "đổi liều" thuốc đã có không có tác dụng và không báo), bảng ghi chép và câu hỏi sau buổi thử theo kiểu hỏi việc đã xảy ra. README thêm link ở mục Đo lường và Cấu trúc thư mục.
+- **Lý do:** Chủ dự án hỏi kịch bản test cho bác sĩ đọc nằm ở đâu; trước đó chỉ có câu mẫu dạng JSON trong `data/cases/` lẫn với đáp án eval.
+- **File:** `docs/kich-ban-thu-bac-si.md`, `README.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** Đối chiếu nhãn nút với `src/client/eform/TroLyAi.tsx` và `src/client/chung/MicButton.tsx`. Kiểm tra Strepsils không có trong `data/catalog/` và `data/tham-khao/`, Augmentin có 2 hàm lượng nên thiếu hàm lượng sẽ "chưa chắc". Chưa chạy thử các kịch bản trên giao diện.
+- **Ảnh hưởng:** Không đổi code hay điểm eval. Câu A3, A4 khác chút so với `data/cases/`, eval không dùng file này.
+
+### Tạm ẩn các bảng "Thông tin khai thác" trên phiếu khám
+- **Loại:** Giao diện
+- **Thay đổi:** Thêm hằng `HIEN_THONG_TIN_KHAI_THAC = false` ở đầu `src/client/eform/EformForm.tsx`. Khi `false`, phiếu khám không hiện bảng lịch sử các lần khám trước dưới ô Tiền sử bản thân, Tiền sử gia đình, Bệnh sử (kèm nút Copy và ✨ AI tóm tắt), cũng không hiện dòng "Lịch sử dị ứng", nút "Lấy LS dị ứng từ hệ thống khác" và bảng lịch sử dị ứng. Không có nút bật lại trên giao diện. Các ô nhập vẫn gõ được, AI vẫn điền vào như cũ. Cảnh báo dị ứng đỏ trên header vẫn giữ. Code `LichSuBlock.tsx`, `tom-tat.ts` và dữ liệu `lich_su` trong `data/eform/ca-gia.json` giữ nguyên.
+- **Lý do:** Chủ dự án muốn buổi thử tập trung vào phần AI điền phiếu. Ẩn chứ không xóa để hiện lại được dễ dàng.
+- **File:** `src/client/eform/EformForm.tsx`, `README.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** `npx tsc --noEmit`, `npm run lint` sạch. Mở `/` bằng playwright (dev server `LLM_PROVIDER=gemini`): không còn chữ "Thông tin khai thác", "Lịch sử dị ứng", "AI tóm tắt" hay nút Copy nào. Ô Tiền sử bản thân, Bệnh sử vẫn hiện, cảnh báo "Dị ứng: Penicillin" vẫn có. Console không lỗi. Không đổi logic tách/khớp nên không chạy eval.
+- **Ảnh hưởng:** Bác sĩ không Copy được tiền sử, bệnh sử, dị ứng từ lần khám trước. Muốn hiện lại thì đổi hằng thành `true`.
+
 ### Nạp danh mục thật: 367 mã ICD10, 486 kỹ thuật, khoảng 4.770 thuốc; ô chọn đổi thành ô gõ tìm
 - **Loại:** Dữ liệu
 - **Thay đổi:**

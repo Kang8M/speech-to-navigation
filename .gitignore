@@ -49,3 +49,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# âm thanh để đo nhận dạng giọng nói (tự sinh hoặc tự ghi, nặng)
+/data/giong-noi/*
+!/data/giong-noi/README.md
+
+# đơn bác sĩ đã kê để gợi ý theo thói quen (tự sinh khi bấm Lưu)
+/data/thoi-quen/*

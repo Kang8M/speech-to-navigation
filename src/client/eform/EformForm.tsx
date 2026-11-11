@@ -26,6 +26,11 @@ import { demChoTrong } from "@/shared/eform/mau-cau";
 import type { KetQuaTheoNgay } from "@/shared/eform/types";
 
 const CO_KHONG = ["Có", "Không"];
+/**
+ * Bảng "Thông tin khai thác" (lịch sử tiền sử, bệnh sử, dị ứng các lần khám trước, kèm Copy và ✨ AI tóm tắt).
+ * Tạm ẩn để buổi thử tập trung vào phần AI điền phiếu; đổi thành true là hiện lại, code giữ nguyên.
+ */
+const HIEN_THONG_TIN_KHAI_THAC = false;
 
 function KetQuaGroup({ title, items, extra }: { title: string; items: KetQuaTheoNgay[]; extra?: React.ReactNode }) {
   return (
@@ -112,11 +117,15 @@ function DanhGiaChung() {
       <TextBox id="ly_do" label="Lý do đến khám" bcyt />
 
       <TextBox id="tien_su_ban_than" label="Tiền sử bản thân">
-        <LichSuBlock targetId="tien_su_ban_than" targetLabel="Tiền sử bản thân" rows={ca.lich_su.tien_su_ban_than} />
+        {HIEN_THONG_TIN_KHAI_THAC && (
+          <LichSuBlock targetId="tien_su_ban_than" targetLabel="Tiền sử bản thân" rows={ca.lich_su.tien_su_ban_than} />
+        )}
       </TextBox>
 
       <TextBox id="tien_su_gia_dinh" label="Tiền sử gia đình">
-        <LichSuBlock targetId="tien_su_gia_dinh" targetLabel="Tiền sử gia đình" rows={ca.lich_su.tien_su_gia_dinh} />
+        {HIEN_THONG_TIN_KHAI_THAC && (
+          <LichSuBlock targetId="tien_su_gia_dinh" targetLabel="Tiền sử gia đình" rows={ca.lich_su.tien_su_gia_dinh} />
+        )}
       </TextBox>
 
       <div className="space-y-2">
@@ -139,48 +148,54 @@ function DanhGiaChung() {
             <TextBox id="di_ung_mo_ta" label="Mô tả dị ứng" rows={1} />
           </>
         )}
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-semibold text-ef-phu">Lịch sử dị ứng</span>
-          {ca.lich_su.di_ung.length > 0 && <SourceBadge nguon="cu" />}
-          <button type="button" className={BTN_OUTLINE} onClick={() => notify(MO_PHONG)}>
-            Lấy LS dị ứng từ hệ thống khác
-          </button>
-        </div>
-        {ca.lich_su.di_ung.length > 0 && (
-          <div className="overflow-x-auto rounded-md border border-ef-vien">
-            <table className="w-full min-w-[36rem] border-collapse text-[13px]">
-              <thead>
-                <tr>
-                  {["Ngày cập nhật", "Loại phiếu", "Loại dị ứng", "Thông tin", "Người cập nhật", ""].map((head) => (
-                    <th key={head} className={TH}>
-                      {head}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {ca.lich_su.di_ung.map((row) => (
-                  <tr key={`${row.ngay}-${row.loai_phieu}`} className="[&:last-child>td]:border-b-0">
-                    <td className={`${TD} whitespace-nowrap tabular-nums`}>{row.ngay}</td>
-                    <td className={TD}>{row.loai_phieu}</td>
-                    <td className={TD}>{row.loai}</td>
-                    <td className={TD}>{row.thong_tin}</td>
-                    <td className={TD}>{row.nguoi}</td>
-                    <td className={`${TD} text-right`}>
-                      <button type="button" className={BTN_OUTLINE} onClick={() => append("di_ung_mo_ta", row.thong_tin, "cu")}>
-                        Copy
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        {HIEN_THONG_TIN_KHAI_THAC && (
+          <>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-semibold text-ef-phu">Lịch sử dị ứng</span>
+              {ca.lich_su.di_ung.length > 0 && <SourceBadge nguon="cu" />}
+              <button type="button" className={BTN_OUTLINE} onClick={() => notify(MO_PHONG)}>
+                Lấy LS dị ứng từ hệ thống khác
+              </button>
+            </div>
+            {ca.lich_su.di_ung.length > 0 && (
+              <div className="overflow-x-auto rounded-md border border-ef-vien">
+                <table className="w-full min-w-[36rem] border-collapse text-[13px]">
+                  <thead>
+                    <tr>
+                      {["Ngày cập nhật", "Loại phiếu", "Loại dị ứng", "Thông tin", "Người cập nhật", ""].map((head) => (
+                        <th key={head} className={TH}>
+                          {head}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ca.lich_su.di_ung.map((row) => (
+                      <tr key={`${row.ngay}-${row.loai_phieu}`} className="[&:last-child>td]:border-b-0">
+                        <td className={`${TD} whitespace-nowrap tabular-nums`}>{row.ngay}</td>
+                        <td className={TD}>{row.loai_phieu}</td>
+                        <td className={TD}>{row.loai}</td>
+                        <td className={TD}>{row.thong_tin}</td>
+                        <td className={TD}>{row.nguoi}</td>
+                        <td className={`${TD} text-right`}>
+                          <button type="button" className={BTN_OUTLINE} onClick={() => append("di_ung_mo_ta", row.thong_tin, "cu")}>
+                            Copy
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </>
         )}
       </div>
 
       <TextBox id="benh_su" label="Bệnh sử" rows={4} bcyt>
-        <LichSuBlock targetId="benh_su" targetLabel="Bệnh sử" rows={ca.lich_su.benh_su} columnLabel="Bệnh sử" />
+        {HIEN_THONG_TIN_KHAI_THAC && (
+          <LichSuBlock targetId="benh_su" targetLabel="Bệnh sử" rows={ca.lich_su.benh_su} columnLabel="Bệnh sử" />
+        )}
       </TextBox>
 
       <RadioField id="thuoc_dang_dung" label="Thuốc đang dùng (cả kê đơn và không kê đơn)" options={["NB không có", "NB có"]} />

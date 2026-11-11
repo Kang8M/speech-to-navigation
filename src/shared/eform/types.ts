@@ -1,6 +1,8 @@
 // Kiểu dữ liệu của trang mô phỏng eForm ngoại trú.
 import type { CatalogItem, VietTat, WarningRules } from "../types";
+import type { BangSuaChu } from "../giong-noi/sua-chu";
 import type { MauGoiY } from "./goi-y";
+import type { DonDaKe } from "./thoi-quen";
 
 /** cu: dữ liệu có sẵn; ai: AI thêm; xem: AI thêm nhưng chưa chắc, bác sĩ cần xem lại;
  * sua: dữ liệu cũ hoặc AI đã bị bác sĩ sửa; bs: bác sĩ tự nhập */
@@ -142,4 +144,8 @@ export interface EformData {
   provider: string;
   /** Câu mẫu của ca giả này (lấy từ data/cases/ca-11-*.json) để demo nhanh; id ghi vào số đo lượt thử */
   cauMau: { id: string; noi: string; goTat: string };
+  /** Bảng sửa chữ nhận dạng giọng nói (config/sua-chu-giong-noi.json), áp vào từng câu trước khi đưa vào ô nhập */
+  suaChu: BangSuaChu;
+  /** Các lần tài khoản đang đăng nhập (ca.dang_nhap) đã Lưu đơn, để gợi ý theo thói quen */
+  thoiQuen: DonDaKe[];
 }

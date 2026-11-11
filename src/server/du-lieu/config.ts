@@ -2,6 +2,7 @@
 import "server-only";
 import fs from "node:fs";
 import path from "node:path";
+import type { BangSuaChu } from "@/shared/giong-noi/sua-chu";
 import type {
   CaseData,
   FormConfig,
@@ -30,6 +31,11 @@ export function loadTheme(): Record<string, string> {
 
 export function loadVietTat(): VietTat {
   return readJson<VietTat>("config", "viet-tat.json");
+}
+
+/** Bảng sửa chữ nhận dạng giọng nói: tên thuốc, từ chuyên khoa model hay nghe nhầm */
+export function loadSuaChu(): BangSuaChu {
+  return readJson<BangSuaChu>("config", "sua-chu-giong-noi.json");
 }
 
 export function loadRules(): WarningRules {

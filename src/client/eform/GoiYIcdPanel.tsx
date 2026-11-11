@@ -18,9 +18,6 @@ export function GoiYIcdPanel({ loaiTru = [], onPick }: Props) {
 
   return (
     <div className="mt-2 rounded-lg border border-tim-vien bg-tim-nhat p-3">
-      <p className="mb-1.5 text-xs text-ef-phu">
-        ✨ AI gợi ý từ Bệnh sử và Khám lâm sàng. Độ tin cậy mô phỏng từ điểm khớp từ khóa, không phải xác suất bệnh. Bác sĩ bấm để chọn.
-      </p>
       {goiY.length === 0 && <p className="text-[13px] text-ef-chu">Chưa đủ dữ kiện để gợi ý.</p>}
       <div className="space-y-1">
         {goiY.map(({ item, tinCay, khop }) => {

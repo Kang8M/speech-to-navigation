@@ -52,7 +52,6 @@ export function DonThuocTab({ rows, onChange }: { rows: DongThuoc[]; onChange: (
     <section className="rounded-lg border border-ef-vien bg-white text-[13px]">
       <div className="flex flex-wrap items-center gap-2 border-b border-ef-vien px-5 py-3">
         <span className="font-semibold text-ef-dam">Kê đơn ngoại trú</span>
-        <span className="text-xs text-ef-phu">(mô phỏng màn Medication ordering)</span>
         {diUng && <span className="ml-auto rounded-full bg-ef-do px-2.5 py-0.5 text-xs font-semibold text-white">Dị ứng: {diUng}</span>}
       </div>
 

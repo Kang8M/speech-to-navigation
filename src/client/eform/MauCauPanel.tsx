@@ -52,13 +52,10 @@ function TheMau({ nhanVung, text, theoLyDo }: { nhanVung: string; text: string; 
 export function MauCauPanel() {
   const { data, get } = useEform();
   const lyDo = get("ly_do").value;
-  const { nhomKhop, theoVung } = goiYMauCau(lyDo, data.mauCau, data.quyTac.phu_dinh);
+  const { theoVung } = goiYMauCau(lyDo, data.mauCau, data.quyTac.phu_dinh);
 
   return (
     <div className="mt-2 rounded-lg border border-tim-vien bg-tim-nhat p-3">
-      <p className="mb-2 text-xs text-ef-phu">
-        ✨ AI gợi ý theo lý do khám{nhomKhop.length > 0 ? `: ${nhomKhop.join("; ")}` : " (chưa khớp nhóm nào, đang hiện mẫu chung)"}. Bác sĩ chọn kết quả thực tế ở từng chỗ trống rồi bấm Chèn.
-      </p>
       <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
         {VUNG_KHAM.map((vung) => (
           <div key={vung.id} className="space-y-1.5">

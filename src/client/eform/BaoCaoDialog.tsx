@@ -40,7 +40,7 @@ export function BaoCaoDialog({ onClose }: { onClose: () => void }) {
       className="m-auto w-full max-w-2xl rounded-xl p-6 text-ef-chu shadow-xl backdrop:bg-ef-dam/40"
     >
       <div className="mb-3 flex items-center justify-between gap-2">
-        <h2 className="text-base font-bold text-ef-dam">Báo cáo y tế – xem trước (DỮ LIỆU GIẢ)</h2>
+        <h2 className="text-base font-bold text-ef-dam">Báo cáo y tế – xem trước</h2>
         <button type="button" className={BTN_OUTLINE} onClick={() => ref.current?.close()}>
           Đóng
         </button>

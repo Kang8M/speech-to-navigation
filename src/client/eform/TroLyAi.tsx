@@ -61,7 +61,6 @@ export function TroLyAi({ ketQua, onDien, onBatDau, onHoanTac, onGoTo, onOpenTab
   const { data, get, put } = useEform();
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
-  const [dangNghe, setDangNghe] = useState(false);
   const [error, setError] = useState<string | null>(null);
   /** Đoạn chữ của lần điền gần nhất, để biết bác sĩ đã nói hoặc gõ thêm chưa */
   const [daGui, setDaGui] = useState("");
@@ -99,30 +98,17 @@ export function TroLyAi({ ketQua, onDien, onBatDau, onHoanTac, onGoTo, onOpenTab
   return (
     <aside className="flex flex-col self-start rounded-xl border border-tim-vien bg-white text-[13px] shadow-[0_1px_2px_rgba(26,37,51,0.06)] lg:sticky lg:top-[calc(var(--cao-dau)+1rem)] lg:max-h-[calc(100vh-var(--cao-dau)-var(--cao-day)-2rem)] lg:overflow-y-auto">
       <div className="space-y-3 border-b border-tim-vien/60 bg-tim-nhat px-4 py-3">
-        <div className="flex items-center justify-between gap-2">
-          <h2 className="text-[15px] font-semibold text-tim">✨ Trợ lý AI điền phiếu</h2>
-          <span className="rounded-full bg-white px-2 py-px text-[11px] text-ef-phu ring-1 ring-tim-vien" title="Đổi trong .env.local (LLM_PROVIDER)">
-            Chế độ AI: <strong className="font-semibold text-ef-chu">{data.provider}</strong>
-          </span>
-        </div>
+        <h2 className="text-[15px] font-semibold text-tim">✨ Trợ lý AI điền phiếu</h2>
         <CacBuoc hienTai={buoc} xong={buoc === 3 && conXem.length === 0} />
       </div>
 
       <div className="space-y-3 px-4 py-4">
-        {!ketQua && !coChu && !dangNghe && (
-          <p className="text-ef-phu">
-            Nói trong lúc khám hoặc gõ tắt một đoạn. AI điền nháp phiếu khám, chỉ định và đơn thuốc, bác sĩ duyệt rồi bấm Lưu.
-          </p>
-        )}
-
         <MicButton
           giaoDien={giaoDienMic}
           onStart={() => {
             setError(null);
-            setDangNghe(true);
             onBatDau("noi", false);
           }}
-          onStop={() => setDangNghe(false)}
           onText={(chunk) => setText((current) => (current ? `${current} ${chunk}` : chunk))}
         />
 
@@ -248,10 +234,6 @@ export function TroLyAi({ ketQua, onDien, onBatDau, onHoanTac, onGoTo, onOpenTab
             </ul>
           </details>
 
-          {ketQua.boQua.length > 0 && (
-            <p className="text-xs text-ef-phu">Giữ nguyên nội dung bác sĩ đã nhập: {ketQua.boQua.join(", ")}.</p>
-          )}
-
           <div className="grid grid-cols-2 gap-2">
             <button type="button" className={NUT_PHU} onClick={() => onOpenTab("chi_dinh")}>
               {soChiDinh} chỉ định
@@ -268,10 +250,6 @@ export function TroLyAi({ ketQua, onDien, onBatDau, onHoanTac, onGoTo, onOpenTab
           )}
         </div>
       )}
-
-      <p className="border-t border-ef-vien/70 px-4 py-3 text-[11px] leading-relaxed text-ef-phu">
-        Mã ICD10, mã dịch vụ và mã thuốc do code khớp danh mục gán, không do AI tự nghĩ ra. Gợi ý ICD10 chỉ là điểm khớp từ khóa.
-      </p>
     </aside>
   );
 }

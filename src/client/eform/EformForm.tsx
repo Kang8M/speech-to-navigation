@@ -104,8 +104,8 @@ function DanhGiaChung() {
     <Section title="1. Đánh giá chung">
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <DateField id="thoi_gian_kham" label="Thời gian khám" type="datetime-local" />
-        <ReadonlyItem label="Bác sĩ khám (tự động)" value={ca.bac_si_kham} />
-        <ReadonlyItem label="Phòng khám (tự động)" value={ca.phong_kham} />
+        <ReadonlyItem label="Bác sĩ khám" value={ca.bac_si_kham} />
+        <ReadonlyItem label="Phòng khám" value={ca.phong_kham} />
         <RadioField id="noi_gioi_thieu" label="Nơi giới thiệu" options={["Cơ quan y tế", "Tự đến"]} />
       </div>
 
@@ -260,7 +260,7 @@ function ThongTinKhac({ noiSoiEnabled }: { noiSoiEnabled: boolean }) {
   return (
     <Section title="3. Thông tin khác">
       <div className="grid gap-4 md:grid-cols-2">
-        <ReadonlyItem label="Bác sĩ chính (tự động)" value={data.ca.bac_si_chinh} />
+        <ReadonlyItem label="Bác sĩ chính" value={data.ca.bac_si_chinh} />
         <div>
           <div className="mb-1 text-[13px] font-semibold text-ef-chu">Bác sĩ được ủy quyền</div>
           <div className="flex items-center justify-between gap-2 rounded-md bg-ef-nen px-3 py-1.5">

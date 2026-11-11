@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { MO_PHONG, useEform } from "@/client/eform/EformContext";
-import { BTN_OUTLINE, SourceBadge } from "@/client/eform/fields";
+import { BTN_OUTLINE } from "@/client/eform/fields";
 import type { SinhHieu } from "@/shared/eform/types";
 
 interface Props {
@@ -84,7 +84,6 @@ export function EformHeader({ lastEdit, expanded, onToggleExpand }: Props) {
         </div>
 
         <div className="ml-auto flex flex-wrap items-center gap-2 text-[13px]">
-          <span className="rounded-md bg-accent-2/20 px-2 py-0.5 text-xs font-semibold text-ef-chu">Dữ liệu giả, mô phỏng</span>
           <span className="text-ef-phu">{ca.co_so}</span>
           <span className="font-medium text-ef-chu">{ca.dang_nhap}</span>
           <button type="button" onClick={() => notify(MO_PHONG)} className={BTN_OUTLINE}>
@@ -108,10 +107,7 @@ export function EformHeader({ lastEdit, expanded, onToggleExpand }: Props) {
         <details className="relative">
           <summary className="cursor-pointer text-ef-xanh hover:underline">Đánh giá ban đầu</summary>
           <div className="absolute left-0 top-full z-10 mt-1.5 w-[36rem] max-w-[85vw] rounded-lg border border-ef-vien bg-white p-3 text-xs shadow-lg">
-            <div className="mb-1.5 flex items-center gap-2">
-              <span className="font-semibold text-ef-chu">Đánh giá ban đầu người bệnh ngoại trú thông thường</span>
-              <SourceBadge nguon="cu" />
-            </div>
+            <div className="mb-1.5 font-semibold text-ef-chu">Đánh giá ban đầu người bệnh ngoại trú thông thường</div>
             <dl className="grid max-h-60 gap-x-4 gap-y-1 overflow-y-auto sm:grid-cols-2">
               {ca.danh_gia_ban_dau.map((item) => (
                 <div key={item.nhan} className="flex gap-1">

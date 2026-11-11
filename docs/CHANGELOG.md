@@ -4,6 +4,21 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-11
 
+### Bỏ các thông báo và ghi chú của prototype trên giao diện
+- **Loại:** Giao diện
+- **Thay đổi:**
+  - Bỏ dải vàng "Prototype – chỉ dùng dữ liệu giả…" dưới header (xóa `src/client/chung/Banner.tsx`), chip "Dữ liệu giả, mô phỏng" ở header bệnh nhân, chữ "(DỮ LIỆU GIẢ)" ở tiêu đề Báo cáo y tế, "(mô phỏng màn Medication ordering)" ở tab Đơn thuốc. Bỏ "– Prototype" ở tên trang và thanh trên cùng; link "Mô phỏng eForm ngoại trú" đổi thành "eForm ngoại trú".
+  - Không hiện nhãn **Dữ liệu cũ** nữa (`SourceBadge` trả về rỗng với nguồn `cu`, bỏ khỏi chú giải, Đánh giá ban đầu, Thông tin khai thác). Ô dữ liệu cũ vẫn nền xám nhạt; nguồn `cu` vẫn dùng để tính "Đã sửa".
+  - Bỏ "(tự động)" ở nhãn Bác sĩ khám, Phòng khám, Bác sĩ chính.
+  - Cột Trợ lý AI: bỏ câu hướng dẫn đầu cột, chip "Chế độ AI" (trùng với thanh trên cùng), dòng "Giữ nguyên nội dung bác sĩ đã nhập…", dòng cuối "Mã ICD10… không do AI tự nghĩ ra". Bỏ dòng "Nhận dạng trên máy (Zipformer)…" dưới nút micro.
+  - Bỏ dòng giải thích ở Gợi ý ICD10, Gợi ý mẫu câu, Gợi ý theo chẩn đoán ("Mô phỏng bằng bộ mẫu giả…"), AI tóm tắt ("Mô phỏng bằng rule · Gộp…", "Bác sĩ đọc và sửa trước khi chèn…").
+  - Thông báo ngắn lại: Lưu chỉ còn "Đã lưu." (lỗi ghi số đo vẫn báo); bỏ đuôi "Bác sĩ duyệt/kiểm tra lại trước khi Lưu"; In ngay không báo trước nữa; bỏ tiền tố "Mô phỏng:" ở các nút chưa nối hệ thống.
+  - Giữ lại: cảnh báo chỗ `[ ]` chưa chọn, cảnh báo dị ứng, câu khi chưa có dữ liệu, ghi chú "Chỉ hoạt động khi trạng thái là Chờ KQ CLS", báo thiếu model giọng nói, dấu "DỮ LIỆU GIẢ – BẢN MÔ PHỎNG" trên bản in.
+- **Lý do:** Chủ dự án muốn giao diện tối giản, bỏ các thông báo, ghi chú kiểu "prototype chỉ dùng dữ liệu giả", "dữ liệu cũ", "tự động". Các giới hạn vẫn ghi trong README.
+- **File:** `src/app/layout.tsx`, `src/app/page.tsx`, `src/client/chung/Banner.tsx` (xóa), `src/client/chung/Header.tsx`, `src/client/chung/MicButton.tsx`, `src/client/eform/EformHeader.tsx`, `src/client/eform/EformScreen.tsx`, `src/client/eform/EformContext.tsx`, `src/client/eform/EformForm.tsx`, `src/client/eform/fields.tsx`, `src/client/eform/TroLyAi.tsx`, `src/client/eform/GoiYTheoChanDoan.tsx`, `src/client/eform/GoiYIcdPanel.tsx`, `src/client/eform/MauCauPanel.tsx`, `src/client/eform/LichSuBlock.tsx`, `src/client/eform/DonThuocTab.tsx`, `src/client/eform/ChiDinhTab.tsx`, `src/client/eform/BaoCaoDialog.tsx`, `README.md`, `docs/cau-truc-du-an.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** `npx tsc --noEmit`, `npm run lint` sạch. Playwright mở `/`, nạp câu mẫu kiểu gõ tắt rồi Điền vào phiếu (LLM_PROVIDER đang là gemini): cột AI hiện đủ số trường, chỗ cần xem lại, nút chỉ định/thuốc; quét chữ trên trang không còn "dữ liệu giả", "dữ liệu cũ", "tự động", "Lưu ý" (chỉ còn tên cơ sở giả "Cơ sở mô phỏng" trong dữ liệu ca).
+- **Ảnh hưởng:** Người thử không còn được nhắc trên màn hình rằng đây là dữ liệu giả; cần dặn miệng khi cho bác sĩ thử. Bác sĩ không còn thấy câu báo khi AI giữ nguyên ô đã gõ.
+
 ### Bỏ qua `.claude/settings.local.json` khỏi git
 - **Loại:** Cấu hình
 - **Thay đổi:** `.gitignore` thêm `/.claude/settings.local.json`. Đây là file cấu hình Claude Code riêng của từng người, không commit. Chủ dự án dùng file này để chặn (`permissions.deny`) 3 connector claude.ai không liên quan đến dự án là Vercel, Canva, Supabase.

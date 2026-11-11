@@ -293,7 +293,6 @@ function ZipformerMic({ onStart, onText, onStop, giaoDien = MAC_DINH }: Props) {
         {label}
       </button>
       {interim && <p className="mt-1 text-sm text-muted italic">{interim}</p>}
-      <p className="mt-1 text-xs text-muted">Nhận dạng trên máy (Zipformer), âm thanh không gửi ra ngoài. Ngắt nghỉ thì câu được đưa vào ô.</p>
       {error && (
         <p role="alert" className="mt-1 text-sm text-warn-text">
           {error}

@@ -148,9 +148,10 @@ Trang chủ `/` mô phỏng màn **Phiếu khám ngoại trú của EMR** với 
 - **Header ghim trên cùng** (từ khổ màn rộng): tên bệnh nhân, giới, PID, lượt khám, nhãn dị ứng đỏ (bấm xem chi tiết), Menu. Dòng dưới là **sinh hiệu chỉ đọc** từ phiếu điều dưỡng (chuyển từ mục Đánh giá chung lên đây để luôn thấy khi cuộn), "Đánh giá ban đầu", lần sửa cuối, Xem LSKB, Mở rộng.
 - Mỗi mục là một thẻ trắng trên nền xám nhạt; lựa chọn Có/Không dạng thẻ bấm; bảng chỉ kẻ ngang, có nút Copy.
 - **Thanh dưới đáy 2 tầng như EMR**, ghim ở mọi khổ màn: tầng trên là dải 7 trạng thái lượt khám (khổ điện thoại thì vuốt ngang); tầng dưới là Quay lại, Báo cáo y tế, In ngay, nút **Lưu** dài kèm số chỗ còn cần xem lại, nút lên đầu trang.
-  - **In ngay** mở hộp thoại in của trình duyệt với bản in A4 (`src/client/eform/BanIn.tsx`): hành chính, sinh hiệu, các trường phiếu khám đã có chữ, chẩn đoán (mã và mô tả), bảng chỉ định, bảng đơn thuốc, chỗ ký bác sĩ, có dấu "DỮ LIỆU GIẢ – BẢN MÔ PHỎNG". Còn chỗ AI chưa chắc thì báo trước, bản in giữ nguyên như đang hiện.
+  - **In ngay** mở hộp thoại in của trình duyệt với bản in A4 (`src/client/eform/BanIn.tsx`): hành chính, sinh hiệu, các trường phiếu khám đã có chữ, chẩn đoán (mã và mô tả), bảng chỉ định, bảng đơn thuốc, chỗ ký bác sĩ, có dấu "DỮ LIỆU GIẢ – BẢN MÔ PHỎNG". Bản in giữ nguyên như đang hiện, kể cả chỗ AI chưa chắc.
   - **Trạng thái lượt khám**: "Chờ KQ CLS" mở ô Chuyển nội soi. "Hoàn thành khám" khóa phiếu, chỉ định, đơn thuốc và cột Trợ lý AI (chỉ đọc), chọn lại "Đang khám" để sửa; còn thay đổi chưa Lưu thì không cho chọn. Các trạng thái khác chỉ đổi lựa chọn, chưa có tác dụng gì.
-- Chữ Be Vietnam Pro 14px. Thanh header của prototype (link sang Kết quả thử nghiệm, chế độ AI) nằm trên cùng và cuộn đi khi kéo xuống; header bệnh nhân vẫn ghim. Nút "Quay lại" chỉ hiện thông báo mô phỏng.
+- Chữ Be Vietnam Pro 14px. Thanh header của prototype (link sang Kết quả thử nghiệm, chế độ AI) nằm trên cùng và cuộn đi khi kéo xuống; header bệnh nhân vẫn ghim. Nút "Quay lại" chỉ hiện thông báo "Chưa kết nối hệ thống thật".
+- **Giao diện tối giản, không hiện chú thích của prototype**: không có dải cảnh báo dữ liệu giả, không có nhãn "Dữ liệu cũ", "(tự động)", "(mô phỏng …)", không có các dòng giải thích cách AI hoạt động dưới từng điểm AI. Các giới hạn đó ghi trong README này. Dấu "DỮ LIỆU GIẢ" chỉ còn trên bản in, để tờ giấy in ra không bị nhầm là phiếu thật.
 
 Chỗ khác với EMR là **cột "✨ Trợ lý AI điền phiếu" bên phải**:
 
@@ -163,7 +164,7 @@ Chỗ khác với EMR là **cột "✨ Trợ lý AI điền phiếu" bên phải
 | Quy tắc | Chi tiết |
 |---|---|
 | Màu | Tím = AI điền (ô có vạch tím bên trái). Vàng = AI chưa chắc, cần xem lại (vạch vàng; bấm "✓ Đúng" ngay cạnh nhãn trường hoặc trong cột AI, hoặc sửa để bỏ đánh dấu). |
-| Không ghi đè | Ô bác sĩ đã gõ hoặc đã sửa thì AI không ghi đè, cột AI báo "giữ nguyên". |
+| Không ghi đè | Ô bác sĩ đã gõ hoặc đã sửa thì AI không ghi đè (cột AI không báo riêng). |
 | Mã ICD10 | Không lấy từ LLM. Code chấm điểm từ khóa trên câu chẩn đoán để gán mã, luôn đánh dấu vàng. |
 | Mã dịch vụ, thuốc | Do `src/shared/match.ts` khớp danh mục. Khớp chưa chắc thì dòng vàng, có ô chọn lại trong danh sách gần đúng. |
 | Nói nhiều lần | Lần điền sau chỉ thêm dòng chỉ định/thuốc chưa có (trùng mã thì bỏ qua). |
@@ -187,7 +188,7 @@ Các điểm AI cũ vẫn nằm ngay tại ô, **đều là mock bằng rule, kh
 | ✨ Gợi ý ICD10 (top 3) | Chấm điểm từ khóa trong Bệnh sử và Khám lâm sàng, có xét phủ định ("không sốt"). Đoạn tóm tắt lịch sử cũ và chỗ `[ ]` chưa chọn không được tính. | **Độ tin cậy chỉ là điểm khớp từ khóa, không phải xác suất bệnh** |
 | ✨ Gợi ý mẫu câu | Chọn mẫu Tai/Mũi/Vòm/Họng theo Lý do đến khám. Kết quả khám để trống cho bác sĩ chọn, AI không tự điền. | Chỉ có 7 nhóm lý do khám mẫu |
 
-Nhãn trên giao diện: **Dữ liệu cũ**, **✨ AI điền**, **⚠ AI chưa chắc, cần xem lại**, **Đã sửa**, **(Hiển thị trên báo cáo y tế)**. Nút "Báo cáo y tế" cho xem trước báo cáo: khối hành chính (họ tên, giới, PID, thời gian khám, bác sĩ, dị ứng), các trường có nhãn BCYT, chẩn đoán chính (chẩn đoán ra viện, chưa có thì chẩn đoán ban đầu) và chẩn đoán kèm theo. Ảnh chụp EMR chỉ thấy nhãn BCYT ở chẩn đoán kèm theo; việc đưa chẩn đoán chính và hành chính vào là giả định, cần xác nhận với bác sĩ.
+Nhãn trên giao diện: **✨ AI điền**, **⚠ AI chưa chắc, cần xem lại**, **Đã sửa**, **(Hiển thị trên báo cáo y tế)**. Nút "Báo cáo y tế" cho xem trước báo cáo: khối hành chính (họ tên, giới, PID, thời gian khám, bác sĩ, dị ứng), các trường có nhãn BCYT, chẩn đoán chính (chẩn đoán ra viện, chưa có thì chẩn đoán ban đầu) và chẩn đoán kèm theo. Ảnh chụp EMR chỉ thấy nhãn BCYT ở chẩn đoán kèm theo; việc đưa chẩn đoán chính và hành chính vào là giả định, cần xác nhận với bác sĩ.
 
 Các nút lấy dữ liệu từ hệ thống khác, Menu, Xem LSKB và Quay lại chỉ hiện thông báo mô phỏng. Nút Lưu không ghi nội dung phiếu xuống đĩa (chỉ ghi số đo lượt thử, xem mục Đo lường), tải lại trang là về dữ liệu ban đầu.
 
@@ -211,7 +212,7 @@ data/sessions/  kết quả các lượt thử (tự sinh, không đưa lên git
 data/eform/     ca giả, danh mục và quy tắc của trang eForm
 data/tham-khao/ danh mục thật cào từ nguồn công khai, chỉ để tra cứu (ứng dụng chưa nạp)
 src/app/        trang và API (định tuyến Next, mỏng)
-src/client/     giao diện chạy trên trình duyệt: chung/ (Header, Banner, MicButton), eform/ (trang chủ), ket-qua/, api.ts (gọi API)
+src/client/     giao diện chạy trên trình duyệt: chung/ (Header, MicButton), eform/ (trang chủ), ket-qua/, api.ts (gọi API)
 src/server/ai/  AI thật: pipeline, prompt, schema, llm/ (mock, rules, anthropic, openai, gemini), asr.ts (Zipformer)
 src/server/du-lieu/ nạp config và data, lưu lượt thử
 src/shared/     dùng chung hai phía: kiểu, khớp danh mục, chuẩn hóa, tính tổng, đo lường, api.ts (hợp đồng FE–BE)

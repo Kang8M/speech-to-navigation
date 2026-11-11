@@ -3,7 +3,7 @@
 import { createContext, useContext } from "react";
 import type { EformData, Nguon, Truong } from "@/shared/eform/types";
 
-export const MO_PHONG = "Mô phỏng: chưa kết nối hệ thống thật.";
+export const MO_PHONG = "Chưa kết nối hệ thống thật.";
 
 export interface EformApi {
   data: EformData;

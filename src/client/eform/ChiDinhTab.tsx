@@ -134,7 +134,7 @@ export function ChiDinhTab({ rows, onChange }: { rows: DongChiDinh[]; onChange: 
           <button type="button" className={`${BTN_OUTLINE} ml-auto`} onClick={() => onChange([])} disabled={rows.length === 0}>
             Hủy toàn bộ dịch vụ
           </button>
-          <button type="button" className={BTN_OUTLINE} onClick={() => notify("Mô phỏng: đã lưu nháp chỉ định trong trình duyệt.")}>
+          <button type="button" className={BTN_OUTLINE} onClick={() => notify("Đã lưu nháp chỉ định.")}>
             Lưu nháp
           </button>
         </div>

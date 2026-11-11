@@ -34,7 +34,6 @@ const BADGE = "inline-flex items-center gap-1 whitespace-nowrap rounded-full px-
 export function SourceBadge({ nguon }: { nguon: Nguon | null }) {
   if (nguon === "ai") return <span className={`${BADGE} bg-tim-nhat text-tim ring-1 ring-tim-vien`}>✨ AI điền</span>;
   if (nguon === "xem") return <span className={`${BADGE} bg-xem-nhat text-xem ring-1 ring-xem/40`}>⚠ AI chưa chắc, cần xem lại</span>;
-  if (nguon === "cu") return <span className={`${BADGE} bg-ef-nen font-medium text-ef-phu ring-1 ring-ef-vien`}>Dữ liệu cũ</span>;
   if (nguon === "sua") return <span className={`${BADGE} bg-ef-dam/10 text-ef-dam`}>Đã sửa</span>;
   return null;
 }

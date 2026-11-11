@@ -60,7 +60,7 @@ export function GoiYTheoChanDoan<T extends Dong>({ rows, lay, moTa, canhBao, onA
   const them = () => {
     onAdd(daChon.map((row) => ({ ...row })));
     setTich({});
-    notify(`Đã thêm ${daChon.length} mục từ gợi ý theo chẩn đoán. Bác sĩ kiểm tra lại trước khi Lưu.`);
+    notify(`Đã thêm ${daChon.length} mục từ gợi ý theo chẩn đoán.`);
   };
 
   const tenIcd = (ma: string) => data.icd10.find((item) => item.ma === ma)?.ten ?? "";
@@ -69,7 +69,6 @@ export function GoiYTheoChanDoan<T extends Dong>({ rows, lay, moTa, canhBao, onA
     <div className="rounded-lg border border-tim-vien bg-tim-nhat p-3">
       <div className="flex flex-wrap items-center gap-2">
         <span className="font-bold text-tim">✨ Gợi ý theo chẩn đoán</span>
-        <span className="text-xs text-ef-phu">Mô phỏng bằng bộ mẫu giả · bác sĩ tích chọn rồi bấm Thêm</span>
         {nhom.length > 0 && (
           <button type="button" className={`${BTN_OUTLINE} ml-auto`} onClick={() => setAn((v) => !v)}>
             {an ? "Hiện" : "Ẩn"}

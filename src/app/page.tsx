@@ -5,7 +5,7 @@ import { loadEformData } from "@/server/du-lieu/eform";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Mô phỏng eForm ngoại trú – Prototype",
+  title: "eForm ngoại trú",
   description: "Mô phỏng phiếu khám ngoại trú có điểm AI hỗ trợ. Chỉ dùng dữ liệu giả.",
 };
 

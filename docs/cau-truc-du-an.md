@@ -18,7 +18,7 @@ src/
     api.ts                gọi /api/extract, /api/sessions (dùng kiểu trong shared/api.ts)
     chung/                component dùng được ở mọi trang
       MicButton.tsx       nút 🎤: Web Speech hoặc Zipformer (gọi /api/asr)
-      Header.tsx, Banner.tsx  thanh trên cùng (link eForm, Kết quả, chế độ AI) và dải cảnh báo dữ liệu giả
+      Header.tsx          thanh trên cùng (link eForm, Kết quả, chế độ AI)
     eform/                trang / (màn giống EMR + cột Trợ lý AI; Lưu ghi số đo lượt thử)
     ket-qua/              trang /ket-qua
 

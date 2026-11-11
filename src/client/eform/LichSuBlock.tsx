@@ -41,7 +41,6 @@ export function LichSuBlock({ targetId, targetLabel, rows, columnLabel = "Nội 
     <div className="mt-3">
       <div className="mb-1 flex flex-wrap items-center gap-2">
         <span className="text-xs font-semibold text-ef-phu">Thông tin khai thác {targetLabel.toLowerCase()}</span>
-        <SourceBadge nguon="cu" />
         <button type="button" className={BTN_AI} onClick={summarize}>
           ✨ AI tóm tắt
         </button>
@@ -49,12 +48,8 @@ export function LichSuBlock({ targetId, targetLabel, rows, columnLabel = "Nội 
 
       {ketQua && (
         <div className="mb-2 rounded-lg border border-tim-vien bg-tim-nhat p-3">
-          <div className="mb-1 flex flex-wrap items-center gap-2">
+          <div className="mb-1">
             <SourceBadge nguon="ai" />
-            <span className="text-xs text-ef-phu">
-              Mô phỏng bằng rule · Gộp {ketQua.soLanKham} lần khám thành {ketQua.soY} ý
-              {ketQua.boBot > 0 && ` · Lược ${ketQua.boBot} ý cũ hơn, xem bảng bên dưới`}
-            </span>
           </div>
           <textarea
             aria-label={`Bản nháp tóm tắt ${targetLabel.toLowerCase()}`}
@@ -63,7 +58,6 @@ export function LichSuBlock({ targetId, targetLabel, rows, columnLabel = "Nội 
             onChange={(e) => setDraft(e.target.value)}
             className={inputClass(null)}
           />
-          <p className="mt-1 text-xs text-ef-phu">Bác sĩ đọc và sửa trước khi chèn. Nội dung chỉ lấy từ các dòng lịch sử bên dưới.</p>
           <div className="mt-1.5 flex gap-1.5">
             <button type="button" className={BTN_AI} onClick={insert}>
               Chèn vào ô {targetLabel}

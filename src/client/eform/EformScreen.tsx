@@ -6,7 +6,7 @@ import { BanIn } from "@/client/eform/BanIn";
 import { BaoCaoDialog } from "@/client/eform/BaoCaoDialog";
 import { ChiDinhTab } from "@/client/eform/ChiDinhTab";
 import { DonThuocTab } from "@/client/eform/DonThuocTab";
-import { EformContext, type EformApi } from "@/client/eform/EformContext";
+import { EformContext, MO_PHONG, type EformApi } from "@/client/eform/EformContext";
 import { EformForm } from "@/client/eform/EformForm";
 import { EformHeader } from "@/client/eform/EformHeader";
 import { BTN_CHINH, BTN_OUTLINE, BcytTag, SourceBadge, anchorId } from "@/client/eform/fields";
@@ -152,7 +152,7 @@ export function EformScreen({ data }: { data: EformData }) {
     setDongAi({ tong: dongAi.tong + them.length, khop: dongAi.khop + them.filter((row) => row.nguon === "ai").length });
     setLuot((prev) => ({ ...prev, provider: result.provider }));
     setTab("phieu");
-    notify(`AI đã điền ${kq.daDien.length} trường, ${kq.chiDinh.length} chỉ định, ${kq.donThuoc.length} thuốc. Bác sĩ duyệt trước khi Lưu.`);
+    notify(`AI đã điền ${kq.daDien.length} trường, ${kq.chiDinh.length} chỉ định, ${kq.donThuoc.length} thuốc.`);
   };
 
   const hoanTac = () => {
@@ -207,7 +207,7 @@ export function EformScreen({ data }: { data: EformData }) {
   /** Ghi số đo lượt thử vào data/sessions/ (chỉ số đếm), hiện ở trang Kết quả thử nghiệm. Trả câu báo thêm */
   const ghiLuot = async (): Promise<string> => {
     if (!ketQua) return "";
-    if (luot.daGhi) return " Lượt thử đã ghi trước đó, tải lại trang để thử lượt mới.";
+    if (luot.daGhi) return "";
     try {
       await luuLuotThu({
         kieu_nhap: luot.kieuNhap,
@@ -221,7 +221,7 @@ export function EformScreen({ data }: { data: EformData }) {
         so_muc_khong_khop: dongAi.tong - dongAi.khop,
       });
       setLuot((prev) => ({ ...prev, daGhi: true }));
-      return " Đã ghi số đo lượt thử vào Kết quả thử nghiệm.";
+      return "";
     } catch {
       return " Chưa ghi được số đo lượt thử, hãy bấm Lưu lại.";
     }
@@ -231,17 +231,7 @@ export function EformScreen({ data }: { data: EformData }) {
     setLastEdit({ nguoi: data.ca.dang_nhap, luc: nowText() });
     setBanLuu({ fields, chiDinh, donThuoc });
     const ghiChu = await ghiLuot();
-    notify(
-      "Đã lưu (mô phỏng): nội dung phiếu chỉ giữ trên trang này, tải lại trang là mất." +
-        (conXem > 0 ? ` Lưu ý: còn ${conXem} chỗ AI chưa chắc, bác sĩ nên xem lại.` : "") +
-        ghiChu,
-    );
-  };
-
-  const inNgay = () => {
-    if (conXem > 0) notify(`Lưu ý: còn ${conXem} chỗ AI chưa chắc, bản in giữ nguyên như đang hiện.`);
-    // Đợi thông báo hiện ra rồi mới mở hộp thoại in của trình duyệt
-    setTimeout(() => window.print(), 0);
+    notify("Đã lưu." + ghiChu);
   };
 
   const soDong = { chi_dinh: chiDinh.length, don_thuoc: donThuoc.length, phieu: 0 };
@@ -294,7 +284,6 @@ export function EformScreen({ data }: { data: EformData }) {
               {tab === "phieu" && (
                 <div className="flex flex-wrap items-center gap-1.5 pb-2.5 text-xs text-ef-phu">
                   <span>Chú giải:</span>
-                  <SourceBadge nguon="cu" />
                   <SourceBadge nguon="ai" />
                   <SourceBadge nguon="xem" />
                   <SourceBadge nguon="sua" />
@@ -369,14 +358,14 @@ export function EformScreen({ data }: { data: EformData }) {
               type="button"
               aria-label="Quay lại"
               className={`${BTN_OUTLINE} whitespace-nowrap`}
-              onClick={() => notify("Mô phỏng: trong EMR nút này quay về danh sách bệnh nhân.")}
+              onClick={() => notify(MO_PHONG)}
             >
               ←<span className="hidden sm:inline"> Quay lại</span>
             </button>
             <button type="button" className={`${BTN_OUTLINE} whitespace-nowrap`} onClick={() => setShowReport(true)}>
               Báo cáo y tế
             </button>
-            <button type="button" className={`${BTN_OUTLINE} whitespace-nowrap`} onClick={inNgay} title="In phiếu khám, chỉ định và đơn thuốc (bản mô phỏng có dấu DỮ LIỆU GIẢ)">
+            <button type="button" className={`${BTN_OUTLINE} whitespace-nowrap`} onClick={() => window.print()} title="In phiếu khám, chỉ định và đơn thuốc">
               In ngay
             </button>
             <button type="button" className={`${BTN_CHINH} ml-auto inline-flex flex-1 items-center justify-center gap-2 whitespace-nowrap sm:max-w-sm`} onClick={save}>

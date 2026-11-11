@@ -40,14 +40,32 @@ const ERROR_MESSAGES: Record<string, string> = {
   network: "Không kết nối được dịch vụ nhận giọng nói. Hãy kiểm tra internet hoặc gõ tay.",
 };
 
+/** Kiểu nút cho từng trang; không truyền thì dùng kiểu của màn hình làm việc */
+export interface GiaoDienMic {
+  /** Lớp chung của nút */
+  nut: string;
+  /** Thêm vào khi đang nghe */
+  dangNghe: string;
+  /** Thêm vào khi chưa nghe */
+  cho: string;
+  /** Nhãn khi chưa nghe */
+  nhan: string;
+}
+
 interface Props {
   onStart: () => void;
   onText: (text: string) => void;
+  /** Gọi khi dừng nghe (bác sĩ bấm dừng, hết giờ hoặc lỗi) */
+  onStop?: () => void;
+  giaoDien?: GiaoDienMic;
 }
 
-const BUTTON = "w-full rounded border py-2 font-medium disabled:cursor-wait disabled:opacity-70";
-const BUTTON_ON = "border-warn bg-warn/10 text-warn-text";
-const BUTTON_OFF = "border-primary text-primary hover:bg-soft";
+const MAC_DINH: GiaoDienMic = {
+  nut: "w-full rounded border py-2 font-medium disabled:cursor-wait disabled:opacity-70",
+  dangNghe: "border-warn bg-warn/10 text-warn-text",
+  cho: "border-primary text-primary hover:bg-soft",
+  nhan: "🎤 Nói",
+};
 
 /** Hỏi server chế độ nhận dạng: zipformer (trên máy) khi ASR_PROVIDER=zipformer và đã có model, còn lại dùng Web Speech */
 export function MicButton(props: Props) {
@@ -126,7 +144,7 @@ type KetQuaPhien = Partial<AsrKetQua & ApiLoi>;
  * Server trả chữ tạm (câu đang nói dở, hiện in nghiêng) và câu đã chốt khi bác sĩ ngắt nghỉ (đưa vào ô nhập).
  * Âm thanh không ra khỏi máy chạy prototype và không được lưu.
  */
-function ZipformerMic({ onStart, onText }: Props) {
+function ZipformerMic({ onStart, onText, onStop, giaoDien = MAC_DINH }: Props) {
   const [state, setState] = useState<"idle" | "starting" | "recording" | "stopping">("idle");
   const [seconds, setSeconds] = useState(0);
   const [interim, setInterim] = useState("");
@@ -198,6 +216,7 @@ function ZipformerMic({ onStart, onText }: Props) {
       setInterim("");
       setState("idle");
       setSeconds(0);
+      onStop?.();
     }
   }
 
@@ -257,7 +276,7 @@ function ZipformerMic({ onStart, onText }: Props) {
 
   const clock = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
   const label = {
-    idle: "🎤 Nói",
+    idle: giaoDien.nhan,
     starting: "Đang mở micro…",
     recording: `⏹ Dừng nghe · ${clock}`,
     stopping: "Đang chốt câu cuối…",
@@ -269,7 +288,7 @@ function ZipformerMic({ onStart, onText }: Props) {
         onClick={state === "recording" ? () => void stop() : () => void start()}
         disabled={state === "starting" || state === "stopping"}
         aria-pressed={state === "recording"}
-        className={`${BUTTON} ${state === "recording" ? BUTTON_ON : BUTTON_OFF}`}
+        className={`${giaoDien.nut} ${state === "recording" ? giaoDien.dangNghe : giaoDien.cho}`}
       >
         {label}
       </button>
@@ -284,7 +303,7 @@ function ZipformerMic({ onStart, onText }: Props) {
   );
 }
 
-function WebSpeechMic({ onStart, onText }: Props) {
+function WebSpeechMic({ onStart, onText, onStop, giaoDien = MAC_DINH }: Props) {
   const supported = useSyncExternalStore(subscribe, () => getRecognition() !== null, () => false);
   const [listening, setListening] = useState(false);
   const [interim, setInterim] = useState("");
@@ -332,6 +351,7 @@ function WebSpeechMic({ onStart, onText }: Props) {
       } else {
         setListening(false);
         setInterim("");
+        onStop?.();
       }
     };
     recognitionRef.current = recognition;
@@ -353,9 +373,9 @@ function WebSpeechMic({ onStart, onText }: Props) {
         type="button"
         onClick={listening ? stop : start}
         aria-pressed={listening}
-        className={`${BUTTON} ${listening ? BUTTON_ON : BUTTON_OFF}`}
+        className={`${giaoDien.nut} ${listening ? giaoDien.dangNghe : giaoDien.cho}`}
       >
-        {listening ? "⏹ Dừng nghe" : "🎤 Nói"}
+        {listening ? "⏹ Dừng nghe" : giaoDien.nhan}
       </button>
       {interim && <p className="mt-1 text-sm text-muted italic">{interim}</p>}
       {error && (

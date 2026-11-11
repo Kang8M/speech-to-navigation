@@ -4,11 +4,19 @@ import { useState } from "react";
 import { useEform } from "@/client/eform/EformContext";
 import { BTN_AI, FieldLabel, anchorId, inputClass } from "@/client/eform/fields";
 import { GoiYIcdPanel } from "@/client/eform/GoiYIcdPanel";
+import type { Icd10 } from "@/shared/eform/types";
 
 const SEPARATOR = ",";
 
 export function splitCodes(value: string): string[] {
   return value ? value.split(SEPARATOR) : [];
+}
+
+/** "Mã – tên" của các mã ICD10 trong ô, dùng cho báo cáo y tế và bản in */
+export function nhanIcd(value: string, icd10: Icd10[]): string {
+  return splitCodes(value)
+    .map((code) => `${code} – ${icd10.find((item) => item.ma === code)?.ten ?? ""}`)
+    .join("; ");
 }
 
 function GoiYButton({ open, onToggle }: { open: boolean; onToggle: () => void }) {
@@ -26,10 +34,10 @@ export function IcdField({ id, moTaId, label }: { id: string; moTaId: string; la
   const field = get(id);
   const moTa = get(moTaId);
   return (
-    <div className="space-y-2">
-      <div id={anchorId(id)} className="scroll-mt-40">
+    <div className="space-y-3">
+      <div id={anchorId(id)} className="scroll-mt-44">
         <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
-          <FieldLabel label={`${label} (ICD10)`} nguon={field.nguon} />
+          <FieldLabel id={id} label={`${label} (ICD10)`} nguon={field.nguon} />
           <GoiYButton open={open} onToggle={() => setOpen((value) => !value)} />
         </div>
         <select
@@ -54,9 +62,9 @@ export function IcdField({ id, moTaId, label }: { id: string; moTaId: string; la
           />
         )}
       </div>
-      <div id={anchorId(moTaId)} className="scroll-mt-40">
+      <div id={anchorId(moTaId)} className="scroll-mt-44">
         <div className="mb-1">
-          <FieldLabel label={`Mô tả ${label.toLowerCase()}`} nguon={moTa.nguon} />
+          <FieldLabel id={moTaId} label={`Mô tả ${label.toLowerCase()}`} nguon={moTa.nguon} />
         </div>
         <textarea
           aria-label={`Mô tả ${label.toLowerCase()}`}
@@ -86,9 +94,9 @@ export function IcdMultiField({ id, label, loaiTru }: { id: string; label: strin
   };
 
   return (
-    <div id={anchorId(id)} className="scroll-mt-40">
+    <div id={anchorId(id)} className="scroll-mt-44">
       <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
-        <FieldLabel label={`${label} (ICD10)`} nguon={field.nguon} bcyt />
+        <FieldLabel id={id} label={`${label} (ICD10)`} nguon={field.nguon} bcyt />
         <GoiYButton open={open} onToggle={() => setOpen((value) => !value)} />
       </div>
       {codes.length > 0 && (
@@ -96,10 +104,10 @@ export function IcdMultiField({ id, label, loaiTru }: { id: string; label: strin
           {codes.map((code) => (
             <span
               key={code}
-              className={`flex items-center gap-1 rounded-sm px-2 py-0.5 text-[13px] ${field.nguon === "xem" ? "border border-xem bg-xem-nhat" : field.nguon === "ai" ? "bg-tim-nhat" : "bg-gray-100"}`}
+              className={`flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[13px] ring-1 ${field.nguon === "xem" ? "bg-xem-nhat ring-xem/50" : field.nguon === "ai" ? "bg-tim-nhat ring-tim-vien" : "bg-ef-nen ring-ef-vien"}`}
             >
               {code} – {data.icd10.find((item) => item.ma === code)?.ten}
-              <button type="button" aria-label={`Bỏ ${code}`} onClick={() => remove(code)} className="text-muted hover:text-warn-text">
+              <button type="button" aria-label={`Bỏ ${code}`} onClick={() => remove(code)} className="text-ef-phu hover:text-ef-do">
                 ×
               </button>
             </span>

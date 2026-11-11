@@ -1,8 +1,14 @@
-import { Workspace } from "@/client/workspace/Workspace";
-import { loadAppConfig } from "@/server/du-lieu/config";
+import type { Metadata } from "next";
+import { EformScreen } from "@/client/eform/EformScreen";
+import { loadEformData } from "@/server/du-lieu/eform";
 
 export const dynamic = "force-dynamic";
 
+export const metadata: Metadata = {
+  title: "Mô phỏng eForm ngoại trú – Prototype",
+  description: "Mô phỏng phiếu khám ngoại trú có điểm AI hỗ trợ. Chỉ dùng dữ liệu giả.",
+};
+
 export default function Page() {
-  return <Workspace config={loadAppConfig()} />;
+  return <EformScreen data={loadEformData()} />;
 }

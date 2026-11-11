@@ -27,10 +27,11 @@ npm run tai-model-giong-noi  # tải model Zipformer về models/, cần cho ASR
 
 ## Kiến trúc nhanh
 
-- `config/forms/*.json` sinh ra giao diện, schema gửi LLM và prompt. Thêm trường thì sửa JSON, không hardcode trong component.
+- Chỉ có hai trang: `/` là eForm (mô phỏng phiếu khám EMR + cột Trợ lý AI, `src/client/eform/`), `/ket-qua` là số đo lượt thử (ghi khi bấm Lưu trên eForm). Trang "Màn hình làm việc" cũ đã bỏ ngày 2026-11-11.
+- `config/forms/*.json` sinh ra schema gửi LLM, prompt, mock và eval. Giao diện eForm viết tay: thêm trường thì sửa JSON, rồi nối vào `src/shared/eform/dien-phieu.ts` và `src/client/eform/` nếu cần hiện trên phiếu.
 - Code chia theo nơi chạy, xem `docs/cau-truc-du-an.md`: `src/app` (định tuyến mỏng), `src/client` (FE), `src/server` (BE, có `import "server-only"`), `src/shared` (TS thuần dùng cả hai phía). `src/client` không import `src/server`, gọi qua `/api/*` bằng `src/client/api.ts`; kiểu request/response đặt ở `src/shared/api.ts`. `npm run lint` chặn import sai chiều.
 - AI thật (LLM, ASR) ở `src/server/ai/`: `pipeline.ts` → `llm/{mock,anthropic,openai,gemini,rules}.ts` → `src/shared/match.ts` (khớp danh mục) → `src/shared/validate.ts`.
-- `src/shared/eform/` là rule mock cho trang `/eform` (tóm tắt, gợi ý ICD10, mẫu câu, gợi ý chỉ định và đơn thuốc theo chẩn đoán), chạy trên trình duyệt, không gọi LLM.
+- `src/shared/eform/` là rule mock cho trang eForm (tóm tắt, gợi ý ICD10, mẫu câu, gợi ý chỉ định và đơn thuốc theo chẩn đoán, đếm số đo lượt thử), chạy trên trình duyệt, không gọi LLM.
 - Script ngoài Next import code server phải chạy bằng `tsx --conditions=react-server` (như `npm run eval`), nếu không `server-only` sẽ báo lỗi.
 - Thêm trường mới thì bổ sung `expected` trong `data/cases/ca-*.json` để eval không tính là "Thừa".
 
@@ -41,4 +42,4 @@ npm run tai-model-giong-noi  # tải model Zipformer về models/, cần cho ASR
 
 ## Plugin dùng trong dự án
 
-Khai báo trong `.claude/settings.json`: `typescript-lsp` (cần `npm i -g typescript-language-server typescript`), `playwright`, `security-guidance`, `claude-md-management`, `commit-commands`. Lý do chọn từng cái xem `docs/CHANGELOG.md` mục ngày 2026-11-10.
+Khai báo trong `.claude/settings.json`: `typescript-lsp` (cần `npm i -g typescript-language-server typescript`), `playwright`, `security-guidance`, `claude-md-management`, `commit-commands`, `frontend-design` (skill thiết kế giao diện). Lý do chọn từng cái xem `docs/CHANGELOG.md` mục ngày 2026-11-10 và 2026-11-11.

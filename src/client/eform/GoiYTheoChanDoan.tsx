@@ -66,10 +66,10 @@ export function GoiYTheoChanDoan<T extends Dong>({ rows, lay, moTa, canhBao, onA
   const tenIcd = (ma: string) => data.icd10.find((item) => item.ma === ma)?.ten ?? "";
 
   return (
-    <div className="rounded border border-tim-vien bg-tim-nhat p-2">
+    <div className="rounded-lg border border-tim-vien bg-tim-nhat p-3">
       <div className="flex flex-wrap items-center gap-2">
         <span className="font-bold text-tim">✨ Gợi ý theo chẩn đoán</span>
-        <span className="text-xs text-muted">Mô phỏng bằng bộ mẫu giả · bác sĩ tích chọn rồi bấm Thêm</span>
+        <span className="text-xs text-ef-phu">Mô phỏng bằng bộ mẫu giả · bác sĩ tích chọn rồi bấm Thêm</span>
         {nhom.length > 0 && (
           <button type="button" className={`${BTN_OUTLINE} ml-auto`} onClick={() => setAn((v) => !v)}>
             {an ? "Hiện" : "Ẩn"}
@@ -78,32 +78,32 @@ export function GoiYTheoChanDoan<T extends Dong>({ rows, lay, moTa, canhBao, onA
       </div>
 
       {maIcd.length === 0 && (
-        <p className="mt-1 text-xs text-muted">
+        <p className="mt-1 text-xs text-ef-phu">
           Chưa có mã ICD10 chẩn đoán. Chọn ở tab Phiếu khám hoặc để Trợ lý AI điền, gợi ý sẽ hiện ở đây.
         </p>
       )}
       {maIcd.length > 0 && nhom.length === 0 && (
-        <p className="mt-1 text-xs text-muted">Chưa có bộ mẫu cho {maIcd.join(", ")}.</p>
+        <p className="mt-1 text-xs text-ef-phu">Chưa có bộ mẫu cho {maIcd.join(", ")}.</p>
       )}
 
       {!an && nhom.length > 0 && (
-        <div className="mt-1.5 space-y-2">
+        <div className="mt-2 space-y-2">
           {danhSach.map(({ ma, mau, dong }) => (
-            <div key={mau.id} className="rounded border border-gray-200 bg-white p-2">
+            <div key={mau.id} className="rounded-md border border-ef-vien bg-white p-2.5">
               <div className="mb-1 text-xs">
                 <span className="font-semibold">
                   {ma} – {tenIcd(ma)}
                 </span>
-                <span className="text-muted"> · bộ mẫu “{mau.ten}”</span>
+                <span className="text-ef-phu"> · bộ mẫu “{mau.ten}”</span>
               </div>
-              {dong.length === 0 && <p className="text-xs text-muted">Bộ mẫu không có mục nào ở phần này.</p>}
+              {dong.length === 0 && <p className="text-xs text-ef-phu">Bộ mẫu không có mục nào ở phần này.</p>}
               <ul className="space-y-1">
                 {dong.map(({ id, row, trung, loi, chon }) => (
                   <li key={id}>
                     <label className={`flex items-start gap-2 ${trung ? "opacity-60" : "cursor-pointer"}`}>
                       <input
                         type="checkbox"
-                        className="mt-0.5"
+                        className="mt-0.5 accent-tim"
                         checked={chon}
                         disabled={Boolean(trung)}
                         onChange={(e) => setTich((prev) => ({ ...prev, [id]: e.target.checked }))}
@@ -115,10 +115,10 @@ export function GoiYTheoChanDoan<T extends Dong>({ rows, lay, moTa, canhBao, onA
                             <SourceBadge nguon="xem" />
                           </span>
                         )}
-                        {moTa && moTa(row) && <span className="block text-xs text-muted">{moTa(row)}</span>}
-                        {trung && <span className="block text-xs text-muted">{trung}</span>}
+                        {moTa && moTa(row) && <span className="block text-xs text-ef-phu">{moTa(row)}</span>}
+                        {trung && <span className="block text-xs text-ef-phu">{trung}</span>}
                         {loi && (
-                          <span role="alert" className="block text-xs font-semibold text-[#c9302c]">
+                          <span role="alert" className="block text-xs font-semibold text-ef-do">
                             ⚠ {loi}
                           </span>
                         )}

@@ -131,13 +131,13 @@ export interface EformData {
   tuyChon: TuyChon;
   quyTac: QuyTacAi;
   mauCau: MauCauData;
-  /** Danh mục dịch vụ và thuốc dùng chung với trang chính, để bác sĩ chọn lại khi AI khớp chưa chắc */
+  /** Danh mục dịch vụ và thuốc (data/catalog/), để bác sĩ chọn lại khi AI khớp chưa chắc */
   danhMuc: { dichVu: CatalogItem[]; thuoc: CatalogItem[] };
   canhBao: WarningRules;
   /** Bộ mẫu chỉ định và đơn thuốc theo chẩn đoán, mã đã gán bằng src/shared/match.ts */
   goiY: MauGoiY[];
   /** Nhà cung cấp AI đang dùng (mock, anthropic, openai, gemini) */
   provider: string;
-  /** Câu mẫu của ca giả này (lấy từ data/cases/ca-11-*.json) để demo nhanh */
-  cauMau: { noi: string; goTat: string };
+  /** Câu mẫu của ca giả này (lấy từ data/cases/ca-11-*.json) để demo nhanh; id ghi vào số đo lượt thử */
+  cauMau: { id: string; noi: string; goTat: string };
 }

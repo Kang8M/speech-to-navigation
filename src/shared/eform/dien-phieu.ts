@@ -1,4 +1,4 @@
-// Đổ kết quả AI của trang chính (/api/extract) vào phiếu eForm, chỉ định và đơn thuốc.
+// Đổ kết quả AI (/api/extract) vào phiếu eForm, chỉ định và đơn thuốc.
 // Mã ICD10 không lấy từ LLM: code chấm điểm từ khóa gán mã và luôn đánh dấu "cần xem lại".
 import type { MatchResult, RowMatches } from "../match";
 import type { CatalogItem, Draft, FieldValue, Values } from "../types";
@@ -13,6 +13,8 @@ export interface DongChiDinh {
   nguon: Nguon;
   /** Danh mục gần đúng khi AI khớp chưa chắc */
   ung_vien: CatalogItem[];
+  /** Dòng do AI điền (giữ cả khi bác sĩ sửa), để đếm số đo lượt thử */
+  tu_ai?: boolean;
 }
 
 export interface DongThuoc {
@@ -27,6 +29,7 @@ export interface DongThuoc {
   ghi_chu: string;
   nguon: Nguon;
   ung_vien: CatalogItem[];
+  tu_ai?: boolean;
 }
 
 export interface MucDaDien {
@@ -44,7 +47,7 @@ export interface KetQuaDien {
   donThuoc: DongThuoc[];
 }
 
-/** Trường văn bản của trang chính → trường eForm */
+/** Trường văn bản của config/forms/phieu-kham.json → trường eForm */
 const ANH_XA: { tu: string; den: string; nhan: string }[] = [
   { tu: "ly_do_kham", den: "ly_do", nhan: "Lý do đến khám" },
   { tu: "benh_su", den: "benh_su", nhan: "Bệnh sử" },
@@ -132,6 +135,7 @@ export function dienPhieu(
     ghi_chu: chu(row.ghi_chu),
     nguon: nguonDong(matches.chi_dinh?.[i]),
     ung_vien: matches.chi_dinh?.[i]?.candidates ?? [],
+    tu_ai: true,
   }));
 
   const donThuoc = ((draft.ke_don ?? []) as Values[]).map((row, i) => ({
@@ -146,6 +150,7 @@ export function dienPhieu(
     ghi_chu: chu(row.ghi_chu),
     nguon: nguonDong(matches.ke_don?.[i]),
     ung_vien: matches.ke_don?.[i]?.candidates ?? [],
+    tu_ai: true,
   }));
 
   return { truong, daDien, boQua, chiDinh, donThuoc };

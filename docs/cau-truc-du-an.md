@@ -7,8 +7,7 @@ Một app Next.js, nhưng code chia ba phần theo **nơi chạy**: giao diện 
 ```
 src/
   app/                    Định tuyến Next: chỉ đọc request, gọi server, trả kết quả. Không chứa logic.
-    page.tsx              /          nạp cấu hình (server) rồi đưa cho Workspace (client)
-    eform/page.tsx        /eform     nạp dữ liệu eForm (server) rồi đưa cho EformScreen (client)
+    page.tsx              /          nạp dữ liệu eForm (server) rồi đưa cho EformScreen (client); /eform chuyển về đây (next.config.ts)
     ket-qua/page.tsx      /ket-qua   đọc các lượt thử (server) rồi đưa cho ResultsView (client)
     api/extract/          POST: văn bản → nháp đã khớp danh mục (gọi server/ai/pipeline)
     api/asr/, api/asr/[id]/  nhận dạng giọng nói Zipformer (gọi server/ai/asr)
@@ -19,11 +18,8 @@ src/
     api.ts                gọi /api/extract, /api/sessions (dùng kiểu trong shared/api.ts)
     chung/                component dùng được ở mọi trang
       MicButton.tsx       nút 🎤: Web Speech hoặc Zipformer (gọi /api/asr)
-      CatalogPicker.tsx   ô tìm trong danh mục dịch vụ/thuốc
-      DynamicField.tsx    ô nhập sinh từ FieldDef trong config/forms/*.json
-      Header.tsx, Banner.tsx
-    workspace/            trang /  (Workspace, FormPanel, trang-thai.ts: trạng thái ô và đếm số đo)
-    eform/                trang /eform (màn giống EMR + cột Trợ lý AI)
+      Header.tsx, Banner.tsx  thanh trên cùng (link eForm, Kết quả, chế độ AI) và dải cảnh báo dữ liệu giả
+    eform/                trang / (màn giống EMR + cột Trợ lý AI; Lưu ghi số đo lượt thử)
     ket-qua/              trang /ket-qua
 
   server/                 BE: chỉ chạy trên server (có import "server-only")
@@ -34,7 +30,7 @@ src/
       asr.ts              phiên nhận dạng Zipformer + Silero VAD (gói native sherpa-onnx-node)
     du-lieu/              đọc/ghi đĩa
       config.ts           nạp config/ và data/catalog, data/cases
-      eform.ts            nạp data/eform/ cho trang /eform
+      eform.ts            nạp data/eform/ cho trang eForm
       sessions.ts         ghi/đọc data/sessions/
 
   shared/                 TypeScript thuần: chạy được ở trình duyệt, server và scripts
@@ -42,9 +38,9 @@ src/
     types.ts              FieldDef, FormConfig, Draft, CatalogItem...
     normalize.ts          bỏ dấu, chuẩn hóa, mở rộng viết tắt
     match.ts              khớp danh mục (Fuse.js): nơi DUY NHẤT gán mã dịch vụ/thuốc
-    validate.ts           tính tổng số lượng thuốc, cảnh báo
+    validate.ts           tính tổng số lượng thuốc
     metrics.ts            kiểu số đo lượt thử, tính trung bình, xuất CSV
-    eform/                logic trang /eform, gồm cả "AI" bằng rule (xem dưới)
+    eform/                logic trang eForm, gồm cả "AI" bằng rule (xem dưới) và đếm số đo lượt thử (do-luong.ts)
 
 config/  data/  scripts/  models/  docs/   giữ nguyên ở gốc (dữ liệu, script, tài liệu)
 ```
@@ -84,12 +80,14 @@ Muốn thay một tính năng rule bằng LLM thật (ví dụ tóm tắt lịch
 
 ## Luồng chính
 
-**Điền nháp (cả `/` và cột Trợ lý AI của `/eform`):**
-`Workspace.tsx` / `TroLyAi.tsx` → `client/api.ts › goiAiDienNhap` → `POST /api/extract` → `server/ai/pipeline.ts › runPipeline` → `llm/index.ts` (chọn theo `LLM_PROVIDER`, kiểm tra zod, thử lại 1 lần) → bỏ trường không `ai_fill` → `shared/match.ts` gán mã → `shared/validate.ts` tính tổng → trả `PipelineResult`.
+**Điền nháp (cột Trợ lý AI của trang eForm):**
+`TroLyAi.tsx` → `client/api.ts › goiAiDienNhap` → `POST /api/extract` → `server/ai/pipeline.ts › runPipeline` → `llm/index.ts` (chọn theo `LLM_PROVIDER`, kiểm tra zod, thử lại 1 lần) → bỏ trường không `ai_fill` → `shared/match.ts` gán mã → `shared/validate.ts` tính tổng → trả `PipelineResult`.
 
 **Giọng nói Zipformer:** `MicButton.tsx` → `GET /api/asr` (chế độ) → `POST /api/asr` (mở phiên) → `POST /api/asr/[id]` mỗi 0,4 giây (PCM 16 kHz, nhận `{ chot, tam }`) → `DELETE /api/asr/[id]`.
 
-**Nạp trang `/eform`:** `src/app/eform/page.tsx` (server) gọi `server/du-lieu/eform.ts › loadEformData` (đọc `data/eform/`, gán mã cho bộ mẫu gợi ý) → truyền xuống `EformScreen` (client). Các gợi ý rule chạy trên trình duyệt với dữ liệu đó, không gọi API.
+**Nạp trang eForm (`/`):** `src/app/page.tsx` (server) gọi `server/du-lieu/eform.ts › loadEformData` (đọc `data/eform/`, gán mã cho bộ mẫu gợi ý) → truyền xuống `EformScreen` (client). Các gợi ý rule chạy trên trình duyệt với dữ liệu đó, không gọi API.
+
+**Đo lượt thử:** `TroLyAi.tsx` báo `onBatDau` (gõ, bấm 🎤, bấm câu mẫu) → `EformScreen` ghi mốc giờ → bấm Lưu lần đầu sau khi AI điền → `shared/eform/do-luong.ts › demLuot` đếm → `client/api.ts › luuLuotThu` → `POST /api/sessions` → `server/du-lieu/sessions.ts` ghi `data/sessions/` → trang `/ket-qua` đọc lại.
 
 ## Cái gì dùng lại được
 
@@ -97,12 +95,12 @@ Muốn thay một tính năng rule bằng LLM thật (ví dụ tóm tắt lịch
 |---|---|---|---|
 | Pipeline điền nháp | `server/ai/pipeline.ts` | `/api/extract`, `scripts/eval.ts` | Mọi màn mới cần "nói/gõ → nháp" gọi `goiAiDienNhap`, không viết pipeline riêng |
 | Nhà cung cấp LLM | `server/ai/llm/*.ts` | pipeline | Mỗi provider là một hàm `LlmCall` (nhận `system`, `user`, `schema`, trả chuỗi JSON). Thêm provider: tạo file mới, đăng ký trong `PROVIDERS` của `llm/index.ts` |
-| Form sinh từ JSON | `config/forms/*.json` + `server/ai/{prompt,schema}.ts` + `client/chung/DynamicField.tsx` | trang `/` | Thêm trường chỉ sửa JSON: giao diện, prompt và schema tự đổi theo |
-| Khớp danh mục | `shared/match.ts` | pipeline, `Workspace`, `CatalogPicker`, bộ mẫu gợi ý | Gán mã cho bất kỳ tên dịch vụ/thuốc nào (`matchCatalog`), tìm gần đúng (`searchCatalog`) |
+| Trường AI tách từ JSON | `config/forms/*.json` + `server/ai/{prompt,schema}.ts` | pipeline, eval | Thêm trường chỉ sửa JSON: prompt, schema, mock và eval tự đổi theo. Muốn hiện trên eForm thì nối thêm trong `shared/eform/dien-phieu.ts` và `client/eform/` (giao diện eForm viết tay) |
+| Khớp danh mục | `shared/match.ts` | pipeline, bộ mẫu gợi ý | Gán mã cho bất kỳ tên dịch vụ/thuốc nào (`matchCatalog`), tìm gần đúng (`searchCatalog`) |
 | Chuẩn hóa tiếng Việt | `shared/normalize.ts` | match, rule, eval, eform | So khớp không dấu, mở rộng viết tắt theo `config/viet-tat.json` |
-| Tính tổng, cảnh báo | `shared/validate.ts` | pipeline, `Workspace`, `DonThuocTab` | Tổng số lượng thuốc, cảnh báo trẻ em |
-| Nút micro | `client/chung/MicButton.tsx` | `/`, `/eform` | Chỉ cần `onStart`, `onText`; tự chọn Web Speech hay Zipformer |
-| Ô tìm danh mục | `client/chung/CatalogPicker.tsx` | trang `/` | Chưa dùng ở `/eform` (tab Chỉ định/Đơn thuốc đang chọn từ danh sách riêng); có thể thay vào |
+| Tính tổng | `shared/validate.ts` | pipeline, `DonThuocTab` | Tổng số lượng thuốc theo `config/canh-bao.json` |
+| Nút micro | `client/chung/MicButton.tsx` | trang eForm | Chỉ cần `onStart`, `onText`; tự chọn Web Speech hay Zipformer. Tùy chọn `onStop` (báo dừng nghe) và `giaoDien` (lớp CSS, nhãn nút; eForm dùng nút lớn màu tím) |
+| Số đo lượt thử | `shared/metrics.ts`, `shared/eform/do-luong.ts`, `/api/sessions` | trang eForm, `/ket-qua` | Màn mới muốn đo thì gửi `SessionInput` qua `luuLuotThu`; trang Kết quả tự hiện |
 | Hợp đồng API | `shared/api.ts` | route + `client/api.ts` + `MicButton` | Đổi kiểu một chỗ, cả route và nơi gọi cùng báo lỗi nếu lệch |
 | Nạp cấu hình | `server/du-lieu/config.ts` | các trang, route, eval | Đọc lại file mỗi lần gọi, sửa JSON rồi tải lại trang là thấy |
 | Kiểm tra dị ứng | `shared/eform/di-ung.ts` | `DonThuocTab`, `GoiYTheoChanDoan` | Mọi chỗ thêm thuốc nên gọi `trungDiUng` |
@@ -117,8 +115,9 @@ Muốn thay một tính năng rule bằng LLM thật (ví dụ tóm tắt lịch
 | Tính năng gọi LLM hoặc model | `src/server/ai/` |
 | Đọc/ghi file, biến môi trường | `src/server/du-lieu/` (hoặc `src/server/ai/` nếu là cấu hình AI) |
 | Hàm tính toán thuần mà cả hai phía cần | `src/shared/` |
-| Trường form, danh mục, ca mẫu | `config/`, `data/` (không đổi code) |
+| Danh mục, ca mẫu | `config/`, `data/` (không đổi code) |
+| Trường AI tách | `config/forms/*.json`; muốn hiện trên eForm thì thêm vào `shared/eform/dien-phieu.ts` và `client/eform/` |
 
 ## Sau này muốn tách thành hai app
 
-Ranh giới đã đúng chỗ nên tách được mà không viết lại logic: chuyển `src/server` + `src/app/api` sang một server Node riêng (ví dụ Hono), `src/shared` thành gói dùng chung, còn lại là app giao diện. Việc phải làm thêm: CORS, đổi URL trong `client/api.ts` và `MicButton.tsx`, và trang `/` với `/eform` phải lấy dữ liệu qua API thay vì đọc file lúc render. Chưa làm vì với prototype hiện tại chỉ thêm việc mà không thêm lợi ích.
+Ranh giới đã đúng chỗ nên tách được mà không viết lại logic: chuyển `src/server` + `src/app/api` sang một server Node riêng (ví dụ Hono), `src/shared` thành gói dùng chung, còn lại là app giao diện. Việc phải làm thêm: CORS, đổi URL trong `client/api.ts` và `MicButton.tsx`, và trang `/` với `/ket-qua` phải lấy dữ liệu qua API thay vì đọc file lúc render. Chưa làm vì với prototype hiện tại chỉ thêm việc mà không thêm lợi ích.

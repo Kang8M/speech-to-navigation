@@ -3,7 +3,6 @@ import "server-only";
 import fs from "node:fs";
 import path from "node:path";
 import type {
-  AppConfig,
   CaseData,
   Catalogs,
   FormConfig,
@@ -22,10 +21,6 @@ export function loadForms(): FormConfig[] {
   return FORM_FILES.map((name) =>
     readJson<FormConfig>("config", "forms", `${name}.json`),
   );
-}
-
-export function loadHanhChinh(): FormConfig {
-  return readJson<FormConfig>("config", "forms", "hanh-chinh.json");
 }
 
 export function loadTheme(): Record<string, string> {
@@ -60,16 +55,4 @@ export function loadCases(): CaseData[] {
 
 export function getProviderName(): string {
   return process.env.LLM_PROVIDER?.trim() || "mock";
-}
-
-export function loadAppConfig(): AppConfig {
-  return {
-    hanhChinh: loadHanhChinh(),
-    forms: loadForms(),
-    catalogs: loadCatalogs(),
-    vietTat: loadVietTat(),
-    rules: loadRules(),
-    cases: loadCases(),
-    provider: getProviderName(),
-  };
 }

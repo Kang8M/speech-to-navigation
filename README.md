@@ -1,6 +1,6 @@
 # Trợ lý điền bệnh án TMH – Prototype
 
-Bác sĩ **nói** hoặc **gõ tắt** một đoạn tóm tắt; AI tách ra và điền nháp vào 3 phần (**Phiếu khám, Chỉ định, Đơn thuốc**); bác sĩ duyệt, sửa rồi xác nhận.
+Bác sĩ **nói** hoặc **gõ tắt** một đoạn tóm tắt; AI tách ra và điền nháp vào 3 phần (**Phiếu khám, Chỉ định, Đơn thuốc**); bác sĩ duyệt, sửa rồi Lưu.
 
 > **Chỉ dùng dữ liệu giả, không nhập thông tin bệnh nhân thật.**
 > **Danh mục, mã và liều thuốc đều là dữ liệu minh họa, không dùng cho lâm sàng.**
@@ -14,7 +14,7 @@ npm install
 npm run dev
 ```
 
-Mở http://localhost:3000 bằng Chrome. Mặc định chạy chế độ `mock`, không cần internet hay API key.
+Mở http://localhost:3000 bằng Chrome: trang đầu là **Mô phỏng eForm ngoại trú** (link cũ `/eform` tự chuyển về đây). Thanh trên cùng có link sang **Kết quả thử nghiệm** (`/ket-qua`). Mặc định chạy chế độ `mock`, không cần internet hay API key.
 
 ## Đổi nhà cung cấp AI
 
@@ -52,14 +52,15 @@ Model Zipformer bản tiếng Việt là loại không streaming (nghe hết m�
 
 ## Thêm hoặc sửa trường form
 
-Chỉ cần sửa JSON trong `config/forms/`, rồi tải lại trang. Giao diện, schema gửi cho LLM và prompt đều sinh từ các file này.
+Các trường AI tách ra nằm trong JSON ở `config/forms/`. Schema gửi cho LLM, prompt, chế độ `mock` và eval đều sinh từ các file này.
+
+**Giao diện eForm không sinh từ JSON.** Thêm trường mới vào JSON thì AI sẽ tách được ngay (thấy trong eval), nhưng muốn trường hiện trên phiếu thì phải nối thêm: trường phiếu khám vào bảng `ANH_XA` trong `src/shared/eform/dien-phieu.ts` và vào ô tương ứng ở `src/client/eform/EformForm.tsx`; cột chỉ định, thuốc vào `dienPhieu` và `ChiDinhTab.tsx` / `DonThuocTab.tsx`.
 
 | File | Nội dung |
 |---|---|
 | `phieu-kham.json` | Các trường phiếu khám ngoại trú |
 | `chi-dinh.json` | Các trường một dòng chỉ định |
 | `ke-don.json` | Các trường một dòng thuốc |
-| `hanh-chinh.json` | Thông tin hành chính giả ở đầu màn hình |
 
 Ví dụ thêm trường "Mạch" vào phiếu khám, chèn vào mảng `fields` của `phieu-kham.json`:
 
@@ -73,17 +74,17 @@ Ví dụ thêm trường "Mạch" vào phiếu khám, chèn vào mảng `fields`
 | `id` | Mã trường, không trùng trong một form |
 | `label`, `hint` | Nhãn và gợi ý; `hint` cũng được đưa vào prompt cho LLM |
 | `type` | `text`, `textarea`, `number`, `date`, hoặc `select` (kèm `"options": ["A", "B"]`) |
-| `required` | `true` thì hiện cảnh báo khi để trống (không chặn xác nhận) |
+| `required` | Đánh dấu trường bắt buộc trong schema; giao diện eForm hiện chưa dùng khóa này |
 | `ai_fill` | `false` thì AI không điền |
 | `mock_keywords` | Không bắt buộc. Từ khóa để chế độ `mock` nhận ra phần này trong câu tự do |
 
-Trường mã có thêm `catalog` (tên danh mục), `name_field` (trường tên) và `strength_field` (trường hàm lượng, nếu có) để hiện ô tìm kiếm trong danh mục. Không đặt `ai_fill: true` cho trường mã: mã chỉ được gán bởi code khớp danh mục ở `src/shared/match.ts`.
+Trường mã có thêm `catalog` (tên danh mục), `name_field` (trường tên) và `strength_field` (trường hàm lượng, nếu có) để pipeline biết khớp danh mục nào bằng trường nào. Không đặt `ai_fill: true` cho trường mã: mã chỉ được gán bởi code khớp danh mục ở `src/shared/match.ts`.
 
 Các cấu hình khác:
 
 - `config/viet-tat.json`: bảng từ viết tắt. Khóa một chữ cái phân biệt hoa thường và phải đứng riêng thành từ.
-- `config/canh-bao.json`: ngưỡng tuổi trẻ em, cách tính tổng số lượng thuốc.
-- `config/theme.json`: màu giao diện. Các khóa `emr_*` là màu của trang `/eform` theo EMR, `ai_tim` là màu tím đánh dấu phần AI điền, `xem` là màu vàng "cần xem lại".
+- `config/canh-bao.json`: cách tính tổng số lượng thuốc (`tinh_tong`). Các khóa tuổi trẻ em, cân nặng là của cảnh báo trên trang cũ đã bỏ, hiện không dùng.
+- `config/theme.json`: màu giao diện. Các khóa `ef_*` là màu của trang eForm (nền, viền, chữ, xanh thao tác chính, đỏ dị ứng), `ai_tim` là màu tím đánh dấu phần AI điền, `xem` là màu vàng đất "cần xem lại".
 - `data/catalog/*.json`: danh mục dịch vụ và thuốc mẫu (mã giả). Danh mục thật cào từ nguồn công khai (ICD-10, kỹ thuật TT 23/2024, hoạt chất, thuốc lưu hành) nằm ở `data/tham-khao/`, ứng dụng chưa dùng; xem `data/tham-khao/README.md`, cào lại bằng `npm run cao-du-lieu`.
 
 Lưu ý với file `ca-*.json` đã có: thêm trường mới thì nên bổ sung giá trị vào `expected` để điểm eval không bị tính là "Thừa".
@@ -107,17 +108,23 @@ Tạo file JSON mới trong `data/cases/`, chép từ một ca có sẵn:
 }
 ```
 
-Ca mới tự xuất hiện trong nút "Chọn ca mẫu" và trong eval. Trong `expected`, trường không được nói thì bỏ qua; với dòng khớp danh mục thì ghi đúng tên và mã theo danh mục.
+Ca mới tự vào eval. Trang eForm chỉ dùng câu mẫu của `ca-11` (cùng bệnh nhân giả, nút "Thử câu mẫu"); `hanh_chinh` hiện không dùng. Trong `expected`, trường không được nói thì bỏ qua; với dòng khớp danh mục thì ghi đúng tên và mã theo danh mục.
 
 ## Đo lường
 
-Mỗi lần bấm **Xác nhận**, một file JSON được lưu vào `data/sessions/`. File chỉ chứa số đếm (thời gian, số trường AI điền, số trường sửa, số mục khớp danh mục, kiểu nhập), **không chứa nội dung nhập hay thông tin hành chính**.
+Trên trang eForm, khi AI đã điền ít nhất một lần, lần bấm **Lưu** đầu tiên ghi một lượt thử thành file JSON trong `data/sessions/` (thông báo dưới đáy có câu "Đã ghi số đo lượt thử"). Bấm Lưu nữa thì không ghi thêm; muốn thử lượt mới thì tải lại trang. Chưa để AI điền thì Lưu không ghi gì. File chỉ chứa số đếm (thời gian, số trường AI điền, số trường sửa, số mục khớp danh mục, kiểu nhập), **không chứa nội dung phiếu hay thông tin bệnh nhân**.
 
-Trang **Kết quả thử nghiệm** có bảng các lượt, số liệu trung bình và nút xuất CSV. Lượt nạp từ "Chọn ca mẫu" không có thời gian nhập thật nên mặc định không tính vào số trung bình; có ô đánh dấu để tính cả.
+Trang **Kết quả thử nghiệm** có bảng các lượt, số liệu trung bình và nút xuất CSV. Lượt dùng "Thử câu mẫu" không có thời gian nhập thật nên mặc định không tính vào số trung bình; có ô đánh dấu để tính cả.
 
-- Thời gian: từ lúc bắt đầu nhập (gõ ký tự đầu, bấm mic hoặc nạp ca mẫu) đến lúc bấm Xác nhận.
-- Trường giữ nguyên: tính trên các trường `ai_fill`. Dòng AI điền mà bác sĩ xóa được tính là đã sửa.
-- Khớp danh mục: tính tại thời điểm AI điền nháp, trước khi bác sĩ sửa.
+- Thời gian: từ lúc bắt đầu nhập (gõ ký tự đầu, bấm 🎤 hoặc bấm câu mẫu) đến lúc bấm Lưu.
+- Kiểu nhập: "Nói" nếu trong lượt có bấm 🎤 hoặc dùng câu mẫu kiểu nói, còn lại là "Gõ".
+- AI điền: số trường phiếu khám AI điền cộng số dòng chỉ định, thuốc AI thêm (mỗi dòng tính một mục), cộng dồn qua các lần "Điền thêm".
+- Đã sửa: trường AI điền mà bác sĩ đã sửa, cộng dòng AI thêm mà bác sĩ đã sửa hoặc xóa. Bấm "✓ Đúng" không tính là sửa.
+- Bổ sung: ô bác sĩ tự gõ vào chỗ trống, cộng dòng bác sĩ tự thêm (kể cả chọn từ "Gợi ý theo chẩn đoán").
+- Khớp danh mục: tính trên các dòng AI thêm, tại thời điểm AI điền, trước khi bác sĩ sửa.
+- Cảnh báo: số chỗ còn "cần xem lại" lúc Lưu, cộng số thuốc trùng nhóm dị ứng.
+- Hoàn tác lần AI điền thì số đếm của lần đó cũng bị trừ.
+- Lượt ghi trước ngày 2026-11-11 đến từ trang "Màn hình làm việc" cũ (đã bỏ), cách đếm trên từng ô của form JSON nên không so trực tiếp được với lượt mới.
 
 ## Chấm điểm (eval)
 
@@ -136,22 +143,31 @@ Script chạy cả 11 ca (bản nói và bản gõ tắt) qua pipeline, in độ
 
 ## Mô phỏng eForm ngoại trú
 
-Trang `/eform` mô phỏng màn **Phiếu khám ngoại trú của EMR** với một ca TMH giả, để bác sĩ thấy quen ngay. Bố cục và màu theo màn EMR thật (xem `docs/cau-truc-phieu-kham-ngoai-tru.md`): logo và dải cam "Bệnh án điện tử", nút Menu, dòng PID có nhãn giới tính và dị ứng, nút "Xem LSKB", thanh mục xanh đậm, bảng lịch sử có nút Copy, thanh trạng thái và nút Lưu ghim dưới đáy. Thanh header của prototype được ẩn trên trang này; nút "Quay lại" dẫn về trang chính.
+Trang chủ `/` mô phỏng màn **Phiếu khám ngoại trú của EMR** với một ca TMH giả. Các mục, trường, thứ tự, tab và trạng thái lượt khám giữ như EMR thật (xem `docs/cau-truc-phieu-kham-ngoai-tru.md`) để bác sĩ nhận ra ngay; cách trình bày thì làm mới cho gọn và dễ đọc hơn EMR:
+
+- **Header ghim trên cùng** (từ khổ màn rộng): tên bệnh nhân, giới, PID, lượt khám, nhãn dị ứng đỏ (bấm xem chi tiết), Menu. Dòng dưới là **sinh hiệu chỉ đọc** từ phiếu điều dưỡng (chuyển từ mục Đánh giá chung lên đây để luôn thấy khi cuộn), "Đánh giá ban đầu", lần sửa cuối, Xem LSKB, Mở rộng.
+- Mỗi mục là một thẻ trắng trên nền xám nhạt; lựa chọn Có/Không dạng thẻ bấm; bảng chỉ kẻ ngang, có nút Copy.
+- **Thanh dưới đáy 2 tầng như EMR**, ghim ở mọi khổ màn: tầng trên là dải 7 trạng thái lượt khám (khổ điện thoại thì vuốt ngang); tầng dưới là Quay lại, Báo cáo y tế, In ngay, nút **Lưu** dài kèm số chỗ còn cần xem lại, nút lên đầu trang.
+  - **In ngay** mở hộp thoại in của trình duyệt với bản in A4 (`src/client/eform/BanIn.tsx`): hành chính, sinh hiệu, các trường phiếu khám đã có chữ, chẩn đoán (mã và mô tả), bảng chỉ định, bảng đơn thuốc, chỗ ký bác sĩ, có dấu "DỮ LIỆU GIẢ – BẢN MÔ PHỎNG". Còn chỗ AI chưa chắc thì báo trước, bản in giữ nguyên như đang hiện.
+  - **Trạng thái lượt khám**: "Chờ KQ CLS" mở ô Chuyển nội soi. "Hoàn thành khám" khóa phiếu, chỉ định, đơn thuốc và cột Trợ lý AI (chỉ đọc), chọn lại "Đang khám" để sửa; còn thay đổi chưa Lưu thì không cho chọn. Các trạng thái khác chỉ đổi lựa chọn, chưa có tác dụng gì.
+- Chữ Be Vietnam Pro 14px. Thanh header của prototype (link sang Kết quả thử nghiệm, chế độ AI) nằm trên cùng và cuộn đi khi kéo xuống; header bệnh nhân vẫn ghim. Nút "Quay lại" chỉ hiện thông báo mô phỏng.
 
 Chỗ khác với EMR là **cột "✨ Trợ lý AI điền phiếu" bên phải**:
 
-1. Bác sĩ bấm 🎤 Nói trong lúc khám, hoặc gõ tắt một đoạn (có nút "Câu mẫu" để demo), rồi bấm **✨ Điền vào phiếu**.
-2. AI dùng chung pipeline với trang chính (`/api/extract`, theo `LLM_PROVIDER`) và điền cùng lúc: lý do khám, bệnh sử, tiền sử, khám toàn thân, khám chuyên khoa, chẩn đoán, hướng điều trị, lời dặn, hẹn tái khám (tự tính ngày), **chỉ định dịch vụ** và **đơn thuốc** (hai tab cạnh tab Phiếu khám).
-3. Cột AI liệt kê các trường đã điền; bấm "xem →" để cuộn tới ô. Bác sĩ duyệt, sửa rồi bấm Lưu. Có nút hoàn tác lần AI điền.
+Đầu cột có thanh **3 bước: Nói hoặc gõ → AI điền → Duyệt, Lưu**. Mỗi lúc chỉ một nút tô đậm: chưa có chữ thì nút 🎤 Bắt đầu nói, có chữ mới thì nút ✨ Điền vào phiếu, đã điền thì phần duyệt.
+
+1. Bác sĩ bấm 🎤 Bắt đầu nói trong lúc khám, hoặc gõ tắt một đoạn (có "Thử câu mẫu: kiểu nói / kiểu gõ tắt" để demo), rồi bấm **✨ Điền vào phiếu** (hoặc Ctrl+Enter).
+2. AI gọi pipeline `/api/extract` (theo `LLM_PROVIDER`) và điền cùng lúc: lý do khám, bệnh sử, tiền sử, khám toàn thân, khám chuyên khoa, chẩn đoán, hướng điều trị, lời dặn, hẹn tái khám (tự tính ngày), **chỉ định dịch vụ** và **đơn thuốc** (hai tab cạnh tab Phiếu khám).
+3. Cột AI hiện "Đã điền N trường", thanh tiến độ (tím là chắc chắn, vàng là còn cần xem lại) và danh sách **chỗ cần xem lại** có nút Xem (cuộn tới ô) và ✓ Đúng. Các trường còn lại nằm trong danh sách thu gọn. Bác sĩ duyệt, sửa rồi bấm Lưu. Có nút hoàn tác lần AI điền. Nói hoặc gõ thêm thì nút đổi thành "Điền thêm vào phiếu".
 
 | Quy tắc | Chi tiết |
 |---|---|
-| Màu | Tím = AI điền. Vàng = AI chưa chắc, cần xem lại (bấm "✓ Đúng" hoặc sửa để bỏ đánh dấu). |
+| Màu | Tím = AI điền (ô có vạch tím bên trái). Vàng = AI chưa chắc, cần xem lại (vạch vàng; bấm "✓ Đúng" ngay cạnh nhãn trường hoặc trong cột AI, hoặc sửa để bỏ đánh dấu). |
 | Không ghi đè | Ô bác sĩ đã gõ hoặc đã sửa thì AI không ghi đè, cột AI báo "giữ nguyên". |
 | Mã ICD10 | Không lấy từ LLM. Code chấm điểm từ khóa trên câu chẩn đoán để gán mã, luôn đánh dấu vàng. |
 | Mã dịch vụ, thuốc | Do `src/shared/match.ts` khớp danh mục. Khớp chưa chắc thì dòng vàng, có ô chọn lại trong danh sách gần đúng. |
 | Nói nhiều lần | Lần điền sau chỉ thêm dòng chỉ định/thuốc chưa có (trùng mã thì bỏ qua). |
-| Đơn thuốc | Tổng số lượng tự tính như trang chính. Thuốc cùng nhóm với dị ứng trên header (ví dụ Penicillin → Augmentin, Amoxicillin) hiện cảnh báo đỏ; danh sách nhóm chỉ là minh họa. |
+| Đơn thuốc | Tổng số lượng tự tính theo `config/canh-bao.json`. Thuốc cùng nhóm với dị ứng trên header (ví dụ Penicillin → Augmentin, Amoxicillin) hiện cảnh báo đỏ; danh sách nhóm chỉ là minh họa. |
 
 **✨ Gợi ý theo chẩn đoán** nằm đầu tab Chỉ định dịch vụ và tab Đơn thuốc:
 
@@ -171,9 +187,9 @@ Các điểm AI cũ vẫn nằm ngay tại ô, **đều là mock bằng rule, kh
 | ✨ Gợi ý ICD10 (top 3) | Chấm điểm từ khóa trong Bệnh sử và Khám lâm sàng, có xét phủ định ("không sốt"). Đoạn tóm tắt lịch sử cũ và chỗ `[ ]` chưa chọn không được tính. | **Độ tin cậy chỉ là điểm khớp từ khóa, không phải xác suất bệnh** |
 | ✨ Gợi ý mẫu câu | Chọn mẫu Tai/Mũi/Vòm/Họng theo Lý do đến khám. Kết quả khám để trống cho bác sĩ chọn, AI không tự điền. | Chỉ có 7 nhóm lý do khám mẫu |
 
-Nhãn trên giao diện: **Dữ liệu cũ**, **✨ AI điền**, **⚠ AI chưa chắc, cần xem lại**, **Đã sửa**, **(Hiển thị trên báo cáo y tế)**. Nút "Báo cáo y tế" cho xem trước các trường có nhãn BCYT.
+Nhãn trên giao diện: **Dữ liệu cũ**, **✨ AI điền**, **⚠ AI chưa chắc, cần xem lại**, **Đã sửa**, **(Hiển thị trên báo cáo y tế)**. Nút "Báo cáo y tế" cho xem trước báo cáo: khối hành chính (họ tên, giới, PID, thời gian khám, bác sĩ, dị ứng), các trường có nhãn BCYT, chẩn đoán chính (chẩn đoán ra viện, chưa có thì chẩn đoán ban đầu) và chẩn đoán kèm theo. Ảnh chụp EMR chỉ thấy nhãn BCYT ở chẩn đoán kèm theo; việc đưa chẩn đoán chính và hành chính vào là giả định, cần xác nhận với bác sĩ.
 
-Các nút lấy dữ liệu từ hệ thống khác, Menu, Xem LSKB và In chỉ hiện thông báo mô phỏng. Nút Lưu không ghi xuống đĩa, tải lại trang là về dữ liệu ban đầu.
+Các nút lấy dữ liệu từ hệ thống khác, Menu, Xem LSKB và Quay lại chỉ hiện thông báo mô phỏng. Nút Lưu không ghi nội dung phiếu xuống đĩa (chỉ ghi số đo lượt thử, xem mục Đo lường), tải lại trang là về dữ liệu ban đầu.
 
 | File trong `data/eform/` | Nội dung |
 |---|---|
@@ -195,11 +211,11 @@ data/sessions/  kết quả các lượt thử (tự sinh, không đưa lên git
 data/eform/     ca giả, danh mục và quy tắc của trang eForm
 data/tham-khao/ danh mục thật cào từ nguồn công khai, chỉ để tra cứu (ứng dụng chưa nạp)
 src/app/        trang và API (định tuyến Next, mỏng)
-src/client/     giao diện chạy trên trình duyệt: chung/ (MicButton, CatalogPicker...), workspace/, eform/, ket-qua/, api.ts (gọi API)
+src/client/     giao diện chạy trên trình duyệt: chung/ (Header, Banner, MicButton), eform/ (trang chủ), ket-qua/, api.ts (gọi API)
 src/server/ai/  AI thật: pipeline, prompt, schema, llm/ (mock, rules, anthropic, openai, gemini), asr.ts (Zipformer)
 src/server/du-lieu/ nạp config và data, lưu lượt thử
 src/shared/     dùng chung hai phía: kiểu, khớp danh mục, chuẩn hóa, tính tổng, đo lường, api.ts (hợp đồng FE–BE)
-src/shared/eform/ rule của trang eForm: tóm tắt, gợi ý ICD10, mẫu câu, gợi ý theo chẩn đoán, cảnh báo dị ứng, đổ kết quả AI vào phiếu
+src/shared/eform/ rule của trang eForm: tóm tắt, gợi ý ICD10, mẫu câu, gợi ý theo chẩn đoán, cảnh báo dị ứng, đổ kết quả AI vào phiếu, đếm số đo lượt thử (do-luong.ts)
 scripts/eval.ts chấm điểm
 scripts/cao-du-lieu.ts cào danh mục công khai về data/tham-khao/
 scripts/tai-model-giong-noi.ts tải model Zipformer và Silero VAD về models/

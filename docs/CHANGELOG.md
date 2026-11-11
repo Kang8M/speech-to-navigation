@@ -4,6 +4,73 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-11
 
+### Bỏ qua `.claude/settings.local.json` khỏi git
+- **Loại:** Cấu hình
+- **Thay đổi:** `.gitignore` thêm `/.claude/settings.local.json`. Đây là file cấu hình Claude Code riêng của từng người, không commit. Chủ dự án dùng file này để chặn (`permissions.deny`) 3 connector claude.ai không liên quan đến dự án là Vercel, Canva, Supabase.
+- **Lý do:** 3 connector này nạp hơn 300 tool vào mọi phiên làm việc trên dự án, làm context nặng thêm mà không dùng tới. Connector gắn với tài khoản claude.ai của từng người nên chặn ở file local, không đặt trong `.claude/settings.json` chung.
+- **File:** `.gitignore`, `docs/CHANGELOG.md`
+- **Kiểm tra:** `git check-ignore -v .claude/settings.local.json` khớp dòng mới. Ngay sau khi tạo file, phiên Claude Code báo gỡ 337 tool của 3 connector.
+
+### Thanh đáy eForm tách lại 2 tầng như EMR, ghim ở mọi khổ màn
+- **Loại:** Giao diện
+- **Thay đổi:** Thanh dưới đáy (`EformScreen.tsx`) trước gộp một hàng (nút thao tác, trạng thái, Lưu) và chỉ ghim từ khổ `lg`. Giờ tách 2 tầng theo ảnh chụp EMR: tầng trên là dải 7 trạng thái dạng nút tròn (đang chọn nền xanh, khổ điện thoại thì vuốt ngang), tầng dưới là ← Quay lại, Báo cáo y tế, In ngay, nút Lưu dài bên phải (tối đa `max-w-sm`), nút ↑. Ghim `sticky bottom-0` ở mọi khổ màn; khổ điện thoại nút Quay lại chỉ còn mũi tên (có `aria-label`). Biến `--cao-day` giữ 5.75rem cho khớp chiều cao mới (cột Trợ lý AI dùng để tính chiều cao tối đa).
+- **Lý do:** Chủ dự án báo thanh đáy bị mất và form khác ảnh EMR trong `temp-1/`. Dưới 1024 px thanh không ghim nên trôi xuống cuối trang; trên EMR thật thanh luôn ở đáy và có 2 tầng.
+- **File:** `src/client/eform/EformScreen.tsx`, `README.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** `npx tsc --noEmit`, `npm run lint` sạch. Playwright + Chrome ở 1778, 900, 390 px, cuộn giữa trang: thanh đáy luôn ghim ở đáy màn, 2 tầng, không xuống dòng chữ trong nút. Chạy lại bài thử chức năng (Báo cáo y tế, khóa khi Hoàn thành khám, chặn khi chưa Lưu, In ngay): kết quả như mục dưới, không lỗi console.
+- **Ảnh hưởng:** Khổ điện thoại thanh đáy chiếm khoảng 92 px cố định ở đáy màn. Sinh hiệu vẫn nằm ở header (khác EMR, nơi sinh hiệu là các ô xám trong mục 1), giữ theo đợt làm mới giao diện trước.
+
+### eForm: In ngay in thật, Báo cáo y tế có chẩn đoán chính, Hoàn thành khám khóa phiếu
+- **Loại:** Tính năng, Sửa lỗi, Giao diện
+- **Thay đổi:**
+  - **In ngay** (trước chỉ báo "bản demo không in phiếu") gọi `window.print()`. Thành phần mới `src/client/eform/BanIn.tsx` ẩn trên màn hình, chỉ hiện khi in: hành chính, sinh hiệu, các trường phiếu khám đã có chữ (kể cả tiền sử, dị ứng, hẹn tái khám, tình trạng ra viện), chẩn đoán chính và kèm theo dạng "mã – tên", bảng chỉ định, bảng đơn thuốc, chỗ ký bác sĩ, dấu "DỮ LIỆU GIẢ – BẢN MÔ PHỎNG". Phần còn lại của trang, header và banner prototype có `print:hidden`; `globals.css` thêm `@page` khổ A4 lề 15 mm. Còn chỗ AI chưa chắc thì báo trước khi in.
+  - **Báo cáo y tế** (`BaoCaoDialog.tsx`) thêm khối hành chính (họ tên, giới, PID, thời gian khám, bác sĩ khám, dị ứng) và chẩn đoán chính (ra viện, chưa có thì ban đầu) kèm nhãn nguồn. Hàm dùng chung: `nhanIcd` (`IcdField.tsx`), `ngayGio`, `chanDoanChinh` (`BanIn.tsx`); `moTaLieu` trong `DonThuocTab.tsx` được export để bản in dùng.
+  - **Hoàn thành khám** khóa phiếu khám, chỉ định, đơn thuốc và cột Trợ lý AI bằng `<fieldset disabled>`, hiện dòng "🔒 … phiếu chỉ đọc"; chọn lại Đang khám để mở. Còn thay đổi chưa Lưu (so tham chiếu dữ liệu lúc Lưu gần nhất, ban đầu là lúc mở trang) thì không cho chọn và báo bấm Lưu trước. Ô nhập bị khóa mờ đi (`disabled:opacity-70` trong `fields.tsx`). Đổi trạng thái chỉ bỏ tích Chuyển nội soi khi đang tích.
+  - Sửa ký hiệu giới tính viết cứng ♀ trong header: giờ ♂ cho Nam, ♀ cho Nữ, giới khác không có ký hiệu.
+  - Câu báo khi Lưu đổi thành "Đã lưu (mô phỏng): nội dung phiếu chỉ giữ trên trang này, tải lại trang là mất." Câu cũ "không gửi đi đâu" sai vì Lưu có gửi số đo lượt thử về server.
+- **Lý do:** Rà phiếu khám theo yêu cầu của chủ dự án: các nút ở thanh đáy (trạng thái, Báo cáo y tế, In ngay) gần như không làm gì, trong khi nhật ký thực địa cho thấy ca nào bác sĩ cũng in phiếu khám và đơn thuốc lúc kết thúc. Báo cáo y tế thiếu chẩn đoán chính nên khó tin; đưa vào là giả định, cần hỏi bác sĩ hoặc xem một bản BCYT thật.
+- **File:** `src/client/eform/BanIn.tsx` (mới), `src/client/eform/EformScreen.tsx`, `src/client/eform/BaoCaoDialog.tsx`, `src/client/eform/EformHeader.tsx`, `src/client/eform/IcdField.tsx`, `src/client/eform/DonThuocTab.tsx`, `src/client/eform/fields.tsx`, `src/client/chung/Header.tsx`, `src/client/chung/Banner.tsx`, `src/app/globals.css`, `README.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** `npx tsc --noEmit`, `npm run lint` sạch. Chạy script Playwright với Chrome 1440 px trên dev server (`LLM_PROVIDER=mock`): header hiện "♀ Nữ"; Báo cáo y tế có khối hành chính và mục chẩn đoán; chọn Hoàn thành khám khi chưa sửa thì ô Lý do đến khám và ô Trợ lý AI bị khóa, chọn Đang khám mở lại; sửa Lý do rồi chọn Hoàn thành khám thì bị chặn kèm thông báo, Lưu xong thì khóa được; nạp câu mẫu kiểu nói → Điền → In ngay gọi print một lần, báo còn 3 chỗ chưa chắc; giả lập media print và xuất PDF A4: chỉ còn bản in, đủ 3 chỉ định, 2 thuốc, mã ICD và tên. Không có lỗi console. Không ghi file vào `data/sessions/` (không Lưu sau khi AI điền). Chưa thử in ra máy in thật, chưa xem khổ điện thoại, không cần chạy eval (không đổi logic tách/khớp).
+- **Ảnh hưởng:** Bác sĩ thử nghiệm thấy phiếu bị khóa sau Hoàn thành khám. Trên EMR thật chưa rõ trạng thái này có khóa phiếu không. Bản in là bố cục tự đặt, không theo mẫu phiếu in thật của Vinmec.
+
+### Bỏ trang "Màn hình làm việc", eForm lên `/`, nút Lưu trên eForm ghi số đo lượt thử
+- **Loại:** Tính năng, Dọn dẹp, Cấu hình, Tài liệu
+- **Thay đổi:**
+  - Trang eForm chuyển từ `/eform` lên `/` (`src/app/page.tsx`). Link cũ `/eform` chuyển về `/` bằng `redirects()` trong `next.config.ts` (không permanent).
+  - Bỏ trang "Màn hình làm việc" cũ và code chỉ trang đó dùng: `src/client/workspace/` (Workspace, FormPanel, trang-thai), `src/client/chung/{DynamicField,CatalogPicker}.tsx`, `src/app/eform/page.tsx`, `config/forms/hanh-chinh.json`, `loadAppConfig`/`loadHanhChinh` trong `src/server/du-lieu/config.ts`, kiểu `AppConfig` trong `src/shared/types.ts`, `computeWarnings` (cảnh báo thiếu trường, thiếu mã, trẻ em chưa có cân nặng) trong `src/shared/validate.ts`. Các khóa tuổi, cân nặng trong `config/canh-bao.json` còn đó nhưng không dùng.
+  - Header của prototype (`src/client/chung/Header.tsx`) giờ hiện trên mọi trang, còn 2 link: "Mô phỏng eForm ngoại trú" (`/`) và "Kết quả thử nghiệm". Trên eForm nó cuộn đi khi kéo xuống, header bệnh nhân vẫn ghim.
+  - Nút "← Quay lại" ở đáy eForm trước dẫn về trang cũ, giờ chỉ báo mô phỏng.
+  - Đo lường trên eForm: `TroLyAi.tsx` báo `onBatDau` khi gõ, bấm 🎤 hoặc bấm câu mẫu. Sau khi AI điền, lần bấm Lưu đầu tiên gọi `luuLuotThu` (`/api/sessions`), ghi một lượt vào `data/sessions/`; Lưu tiếp không ghi thêm (tải lại trang để thử lượt mới). Cách đếm ở `src/shared/eform/do-luong.ts` (mới): trường AI điền tính theo từng trường phiếu khám, dòng chỉ định/thuốc AI thêm tính mỗi dòng một mục; sửa hoặc xóa dòng AI là "sửa"; dòng bác sĩ thêm (kể cả từ gợi ý theo chẩn đoán) là "bổ sung"; cảnh báo = chỗ còn "cần xem lại" + thuốc trùng nhóm dị ứng. Dòng AI có cờ mới `tu_ai` (`src/shared/eform/dien-phieu.ts`) để vẫn nhận ra khi bác sĩ đã sửa. Hoàn tác lần AI điền thì trừ cả số đếm.
+  - `EformData.cauMau` thêm `id` (`ca-11`) để ghi `ca_mau_id`.
+  - Thông báo trống ở trang Kết quả đổi thành hướng dẫn Lưu trên eForm. Sửa chú thích còn nhắc "trang chính".
+  - README (chạy ở đâu, mục "Thêm hoặc sửa trường form": giao diện eForm không sinh từ JSON, "Đo lường" viết lại theo eForm, "Mô phỏng eForm ngoại trú", "Cấu trúc thư mục"), `docs/cau-truc-du-an.md`, `CLAUDE.md` cập nhật theo.
+- **Lý do:** Chủ dự án thấy hai màn cùng chức năng gây rối, muốn chạy project là vào thẳng prototype eForm, giữ header và trang Kết quả. Trang Kết quả chỉ có dữ liệu từ nút Xác nhận của trang cũ, nên chủ dự án chọn cho nút Lưu trên eForm ghi số đo thay thế.
+- **File:** `src/app/page.tsx`, `src/app/eform/page.tsx` (xóa), `next.config.ts`, `src/client/chung/Header.tsx`, `src/client/chung/DynamicField.tsx` (xóa), `src/client/chung/CatalogPicker.tsx` (xóa), `src/client/workspace/*` (xóa), `src/client/eform/EformScreen.tsx`, `src/client/eform/TroLyAi.tsx`, `src/client/eform/fields.tsx`, `src/client/ket-qua/ResultsView.tsx`, `src/shared/eform/do-luong.ts` (mới), `src/shared/eform/dien-phieu.ts`, `src/shared/eform/types.ts`, `src/shared/types.ts`, `src/shared/validate.ts`, `src/server/du-lieu/config.ts`, `src/server/du-lieu/eform.ts`, `config/forms/hanh-chinh.json` (xóa), `README.md`, `docs/cau-truc-du-an.md`, `CLAUDE.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** `npx tsc --noEmit`, `npm run lint`, `npm run build` sạch (còn route `/`, `/ket-qua`, `/api/*`). `npm run eval -- --rule-only` giống hệt trước: Phiếu khám nói 97,1% / gõ tắt 98,1%, Chỉ định nói 92,9% / gõ tắt 100%, Đơn thuốc nói 99,1% / gõ tắt 98,1%. Chạy `next start` với `LLM_PROVIDER=mock` cổng 3100, mở bằng Chrome 1536 px: `/eform` chuyển về `/`, header hiện. Lượt 1: câu mẫu kiểu nói → Điền vào phiếu (14 trường, 3 chỉ định, 2 thuốc) → Lưu: file ghi `noi`, `tu_ca_mau: true`, `ca-11`, AI điền 19, sửa 0, khớp 5/5, cảnh báo 3; Lưu lần 2 báo đã ghi, không thêm file. Lượt 2 (tải lại): gõ tay → Điền (7 trường, 1 chỉ định, 1 thuốc) → sửa Lý do đến khám, xóa dòng chỉ định → Lưu: `go`, AI điền 9, sửa 2, khớp 1/2, cảnh báo 2. `/ket-qua` hiện đủ lượt. Khi kéo xuống, header bệnh nhân ghim top 0, cột AI ghim, không cuộn ngang. Đã xóa 2 file thử. Chưa xem ở khổ 390px (cửa sổ Chrome không đổi kích thước được), chưa thử ghi âm thật qua micro.
+- **Ảnh hưởng:** Lượt cũ trong `data/sessions/` vẫn hiện ở trang Kết quả nhưng cách đếm khác (theo từng ô của form JSON), không so trực tiếp được với lượt mới. Mất cảnh báo "trẻ em có kê đơn chưa có cân nặng" (chỉ trang cũ có). Thêm trường vào `config/forms/*.json` giờ không tự hiện trên giao diện nữa.
+
+### Làm mới giao diện `/eform`: header bệnh nhân, thẻ mục, cột Trợ lý AI 3 bước
+- **Loại:** Giao diện, Cấu hình
+- **Thay đổi:**
+  - Giữ nguyên các mục, trường, thứ tự, 3 tab và các trạng thái lượt khám của EMR; chỉ đổi cách trình bày. Bỏ font Arial ép riêng cho trang, dùng Be Vietnam Pro 14px như phần còn lại của prototype.
+  - Màu: `config/theme.json` bỏ 7 khóa `emr_*` (xanh, cam, ngọc lam của EMR), thêm `ef_nen`, `ef_vien`, `ef_chu`, `ef_phu`, `ef_xanh`, `ef_dam`, `ef_do`; `globals.css` đổi biến Tailwind tương ứng (`ef-*`, thêm `ef-xanh-nhat`, `ef-do-nhat`). `xem` đổi `#D97706` → `#B45309` cho chữ vàng đủ tương phản trên nền trắng. Tím AI giữ nguyên.
+  - `EformHeader`: một dòng tên bệnh nhân, giới, PID, lượt khám, nhãn dị ứng đỏ, Menu; dòng dưới là sinh hiệu (chuyển từ mục Đánh giá chung lên, kèm BMI tự tính), "Đánh giá ban đầu" dạng bảng thả xuống, lần sửa cuối, Xem LSKB, Mở rộng. Header và thanh dưới chỉ ghim từ khổ `lg` trở lên; ở khổ điện thoại chúng cuộn theo trang thay vì che màn hình.
+  - `fields.tsx`: nút, ô nhập, nhãn nguồn dạng viên tròn; ô do AI điền có vạch tím bên trái, ô AI chưa chắc có vạch vàng; nhãn "cần xem lại" có nút **✓ Đúng ngay tại trường** (trước đây chỉ có ở cột AI). Mục (`Section`) thành thẻ trắng có tiêu đề chữ thay cho thanh xanh đậm; lựa chọn Có/Không thành thẻ bấm (`RADIO`); thêm hằng `BTN_CHINH`, `TH`, `TD`, `NHOM` dùng chung.
+  - `TroLyAi`: thanh 3 bước (Nói hoặc gõ → AI điền → Duyệt, Lưu); mỗi lúc chỉ một nút tô đậm (micro, rồi Điền, rồi phần duyệt); nút Điền có vòng quay khi đang chạy, Ctrl+Enter để điền; sau khi điền có thanh tiến độ tím/vàng, danh sách chỗ cần xem lại (Xem, ✓ Đúng), các trường đã điền thu gọn, nút mở tab Chỉ định/Đơn thuốc, hoàn tác. Cột cao vừa nội dung, không còn khoảng trắng thừa. Chữ đã nói vẫn giữ trong ô sau khi điền; nói hoặc gõ thêm thì nút đổi thành "Điền thêm vào phiếu".
+  - `EformScreen`: tiêu đề trái, tab gạch chân, chú giải cùng hàng; thanh dưới gom về một hàng, nút Lưu xanh kèm số chỗ còn cần xem lại. Đổi tên tab "Phiếu khám ngoại trú" → "Phiếu khám" (tiêu đề trang đã ghi đủ).
+  - `ChiDinhTab`, `DonThuocTab`, `LichSuBlock`, `IcdField`, các khối gợi ý, `BaoCaoDialog`: cùng màu và kiểu bảng mới; dòng AI điền trong bảng có vạch tím/vàng ở ô đầu.
+  - `MicButton` (dùng chung): thêm tùy chọn `onStop` và `giaoDien` (lớp CSS và nhãn nút). Không truyền thì giữ kiểu cũ, nên trang `/` không đổi.
+- **Lý do:** Chủ dự án chưa ưng giao diện `/eform`: trông thô, luồng dùng khó hiểu, cột Trợ lý AI nghèo nàn, quá giống EMR cũ. Đã chọn giữ cấu trúc phiếu để bác sĩ vẫn nhận ra, chỉ làm mới trình bày và luồng duyệt AI.
+- **File:** `config/theme.json`, `src/app/globals.css`, `src/client/chung/MicButton.tsx`, `src/client/eform/{EformScreen,EformHeader,TroLyAi,EformForm,fields,IcdField,LichSuBlock,ChiDinhTab,DonThuocTab,GoiYTheoChanDoan,GoiYIcdPanel,MauCauPanel,BaoCaoDialog}.tsx`, `README.md`, `docs/cau-truc-du-an.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** `npx tsc --noEmit`, `npm run lint`, `npm run build` sạch. Chạy `next dev` với `LLM_PROVIDER=mock`, mở bằng playwright ở 1440×900: `/eform` bấm "kiểu nói" → Điền vào phiếu: 14 trường, 3 cần xem lại, 3 chỉ định, 2 thuốc; bấm Xem cuộn đúng tới ô Chẩn đoán ban đầu; bấm ✓ Đúng tại trường thì cột AI và nút Lưu cùng giảm còn 2; tab Chỉ định, Đơn thuốc hiện đúng gợi ý theo chẩn đoán và cảnh báo dị ứng Augmentin. Khổ 390px: không cuộn ngang, header không che phiếu. Trang `/` vẫn như cũ. Console không lỗi. Chưa thử ghi âm thật qua micro (trạng thái đang nghe có viền đỏ).
+- **Ảnh hưởng:** Không đổi logic điền, khớp danh mục hay eval. Ai đang dùng lớp `emr-*` trong nhánh khác phải đổi sang `ef-*`.
+
+### Bật plugin `frontend-design` cho dự án
+- **Loại:** Cấu hình
+- **Thay đổi:** `.claude/settings.json` thêm `frontend-design@claude-plugins-official` vào `enabledPlugins`. Plugin này có skill thiết kế giao diện (chọn bảng màu, kiểu chữ, bố cục, tự chụp màn hình kiểm tra), Claude dùng khi làm lại giao diện. CLAUDE.md thêm tên plugin vào mục "Plugin dùng trong dự án".
+- **Lý do:** Chủ dự án chưa ưng giao diện `/eform` và muốn có skill cải thiện giao diện. Trước đây plugin chỉ bật ở cấu hình cá nhân trên một máy; khai báo ở cấp dự án để đồng đội clone repo về cũng có.
+- **File:** `.claude/settings.json`, `CLAUDE.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** Skill `frontend-design:frontend-design` gọi được trong phiên Claude Code. Không ảnh hưởng code ứng dụng.
+
 ### Tái cấu trúc: tách FE (`src/client`), BE (`src/server`), dùng chung (`src/shared`)
 - **Loại:** Dọn dẹp, Phụ thuộc, Cấu hình, Tài liệu
 - **Thay đổi:**

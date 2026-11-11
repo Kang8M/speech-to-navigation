@@ -29,6 +29,6 @@ export function loadEformData(): EformData {
     canhBao: loadRules(),
     goiY: khopBoMau(readJson<{ mau: MauGoiYGoc[] }>("goi-y-theo-chan-doan.json").mau, danhMuc, loadVietTat()),
     provider: getProviderName(),
-    cauMau: { noi: caMau?.input_noi ?? "", goTat: caMau?.input_go_tat ?? "" },
+    cauMau: { id: CA_MAU, noi: caMau?.input_noi ?? "", goTat: caMau?.input_go_tat ?? "" },
   };
 }

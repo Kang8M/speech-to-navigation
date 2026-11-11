@@ -17,11 +17,11 @@ export function GoiYIcdPanel({ loaiTru = [], onPick }: Props) {
   const goiY = goiYIcd(text, data.icd10, data.quyTac, loaiTru);
 
   return (
-    <div className="mt-1.5 rounded border border-tim-vien bg-tim-nhat p-2">
-      <p className="mb-1.5 text-xs text-muted">
+    <div className="mt-2 rounded-lg border border-tim-vien bg-tim-nhat p-3">
+      <p className="mb-1.5 text-xs text-ef-phu">
         ✨ AI gợi ý từ Bệnh sử và Khám lâm sàng. Độ tin cậy mô phỏng từ điểm khớp từ khóa, không phải xác suất bệnh. Bác sĩ bấm để chọn.
       </p>
-      {goiY.length === 0 && <p className="text-[13px] text-ink">Chưa đủ dữ kiện để gợi ý.</p>}
+      {goiY.length === 0 && <p className="text-[13px] text-ef-chu">Chưa đủ dữ kiện để gợi ý.</p>}
       <div className="space-y-1">
         {goiY.map(({ item, tinCay, khop }) => {
           const percent = Math.round(tinCay * 100);
@@ -30,19 +30,19 @@ export function GoiYIcdPanel({ loaiTru = [], onPick }: Props) {
               key={item.ma}
               type="button"
               onClick={() => onPick(item.ma)}
-              className="block w-full rounded border border-gray-200 bg-white px-2 py-1 text-left hover:border-tim"
+              className="block w-full rounded-md border border-ef-vien bg-white px-3 py-1.5 text-left hover:border-tim focus-visible:outline-2 focus-visible:outline-tim"
             >
               <span className="flex flex-wrap items-center gap-x-2">
-                <strong className="text-[13px] text-ink">{item.ma}</strong>
+                <strong className="text-[13px] text-ef-chu">{item.ma}</strong>
                 <span className="text-[13px]">{item.ten}</span>
-                <span className="ml-auto flex items-center gap-1.5 text-xs text-muted">
-                  <span className="block h-1.5 w-16 overflow-hidden rounded bg-gray-200">
+                <span className="ml-auto flex items-center gap-1.5 text-xs text-ef-phu">
+                  <span className="block h-1.5 w-16 overflow-hidden rounded bg-ef-vien">
                     <span className="block h-full rounded bg-tim" style={{ width: `${percent}%` }} />
                   </span>
                   {percent}%
                 </span>
               </span>
-              <span className="block text-xs text-muted">Khớp: {khop.join(", ")}</span>
+              <span className="block text-xs text-ef-phu">Khớp: {khop.join(", ")}</span>
             </button>
           );
         })}

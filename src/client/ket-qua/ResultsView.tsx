@@ -127,7 +127,7 @@ export function ResultsView({ sessions }: { sessions: SessionRecord[] }) {
             {sessions.length === 0 && (
               <tr>
                 <td colSpan={HEADERS.length} className="px-3 py-6 text-center text-muted">
-                  Chưa có lượt thử nào. Hãy bấm &quot;Xác nhận&quot; ở màn hình làm việc để lưu lượt đầu tiên.
+                  Chưa có lượt thử nào. Trên trang eForm, để AI điền phiếu rồi bấm &quot;Lưu&quot; để ghi lượt đầu tiên.
                 </td>
               </tr>
             )}

@@ -72,12 +72,3 @@ export interface CaseData {
   expected: Draft;
 }
 
-export interface AppConfig {
-  hanhChinh: FormConfig;
-  forms: FormConfig[];
-  catalogs: Catalogs;
-  vietTat: VietTat;
-  rules: WarningRules;
-  cases: CaseData[];
-  provider: string;
-}

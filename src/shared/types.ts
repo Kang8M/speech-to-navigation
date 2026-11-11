@@ -37,6 +37,8 @@ export interface CatalogItem {
   hoat_chat?: string;
   ham_luong?: string;
   dang_bao_che?: string;
+  /** Mục trong danh mục bệnh viện soạn tay (data/catalog/), được khớp trước danh mục thật */
+  uu_tien?: boolean;
 }
 
 export type Catalogs = Record<string, CatalogItem[]>;

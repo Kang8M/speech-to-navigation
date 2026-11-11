@@ -17,8 +17,8 @@
       "hen_tai_kham": "Sau 7 ngày"
     },
     "chi_dinh": [
-      { "ma_dich_vu": "DV-TMH-028", "ten_dich_vu": "Xét nghiệm công thức máu" },
-      { "ma_dich_vu": "DV-TMH-029", "ten_dich_vu": "Xét nghiệm CRP" }
+      { "ma_dich_vu": "22.121", "ten_dich_vu": "Tổng phân tích tế bào máu ngoại vi (bằng máy đếm laser)" },
+      { "ma_dich_vu": "23.228", "ten_dich_vu": "Định lượng CRP (C-Reactive Protein)" }
     ],
     "ke_don": [
       { "ma_thuoc": "TH-005", "ten_thuoc": "Cefuroxim", "ham_luong": "500 mg", "duong_dung": "Uống", "lieu_moi_lan": "1 viên", "so_lan_ngay": 2, "thoi_diem": "Sau ăn", "so_ngay": 7, "tong_so_luong": 14 },

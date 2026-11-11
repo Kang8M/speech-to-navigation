@@ -3,7 +3,7 @@
 Bác sĩ **nói** hoặc **gõ tắt** một đoạn tóm tắt; AI tách ra và điền nháp vào 3 phần (**Phiếu khám, Chỉ định, Đơn thuốc**); bác sĩ duyệt, sửa rồi Lưu.
 
 > **Chỉ dùng dữ liệu giả, không nhập thông tin bệnh nhân thật.**
-> **Danh mục, mã và liều thuốc đều là dữ liệu minh họa, không dùng cho lâm sàng.**
+> **Danh mục thật (ICD-10, kỹ thuật, thuốc lưu hành) chỉ để tham khảo; danh mục bệnh viện, liều thuốc và bộ mẫu là dữ liệu minh họa. Không dùng cho lâm sàng.**
 
 ## Cài đặt và chạy
 
@@ -85,7 +85,10 @@ Các cấu hình khác:
 - `config/viet-tat.json`: bảng từ viết tắt. Khóa một chữ cái phân biệt hoa thường và phải đứng riêng thành từ.
 - `config/canh-bao.json`: cách tính tổng số lượng thuốc (`tinh_tong`). Các khóa tuổi trẻ em, cân nặng là của cảnh báo trên trang cũ đã bỏ, hiện không dùng.
 - `config/theme.json`: màu giao diện. Các khóa `ef_*` là màu của trang eForm (nền, viền, chữ, xanh thao tác chính, đỏ dị ứng), `ai_tim` là màu tím đánh dấu phần AI điền, `xem` là màu vàng đất "cần xem lại".
-- `data/catalog/*.json`: danh mục dịch vụ và thuốc mẫu (mã giả). Danh mục thật cào từ nguồn công khai (ICD-10, kỹ thuật TT 23/2024, hoạt chất, thuốc lưu hành) nằm ở `data/tham-khao/`, ứng dụng chưa dùng; xem `data/tham-khao/README.md`, cào lại bằng `npm run cao-du-lieu`.
+- Danh mục ứng dụng nạp gồm hai phần, ghép ở `src/server/du-lieu/danh-muc.ts`:
+  - **Danh mục bệnh viện soạn tay** `data/catalog/dich-vu.json` (30 mục), `data/catalog/thuoc.json` (33 thuốc): có `ten_khac` (tên bác sĩ hay gọi) và được khớp trước. Dịch vụ có kỹ thuật tương ứng trong TT 23/2024 dùng mã thật (ví dụ `20.13` Nội soi tai mũi họng); 11 dịch vụ TT 23 không có (khám TMH, nội soi tai riêng, lấy ráy, test nhanh liên cầu, CT xoang...) giữ mã giả `DV-TMH-*`. Thuốc giữ mã nội bộ giả `TH-*`.
+  - **Danh mục thật** ở `data/tham-khao/` (xem `data/tham-khao/README.md`, cào lại bằng `npm run cao-du-lieu`): 486 kỹ thuật, 4.914 số đăng ký thuốc gộp còn khoảng 4.770 mục (trùng tên + hàm lượng + dạng bào chế thì giữ số đăng ký còn hạn lâu nhất), 433 mã ICD-10 lọc còn 367 mã chi tiết nhất. Mục thật trùng mã với mục soạn tay thì lấy bản soạn tay.
+  - Thứ tự khớp (`matchCatalog`): trùng tên ở danh mục bệnh viện → trùng tên ở danh mục thật → tìm mờ ở danh mục bệnh viện → tìm mờ ở danh mục thật. Ví dụ "Paracetamol 500mg" ra `TH-013`, "Betaserc 24mg" (bệnh viện chỉ có 16 mg) ra số đăng ký thật, "đo thính lực lời" ra `21.61`.
 
 Lưu ý với file `ca-*.json` đã có: thêm trường mới thì nên bổ sung giá trị vào `expected` để điểm eval không bị tính là "Thừa".
 
@@ -166,7 +169,8 @@ Chỗ khác với EMR là **cột "✨ Trợ lý AI điền phiếu" bên phải
 | Màu | Tím = AI điền (ô có vạch tím bên trái). Vàng = AI chưa chắc, cần xem lại (vạch vàng; bấm "✓ Đúng" ngay cạnh nhãn trường hoặc trong cột AI, hoặc sửa để bỏ đánh dấu). |
 | Không ghi đè | Ô bác sĩ đã gõ hoặc đã sửa thì AI không ghi đè (cột AI không báo riêng). |
 | Mã ICD10 | Không lấy từ LLM. Code chấm điểm từ khóa trên câu chẩn đoán để gán mã, luôn đánh dấu vàng. |
-| Mã dịch vụ, thuốc | Do `src/shared/match.ts` khớp danh mục. Khớp chưa chắc thì dòng vàng, có ô chọn lại trong danh sách gần đúng. |
+| Mã dịch vụ, thuốc | Do `src/shared/match.ts` khớp danh mục. Khớp chưa chắc thì dòng vàng, có ô chọn lại: bấm vào hiện ứng viên AI tìm được, gõ để tìm trong cả danh mục. |
+| Ô tìm danh mục | Tìm dịch vụ, tìm thuốc, ICD10 đều là ô gõ để tìm (`TimDanhMuc.tsx`, tìm mờ theo tên, tên khác, hoạt chất, mã; hiểu từ viết tắt), hiện tối đa 30 kết quả. Mục có nhãn **DM BV** là danh mục bệnh viện. |
 | Nói nhiều lần | Lần điền sau chỉ thêm dòng chỉ định/thuốc chưa có (trùng mã thì bỏ qua). |
 | Đơn thuốc | Tổng số lượng tự tính theo `config/canh-bao.json`. Thuốc cùng nhóm với dị ứng trên header (ví dụ Penicillin → Augmentin, Amoxicillin) hiện cảnh báo đỏ; danh sách nhóm chỉ là minh họa. |
 
@@ -195,8 +199,8 @@ Các nút lấy dữ liệu từ hệ thống khác, Menu, Xem LSKB và Quay l�
 | File trong `data/eform/` | Nội dung |
 |---|---|
 | `ca-gia.json` | Ca giả và lịch sử khám |
-| `goi-y-theo-chan-doan.json` | Bộ mẫu chỉ định, thuốc, lời dặn theo mã ICD10 (giả). Mỗi mẫu: `id`, `ten`, `icd` (danh sách mã), `chi_dinh` (`ten`), `don_thuoc` (`ten`, `ham_luong`, `duong_dung`, `lieu_moi_lan`, `so_lan_ngay`, `thoi_diem`, `so_ngay`, `ghi_chu`), `loi_dan`. Tên phải có trong `data/catalog/` để khớp được mã |
-| `icd10.json` | 28 mã TMH mẫu kèm từ khóa |
+| `goi-y-theo-chan-doan.json` | Bộ mẫu chỉ định, thuốc, lời dặn theo mã ICD10 (giả). Mỗi mẫu: `id`, `ten`, `icd` (danh sách mã), `chi_dinh` (`ten`), `don_thuoc` (`ten`, `ham_luong`, `duong_dung`, `lieu_moi_lan`, `so_lan_ngay`, `thoi_diem`, `so_ngay`, `ghi_chu`), `loi_dan`. Tên nên có trong danh mục bệnh viện `data/catalog/` để khớp chắc mã |
+| `icd10.json` | Từ khóa gợi ý ICD10 (`manh`, `vua`) cho 28 mã TMH hay gặp. Danh sách mã để chọn lấy từ `data/tham-khao/icd10-tmh.json` (367 mã chi tiết); mã ở đây mà nguồn thật không có vẫn được giữ |
 | `mau-cau.json` | Mẫu câu theo nhóm lý do khám, chỗ trống viết dạng `[a\|b]` |
 | `quy-tac.json` | Ngưỡng tóm tắt, cách tính điểm, từ phủ định |
 | `thu-vien.json` | Thư viện mẫu câu tĩnh của các ô khác |
@@ -206,11 +210,11 @@ Các nút lấy dữ liệu từ hệ thống khác, Menu, Xem LSKB và Quay l�
 
 ```
 config/         cấu hình form, màu, viết tắt, cảnh báo
-data/catalog/   danh mục mẫu
+data/catalog/   danh mục bệnh viện soạn tay (khớp trước danh mục thật)
 data/cases/     ca giả
 data/sessions/  kết quả các lượt thử (tự sinh, không đưa lên git)
 data/eform/     ca giả, danh mục và quy tắc của trang eForm
-data/tham-khao/ danh mục thật cào từ nguồn công khai, chỉ để tra cứu (ứng dụng chưa nạp)
+data/tham-khao/ danh mục thật cào từ nguồn công khai, ứng dụng nạp kèm data/catalog/
 src/app/        trang và API (định tuyến Next, mỏng)
 src/client/     giao diện chạy trên trình duyệt: chung/ (Header, MicButton), eform/ (trang chủ), ket-qua/, api.ts (gọi API)
 src/server/ai/  AI thật: pipeline, prompt, schema, llm/ (mock, rules, anthropic, openai, gemini), asr.ts (Zipformer)

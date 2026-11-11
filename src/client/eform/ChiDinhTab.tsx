@@ -3,7 +3,9 @@
 import { MO_PHONG, useEform } from "@/client/eform/EformContext";
 import { BTN_OUTLINE, SourceBadge } from "@/client/eform/fields";
 import { GoiYTheoChanDoan } from "@/client/eform/GoiYTheoChanDoan";
+import { TimDanhMuc } from "@/client/eform/TimDanhMuc";
 import type { DongChiDinh } from "@/shared/eform/dien-phieu";
+import type { CatalogItem } from "@/shared/types";
 
 const CELL = "w-full rounded-md border border-ef-vien bg-white px-2 py-1 text-[13px] outline-none focus:border-ef-xanh focus:ring-2 focus:ring-ef-xanh/20";
 
@@ -19,9 +21,8 @@ export function ChiDinhTab({ rows, onChange }: { rows: DongChiDinh[]; onChange: 
       ),
     );
 
-  const add = (ma: string) => {
-    const item = dichVu.find((d) => d.ma === ma);
-    if (!item || rows.some((row) => row.ma === ma)) return;
+  const add = (item: CatalogItem) => {
+    if (rows.some((row) => row.ma === item.ma)) return;
     onChange([...rows, { ma: item.ma, ten: item.ten, so_luong: "1", ghi_chu: "", nguon: "bs", ung_vien: [] }]);
   };
 
@@ -39,19 +40,18 @@ export function ChiDinhTab({ rows, onChange }: { rows: DongChiDinh[]; onChange: 
       <div className="space-y-4 p-5">
         <GoiYTheoChanDoan rows={rows} lay={(mau) => mau.chiDinh} onAdd={(moi) => onChange([...rows, ...moi])} />
 
-        <label className="block">
+        <div>
           <span className="mb-1 block font-semibold text-ef-chu">Tìm kiếm dịch vụ</span>
-          <select value="" onChange={(e) => add(e.target.value)} className={CELL}>
-            <option value="">Gõ để tìm dịch vụ…</option>
-            {dichVu
-              .filter((d) => !rows.some((row) => row.ma === d.ma))
-              .map((d) => (
-                <option key={d.ma} value={d.ma}>
-                  {d.ma} – {d.ten}
-                </option>
-              ))}
-          </select>
-        </label>
+          <TimDanhMuc
+            items={dichVu}
+            vietTat={data.vietTat}
+            onPick={add}
+            ariaLabel="Tìm kiếm dịch vụ"
+            placeholder={`Gõ tên hoặc mã dịch vụ (${dichVu.length} dịch vụ)…`}
+            loaiTru={rows.map((row) => row.ma)}
+            className={CELL}
+          />
+        </div>
 
         <div>
           <h3 className="mb-2 text-sm font-semibold text-ef-dam">Dịch vụ đã chọn – {rows.length}</h3>
@@ -77,22 +77,17 @@ export function ChiDinhTab({ rows, onChange }: { rows: DongChiDinh[]; onChange: 
                           <SourceBadge nguon={row.nguon} />
                         </div>
                         {row.nguon === "xem" && (
-                          <select
-                            aria-label={`Chọn lại dịch vụ cho "${row.ten}"`}
-                            value=""
-                            onChange={(e) => {
-                              const item = dichVu.find((d) => d.ma === e.target.value);
-                              if (item) update(index, { ma: item.ma, ten: item.ten });
-                            }}
-                            className={`${CELL} mt-1.5 border-xem/60`}
-                          >
-                            <option value="">AI chưa chắc – chọn đúng dịch vụ…</option>
-                            {(row.ung_vien.length > 0 ? row.ung_vien : dichVu).map((d) => (
-                              <option key={d.ma} value={d.ma}>
-                                {d.ma} – {d.ten}
-                              </option>
-                            ))}
-                          </select>
+                          <div className="mt-1.5">
+                            <TimDanhMuc
+                              items={dichVu}
+                              vietTat={data.vietTat}
+                              goiY={row.ung_vien}
+                              onPick={(item) => update(index, { ma: item.ma, ten: item.ten })}
+                              ariaLabel={`Chọn lại dịch vụ cho "${row.ten}"`}
+                              placeholder="AI chưa chắc – chọn hoặc gõ để tìm đúng dịch vụ…"
+                              className={`${CELL} border-xem/60`}
+                            />
+                          </div>
                         )}
                       </td>
                       <td className="border-b border-ef-vien px-2.5 py-2">

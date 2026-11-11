@@ -4,11 +4,12 @@ import fs from "node:fs";
 import path from "node:path";
 import type {
   CaseData,
-  Catalogs,
   FormConfig,
   VietTat,
   WarningRules,
 } from "@/shared/types";
+
+export { loadCatalogs } from "./danh-muc";
 
 const FORM_FILES = ["phieu-kham", "chi-dinh", "ke-don"];
 
@@ -33,15 +34,6 @@ export function loadVietTat(): VietTat {
 
 export function loadRules(): WarningRules {
   return readJson<WarningRules>("config", "canh-bao.json");
-}
-
-export function loadCatalogs(): Catalogs {
-  const dir = path.join(process.cwd(), "data", "catalog");
-  const catalogs: Catalogs = {};
-  for (const file of fs.readdirSync(dir).filter((f) => f.endsWith(".json"))) {
-    catalogs[file.replace(/\.json$/, "")] = readJson("data", "catalog", file);
-  }
-  return catalogs;
 }
 
 export function loadCases(): CaseData[] {

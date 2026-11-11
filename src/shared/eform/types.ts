@@ -1,5 +1,5 @@
 // Kiểu dữ liệu của trang mô phỏng eForm ngoại trú.
-import type { CatalogItem, WarningRules } from "../types";
+import type { CatalogItem, VietTat, WarningRules } from "../types";
 import type { MauGoiY } from "./goi-y";
 
 /** cu: dữ liệu có sẵn; ai: AI thêm; xem: AI thêm nhưng chưa chắc, bác sĩ cần xem lại;
@@ -131,8 +131,10 @@ export interface EformData {
   tuyChon: TuyChon;
   quyTac: QuyTacAi;
   mauCau: MauCauData;
-  /** Danh mục dịch vụ và thuốc (data/catalog/), để bác sĩ chọn lại khi AI khớp chưa chắc */
+  /** Danh mục dịch vụ và thuốc: danh mục bệnh viện (data/catalog/) ghép danh mục thật (data/tham-khao/) */
   danhMuc: { dichVu: CatalogItem[]; thuoc: CatalogItem[] };
+  /** Từ viết tắt (config/viet-tat.json), để ô tìm danh mục hiểu "nmsl", "đtl"... */
+  vietTat: VietTat;
   canhBao: WarningRules;
   /** Bộ mẫu chỉ định và đơn thuốc theo chẩn đoán, mã đã gán bằng src/shared/match.ts */
   goiY: MauGoiY[];

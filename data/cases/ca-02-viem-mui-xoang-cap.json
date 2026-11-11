@@ -19,7 +19,7 @@
     },
     "chi_dinh": [
       { "ma_dich_vu": "DV-TMH-004", "ten_dich_vu": "Nội soi mũi xoang" },
-      { "ma_dich_vu": "DV-TMH-011", "ten_dich_vu": "Chụp X-quang xoang tư thế Blondeau" }
+      { "ma_dich_vu": "18.72", "ten_dich_vu": "Chụp X-quang Blondeau" }
     ],
     "ke_don": [
       { "ma_thuoc": "TH-002", "ten_thuoc": "Augmentin", "ham_luong": "1 g", "duong_dung": "Uống", "lieu_moi_lan": "1 viên", "so_lan_ngay": 2, "thoi_diem": "Sau ăn", "so_ngay": 7, "tong_so_luong": 14 },

@@ -19,7 +19,7 @@
     },
     "chi_dinh": [
       { "ma_dich_vu": "DV-TMH-003", "ten_dich_vu": "Nội soi tai" },
-      { "ma_dich_vu": "DV-TMH-006", "ten_dich_vu": "Đo thính lực đơn âm" },
+      { "ma_dich_vu": "21.60", "ten_dich_vu": "Đo thính lực đơn âm" },
       { "ma_dich_vu": "DV-TMH-017", "ten_dich_vu": "Làm sạch ống tai, hút dịch tai" }
     ],
     "ke_don": [

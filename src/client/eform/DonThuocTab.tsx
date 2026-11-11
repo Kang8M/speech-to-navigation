@@ -3,6 +3,7 @@
 import { useEform } from "@/client/eform/EformContext";
 import { BTN_OUTLINE, SourceBadge } from "@/client/eform/fields";
 import { GoiYTheoChanDoan } from "@/client/eform/GoiYTheoChanDoan";
+import { TimDanhMuc } from "@/client/eform/TimDanhMuc";
 import type { DongThuoc } from "@/shared/eform/dien-phieu";
 import { trungDiUng } from "@/shared/eform/di-ung";
 import type { CatalogItem } from "@/shared/types";
@@ -39,9 +40,7 @@ export function DonThuocTab({ rows, onChange }: { rows: DongThuoc[]; onChange: (
 
   const chon = (item: CatalogItem): Partial<DongThuoc> => ({ ma: item.ma, ten: item.ten, ham_luong: item.ham_luong ?? "" });
 
-  const add = (ma: string) => {
-    const item = thuoc.find((t) => t.ma === ma);
-    if (!item) return;
+  const add = (item: CatalogItem) => {
     onChange([
       ...rows,
       { ...chon(item), duong_dung: "", lieu_moi_lan: "", so_lan_ngay: "", thoi_diem: "", so_ngay: "", ghi_chu: "", nguon: "bs", ung_vien: [] } as DongThuoc,
@@ -90,17 +89,17 @@ export function DonThuocTab({ rows, onChange }: { rows: DongThuoc[]; onChange: (
           }}
         />
 
-        <label className="block">
+        <div>
           <span className="mb-1 block font-semibold text-ef-chu">Tìm thuốc</span>
-          <select value="" onChange={(e) => add(e.target.value)} className={CELL}>
-            <option value="">Gõ tên thuốc…</option>
-            {thuoc.map((t) => (
-              <option key={t.ma} value={t.ma}>
-                {t.ma} – {t.ten} {t.ham_luong}
-              </option>
-            ))}
-          </select>
-        </label>
+          <TimDanhMuc
+            items={thuoc}
+            vietTat={data.vietTat}
+            onPick={add}
+            ariaLabel="Tìm thuốc"
+            placeholder={`Gõ tên thuốc, hoạt chất hoặc số đăng ký (${thuoc.length} thuốc)…`}
+            className={CELL}
+          />
+        </div>
 
         <div>
           <h3 className="mb-2 text-sm font-semibold text-ef-dam">Đơn thuốc – {rows.length} thuốc</h3>
@@ -144,22 +143,17 @@ export function DonThuocTab({ rows, onChange }: { rows: DongThuoc[]; onChange: (
                             </p>
                           )}
                           {row.nguon === "xem" && (
-                            <select
-                              aria-label={`Chọn lại thuốc cho "${row.ten}"`}
-                              value=""
-                              onChange={(e) => {
-                                const picked = thuoc.find((t) => t.ma === e.target.value);
-                                if (picked) update(index, chon(picked));
-                              }}
-                              className={`${CELL} mt-1.5 border-xem/60`}
-                            >
-                              <option value="">AI chưa chắc – chọn đúng thuốc…</option>
-                              {(row.ung_vien.length > 0 ? row.ung_vien : thuoc).map((t) => (
-                                <option key={t.ma} value={t.ma}>
-                                  {t.ma} – {t.ten} {t.ham_luong}
-                                </option>
-                              ))}
-                            </select>
+                            <div className="mt-1.5">
+                              <TimDanhMuc
+                                items={thuoc}
+                                vietTat={data.vietTat}
+                                goiY={row.ung_vien}
+                                onPick={(picked) => update(index, chon(picked))}
+                                ariaLabel={`Chọn lại thuốc cho "${row.ten}"`}
+                                placeholder="AI chưa chắc – chọn hoặc gõ để tìm đúng thuốc…"
+                                className={`${CELL} border-xem/60`}
+                              />
+                            </div>
                           )}
                         </td>
                         {COT.map((cot) => (

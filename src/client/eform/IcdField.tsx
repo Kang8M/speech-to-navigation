@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useEform } from "@/client/eform/EformContext";
 import { BTN_AI, FieldLabel, anchorId, inputClass } from "@/client/eform/fields";
 import { GoiYIcdPanel } from "@/client/eform/GoiYIcdPanel";
+import { TimDanhMuc } from "@/client/eform/TimDanhMuc";
 import type { Icd10 } from "@/shared/eform/types";
 
 const SEPARATOR = ",";
@@ -40,19 +41,24 @@ export function IcdField({ id, moTaId, label }: { id: string; moTaId: string; la
           <FieldLabel id={id} label={`${label} (ICD10)`} nguon={field.nguon} />
           <GoiYButton open={open} onToggle={() => setOpen((value) => !value)} />
         </div>
-        <select
-          aria-label={`${label} (ICD10)`}
-          value={field.value}
-          onChange={(e) => put(id, e.target.value, e.target.value ? "bs" : null)}
-          className={inputClass(field.nguon)}
-        >
-          <option value="">-- Chọn mã ICD10 --</option>
-          {data.icd10.map((item) => (
-            <option key={item.ma} value={item.ma}>
-              {item.ma} – {item.ten}
-            </option>
-          ))}
-        </select>
+        <div className="flex items-start gap-1.5">
+          <div className="min-w-0 flex-1">
+            <TimDanhMuc
+              items={data.icd10}
+              vietTat={data.vietTat}
+              onPick={(item) => put(id, item.ma, "bs")}
+              ariaLabel={`${label} (ICD10)`}
+              placeholder={`Gõ mã hoặc tên bệnh (${data.icd10.length} mã ICD10)…`}
+              giaTri={field.value ? nhanIcd(field.value, data.icd10) : undefined}
+              className={inputClass(field.nguon)}
+            />
+          </div>
+          {field.value && (
+            <button type="button" aria-label={`Bỏ mã ${field.value}`} onClick={() => put(id, "", null)} className="mt-1.5 rounded px-1.5 text-ef-phu hover:text-ef-do">
+              ×
+            </button>
+          )}
+        </div>
         {open && (
           <GoiYIcdPanel
             onPick={(ma) => {
@@ -114,16 +120,15 @@ export function IcdMultiField({ id, label, loaiTru }: { id: string; label: strin
           ))}
         </div>
       )}
-      <select aria-label={`Thêm ${label.toLowerCase()}`} value="" onChange={(e) => add(e.target.value, "bs")} className={inputClass(null)}>
-        <option value="">-- Thêm mã ICD10 --</option>
-        {data.icd10
-          .filter((item) => !codes.includes(item.ma))
-          .map((item) => (
-            <option key={item.ma} value={item.ma}>
-              {item.ma} – {item.ten}
-            </option>
-          ))}
-      </select>
+      <TimDanhMuc
+        items={data.icd10}
+        vietTat={data.vietTat}
+        onPick={(item) => add(item.ma, "bs")}
+        ariaLabel={`Thêm ${label.toLowerCase()}`}
+        placeholder="Gõ mã hoặc tên bệnh để thêm…"
+        loaiTru={codes}
+        className={inputClass(null)}
+      />
       {open && (
         <GoiYIcdPanel
           loaiTru={[...codes, ...loaiTru]}

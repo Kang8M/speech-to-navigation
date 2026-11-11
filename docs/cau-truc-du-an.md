@@ -29,7 +29,8 @@ src/
       llm/                mỗi nhà cung cấp một file: mock, rules, anthropic, openai, gemini
       asr.ts              phiên nhận dạng Zipformer + Silero VAD (gói native sherpa-onnx-node)
     du-lieu/              đọc/ghi đĩa
-      config.ts           nạp config/ và data/catalog, data/cases
+      config.ts           nạp config/ và data/cases
+      danh-muc.ts         ghép danh mục bệnh viện (data/catalog/) với danh mục thật (data/tham-khao/), ICD10; nhớ theo giờ sửa file
       eform.ts            nạp data/eform/ cho trang eForm
       sessions.ts         ghi/đọc data/sessions/
 

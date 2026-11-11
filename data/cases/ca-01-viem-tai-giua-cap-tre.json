@@ -17,7 +17,7 @@
       "hen_tai_kham": "Sau 7 ngày"
     },
     "chi_dinh": [
-      { "ma_dich_vu": "DV-TMH-002", "ten_dich_vu": "Nội soi Tai Mũi Họng", "so_luong": 1 }
+      { "ma_dich_vu": "20.13", "ten_dich_vu": "Nội soi tai mũi họng", "so_luong": 1 }
     ],
     "ke_don": [
       { "ma_thuoc": "TH-004", "ten_thuoc": "Amoxicillin", "ham_luong": "250 mg", "duong_dung": "Uống", "lieu_moi_lan": "2 gói", "so_lan_ngay": 2, "thoi_diem": "Sau ăn", "so_ngay": 7, "tong_so_luong": 28 },

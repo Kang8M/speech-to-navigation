@@ -4,6 +4,25 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-11
 
+### Trang Trình diễn: 4 kiểu tương tác với máy trên cùng một ca; hiểu lệnh "kê như mọi khi"
+- **Loại:** Tính năng
+- **Thay đổi:**
+  - Trang mới `/trinh-dien` (link "Trình diễn" trên thanh đầu). Thanh chọn 4 kiểu: 1 Máy điền sẵn, 2 Bấm một lần, 3 Nói một câu, 4 Nghe cả buổi khám. Thẻ giải thích có 5 ô: Giống như, Lúc nào, Bác sĩ làm, Máy làm, Bác sĩ cần kiểm tra; có nút ẩn/hiện. Nút "↺ Làm lại từ đầu". Mỗi lần chọn kiểu, `EformScreen` mở lại với `kichBan`: kiểu 1 đã có nháp AI của câu mẫu (pipeline `mock`, đổ vào phiếu ở server, không gọi LLM); kiểu 2 đã chọn H66.1 và mở tab Đơn thuốc với 3 đơn đã kê giả; kiểu 3 đã chọn H66.1, ô nhập có sẵn câu lệnh; kiểu 4 có nút "▶ Bắt đầu nghe buổi khám" phát lại 12 câu hội thoại giả vào ô nhập, mỗi câu khoảng 1,4 giây, có nút Dừng. Ở trang này Lưu không ghi số đo hay đơn đã kê.
+  - Lệnh "kê như mọi khi", "như lần trước", "đơn quen"… (`nhuMoiKhi` trong `src/shared/eform/thoi-quen.ts`) dùng được ở mọi trang: sau khi AI điền, thêm các dòng thuốc, chỉ định bác sĩ hay kê (từ một nửa số lần trở lên) cho chẩn đoán chính lên trước dòng AI tách, bỏ dòng trùng. Thông báo cho biết đã lấy bao nhiêu dòng, hoặc chưa có đơn đã kê cho mã đó. `TroLyAi` gửi kèm đoạn chữ trong `onDien`.
+  - Prompt LLM thêm quy tắc cho hội thoại `BS:`/`BN:`: lời bệnh nhân chỉ dùng cho lý do khám, bệnh sử, tiền sử.
+  - Kịch bản ở `data/eform/trinh-dien.json` (dữ liệu giả, liều minh họa).
+- **Lý do:** Chủ dự án không biết trình bày thế nào để bác sĩ hiểu "tương tác với AI" nghĩa là gì, trước buổi họp bác sĩ đề nghị mà chủ dự án chủ trì. Chọn làm chế độ trình diễn trước tài liệu in.
+- **File:** `src/app/trinh-dien/page.tsx` (mới), `src/client/trinh-dien/TrinhDienScreen.tsx` (mới), `src/server/du-lieu/trinh-dien.ts` (mới), `data/eform/trinh-dien.json` (mới), `src/client/eform/EformScreen.tsx` (`kichBan`, `trangThaiDau`, `dongQuen`, không ghi khi trình diễn), `src/client/eform/TroLyAi.tsx` (`vanBanDau`, `hoiThoai`, `onDien(result, text)`), `src/shared/eform/thoi-quen.ts` (`nhuMoiKhi`), `src/shared/eform/types.ts` (`TrinhDienData`, `KieuTuongTac`, `KichBan`), `src/server/ai/prompt.ts`, `src/client/chung/Header.tsx`, `README.md`, `docs/cau-truc-du-an.md`
+- **Kiểm tra:** `npx tsc --noEmit`, `npm run lint` sạch. `npm run eval -- --rule-only` không đổi (Phiếu khám nói 97,1%, gõ tắt 98,1%; Chỉ định nói 92,9%; Đơn thuốc nói 99,1%). Playwright trên dev server (`gemini-3.5-flash`), màn 1536×682: kiểu 1 mở ra có 3 chỉ định, 2 thuốc, 3 chỗ cần xem lại; kiểu 2 hiện "Đơn anh/chị đã kê 3 lần trước", Ciprofloxacin và Paracetamol "kê 2/3 lần" được tích, Ofloxacin "kê 1/3 lần" không tích; kiểu 3 bấm Điền (1 lần gọi Gemini) ra Ciprofloxacin, Paracetamol (từ đơn quen) và Cetirizin 10 mg (từ câu nói); kiểu 4 phát đủ 12 câu, bấm Điền (Gemini báo 503 một lần, bấm lại thì được) ra tiền sử lấy từ lời bệnh nhân, khám chuyên khoa, chẩn đoán, lời dặn lấy từ lời bác sĩ, 3 chỉ định, 2 thuốc. Trang `/` không lỗi console. Lần đầu tính nháp kiểu 1 trong component client thì gặp lỗi hydration (lúc SSR mã ICD ra rỗng, trình duyệt ra H66.3; chưa rõ nguyên nhân), nên chuyển sang tính ở server. Chưa chạy eval LLM cho quy tắc hội thoại mới (tốn phí).
+- **Ảnh hưởng:** Ở trang chính, câu có "như mọi khi" giờ thêm cả bộ thuốc quen. Khi kê tùy ý thì đây là hành vi mới. Thẻ giải thích chiếm chỗ trên màn thấp, nên ẩn đi trước khi bấm Điền. Lỗi hydration ở trên có thể còn ở chỗ khác nếu sau này để component client gọi `goiYIcd` lúc render đầu.
+
+### Ghi thêm ý "AI hỗ trợ chẩn đoán để đỡ bỏ sót" vào phản hồi bác sĩ
+- **Loại:** Tài liệu
+- **Thay đổi:** `docs/tham-khao/phan-hoi-bac-si-prototype-2026-11-11.md` thêm ý 5 vào bảng, thêm mục "Ý 5": lý do chưa nên làm dạng gợi ý chẩn đoán (rủi ro hỗ trợ quyết định lâm sàng, chưa biết thực tế bỏ sót gì, báo nhiều quá thì bị bỏ qua), đề xuất bản hẹp "cờ đỏ, cân nhắc loại trừ" bằng rule do bác sĩ đưa, 3 ví dụ ghi rõ chưa được bác sĩ xác nhận. Thêm 3 câu hỏi Mom Test. Mục lục `docs/tham-khao/README.md` cập nhật mô tả.
+- **Lý do:** Chủ dự án báo thêm ý kiến này sau buổi xem prototype và muốn ghi vào file phản hồi.
+- **File:** `docs/tham-khao/phan-hoi-bac-si-prototype-2026-11-11.md`, `docs/tham-khao/README.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** Đọc lại, không có tên hay thông tin bệnh nhân. Không đổi code.
+
 ### Gợi ý "Đơn anh/chị đã kê" theo thói quen từng bác sĩ
 - **Loại:** Tính năng
 - **Thay đổi:**

@@ -14,8 +14,8 @@ import { splitCodes } from "@/client/eform/IcdField";
 import { TroLyAi, type TabId } from "@/client/eform/TroLyAi";
 import { dienPhieu, type DongChiDinh, type DongThuoc, type KetQuaDien } from "@/shared/eform/dien-phieu";
 import { demLuot } from "@/shared/eform/do-luong";
-import { chiGiuCot, COT_CHI_DINH, COT_THUOC, ghepGoiY } from "@/shared/eform/thoi-quen";
-import type { EformData, Nguon, Truong } from "@/shared/eform/types";
+import { chiGiuCot, COT_CHI_DINH, COT_THUOC, ghepGoiY, goiYThoiQuen, hayKe, nhuMoiKhi } from "@/shared/eform/thoi-quen";
+import type { EformData, KichBan, Nguon, Truong } from "@/shared/eform/types";
 import type { PipelineResult } from "@/shared/api";
 import type { InputMode } from "@/shared/metrics";
 
@@ -89,15 +89,43 @@ function nowText(): string {
   return `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
 }
 
-export function EformScreen({ data }: { data: EformData }) {
-  const [fields, setFields] = useState(() => initFields(data.ca.gia_tri));
-  const [chiDinh, setChiDinh] = useState(KHONG_CHI_DINH);
-  const [donThuoc, setDonThuoc] = useState(KHONG_THUOC);
+/**
+ * Trạng thái lúc mở phiếu. Trang /trinh-dien truyền kichBan: kiểu 1 mở ra đã có nháp AI (server đổ sẵn),
+ * kiểu 2 và 3 đã chọn sẵn chẩn đoán; kiểu 2 mở thẳng tab Đơn thuốc.
+ */
+function trangThaiDau(data: EformData, kichBan?: KichBan) {
+  const fields = initFields(data.ca.gia_tri);
+  const td = data.trinhDien;
+  if (td && (kichBan === 2 || kichBan === 3)) {
+    const ten = data.icd10.find((item) => item.ma === td.icd)?.ten ?? "";
+    fields.icd_ra_vien = { value: td.icd, nguon: "bs" };
+    fields.mo_ta_ra_vien = { value: ten, nguon: "bs" };
+  }
+  if (td && kichBan === 1) {
+    const kq = td.phieuMau;
+    const them = [...kq.chiDinh, ...kq.donThuoc];
+    return {
+      fields: { ...fields, ...kq.truong },
+      chiDinh: kq.chiDinh,
+      donThuoc: kq.donThuoc,
+      ketQua: kq,
+      dongAi: { tong: them.length, khop: them.filter((row) => row.nguon === "ai").length },
+      tab: "phieu" as TabId,
+    };
+  }
+  return { fields, chiDinh: KHONG_CHI_DINH, donThuoc: KHONG_THUOC, ketQua: null, dongAi: { tong: 0, khop: 0 }, tab: (kichBan === 2 ? "don_thuoc" : "phieu") as TabId };
+}
+
+export function EformScreen({ data, kichBan }: { data: EformData; kichBan?: KichBan }) {
+  const [dau] = useState(() => trangThaiDau(data, kichBan));
+  const [fields, setFields] = useState(dau.fields);
+  const [chiDinh, setChiDinh] = useState(dau.chiDinh);
+  const [donThuoc, setDonThuoc] = useState(dau.donThuoc);
   // Dữ liệu lúc Lưu gần nhất (ban đầu là lúc mở phiếu); khác tham chiếu nghĩa là có thay đổi chưa Lưu
   const [banLuu, setBanLuu] = useState(() => ({ fields, chiDinh, donThuoc }));
-  const [ketQua, setKetQua] = useState<KetQuaDien | null>(null);
+  const [ketQua, setKetQua] = useState<KetQuaDien | null>(dau.ketQua);
   const [banChup, setBanChup] = useState<BanChup | null>(null);
-  const [dongAi, setDongAi] = useState<DongAi>({ tong: 0, khop: 0 });
+  const [dongAi, setDongAi] = useState<DongAi>(dau.dongAi);
   const [luot, setLuot] = useState<Luot>({
     batDau: null,
     kieuNhap: "go",
@@ -105,7 +133,7 @@ export function EformScreen({ data }: { data: EformData }) {
     provider: data.provider,
     daGhi: false,
   });
-  const [tab, setTab] = useState<TabId>("phieu");
+  const [tab, setTab] = useState<TabId>(dau.tab);
   // Một lượt mở phiếu là một lần kê: Lưu lại nhiều lần thì server ghi đè, không đếm thêm vào thói quen
   const [idLuotKham] = useState(() => crypto.randomUUID());
   const [trangThai, setTrangThai] = useState(data.ca.trang_thai);
@@ -141,10 +169,26 @@ export function EformScreen({ data }: { data: EformData }) {
     [data, fields, notify],
   );
 
-  const aiDien = (result: PipelineResult) => {
+  /** "Kê như mọi khi": các dòng bác sĩ hay kê cho chẩn đoán chính (trên phiếu, chưa có thì mã AI vừa gán) */
+  const dongQuen = (kq: KetQuaDien) => {
+    const icd =
+      splitCodes(api.get("icd_ra_vien").value)[0] ??
+      splitCodes(api.get("icd_ban_dau").value)[0] ??
+      splitCodes(kq.truong.icd_ra_vien?.value ?? "")[0];
+    const quen = icd ? goiYThoiQuen([icd], data.thoiQuen, data.danhMuc)[0] : undefined;
+    if (!quen) return { icd, chiDinh: [], donThuoc: [] };
+    const lay = <T extends { ma: string; ten: string }>(rows: T[]) => rows.filter((row) => hayKe(quen, row)).map((row) => ({ ...row, tu_ai: true }));
+    return { icd, chiDinh: lay(quen.chiDinh), donThuoc: lay(quen.donThuoc) };
+  };
+
+  const aiDien = (result: PipelineResult, text: string) => {
     const kq = dienPhieu(result.draft, result.matches, data, api.get);
-    const themChiDinh = dongMoi(chiDinh, kq.chiDinh);
-    const themThuoc = dongMoi(donThuoc, kq.donThuoc);
+    const quen = nhuMoiKhi(text) ? dongQuen(kq) : null;
+    // Dòng quen đứng trước, dòng AI tách từ câu nói thêm vào sau; trùng mã hay tên thì bỏ
+    const quenChiDinh = dongMoi(chiDinh, quen?.chiDinh ?? []);
+    const quenThuoc = dongMoi(donThuoc, quen?.donThuoc ?? []);
+    const themChiDinh = [...quenChiDinh, ...dongMoi([...chiDinh, ...quenChiDinh], kq.chiDinh)];
+    const themThuoc = [...quenThuoc, ...dongMoi([...donThuoc, ...quenThuoc], kq.donThuoc)];
     const them = [...themChiDinh, ...themThuoc];
     setBanChup({ fields, chiDinh, donThuoc, ketQua, dongAi });
     setFields((prev) => ({ ...prev, ...kq.truong }));
@@ -154,7 +198,12 @@ export function EformScreen({ data }: { data: EformData }) {
     setDongAi({ tong: dongAi.tong + them.length, khop: dongAi.khop + them.filter((row) => row.nguon === "ai").length });
     setLuot((prev) => ({ ...prev, provider: result.provider }));
     setTab("phieu");
-    notify(`AI đã điền ${kq.daDien.length} trường, ${kq.chiDinh.length} chỉ định, ${kq.donThuoc.length} thuốc.`);
+    const ghiChuQuen = !quen
+      ? ""
+      : quenChiDinh.length + quenThuoc.length > 0
+        ? ` Đã lấy ${quenThuoc.length} thuốc, ${quenChiDinh.length} chỉ định anh/chị hay kê cho ${quen.icd}.`
+        : ` Chưa có đơn anh/chị đã kê cho ${quen.icd ?? "chẩn đoán này"} nên chưa lấy được bộ quen.`;
+    notify(`AI đã điền ${kq.daDien.length} trường, ${themChiDinh.length} chỉ định, ${themThuoc.length} thuốc.${ghiChuQuen}`);
   };
 
   const hoanTac = () => {
@@ -253,6 +302,10 @@ export function EformScreen({ data }: { data: EformData }) {
   const save = async () => {
     setLastEdit({ nguoi: data.ca.dang_nhap, luc: nowText() });
     setBanLuu({ fields, chiDinh, donThuoc });
+    if (data.trinhDien) {
+      notify("Đã lưu (trình diễn: không ghi số đo hay đơn đã kê).");
+      return;
+    }
     const ghiChu = (await ghiLuot()) + (await ghiThoiQuen());
     notify("Đã lưu." + ghiChu);
   };
@@ -339,6 +392,8 @@ export function EformScreen({ data }: { data: EformData }) {
               onOpenTab={setTab}
               soChiDinh={chiDinh.length}
               soThuoc={donThuoc.length}
+              vanBanDau={kichBan === 3 ? data.trinhDien?.lenh : undefined}
+              hoiThoai={kichBan === 4 ? data.trinhDien?.hoiThoai : undefined}
             />
           </fieldset>
         </div>

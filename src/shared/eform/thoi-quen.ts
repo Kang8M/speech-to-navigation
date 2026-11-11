@@ -105,3 +105,10 @@ export function ghepGoiY(
     ...chonBoMau(maIcd, data.goiY),
   ];
 }
+
+/** Câu có "kê như mọi khi", "như lần trước", "đơn quen"… thì lấy bộ thuốc, chỉ định hay kê cho chẩn đoán chính */
+const LENH_NHU_MOI_KHI = /như (mọi khi|mọi lần|lần trước|thường lệ|thường lần|cũ)|đơn quen|bộ quen/iu;
+
+export function nhuMoiKhi(text: string): boolean {
+  return LENH_NHU_MOI_KHI.test(text.normalize("NFC"));
+}

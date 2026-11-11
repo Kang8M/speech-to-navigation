@@ -224,9 +224,27 @@ Nhãn trên giao diện: **✨ AI điền**, **⚠ AI chưa chắc, cần xem l�
 
 Các nút lấy dữ liệu từ hệ thống khác, Menu, Xem LSKB và Quay lại chỉ hiện thông báo mô phỏng. Nút Lưu không ghi nội dung phiếu xuống đĩa. Nó chỉ ghi số đo lượt thử (xem mục Đo lường) và các dòng chỉ định, thuốc cho gợi ý theo thói quen. Tải lại trang là phiếu về dữ liệu ban đầu.
 
+### Trang Trình diễn (`/trinh-dien`)
+
+Dùng trong buổi họp với bác sĩ, để cho thấy "làm việc với AI" cụ thể là thế nào. Vẫn là phiếu eForm với ca giả như trên. Thanh trên cùng chọn một trong 4 kiểu tương tác. Mỗi lần chọn (hoặc bấm "↺ Làm lại từ đầu") phiếu mở lại từ đầu theo kiểu đó. Thẻ giải thích ghi kiểu này giống thứ gì bác sĩ đã quen, dùng lúc nào, bác sĩ làm gì, máy làm gì, bác sĩ cần kiểm tra gì. Giải thích xong thì bấm "Ẩn giải thích" để cột Trợ lý AI hiện trọn trên màn laptop.
+
+| Kiểu | Phiếu mở ra thế nào | Gọi LLM? |
+|---|---|---|
+| 1. Máy điền sẵn | Đã có nháp AI của câu mẫu (kết quả soạn sẵn, server đổ sẵn vào phiếu) | Không |
+| 2. Bấm một lần | Đã chọn H66.1, mở tab Đơn thuốc, có "Đơn anh/chị đã kê 3 lần trước" (giả) | Không |
+| 3. Nói một câu | Đã chọn H66.1, ô nhập có câu "Kê như mọi khi, thêm Cetirizin… Hẹn tái khám sau 7 ngày." | Có, khi bấm Điền |
+| 4. Nghe cả buổi khám | Nút "▶ Bắt đầu nghe buổi khám" phát lại 12 câu hội thoại giả vào ô nhập (`BS: …`, `BN: …`), mỗi câu khoảng 1,4 giây, không dùng micro | Có, khi bấm Điền |
+
+- Câu lệnh "kê như mọi khi", "như lần trước", "đơn quen"… dùng được ở cả trang chính. Máy lấy các dòng bác sĩ hay kê (kê từ một nửa số lần trở lên) cho chẩn đoán chính trên phiếu; phiếu chưa có thì dùng mã AI vừa gán. Các dòng này đứng trước dòng AI tách từ câu nói. Chưa có đơn đã kê thì thông báo không lấy được bộ quen.
+- Prompt LLM hiểu hội thoại: lời bệnh nhân (`BN:`) chỉ dùng cho lý do khám, bệnh sử, tiền sử; khám, chẩn đoán, chỉ định, thuốc, lời dặn chỉ lấy từ lời bác sĩ.
+- Ở trang này, bấm Lưu không ghi số đo lượt thử hay đơn đã kê.
+- Kiểu 3, 4 chạy với `mock` thì tách bằng quy tắc nên kém. Nên dùng LLM thật. Gemini miễn phí thỉnh thoảng báo 503 quá tải, bấm lại là được.
+- Kịch bản (chữ trên thẻ, câu lệnh, hội thoại, 3 đơn đã kê giả) ở `data/eform/trinh-dien.json`. Sửa rồi tải lại trang là có hiệu lực.
+
 | File trong `data/eform/` | Nội dung |
 |---|---|
 | `ca-gia.json` | Ca giả và lịch sử khám |
+| `trinh-dien.json` | Kịch bản trang `/trinh-dien`: `kieu` (chữ trên thẻ của 4 kiểu), `lenh` (câu kiểu 3), `hoi_thoai` (hội thoại kiểu 4, `ai` là `BS` hoặc `BN`), `thoi_quen` (đơn đã kê giả, chỉ ghi tên; mã gán bằng `src/shared/match.ts` khi nạp trang) |
 | `goi-y-theo-chan-doan.json` | Bộ mẫu chỉ định, thuốc, lời dặn theo mã ICD10 (giả). Mỗi mẫu: `id`, `ten`, `icd` (danh sách mã), `chi_dinh` (`ten`), `don_thuoc` (`ten`, `ham_luong`, `duong_dung`, `lieu_moi_lan`, `so_lan_ngay`, `thoi_diem`, `so_ngay`, `ghi_chu`), `loi_dan`. Tên nên có trong danh mục bệnh viện `data/catalog/` để khớp chắc mã |
 | `icd10.json` | Từ khóa gợi ý ICD10 (`manh`, `vua`) cho 28 mã TMH hay gặp. Danh sách mã để chọn lấy từ `data/tham-khao/icd10-tmh.json` (367 mã chi tiết); mã ở đây mà nguồn thật không có vẫn được giữ |
 | `mau-cau.json` | Mẫu câu theo nhóm lý do khám, chỗ trống viết dạng `[a\|b]` |
@@ -246,9 +264,9 @@ data/giong-noi/ file âm thanh để đo nhận dạng giọng nói (tự sinh h
 data/eform/     ca giả, danh mục và quy tắc của trang eForm
 data/tham-khao/ danh mục thật cào từ nguồn công khai, ứng dụng nạp kèm data/catalog/
 src/app/        trang và API (định tuyến Next, mỏng)
-src/client/     giao diện chạy trên trình duyệt: chung/ (Header, MicButton), eform/ (trang chủ), ket-qua/, api.ts (gọi API)
+src/client/     giao diện chạy trên trình duyệt: chung/ (Header, MicButton), eform/ (trang chủ), trinh-dien/ (trang Trình diễn), ket-qua/, api.ts (gọi API)
 src/server/ai/  AI thật: pipeline, prompt, schema, llm/ (mock, rules, anthropic, openai, gemini), asr.ts (Zipformer)
-src/server/du-lieu/ nạp config và data, lưu lượt thử
+src/server/du-lieu/ nạp config và data, lưu lượt thử và đơn đã kê, dữ liệu trang Trình diễn (trinh-dien.ts)
 src/shared/     dùng chung hai phía: kiểu, khớp danh mục, chuẩn hóa, tính tổng, đo lường, api.ts (hợp đồng FE–BE)
 src/shared/eform/ rule của trang eForm: tóm tắt, gợi ý ICD10, mẫu câu, gợi ý theo chẩn đoán và theo thói quen (thoi-quen.ts), cảnh báo dị ứng, đổ kết quả AI vào phiếu, đếm số đo lượt thử (do-luong.ts)
 src/shared/giong-noi/ sửa chữ sau nhận dạng giọng nói (sua-chu.ts), đọc số thành chữ để chấm (so.ts)

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MicButton, type GiaoDienMic } from "@/client/chung/MicButton";
 import { useEform } from "@/client/eform/EformContext";
 import { BTN_OUTLINE } from "@/client/eform/fields";
@@ -14,8 +14,8 @@ export type TabId = "phieu" | "chi_dinh" | "don_thuoc";
 
 interface Props {
   ketQua: KetQuaDien | null;
-  /** Mỗi lần AI điền: trả kết quả để màn hình áp vào phiếu */
-  onDien: (result: PipelineResult) => void;
+  /** Mỗi lần AI điền: trả kết quả và đoạn chữ đã gửi để màn hình áp vào phiếu */
+  onDien: (result: PipelineResult, text: string) => void;
   /** Bác sĩ bắt đầu nói, gõ hoặc nạp câu mẫu: mốc tính thời gian lượt thử */
   onBatDau: (kieuNhap: InputMode, tuCaMau: boolean) => void;
   onHoanTac: (() => void) | null;
@@ -23,7 +23,14 @@ interface Props {
   onOpenTab: (tab: TabId) => void;
   soChiDinh: number;
   soThuoc: number;
+  /** Trang trình diễn kiểu 3: ô nhập có sẵn câu lệnh */
+  vanBanDau?: string;
+  /** Trang trình diễn kiểu 4: hội thoại giả, phát lại từng câu như máy đang nghe */
+  hoiThoai?: { ai: "BS" | "BN"; cau: string }[];
 }
+
+/** Khoảng cách giữa hai câu khi phát lại hội thoại mẫu */
+const NHIP_HOI_THOAI_MS = 1400;
 
 const FOCUS = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-tim";
 const NUT_CHINH = `w-full rounded-lg bg-tim py-2.5 text-sm font-semibold text-white hover:bg-tim/90 disabled:cursor-not-allowed disabled:opacity-50 ${FOCUS}`;
@@ -58,9 +65,24 @@ function CacBuoc({ hienTai, xong }: { hienTai: number; xong: boolean }) {
 }
 
 /** Cột phải: bác sĩ nói hoặc gõ tắt một lần, AI điền cả phiếu khám, chỉ định và đơn thuốc */
-export function TroLyAi({ ketQua, onDien, onBatDau, onHoanTac, onGoTo, onOpenTab, soChiDinh, soThuoc }: Props) {
+export function TroLyAi({ ketQua, onDien, onBatDau, onHoanTac, onGoTo, onOpenTab, soChiDinh, soThuoc, vanBanDau, hoiThoai }: Props) {
   const { data, get, put } = useEform();
-  const [text, setText] = useState("");
+  const [text, setText] = useState(vanBanDau ?? "");
+  /** Số câu hội thoại mẫu đã phát; null là chưa bấm phát */
+  const [daPhat, setDaPhat] = useState<number | null>(null);
+  const hen = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const dangPhat = hoiThoai !== undefined && daPhat !== null && daPhat < hoiThoai.length;
+
+  // Phát lại từng câu: mỗi nhịp thêm một dòng "BS: …" hoặc "BN: …" vào ô nhập
+  useEffect(() => {
+    if (!hoiThoai || daPhat === null || daPhat >= hoiThoai.length) return;
+    hen.current = setTimeout(() => {
+      const { ai, cau } = hoiThoai[daPhat];
+      setText((cu) => (cu ? `${cu}\n${ai}: ${cau}` : `${ai}: ${cau}`));
+      setDaPhat(daPhat + 1);
+    }, daPhat === 0 ? 300 : NHIP_HOI_THOAI_MS);
+    return () => clearTimeout(hen.current);
+  }, [hoiThoai, daPhat]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   /** Đoạn chữ của lần điền gần nhất, để biết bác sĩ đã nói hoặc gõ thêm chưa */
@@ -71,7 +93,7 @@ export function TroLyAi({ ketQua, onDien, onBatDau, onHoanTac, onGoTo, onOpenTab
     setLoading(true);
     setError(null);
     try {
-      onDien(await goiAiDienNhap(text, "AI không điền được phiếu."));
+      onDien(await goiAiDienNhap(text, "AI không điền được phiếu."), text);
       setDaGui(text);
     } catch (err) {
       setError(err instanceof Error ? err.message : "AI không điền được phiếu.");
@@ -86,7 +108,7 @@ export function TroLyAi({ ketQua, onDien, onBatDau, onHoanTac, onGoTo, onOpenTab
   const tong = ketQua?.daDien.length ?? 0;
   const coChu = text.trim().length > 0;
   const chuMoi = coChu && text !== daGui;
-  const buoc = chuMoi || loading ? 2 : ketQua ? 3 : 1;
+  const buoc = dangPhat ? 1 : chuMoi || loading ? 2 : ketQua ? 3 : 1;
 
   // Mỗi lúc chỉ một nút nổi bật: chưa có gì thì nút micro, có chữ mới thì nút Điền, đã điền thì phần duyệt
   const giaoDienMic: GiaoDienMic = {
@@ -104,7 +126,40 @@ export function TroLyAi({ ketQua, onDien, onBatDau, onHoanTac, onGoTo, onOpenTab
       </div>
 
       <div className="space-y-3 px-4 py-4">
-        <MicButton
+        {hoiThoai && (
+          <div className="rounded-lg border border-tim-vien bg-tim-nhat/60 p-3">
+            {daPhat === null ? (
+              <button
+                type="button"
+                className={NUT_CHINH}
+                onClick={() => {
+                  setText("");
+                  setDaPhat(0);
+                  onBatDau("noi", true);
+                }}
+              >
+                ▶ Bắt đầu nghe buổi khám
+              </button>
+            ) : dangPhat ? (
+              <div className="flex items-center gap-2">
+                <span aria-hidden className="size-2.5 animate-pulse rounded-full bg-ef-do motion-reduce:animate-none" />
+                <span role="status" className="flex-1 font-semibold text-ef-chu">
+                  Đang nghe buổi khám… {daPhat}/{hoiThoai.length} câu
+                </span>
+                <button type="button" className={`${BTN_OUTLINE} py-0.5`} onClick={() => setDaPhat(hoiThoai.length)}>
+                  ⏹ Dừng
+                </button>
+              </div>
+            ) : (
+              <p role="status" className="font-semibold text-ef-chu">
+                ⏹ Đã nghe xong buổi khám. Bấm Điền vào phiếu.
+              </p>
+            )}
+            <p className="mt-1.5 text-xs text-ef-phu">Giả lập: phát lại hội thoại soạn sẵn, không dùng micro.</p>
+          </div>
+        )}
+
+        {!hoiThoai && <MicButton
           giaoDien={giaoDienMic}
           onStart={() => {
             setError(null);
@@ -114,7 +169,7 @@ export function TroLyAi({ ketQua, onDien, onBatDau, onHoanTac, onGoTo, onOpenTab
             const cau = suaChu(chunk, data.suaChu);
             setText((current) => (current ? `${current} ${cau}` : cau));
           }}
-        />
+        />}
 
         <div className="relative">
           <textarea
@@ -148,7 +203,7 @@ export function TroLyAi({ ketQua, onDien, onBatDau, onHoanTac, onGoTo, onOpenTab
           )}
         </div>
 
-        {(chuMoi || loading) && (
+        {(chuMoi || loading) && !dangPhat && (
           <button type="button" onClick={dien} disabled={loading} className={NUT_CHINH}>
             {loading ? (
               <span className="inline-flex items-center gap-2">

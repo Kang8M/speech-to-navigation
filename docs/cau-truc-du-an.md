@@ -90,7 +90,9 @@ Muốn thay một tính năng rule bằng LLM thật (ví dụ tóm tắt lịch
 
 **Đo lượt thử:** `TroLyAi.tsx` báo `onBatDau` (gõ, bấm 🎤, bấm câu mẫu) → `EformScreen` ghi mốc giờ → bấm Lưu lần đầu sau khi AI điền → `shared/eform/do-luong.ts › demLuot` đếm → `client/api.ts › luuLuotThu` → `POST /api/sessions` → `server/du-lieu/sessions.ts` ghi `data/sessions/` → trang `/ket-qua` đọc lại.
 
-**Thói quen kê đơn:** bấm Lưu → `EformScreen › ghiThoiQuen` (có mã ICD10 chính và ít nhất một dòng) → `client/api.ts › luuThoiQuen` → `POST /api/thoi-quen` → `server/du-lieu/thoi-quen.ts` ghi `data/thoi-quen/<tài khoản>.json`. Lần nạp trang sau, `GoiYTheoChanDoan` gọi `shared/eform/thoi-quen.ts › ghepGoiY` để đặt nhóm "Đơn anh/chị đã kê" lên trên bộ mẫu.
+**Trang Trình diễn (`/trinh-dien`):** `src/app/trinh-dien/page.tsx` gọi `server/du-lieu/trinh-dien.ts › loadTrinhDienData` (gồm `loadEformData`, đơn đã kê giả trong `data/eform/trinh-dien.json` được gán mã bằng `shared/match.ts`, nháp của câu mẫu chạy pipeline `mock` rồi đổ vào phiếu bằng `dienPhieu` ngay ở server) → `client/trinh-dien/TrinhDienScreen.tsx` (thanh chọn kiểu) → `EformScreen` với `kichBan` 1–4 (`trangThaiDau` dựng trạng thái mở phiếu; có `data.trinhDien` thì Lưu không ghi gì). Nháp kiểu 1 tính ở server chứ không ở trình duyệt, vì khi để component client tự tính lúc SSR, mã ICD ra khác trình duyệt và React báo lỗi hydration.
+
+**Thói quen kê đơn:** bấm Lưu → `EformScreen › ghiThoiQuen` (có mã ICD10 chính và ít nhất một dòng) → `client/api.ts › luuThoiQuen` → `POST /api/thoi-quen` → `server/du-lieu/thoi-quen.ts` ghi `data/thoi-quen/<tài khoản>.json`. Câu có "kê như mọi khi" (`thoi-quen.ts › nhuMoiKhi`) thì `EformScreen › aiDien` thêm các dòng hay kê cho chẩn đoán chính trước dòng AI tách. Lần nạp trang sau, `GoiYTheoChanDoan` gọi `shared/eform/thoi-quen.ts › ghepGoiY` để đặt nhóm "Đơn anh/chị đã kê" lên trên bộ mẫu.
 
 ## Cái gì dùng lại được
 

@@ -77,7 +77,7 @@ Ví dụ thêm trường "Mạch" vào phiếu khám, chèn vào mảng `fields`
 | `ai_fill` | `false` thì AI không điền |
 | `mock_keywords` | Không bắt buộc. Từ khóa để chế độ `mock` nhận ra phần này trong câu tự do |
 
-Trường mã có thêm `catalog` (tên danh mục), `name_field` (trường tên) và `strength_field` (trường hàm lượng, nếu có) để hiện ô tìm kiếm trong danh mục. Không đặt `ai_fill: true` cho trường mã: mã chỉ được gán bởi code khớp danh mục ở `lib/match.ts`.
+Trường mã có thêm `catalog` (tên danh mục), `name_field` (trường tên) và `strength_field` (trường hàm lượng, nếu có) để hiện ô tìm kiếm trong danh mục. Không đặt `ai_fill: true` cho trường mã: mã chỉ được gán bởi code khớp danh mục ở `src/shared/match.ts`.
 
 Các cấu hình khác:
 
@@ -149,7 +149,7 @@ Chỗ khác với EMR là **cột "✨ Trợ lý AI điền phiếu" bên phải
 | Màu | Tím = AI điền. Vàng = AI chưa chắc, cần xem lại (bấm "✓ Đúng" hoặc sửa để bỏ đánh dấu). |
 | Không ghi đè | Ô bác sĩ đã gõ hoặc đã sửa thì AI không ghi đè, cột AI báo "giữ nguyên". |
 | Mã ICD10 | Không lấy từ LLM. Code chấm điểm từ khóa trên câu chẩn đoán để gán mã, luôn đánh dấu vàng. |
-| Mã dịch vụ, thuốc | Do `lib/match.ts` khớp danh mục. Khớp chưa chắc thì dòng vàng, có ô chọn lại trong danh sách gần đúng. |
+| Mã dịch vụ, thuốc | Do `src/shared/match.ts` khớp danh mục. Khớp chưa chắc thì dòng vàng, có ô chọn lại trong danh sách gần đúng. |
 | Nói nhiều lần | Lần điền sau chỉ thêm dòng chỉ định/thuốc chưa có (trùng mã thì bỏ qua). |
 | Đơn thuốc | Tổng số lượng tự tính như trang chính. Thuốc cùng nhóm với dị ứng trên header (ví dụ Penicillin → Augmentin, Amoxicillin) hiện cảnh báo đỏ; danh sách nhóm chỉ là minh họa. |
 
@@ -158,7 +158,7 @@ Chỗ khác với EMR là **cột "✨ Trợ lý AI điền phiếu" bên phải
 - Lấy mã ICD10 đang chọn trên phiếu khám (ra viện, ban đầu, kèm theo; do bác sĩ chọn hoặc Trợ lý AI điền), tìm bộ mẫu khớp trong `data/eform/goi-y-theo-chan-doan.json` và liệt kê dịch vụ, thuốc kèm liều, lời dặn theo từng chẩn đoán. Tab nào có gợi ý thì hiện ✨ trên tên tab.
 - **Không tự thêm gì.** Bác sĩ tích chọn rồi bấm "Thêm N mục đã chọn". Mục đã có trong danh sách hoặc trùng gợi ý phía trên thì làm mờ. Thuốc cùng nhóm dị ứng trên header (ví dụ Augmentin khi dị ứng Penicillin) không được tích sẵn và có cảnh báo đỏ.
 - Lời dặn mẫu có nút "Chèn vào Lời dặn" (thêm vào cuối ô Lời dặn & theo dõi, đánh dấu AI điền).
-- Bộ mẫu chỉ ghi tên dịch vụ và thuốc. Mã do `lib/match.ts` gán khi nạp trang; khớp chưa chắc thì dòng hiện vàng "cần xem lại".
+- Bộ mẫu chỉ ghi tên dịch vụ và thuốc. Mã do `src/shared/match.ts` gán khi nạp trang; khớp chưa chắc thì dòng hiện vàng "cần xem lại".
 - Chạy bằng rule, không gọi LLM. **12 bộ mẫu hiện có đều là dữ liệu giả, liều chỉ minh họa**; sẽ thay bằng danh sách bệnh hay gặp do bác sĩ đưa.
 
 Ở chế độ `mock`, câu mẫu của ca `data/cases/ca-11-viem-tai-giua-man-dot-cap.json` (cùng bệnh nhân giả với trang này) trả kết quả soạn sẵn; câu khác được tách bằng quy tắc nên kém hơn LLM thật.
@@ -194,12 +194,12 @@ data/cases/     ca giả
 data/sessions/  kết quả các lượt thử (tự sinh, không đưa lên git)
 data/eform/     ca giả, danh mục và quy tắc của trang eForm
 data/tham-khao/ danh mục thật cào từ nguồn công khai, chỉ để tra cứu (ứng dụng chưa nạp)
-lib/            schema, prompt, khớp danh mục, cảnh báo, đo lường, nhận dạng giọng nói trên máy (asr.ts)
-lib/llm/        mock, anthropic, openai, gemini
-lib/eform/      rule tóm tắt, gợi ý ICD10, gợi ý mẫu câu, gợi ý theo chẩn đoán (goi-y.ts), cảnh báo dị ứng (di-ung.ts), đổ kết quả AI vào phiếu (dien-phieu.ts)
-components/     thành phần giao diện
-components/eform/ giao diện trang eForm
-app/            trang và API
+src/app/        trang và API (định tuyến Next, mỏng)
+src/client/     giao diện chạy trên trình duyệt: chung/ (MicButton, CatalogPicker...), workspace/, eform/, ket-qua/, api.ts (gọi API)
+src/server/ai/  AI thật: pipeline, prompt, schema, llm/ (mock, rules, anthropic, openai, gemini), asr.ts (Zipformer)
+src/server/du-lieu/ nạp config và data, lưu lượt thử
+src/shared/     dùng chung hai phía: kiểu, khớp danh mục, chuẩn hóa, tính tổng, đo lường, api.ts (hợp đồng FE–BE)
+src/shared/eform/ rule của trang eForm: tóm tắt, gợi ý ICD10, mẫu câu, gợi ý theo chẩn đoán, cảnh báo dị ứng, đổ kết quả AI vào phiếu
 scripts/eval.ts chấm điểm
 scripts/cao-du-lieu.ts cào danh mục công khai về data/tham-khao/
 scripts/tai-model-giong-noi.ts tải model Zipformer và Silero VAD về models/
@@ -207,5 +207,7 @@ models/         model nhận dạng giọng nói (tự tải, không đưa lên 
 docs/           quan sát thực địa, cấu trúc màn hình EMR, CHANGELOG.md
 .claude/        cấu hình Claude Code: plugin, hook, skill
 ```
+
+Chi tiết ranh giới FE/BE, AI đặt ở đâu, cái gì dùng lại được và thêm mới thì đặt ở đâu: xem `docs/cau-truc-du-an.md`. `npm run lint` chặn import sai chiều (giao diện không được import `src/server`).
 
 Mọi thay đổi đều được ghi trong `docs/CHANGELOG.md`. Quy tắc làm việc với Claude Code xem `CLAUDE.md`.

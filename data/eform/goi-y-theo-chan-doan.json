@@ -1,5 +1,5 @@
 {
-  "_ghi_chu": "Bộ mẫu GIẢ để demo gợi ý chỉ định và đơn thuốc theo chẩn đoán. Liều chỉ là minh họa, không dùng cho lâm sàng. Chỉ ghi tên dịch vụ/thuốc; mã do lib/match.ts gán khi nạp trang. Thay bằng danh sách bệnh hay gặp do bác sĩ đưa.",
+  "_ghi_chu": "Bộ mẫu GIẢ để demo gợi ý chỉ định và đơn thuốc theo chẩn đoán. Liều chỉ là minh họa, không dùng cho lâm sàng. Chỉ ghi tên dịch vụ/thuốc; mã do src/shared/match.ts gán khi nạp trang. Thay bằng danh sách bệnh hay gặp do bác sĩ đưa.",
   "mau": [
     {
       "id": "viem-tai-giua-cap",

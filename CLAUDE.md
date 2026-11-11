@@ -8,7 +8,7 @@ Prototype Next.js 16 (App Router) + React 19 + Tailwind 4. Bác sĩ nói hoặc 
 
 1. **Mọi thay đổi đều phải ghi tài liệu, kể cả thay đổi nhỏ nhất** (một dòng code, một khóa JSON, một màu, một dependency). Sau khi sửa, dùng skill `ghi-tai-lieu`: thêm mục vào `docs/CHANGELOG.md` và cập nhật `README.md` / `docs/` liên quan. Hook `Stop` sẽ chặn nếu quên.
 2. **Chỉ dùng dữ liệu giả.** Không thêm tên, PID, CCCD, tài khoản bác sĩ hay nội dung lâm sàng thật vào code, dữ liệu mẫu, tài liệu hay commit. **Thông tin nhạy cảm** (tên người thật, quốc tịch bệnh nhân, hồ sơ cá nhân, ảnh chụp màn hình EMR, bản gốc chưa làm sạch) **chỉ để trong `temp-1/`** (đã gitignore). Đưa vào `docs/` thì phải làm sạch trước.
-3. **Mã danh mục chỉ được gán bởi code khớp danh mục** (`lib/match.ts`), không bao giờ để LLM tự điền mã. Không đặt `ai_fill: true` cho trường mã.
+3. **Mã danh mục chỉ được gán bởi code khớp danh mục** (`src/shared/match.ts`), không bao giờ để LLM tự điền mã. Không đặt `ai_fill: true` cho trường mã.
 4. **Next.js 16 khác dữ liệu huấn luyện.** Trước khi viết code dùng API Next, đọc `node_modules/next/dist/docs/` hoặc tra context7.
 5. Viết tài liệu, nhãn giao diện, thông báo lỗi bằng tiếng Việt, giữ giọng văn hiện có.
 
@@ -28,8 +28,10 @@ npm run tai-model-giong-noi  # tải model Zipformer về models/, cần cho ASR
 ## Kiến trúc nhanh
 
 - `config/forms/*.json` sinh ra giao diện, schema gửi LLM và prompt. Thêm trường thì sửa JSON, không hardcode trong component.
-- `lib/pipeline.ts` → `lib/llm/{mock,anthropic,openai,gemini,rules}.ts` → `lib/match.ts` (khớp danh mục) → `lib/metrics.ts`.
-- `lib/eform/` là rule mock cho trang `/eform` (tóm tắt, gợi ý ICD10, mẫu câu, gợi ý chỉ định và đơn thuốc theo chẩn đoán), không gọi LLM.
+- Code chia theo nơi chạy, xem `docs/cau-truc-du-an.md`: `src/app` (định tuyến mỏng), `src/client` (FE), `src/server` (BE, có `import "server-only"`), `src/shared` (TS thuần dùng cả hai phía). `src/client` không import `src/server`, gọi qua `/api/*` bằng `src/client/api.ts`; kiểu request/response đặt ở `src/shared/api.ts`. `npm run lint` chặn import sai chiều.
+- AI thật (LLM, ASR) ở `src/server/ai/`: `pipeline.ts` → `llm/{mock,anthropic,openai,gemini,rules}.ts` → `src/shared/match.ts` (khớp danh mục) → `src/shared/validate.ts`.
+- `src/shared/eform/` là rule mock cho trang `/eform` (tóm tắt, gợi ý ICD10, mẫu câu, gợi ý chỉ định và đơn thuốc theo chẩn đoán), chạy trên trình duyệt, không gọi LLM.
+- Script ngoài Next import code server phải chạy bằng `tsx --conditions=react-server` (như `npm run eval`), nếu không `server-only` sẽ báo lỗi.
 - Thêm trường mới thì bổ sung `expected` trong `data/cases/ca-*.json` để eval không tính là "Thừa".
 
 ## Kiểm tra trước khi báo xong

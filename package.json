@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "eval": "tsx scripts/eval.ts",
+    "eval": "tsx --conditions=react-server scripts/eval.ts",
     "cao-du-lieu": "tsx scripts/cao-du-lieu.ts",
     "tai-model-giong-noi": "tsx scripts/tai-model-giong-noi.ts"
   },
@@ -20,6 +20,7 @@
     "openai": "^7.53.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "server-only": "^0.0.1",
     "sherpa-onnx-node": "^2.0.1",
     "zod": "^4.6.7"
   },

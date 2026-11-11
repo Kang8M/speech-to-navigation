@@ -2,11 +2,11 @@
 //   npm run eval                     dùng LLM_PROVIDER trong .env.local (mặc định mock)
 //   npm run eval -- --rule-only      chỉ chạy bộ tách bằng quy tắc, làm mốc so sánh
 //   npm run eval -- --provider=anthropic   (hoặc openai, gemini)
-import { loadCases, loadCatalogs, loadForms, loadRules, loadVietTat } from "../lib/config";
-import { normalizeVi } from "../lib/normalize";
-import { runPipeline } from "../lib/pipeline";
-import { fillDraft } from "../lib/schema";
-import type { FieldDef, FieldValue, FormConfig, Values } from "../lib/types";
+import { loadCases, loadCatalogs, loadForms, loadRules, loadVietTat } from "@/server/du-lieu/config";
+import { normalizeVi } from "@/shared/normalize";
+import { runPipeline } from "@/server/ai/pipeline";
+import { fillDraft } from "@/server/ai/schema";
+import type { FieldDef, FieldValue, FormConfig, Values } from "@/shared/types";
 
 /** Ngưỡng giống nhau của văn bản tự do, vì LLM có thể diễn đạt khác đi đôi chút */
 const TEXT_SIMILARITY = 0.7;

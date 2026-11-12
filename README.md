@@ -1,5 +1,34 @@
 # Trợ lý điền bệnh án TMH – Prototype
 
+## Thử nghiệm STT local từ P-018
+
+Mở **[http://localhost:3000/stt](http://localhost:3000/stt)** để thử model **Zipformer tiếng Việt INT8**, chạy CPU qua sherpa-onnx. Trang này có phiên micro liên tục, trả văn bản dần trong lúc nói, tải file âm thanh và thời gian suy luận. Phần STT được tách riêng từ P-018; không mang theo TTS, LLM, tin nhắn hay điều khiển xe.
+
+Trong PowerShell tại thư mục dự án:
+
+```powershell
+# Máy này đã được cài dependency và tải trọng số trong lần tách code.
+# Chạy lại sau khi khởi động máy hoặc khi dịch vụ đã dừng:
+npm run stt:start
+
+# Cài đầy đủ trên máy mới: cần Python 3.12+ và Node.js 20.12+.
+npm run stt:setup
+```
+
+`stt:setup` tạo `.venv-stt`, cài thư viện theo `stt/requirements-lock.txt`, tải riêng model STT tại revision cố định và chạy nhận dạng file mẫu thật. Cần internet khi cài/tải lần đầu. Sau đó, nhận dạng chạy local, không cần API key, GPU hoặc internet.
+
+`stt:start` chạy backend ở `127.0.0.1:8765` và Next.js ở `127.0.0.1:3000` dưới nền. Có thể chạy lại lệnh để dùng dịch vụ đang hoạt động. Log và PID nằm trong `logs/`. Nếu đã chạy Next.js bằng `npm run dev`, chỉ cần khởi động backend:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-stt.ps1 -BackendOnly
+```
+
+Micro cần Chrome/Edge, localhost hoặc HTTPS và quyền micro. Phiên micro không có giới hạn thời gian: âm thanh được tách tại khoảng nghỉ hoặc tối đa mỗi 5 giây, trả text dần và nối theo thứ tự. Bấm “Kết thúc phiên” để dừng micro và nhận nốt các đoạn còn lại. File tải lên tối đa 30 giây/20 MB, hỗ trợ WAV/MP3/M4A/WebM/Ogg/FLAC tùy bộ giải mã của trình duyệt. Trình duyệt đổi âm thanh sang WAV PCM16 mono 16 kHz trước khi gửi tới backend. Âm thanh và văn bản chỉ nằm trong bộ nhớ; không ghi lịch sử bản thu.
+
+Thêm thuật ngữ bằng cách sửa `config/stt-hotwords.json`, đặt danh sách trong `phrases` (xem ví dụ trong docs/STT.md). Danh sách áp dụng từ đoạn nhận dạng tiếp theo, không cần huấn luyện lại. Đã tích hợp phân biệt 2 giọng và gắn từ theo timestamp: nhãn Người nói 1/2 giữ trong phiên, chưa tự gán vai bác sĩ/bệnh nhân. Text tạm thời được sửa/ghép lại khi nhận thêm âm thanh, nên một lượt nói 8 giây bị gửi thành 5+3 giây vẫn hiển thị liền mạch.
+
+File mẫu có sẵn tại `models/stt/zipformer-vi/test_wavs/` sau khi setup. Chi tiết nguồn code, API, kiểm thử, chạy thủ công và giới hạn: **[docs/STT.md](docs/STT.md)**.
+
 Bác sĩ **nói** hoặc **gõ tắt** một đoạn tóm tắt; AI tách ra và điền nháp vào 3 phần (**Phiếu khám, Chỉ định, Đơn thuốc**); bác sĩ duyệt, sửa rồi xác nhận.
 
 > **Chỉ dùng dữ liệu giả, không nhập thông tin bệnh nhân thật.**
@@ -30,7 +59,7 @@ Khởi động lại `npm run dev` sau khi sửa `.env.local`. Header của ứn
 
 ## Nhập giọng nói
 
-Dùng Web Speech API của Chrome (`vi-VN`), chạy trên localhost. Trình duyệt không hỗ trợ thì nút 🎤 tự ẩn và chỉ còn ô gõ.
+Nút micro trên **màn hình làm việc cũ** dùng Web Speech API của Chrome (`vi-VN`), chạy trên localhost. Trình duyệt không hỗ trợ thì nút 🎤 tự ẩn và chỉ còn ô gõ. Trang **`/stt`** ở trên dùng model Zipformer local riêng.
 
 **Web Speech gửi âm thanh lên dịch vụ của Google và cần internet, vì vậy chỉ dùng với dữ liệu giả.**
 

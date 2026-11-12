@@ -44,3 +44,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Local STT runtime and downloaded weights
+/.venv-stt/
+/.tmp/
+/models/stt/
+/models/diarization/
+/.cache-stt/
+/logs/
+__pycache__/
+.pytest_cache/

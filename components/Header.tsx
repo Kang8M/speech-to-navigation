@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const LINKS = [
+  { href: "/stt", label: "Thử nghiệm STT" },
   { href: "/", label: "Màn hình làm việc" },
   { href: "/ket-qua", label: "Kết quả thử nghiệm" },
   { href: "/eform", label: "Mô phỏng eForm ngoại trú" },
@@ -14,7 +15,7 @@ export function Header({ provider }: { provider: string }) {
   return (
     <header className="flex flex-wrap items-center gap-x-6 gap-y-1 bg-primary px-4 py-2.5 text-white">
       <h1 className="text-lg font-semibold">Trợ lý điền bệnh án TMH – Prototype</h1>
-      <nav className="flex gap-1">
+      <nav className="flex flex-wrap gap-1">
         {LINKS.map((link) => (
           <Link
             key={link.href}

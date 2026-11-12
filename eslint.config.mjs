@@ -12,6 +12,13 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Local Python runtime, provisioning caches and model artifacts.
+    ".venv-stt/**",
+    ".tmp/**",
+    ".cache-stt/**",
+    "models/stt/**",
+    "models/diarization/**",
+    "logs/**",
   ]),
 ]);
 

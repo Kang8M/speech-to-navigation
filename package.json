@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "eval": "tsx scripts/eval.ts"
+    "eval": "tsx scripts/eval.ts",
+    "test": "tsx --test lib/stt/*.test.ts",
+    "stt:setup": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup-stt.ps1",
+    "stt:start": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-stt.ps1"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.6.0",

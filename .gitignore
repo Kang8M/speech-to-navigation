@@ -19,9 +19,14 @@
 
 # production
 /build
+/temp-1
+/.superpowers
+/.playwright-mcp
+/models
 
 # misc
 .DS_Store
+/.claude/settings.local.json
 *.pem
 
 # debug
@@ -54,3 +59,9 @@ next-env.d.ts
 /logs/
 __pycache__/
 .pytest_cache/
+# âm thanh để đo nhận dạng giọng nói (tự sinh hoặc tự ghi, nặng)
+/data/giong-noi/*
+!/data/giong-noi/README.md
+
+# đơn bác sĩ đã kê để gợi ý theo thói quen (tự sinh khi bấm Lưu)
+/data/thoi-quen/*

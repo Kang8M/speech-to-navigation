@@ -25,7 +25,7 @@ Sao chép `.env.example` thành `.env.local`, rồi sửa:
 | `mock` (mặc định) | Không | Câu trùng ca mẫu trả kết quả soạn sẵn, câu khác tách bằng quy tắc đơn giản. Dùng làm dự phòng khi demo. |
 | `anthropic` | `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` | Trả JSON theo schema, sai schema thì thử lại 1 lần. |
 | `openai` | `OPENAI_API_KEY`, `OPENAI_MODEL` | Trả JSON theo schema, sai schema thì thử lại 1 lần. |
-| `gemini` | `GEMINI_API_KEY`, `GEMINI_MODEL` | Key lấy ở Google AI Studio. Trả JSON theo schema (`responseJsonSchema`), sai schema thì thử lại 1 lần. |
+| `gemini` | `GEMINI_API_KEY`, `GEMINI_MODEL` | Key lấy ở Google AI Studio. Trả JSON theo schema (`responseJsonSchema`), sai schema thì thử lại 1 lần. Key miễn phí nên đặt `GEMINI_MODEL=gemini-3.5-flash-lite` (khoảng 2–3 giây/lượt). Gemma 4 (`gemma-4-31b-it`, `gemma-4-26b-a4b-it`) mất 75–85 giây/lượt và hay lỗi 500. `gemini-3.8-flash` với mức suy nghĩ mặc định bị 504 sau khoảng 90 giây. |
 
 Khởi động lại `npm run dev` sau khi sửa `.env.local`. Header của ứng dụng hiện chế độ đang dùng.
 
@@ -139,7 +139,7 @@ Ca mới tự vào eval. Trang eForm chỉ dùng câu mẫu của `ca-11` (cùng
 
 ## Đo lường
 
-Kịch bản cho buổi thử với bác sĩ (lời đọc mẫu, đề bài nói tự do, bảng ghi chép, câu hỏi sau buổi thử) ở `docs/kich-ban-thu-bac-si.md`.
+Kịch bản cho buổi thử với bác sĩ (gọi phiếu mẫu theo bệnh, một ca đọc cả đoạn để so sánh, số đo mẫu đúng sẵn, bảng ghi chép, câu hỏi sau buổi thử) ở `docs/kich-ban-thu-bac-si.md`.
 
 Trên trang eForm, khi AI đã điền ít nhất một lần, lần bấm **Lưu** đầu tiên ghi một lượt thử thành file JSON trong `data/sessions/` (thông báo dưới đáy có câu "Đã ghi số đo lượt thử"). Bấm Lưu nữa thì không ghi thêm; muốn thử lượt mới thì tải lại trang. Chưa để AI điền thì Lưu không ghi gì. File chỉ chứa số đếm (thời gian, số trường AI điền, số trường sửa, số mục khớp danh mục, kiểu nhập), **không chứa nội dung phiếu hay thông tin bệnh nhân**.
 
@@ -170,6 +170,19 @@ Script chạy cả 11 ca (bản nói và bản gõ tắt) qua pipeline, in độ
 - Văn bản tự do được coi là đúng khi giống nhau từ 70% số từ trở lên **và** trùng khít các con số cùng bên phải/trái.
 - Ở chế độ `mock`, ca mẫu trả kết quả soạn sẵn nên điểm gần 100% là đương nhiên, chỉ để kiểm tra pipeline. Muốn có số đo có ý nghĩa, hãy dùng `--rule-only` hoặc LLM thật.
 
+### Đo phiếu mẫu (`npm run eval-mau`)
+
+```bash
+npm run eval-mau                       # mock: không tốn lượt gọi
+npm run eval-mau -- --provider=gemini  # mức 2 gọi LLM thật, mỗi ca có mẫu 1 lượt
+```
+
+Chấm phiếu mẫu (`data/eform/phieu-mau.json`) so với `expected` của các ca có `mau_id` trong `data/cases/`, cùng cách chấm với `npm run eval` (phần chấm dùng chung ở `scripts/cham-diem.ts`). **Mức 1** là chỉ có mẫu, tức bác sĩ chỉ gõ tên mẫu. **Mức 2** là mẫu kèm câu chi tiết ngắn `input_mau` của ca (ví dụ `"vtg cấp trẻ em, tai P, 3n, sốt 38"`). Script in thêm số "không tính tiền sử", vì mẫu không điền tiền sử, ô đó bác sĩ Copy từ lần khám trước. Đây chỉ là **ước tính**: mẫu và đáp án đều do nhóm soạn, số thật phải đo khi bác sĩ thử.
+
+### Test (`npm test`)
+
+`npm test` chạy các file `src/**/*.test.ts` bằng `node:test` qua `tsx` (không cần thư viện test riêng, có cờ `--conditions=react-server` nên test được cả code `src/server`). Test được import `node:*` kể cả trong `src/shared` (`eslint.config.mjs` tắt luật import cho `*.test.ts`).
+
 ## Mô phỏng eForm ngoại trú
 
 Trang chủ `/` mô phỏng màn **Phiếu khám ngoại trú của EMR** với một ca TMH giả. Các mục, trường, thứ tự, tab và trạng thái lượt khám giữ như EMR thật (xem `docs/cau-truc-phieu-kham-ngoai-tru.md`) để bác sĩ nhận ra ngay; cách trình bày thì làm mới cho gọn và dễ đọc hơn EMR:
@@ -189,6 +202,22 @@ Chỗ khác với EMR là **cột "✨ Trợ lý AI điền phiếu" bên phải
 1. Bác sĩ bấm 🎤 Bắt đầu nói trong lúc khám, hoặc gõ tắt một đoạn (có "Thử câu mẫu: kiểu nói / kiểu gõ tắt" để demo), rồi bấm **✨ Điền vào phiếu** (hoặc Ctrl+Enter).
 2. AI gọi pipeline `/api/extract` (theo `LLM_PROVIDER`) và điền cùng lúc: lý do khám, bệnh sử, tiền sử, khám toàn thân, khám chuyên khoa, chẩn đoán, hướng điều trị, lời dặn, hẹn tái khám (tự tính ngày), **chỉ định dịch vụ** và **đơn thuốc** (hai tab cạnh tab Phiếu khám).
 3. Cột AI hiện "Đã điền N trường", thanh tiến độ (tím là chắc chắn, vàng là còn cần xem lại) và danh sách **chỗ cần xem lại** có nút Xem (cuộn tới ô) và ✓ Đúng. Các trường còn lại nằm trong danh sách thu gọn. Bác sĩ duyệt, sửa rồi bấm Lưu. Có nút hoàn tác lần AI điền. Nói hoặc gõ thêm thì nút đổi thành "Điền thêm vào phiếu".
+
+**Gọi phiếu mẫu theo bệnh** (`data/eform/phieu-mau.json`, `src/shared/eform/phieu-mau.ts`):
+
+- Gõ hoặc nói tên mẫu vào ô nhập rồi bấm Điền, ví dụ "mẫu viêm tai giữa cấp", "vtg cấp" hoặc "viem tai giua cap". Tên mẫu phải đứng đầu câu (có thể có "mẫu", "điền mẫu", "theo mẫu" phía trước) hoặc đứng ngay sau chữ "mẫu". Tên bệnh nằm giữa một câu kể cả ca thì vẫn chạy luồng AI tách như cũ.
+- Đang gõ dở (2–40 ký tự) mà chưa khớp mẫu nào thì dưới ô nhập hiện "Mẫu theo bệnh:" với tối đa 5 tên, bấm là điền luôn. Tên khớp nhiều mẫu (bí danh trùng) thì hiện nút "Dùng mẫu: …" để chọn.
+- Chỉ có tên mẫu thì **không gọi API**: mẫu đã gán mã sẵn ở server lúc nạp trang và đổ thẳng vào phiếu.
+- Có chi tiết sau tên ("vtg cấp, tai T, 3n, sốt 38,5") thì gọi `/api/extract` **một lần** với `mau_id`, phần chi tiết gửi làm `text`. Server lấy mẫu theo id. LLM nhận mẫu trong thẻ `<phieu_mau>`, được dặn giữ nguyên câu chữ, chỉ thay chỗ trống và sửa đúng chỗ bác sĩ nói. Sau đó code chạy thêm quy tắc `dienChoTrongNhap` cho chỗ trống LLM còn bỏ sót. Quy tắc:
+  - `T`→trái, `3n`→3 ngày, "hai bên"→2 bên.
+  - "phải/trái" chỉ tính khi đứng sau từ chỉ vị trí (tai, mũi, bên, họng…) hoặc đứng riêng một vế, nên động từ "phải" không bị hiểu là bên phải.
+  - Nhiệt độ lấy số sau "sốt" trong khoảng 35–42, không lấy "sốt 2 ngày".
+  - `[số]` không tìm được số thì giữ nguyên.
+
+  Ở chế độ `mock` chỉ chạy quy tắc. Chỗ không hiểu thì giữ nguyên ngoặc và tô vàng. Gọi AI lỗi (quá tải, hết lượt) thì vẫn điền theo mẫu bằng quy tắc, kèm thông báo đỏ. Bác sĩ gõ vào ô nào trong lúc chờ AI thì ô đó được giữ. Mã ICD của mẫu chỉ dùng khi chẩn đoán LLM trả về vẫn là bệnh của mẫu; khác thì gợi ý mã theo từ khóa như luồng thường. Mã dịch vụ, thuốc vẫn qua bước khớp danh mục như mọi nháp.
+- **Chỉ điền ô còn trống**: ô đã có chữ (điều dưỡng nhập sẵn, AI điền lần trước, bác sĩ gõ) giữ nguyên. Riêng Hẹn tái khám "Không" mặc định vẫn được đổi theo mẫu, trừ khi bác sĩ đã tự chọn. Chỉ định, thuốc trùng thì bỏ. Ô Khám các bộ phận khác cũng lấy từ mẫu.
+- Chỗ riêng của bệnh nhân trong mẫu (`[phải|trái|2 bên]`, `[số] ngày`) hiện vàng để bác sĩ sửa. Mã ICD10 tra theo tên ICD của mẫu, luôn vàng như mọi mã ICD AI điền.
+- Thông báo: "Đã điền theo mẫu …: N ô, X chỉ định, Y thuốc. Bỏ qua K ô đã có chữ. Còn M chỗ cần điền (tô vàng)." Hoàn tác dùng chung nút "↶ Hoàn tác lần AI điền". Lưu thì số đo lượt thử ghi thêm `mau_id`, trang Kết quả hiện "Mẫu <id>".
 
 | Quy tắc | Chi tiết |
 |---|---|
@@ -224,7 +253,9 @@ Nhãn trên giao diện: **✨ AI điền**, **⚠ AI chưa chắc, cần xem l�
 
 Các nút lấy dữ liệu từ hệ thống khác, Menu, Xem LSKB và Quay lại chỉ hiện thông báo mô phỏng. Nút Lưu không ghi nội dung phiếu xuống đĩa. Nó chỉ ghi số đo lượt thử (xem mục Đo lường) và các dòng chỉ định, thuốc cho gợi ý theo thói quen. Tải lại trang là phiếu về dữ liệu ban đầu.
 
-### Trang Trình diễn (`/trinh-dien`)
+### Trang Trình diễn (`/trinh-dien`, tạm ẩn)
+
+> Từ 2026-11-12 trang này tạm ẩn: không còn link ở thanh đầu, mở `/trinh-dien` ra 404. Code và kịch bản vẫn giữ nguyên, bật lại bằng cách khôi phục `src/app/trinh-dien/page.tsx` (xem ghi chú trong file).
 
 Dùng trong buổi họp với bác sĩ, để cho thấy "làm việc với AI" cụ thể là thế nào. Vẫn là phiếu eForm với ca giả như trên. Thanh trên cùng chọn một trong 4 kiểu tương tác. Mỗi lần chọn (hoặc bấm "↺ Làm lại từ đầu") phiếu mở lại từ đầu theo kiểu đó. Thẻ giải thích ghi kiểu này giống thứ gì bác sĩ đã quen, dùng lúc nào, bác sĩ làm gì, máy làm gì, bác sĩ cần kiểm tra gì. Giải thích xong thì bấm "Ẩn giải thích" để cột Trợ lý AI hiện trọn trên màn laptop.
 
@@ -245,6 +276,7 @@ Dùng trong buổi họp với bác sĩ, để cho thấy "làm việc với AI"
 |---|---|
 | `ca-gia.json` | Ca giả và lịch sử khám |
 | `trinh-dien.json` | Kịch bản trang `/trinh-dien`: `kieu` (chữ trên thẻ của 4 kiểu), `lenh` (câu kiểu 3), `hoi_thoai` (hội thoại kiểu 4, `ai` là `BS` hoặc `BN`), `thoi_quen` (đơn đã kê giả, chỉ ghi tên; mã gán bằng `src/shared/match.ts` khi nạp trang) |
+| `phieu-mau.json` | Phiếu mẫu theo bệnh (giả), bác sĩ gọi bằng tên trong ô Trợ lý AI. Mỗi mẫu: `id`, `ten`, `bi_danh` (viết tắt, cách gọi khác; không trùng giữa các mẫu, tránh từ ngắn dễ nhầm như "va"), `icd_ten` (đúng tên một mã trong `data/tham-khao/icd10-tmh.json`, mã do code tra), `kham_khac` (ô Khám các bộ phận khác), `nhap` (cùng dạng nháp của `config/forms`: `phieu_kham`, `chi_dinh`, `ke_don`; không có trường mã). Chỗ riêng của bệnh nhân viết `[phải\|trái\|2 bên]` hoặc `[số] ngày` (đơn vị: ngày, tuần, tháng, giờ, độ, lần, kg). Không ghi `so_luong` chỉ định khi là 1 (eForm tự hiểu là 1). Sửa xong chạy `npm test` để chắc mọi mẫu tra được ICD và mọi dòng khớp chắc danh mục |
 | `goi-y-theo-chan-doan.json` | Bộ mẫu chỉ định, thuốc, lời dặn theo mã ICD10 (giả). Mỗi mẫu: `id`, `ten`, `icd` (danh sách mã), `chi_dinh` (`ten`), `don_thuoc` (`ten`, `ham_luong`, `duong_dung`, `lieu_moi_lan`, `so_lan_ngay`, `thoi_diem`, `so_ngay`, `ghi_chu`), `loi_dan`. Tên nên có trong danh mục bệnh viện `data/catalog/` để khớp chắc mã |
 | `icd10.json` | Từ khóa gợi ý ICD10 (`manh`, `vua`) cho 28 mã TMH hay gặp. Danh sách mã để chọn lấy từ `data/tham-khao/icd10-tmh.json` (367 mã chi tiết); mã ở đây mà nguồn thật không có vẫn được giữ |
 | `mau-cau.json` | Mẫu câu theo nhóm lý do khám, chỗ trống viết dạng `[a\|b]` |

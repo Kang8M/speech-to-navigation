@@ -1,14 +1,7 @@
-import type { Metadata } from "next";
-import { TrinhDienScreen } from "@/client/trinh-dien/TrinhDienScreen";
-import { loadTrinhDienData } from "@/server/du-lieu/trinh-dien";
+import { notFound } from "next/navigation";
 
-export const dynamic = "force-dynamic";
-
-export const metadata: Metadata = {
-  title: "Trình diễn – 4 cách làm việc với máy",
-  description: "Cùng một ca giả, bốn cách bác sĩ làm việc với Trợ lý AI. Chỉ dùng dữ liệu giả, không ghi gì khi Lưu.",
-};
-
-export default async function Page() {
-  return <TrinhDienScreen data={await loadTrinhDienData()} />;
+// Trang Trình diễn tạm ẩn từ 2026-11-12 (đã gỡ link ở thanh đầu). Code vẫn giữ ở src/client/trinh-dien/ và
+// src/server/du-lieu/trinh-dien.ts; muốn bật lại thì trả về <TrinhDienScreen data={await loadTrinhDienData()} />.
+export default function Page() {
+  notFound();
 }

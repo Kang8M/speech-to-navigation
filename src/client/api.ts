@@ -14,9 +14,10 @@ async function postJson<T>(url: string, body: unknown, loiMacDinh: string): Prom
   return data as T;
 }
 
-/** AI tách văn bản thành nháp Phiếu khám, Chỉ định, Đơn thuốc (dùng LLM_PROVIDER của server) */
-export function goiAiDienNhap(text: string, loiMacDinh = "Không gọi được AI."): Promise<PipelineResult> {
-  const body: ExtractRequest = { text };
+/** AI tách văn bản thành nháp Phiếu khám, Chỉ định, Đơn thuốc (dùng LLM_PROVIDER của server).
+ * Có mauId thì text là phần chi tiết bác sĩ nói thêm sau tên mẫu, AI thay chỗ trống trong mẫu đó */
+export function goiAiDienNhap(text: string, loiMacDinh = "Không gọi được AI.", mauId?: string): Promise<PipelineResult> {
+  const body: ExtractRequest = mauId ? { text, mau_id: mauId } : { text };
   return postJson<PipelineResult>("/api/extract", body, loiMacDinh);
 }
 

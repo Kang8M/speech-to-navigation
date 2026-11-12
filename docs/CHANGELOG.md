@@ -2,7 +2,187 @@
 
 Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nhất ở trên cùng. Cách ghi xem `.claude/skills/ghi-tai-lieu/SKILL.md`.
 
+## 2026-11-12
+
+### Phiếu mẫu theo bệnh (9/9): sửa lỗi sau review
+- **Loại:** Sửa lỗi
+- **Thay đổi:** Sửa 6 lỗi do agent review toàn bộ thay đổi chỉ ra.
+  - **Nghiêm trọng:** chỗ `[số]` chưa điền bị thay bằng chữ "số" khi chi tiết có từ bỏ dấu thành "so" ("sổ mũi"). Ô đó mất ngoặc và hiện tím như AI chắc chắn. Giờ chỉ chỗ có lựa chọn `a|b` mới được chọn.
+  - "sốt 2 ngày" không còn thành "Sốt 2 độ": nhiệt độ phải là số sau "sốt" không đứng trước đơn vị thời gian, trong khoảng 35–42.
+  - "phải/trái" chỉ tính là bên khi đứng sau từ chỉ vị trí (tai, mũi, bên, họng, amidan, hạch, má, nhĩ, thanh) hoặc đứng riêng một vế. Ví dụ "phải nhỏ mũi" không còn chọn bên phải. "hai bên" khớp "2 bên".
+  - `EformScreen`: dùng `gopTruongMoi` và cập nhật chỉ định, thuốc theo dạng hàm, để ô bác sĩ sửa và dòng thêm, xóa trong lúc chờ AI không bị ghi đè hay mất.
+  - Gọi AI lỗi khi dùng mẫu kèm chi tiết thì vẫn điền theo mẫu bằng quy tắc (`ketQuaTheoQuyTac`), kèm thông báo đỏ.
+  - Mã ICD của mẫu chỉ dùng khi chẩn đoán LLM trả về vẫn chứa chẩn đoán của mẫu (`icdTheoMau`). Ví dụ "vh cấp, chẩn đoán viêm amidan cấp" không còn gắn mã viêm họng.
+- **Lý do:** Review cuối của cả loạt thay đổi. 9 lỗi nhỏ để lại, xem mục Ảnh hưởng.
+- **File:** `src/shared/eform/phieu-mau.ts`, `src/shared/eform/phieu-mau.test.ts`, `src/shared/eform/dien-phieu.ts`, `src/shared/eform/dien-phieu.test.ts`, `src/client/eform/EformScreen.tsx`, `src/client/eform/TroLyAi.tsx`, `README.md`
+- **Kiểm tra:**
+  - 9 test mới tái hiện đúng các lỗi và fail trước khi sửa; sau khi sửa, `npm test` 51/51 pass.
+  - `npm run lint`, `npx tsc --noEmit` sạch, `npm run build` thành công.
+  - `npm run eval -- --rule-only` giống hệt lúc bắt đầu; `npm run eval-mau` không đổi (68,5% / 72,5%).
+  - Playwright với Gemini (1 lượt), câu "vtg cấp, tai T, sốt 2 ngày, sổ mũi": khám toàn thân giữ "Sốt [số] độ" (vàng), khám chuyên khoa "Màng nhĩ trái…", chẩn đoán "…tai trái", ICD H66.0, báo "Còn 1 chỗ cần điền".
+  - Chưa thử trên trình duyệt trường hợp AI lỗi (cần làm Gemini lỗi) và trường hợp gõ trong lúc chờ; hai trường hợp này có test cho phần hàm thuần.
+- **Ảnh hưởng:** Lỗi nhỏ chưa sửa:
+  - Mẫu có hẹn "Khi có bất thường" vẫn đổi Hẹn tái khám thành "Có" (không có ngày, vàng).
+  - Gọi lại mẫu báo "Bỏ qua 3 ô" vì ô Khám các bộ phận khác bị đếm dù trùng giá trị.
+  - Gọi lại mẫu mà không điền được gì vẫn lưu bản để hoàn tác.
+  - "Mẫu: vtg cấp" (dấu hai chấm) và "vtg-cấp" không nhận ra mẫu.
+  - Câu tự do mở đầu bằng bí danh giống triệu chứng ("Ráy tai nhiều…") bị hiểu là gọi mẫu.
+  - "viêm thanh quản cấp tính" còn dư chữ "tính" nên tốn 1 lượt LLM.
+  - `eval-mau` gửi cả câu `input_mau` thay vì phần sau tên mẫu.
+  - Luật lint cho file test tắt hết `no-restricted-imports`.
+  - `[số] tháng` lấy số đầu tiên trước "tháng" ("18 tháng tuổi").
+
+### Phiếu mẫu theo bệnh (8/9): viết lại kịch bản thử với bác sĩ theo cách gọi mẫu
+- **Loại:** Tài liệu
+- **Thay đổi:** Viết lại `docs/kich-ban-thu-bac-si.md`.
+  - **Phần cho bác sĩ:** còn 4 bước (gõ hoặc nói tên mẫu → Điền → kiểm tra 3 tab, sửa chỗ vàng → Lưu). Kịch bản mới:
+    - M1: chỉ tên mẫu.
+    - M2: tên mẫu kèm chi tiết.
+    - M3: nói.
+    - M4: phiếu đã có chữ.
+    - M5: bệnh chưa có mẫu.
+    - M6: thuốc trùng dị ứng.
+    - Giữ A1 rút gọn (đọc cả ca) để so thời gian. Bỏ A2–A4 và B1–B4 cũ.
+  - **Phần cho người điều phối:**
+    - Lúc nào cần LLM.
+    - Bảng số đo `npm run eval-mau`, ghi rõ là ước tính.
+    - Cảnh báo câu khám có sẵn trong mẫu ("màng nhĩ 2 bên bình thường") và quy tắc nhận tên mẫu.
+    - Bảng ghi chép thêm cột "Chữ nào trong mẫu phải sửa", "Ô nào không đọc mà vẫn Lưu".
+    - Câu hỏi Mom Test về bộ viết tắt điều dưỡng đang dùng.
+  - README cập nhật câu mô tả tài liệu này.
+- **Lý do:** Chủ dự án thấy phần bác sĩ đọc cả ca quá dài. Thực tế điều dưỡng dùng phần mềm gõ tắt ra đoạn mẫu chung, bác sĩ chỉ sửa vài chữ. Kịch bản mới thử đúng cách làm đó.
+- **File:** `docs/kich-ban-thu-bac-si.md`, `README.md`
+- **Kiểm tra:** Đối chiếu tên nút trong tài liệu với code: ✨ Điền vào phiếu, Mẫu theo bệnh:, ✓ Đúng, ↶ Hoàn tác lần AI điền, 🎤 Bắt đầu nói, ⏹ Dừng nghe, "· Mẫu <id>" ở `/ket-qua`. Kiểm tra cuối cả loạt: `npm run lint`, `npx tsc --noEmit` sạch; `npm test` 41/41; `npm run build` thành công; `npm run eval -- --rule-only` giống hệt lúc bắt đầu (diff rỗng); `npm run eval-mau` mức 1 68,5%, mức 2 72,5%.
+
+### Phiếu mẫu theo bệnh (7/9): mở rộng lên 39 mẫu
+- **Loại:** Dữ liệu
+- **Thay đổi:**
+  - `data/eform/phieu-mau.json` thêm 25 mẫu, tổng 39:
+    - Tai: nhọt ống tai, nấm ống tai, viêm tai giữa ứ dịch, tắc vòi tai, thủng màng nhĩ, chóng mặt tư thế kịch phát lành tính, bệnh Ménière, viêm dây thần kinh tiền đình, điếc đột ngột, nghe kém tuổi già.
+    - Mũi: viêm mũi họng cấp, viêm mũi xoang mạn, polyp mũi, vẹo vách ngăn, quá phát cuốn mũi, nhọt tiền đình mũi, chảy máu mũi, dị vật mũi.
+    - Họng, thanh quản: viêm họng mạn, viêm amidan mạn, áp xe quanh amidan, viêm thanh quản mạn, hạt xơ dây thanh, polyp dây thanh, hóc xương.
+  - Danh mục thuốc bệnh viện soạn tay `data/catalog/thuoc.json` thêm 2 thuốc giả: TH-034 Clotrimazol nhỏ tai 1%, TH-035 Acid tranexamic 500 mg. Danh mục thật có các hoạt chất này nhưng nhiều sản phẩm trùng tên nên khớp không chắc.
+  - Test dữ liệu nâng ngưỡng lên ít nhất 30 mẫu.
+- **Lý do:** Người dùng muốn 30–40 bệnh, càng nhiều càng tốt.
+- **File:** `data/eform/phieu-mau.json`, `data/catalog/thuoc.json`, `src/server/du-lieu/phieu-mau.test.ts`
+- **Kiểm tra:**
+  - `npm test` fail khi mới nâng ngưỡng 30 mà chưa thêm mẫu; sau khi thêm thì 41/41 pass. Mọi mẫu tra được ICD, mọi chỉ định và thuốc khớp chắc; đã in mã kiểm tra bằng mắt, ví dụ Ménière H81.0, Flunarizin khớp danh mục thật.
+  - `npm run eval -- --rule-only` giống hệt trước (diff rỗng), `npm run eval-mau` không đổi.
+  - Playwright: "mẫu meniere", "chảy máu cam", "hóc xương cá" điền đúng mẫu và ICD (H81.0, R04.0, T17.2), console không lỗi.
+  - `npm run lint`, `npx tsc --noEmit` sạch.
+- **Ảnh hưởng:** Nội dung mẫu là dữ liệu giả, soạn theo kiến thức lâm sàng chung, liều chỉ để minh họa, chưa có bác sĩ duyệt.
+
+### Phiếu mẫu theo bệnh (6/9): đo mẫu đúng sẵn bao nhiêu (`npm run eval-mau`)
+- **Loại:** Tính năng, Dữ liệu
+- **Thay đổi:**
+  - Tách phần chấm điểm của `scripts/eval.ts` sang `scripts/cham-diem.ts`, thêm hàm `chamNhap`. Output của `npm run eval` giữ nguyên.
+  - Thêm `scripts/eval-mau.ts` (`npm run eval-mau`, mặc định mock), chấm 2 mức: chỉ có mẫu, và mẫu kèm câu chi tiết ngắn.
+  - `CaseData` có thêm `mau_id`, `input_mau`. 10 ca có mẫu được thêm 2 khóa này (ca-09 u bã đậu chưa có mẫu).
+  - `dienChoTrong` nhận thêm đơn vị `giờ`, `kg`, vì mẫu dị vật tai và mẫu trẻ em dùng.
+  - Mẫu không ghi `so_luong: 1` cho chỉ định nữa (eForm tự hiểu là 1; trước đó bị tính 18 lần "Thừa").
+- **Lý do:** Người dùng muốn biết mẫu điền đúng khoảng bao nhiêu phần trăm, để bác sĩ chỉ cần kiểm tra và sửa.
+- **File:** `scripts/cham-diem.ts` (mới), `scripts/eval.ts`, `scripts/eval-mau.ts` (mới), `package.json`, `src/shared/types.ts`, `src/shared/eform/phieu-mau.ts`, `src/shared/eform/phieu-mau.test.ts`, `data/eform/phieu-mau.json`, `data/cases/ca-01…08, ca-10, ca-11` (thêm `mau_id`, `input_mau`), `README.md` (mục Đo phiếu mẫu, quy ước đơn vị), `CLAUDE.md`
+- **Kiểm tra:** `npm run eval -- --rule-only` trước và sau khi tách: `diff` không khác dòng nào. `npm test` 41/41 (test giờ/kg fail trước khi sửa). `npm run lint`, `npx tsc --noEmit` sạch. `npm run eval-mau` (mock), 10/11 ca có mẫu:
+  - **Mức 1, chỉ có mẫu: 68,5%** chung (70,5% không tính tiền sử). Phiếu khám 38,9%, Chỉ định 97,4%, Đơn thuốc 76,3%.
+  - **Mức 2, mẫu kèm chi tiết, quy tắc: 72,5%** (74,6%). Phiếu khám 53,7%.
+  - Ô yếu nhất: bệnh sử, khám toàn thân, khám chuyên khoa, lời dặn, vì bên tai, con số, câu chữ của từng ca khác mẫu. Hẹn tái khám, hướng điều trị, mã chỉ định gần như đúng hết.
+  - Chưa chạy mức 2 với Gemini.
+- **Ảnh hưởng:** Đây là ước tính, vì cả mẫu lẫn đáp án đều do nhóm soạn. File `data/cases/*.json` của 10 ca bị ghi lại bằng `json.dumps`: object một dòng giờ bung ra nhiều dòng, nội dung không đổi ngoài 2 khóa mới. Muốn giữ định dạng cũ thì khôi phục rồi chỉ thêm 2 khóa.
+
+### Phiếu mẫu theo bệnh (5/9): gọi mẫu kèm chi tiết, 1 lượt LLM
+- **Loại:** Tính năng
+- **Thay đổi:**
+  - Phía client: câu có tên mẫu và chi tiết phía sau ("vtg cấp, tai T, 3n, sốt 38,5") thì `TroLyAi` gọi `goiAiDienNhap(chiTiet, …, mau.id)`. `ExtractRequest` có thêm `mau_id`.
+  - `/api/extract`: lấy mẫu bằng `timMauGoc`, không có thì trả 400 "Không tìm thấy mẫu này, hãy tải lại trang.". Mẫu được truyền xuống `runPipeline(…, { mau })` và `extractDraft`.
+  - LLM: `buildUserPrompt(text, previousError, mau)` nối thêm thẻ `<phieu_mau>` cùng lời dặn giữ nguyên câu chữ, chỉ thay chỗ trống, sửa đúng chỗ bác sĩ nói. Kết quả của LLM được chạy thêm `dienChoTrongNhap` cho chỗ trống còn sót.
+  - `mock`: chỉ chạy `dienChoTrongNhap`.
+  - Mã vẫn gán qua `applyCatalogMatch` như mọi nháp.
+- **Lý do:** Bác sĩ chỉ nói vài chi tiết riêng của bệnh nhân, phần còn lại lấy từ mẫu. Lần thử đầu, `gemini-3.5-flash-lite` điền "sốt 38,5" nhưng bỏ sót "tai T" (khám chuyên khoa, chẩn đoán còn `[phải|trái|2 bên]`), nên phải thêm bước quy tắc sau LLM.
+- **File:** `src/shared/api.ts`, `src/client/api.ts`, `src/app/api/extract/route.ts`, `src/server/ai/pipeline.ts`, `src/server/ai/llm/index.ts`, `src/server/ai/prompt.ts`, `src/server/ai/prompt.test.ts` (mới), `src/server/ai/pipeline.test.ts` (mới), `src/client/eform/TroLyAi.tsx`, `README.md`
+- **Kiểm tra:** `npm test` 40/40 pass: test prompt có mẫu, test mock thay chỗ trống và khớp mã, test chi tiết không hiểu thì giữ ngoặc; các test này fail trước khi sửa code. `npm run lint`, `npx tsc --noEmit` sạch. `npm run eval -- --rule-only` không đổi. Playwright với Gemini (2 lượt): lần đầu bỏ sót bên tai, sau khi thêm quy tắc thì khám toàn thân "Sốt 38,5 độ", khám chuyên khoa "Màng nhĩ trái…", chẩn đoán "Viêm tai giữa cấp tai trái", ICD H66.0, lời dặn và hướng điều trị giữ nguyên mẫu, thông báo không còn chỗ cần điền.
+- **Ảnh hưởng:** Mỗi lần gọi mẫu kèm chi tiết tốn 1 lượt LLM (free tier 500 lượt/ngày). Chỉ có tên mẫu thì không tốn lượt nào.
+
+### Phiếu mẫu theo bệnh (4/9): gọi mẫu bằng tên ngay trong eForm, không gọi LLM
+- **Loại:** Tính năng, Giao diện
+- **Thay đổi:**
+  - Cột Trợ lý AI (`TroLyAi.tsx`): khi bấm Điền, kiểm tra câu bằng `timPhieuMau` trước.
+    - Khớp một mẫu: đổ mẫu vào phiếu, không gọi API.
+    - Khớp nhiều mẫu: hiện nút "Dùng mẫu: …" để chọn.
+    - Không khớp: chạy luồng AI tách như cũ.
+  - Đang gõ dở thì hiện "Mẫu theo bệnh:" với tối đa 5 tên, bấm là điền. Chữ gợi ý trong ô nhập đổi thành ví dụ gọi mẫu.
+  - `EformScreen.aiDien(result, text, mau?)`: có mẫu thì gọi `dienPhieu` với `chiOTrong` và mã ICD của mẫu, thêm ô Khám các bộ phận khác khi ô đó trống. Thông báo riêng: "Đã điền theo mẫu …: N ô, X chỉ định, Y thuốc. Bỏ qua K ô đã có chữ. Còn M chỗ cần điền (tô vàng)."
+  - `dienPhieu`: ở chế độ `chiOTrong`, ô đã đúng giá trị của mẫu thì không đếm là vừa điền, để lần gọi lại không báo "1 ô".
+  - Số đo lượt thử có thêm `mau_id` (`src/shared/metrics.ts`, `/api/sessions`, cột CSV). Trang Kết quả hiện "· Mẫu <id>".
+- **Lý do:** Bác sĩ chỉ gõ hoặc nói tên mẫu, sau đó kiểm tra và sửa thay vì đọc cả ca.
+- **File:** `src/client/eform/TroLyAi.tsx`, `src/client/eform/EformScreen.tsx`, `src/shared/eform/dien-phieu.ts`, `src/shared/eform/dien-phieu.test.ts`, `src/shared/metrics.ts`, `src/app/api/sessions/route.ts`, `src/client/ket-qua/ResultsView.tsx`, `README.md` (mục Gọi phiếu mẫu theo bệnh)
+- **Kiểm tra:** `npm test` 34/34 pass (test "ô đã đúng giá trị mẫu" fail trước khi sửa). `npm run lint`, `npx tsc --noEmit` sạch. Playwright trên dev server:
+  - "mẫu viêm tai giữa cấp" → báo "11 ô, 2 chỉ định, 2 thuốc. Bỏ qua 2 ô đã có chữ. Còn 4 chỗ cần điền". Lý do khám và bệnh sử có sẵn của ca giả giữ nguyên, ngày tái khám 2026-11-16, ICD H66.0. Không có request `/api/extract`.
+  - Augmentin hiện cảnh báo dị ứng Penicillin.
+  - Gọi lại "vtg cấp" không thêm dòng trùng.
+  - Gõ "viêm t" hiện 5 gợi ý; bấm "Viêm tai ngoài" thì điền luôn và xóa chữ.
+  - Lưu thì `/ket-qua` hiện "Nhập thật · Mẫu viem-tai-ngoai", provider `mau`.
+  - Câu kể cả ca (có "chẩn đoán viêm họng cấp") vẫn gọi `/api/extract` (1 lượt Gemini).
+  - Console không có lỗi. Đã xóa lượt thử và đơn thói quen do lần kiểm tra này ghi ra.
+- **Ảnh hưởng:** Câu bắt đầu bằng tên một mẫu (ví dụ "Viêm tai ngoài 4 ngày nay…") giờ được hiểu là gọi mẫu. Số đo cũ không có `mau_id`, trang Kết quả vẫn đọc được.
+
+### Phiếu mẫu theo bệnh (3/9): đổ phiếu chỉ vào ô trống, chỗ trống tô vàng
+- **Loại:** Tính năng
+- **Thay đổi:** `dienPhieu` (`src/shared/eform/dien-phieu.ts`) nhận thêm tham số thứ năm `tuyChon: { chiOTrong?, icd? }`. Không truyền thì chạy như cũ.
+  - `chiOTrong` (dùng cho phiếu mẫu): ô đã có chữ thì giữ nguyên và đưa vào `boQua`, bất kể chữ đó từ đâu ra (dữ liệu cũ, AI điền lần trước, bác sĩ gõ). Riêng ô Hẹn tái khám: giá trị mặc định "Không" chưa phải lựa chọn của ai, nên mẫu vẫn được đổi thành "Có" và đặt ngày; bác sĩ đã tự chọn thì giữ.
+  - `icd`: dùng mã đã tra sẵn từ mẫu thay cho gợi ý ICD theo từ khóa.
+  - Ở mọi chế độ, ô còn chỗ trống `[...]` được đánh dấu "xem" (tô vàng) thay vì "ai".
+- **Lý do:** Người dùng chốt "mẫu chỉ điền ô còn trống". Ca giả trên eForm có sẵn lý do khám, bệnh sử (điều dưỡng nhập) và hẹn tái khám "Không" mặc định.
+- **File:** `src/shared/eform/dien-phieu.ts`, `src/shared/eform/dien-phieu.test.ts` (mới)
+- **Kiểm tra:** `npm test` 33/33 pass; 4 test mới fail trước khi sửa code, 2 test về hẹn tái khám pass cả trước lẫn sau để giữ quy tắc cũ. `npm run lint`, `npx tsc --noEmit` sạch. `npm run eval -- --rule-only` không đổi.
+- **Ảnh hưởng:** Luồng AI tách cả đoạn không đổi, trừ việc ô có `[...]` giờ tô vàng.
+
+### Phiếu mẫu theo bệnh (2/9): 14 mẫu đầu tiên, nạp và gán mã ở server
+- **Loại:** Dữ liệu, Tính năng
+- **Thay đổi:**
+  - Thêm `data/eform/phieu-mau.json` với 14 mẫu giả, phủ các bệnh trong 11 ca mẫu và 12 bộ gợi ý theo chẩn đoán: viêm tai giữa cấp (người lớn, trẻ em), viêm tai giữa mạn đợt cấp, viêm tai ngoài, nút ráy tai, dị vật tai, ù tai nghe kém, viêm mũi xoang cấp, viêm mũi dị ứng, viêm họng cấp, viêm amidan cấp, viêm VA trẻ em, viêm thanh quản cấp, trào ngược họng thanh quản. Chưa có mẫu cho u bã đậu (ca-09).
+  - Mỗi mẫu có đủ 8 ô phiếu khám, ô khám bộ phận khác, chỉ định và đơn thuốc. Mẫu không ghi mã: `icd_ten` là tên ICD10 đúng như trong danh mục.
+  - `src/server/du-lieu/phieu-mau.ts` (`loadPhieuMauGoc`, `timMauGoc`, `loadPhieuMau`) gán mã một lần khi nạp trang, dùng `applyCatalogMatch` (chỉ định, thuốc), `applyTotals` (tổng số lượng) và `maIcdTheoTen` mới trong `src/shared/eform/icd.ts` (tra ICD theo tên trùng khít, bỏ dấu). `EformData` có thêm `phieuMau`.
+- **Lý do:** Bộ mẫu để bác sĩ gọi bằng tên thay vì đọc cả ca. Mã vẫn chỉ do code khớp danh mục gán (quy tắc 3).
+- **File:** `data/eform/phieu-mau.json` (mới), `src/server/du-lieu/phieu-mau.ts` (mới), `src/server/du-lieu/phieu-mau.test.ts` (mới, test dữ liệu), `src/shared/eform/icd.ts`, `src/shared/eform/icd.test.ts` (mới), `src/shared/eform/types.ts`, `src/server/du-lieu/eform.ts`, `README.md` (bảng file `data/eform/`)
+- **Kiểm tra:** Chạy `npm test` khi chưa có code thì fail; sau đó 26/26 pass. Mọi mẫu tra được ICD, mọi chỉ định và thuốc khớp chắc (ví dụ viêm tai giữa cấp: H66.0, DV-TMH-003, 21.64, TH-001 tổng 14, TH-013 tổng 9). `npm run lint`, `npx tsc --noEmit` sạch. `npm run eval -- --rule-only` không đổi (Phiếu khám nói 97,1%, gõ tắt 98,1%; Chỉ định nói 92,9%; Đơn thuốc nói 99,1%). Trang `/` vẫn trả 200.
+- **Ảnh hưởng:** Nội dung mẫu soạn theo cách viết của ca mẫu và kiến thức lâm sàng chung. Chưa đối chiếu hướng dẫn của Bộ Y tế, chưa có bác sĩ duyệt. Không sửa `data/tham-khao/nguon.json` vì file đó do `npm run cao-du-lieu` ghi lại mỗi lần cào.
+
+### Phiếu mẫu theo bệnh (1/9): nhận lệnh gọi mẫu, điền chỗ trống; thêm `npm test`
+- **Loại:** Tính năng
+- **Thay đổi:** Thêm `src/shared/eform/phieu-mau.ts` (TS thuần, chạy được cả trình duyệt lẫn server), gồm:
+  - Kiểu `PhieuMauGoc` (một mẫu trong `data/eform/phieu-mau.json`, sẽ có ở bước sau) và `PhieuMau` (mẫu đã khớp mã).
+  - `timPhieuMau`: nhận tên mẫu hoặc bí danh, có dấu hay không dấu. Chỉ nhận khi tên đứng đầu câu (có thể có "mẫu", "điền mẫu", "theo mẫu" phía trước) hoặc đứng ngay sau chữ "mẫu". Vì vậy câu kể cả ca có nhắc tên bệnh không bị nhầm là gọi mẫu, và "máu" không bị hiểu là "mẫu". Tên dài nhất thắng; hai mẫu cùng khớp thì trả `nhieu` để hỏi lại. Phần còn lại của câu là chi tiết; nếu chỉ còn từ đệm ("nhé") thì coi như không có chi tiết.
+  - `goiYTenMau`: gợi ý tối đa 5 tên mẫu khi đang gõ.
+  - `dienChoTrong` / `dienChoTrongNhap`: thay `[phải|trái|2 bên]` và `[số] ngày|tuần|tháng|độ|lần` theo chi tiết bác sĩ nói, bung viết tắt trước (`T`→trái, `3n`→3 ngày). Không hiểu, hoặc có nhiều hơn một lựa chọn cùng xuất hiện, thì giữ nguyên chỗ trống.
+  - Thêm lệnh `npm test` (`node:test` chạy qua `tsx --conditions=react-server`, không thêm thư viện). `eslint.config.mjs` cho file `*.test.ts` import `node:*`.
+- **Lý do:** Bác sĩ chỉ cần gõ hoặc nói một câu ngắn như "mẫu viêm tai giữa cấp", AI điền cả phiếu theo mẫu của bệnh đó, bác sĩ chỉ kiểm tra. Bước này làm phần lõi, chưa nối vào giao diện.
+- **File:** `src/shared/eform/phieu-mau.ts` (mới), `src/shared/eform/phieu-mau.test.ts` (mới), `package.json`, `eslint.config.mjs`, `README.md` (mục Test), `CLAUDE.md` (lệnh `npm test`)
+- **Kiểm tra:** `npm test`: 16/16 pass (đã chạy thấy fail khi chưa có module). `npm run lint`, `npx tsc --noEmit` sạch.
+
+### Tạm ẩn trang Trình diễn
+- **Loại:** Giao diện
+- **Thay đổi:** Gỡ link "Trình diễn" khỏi thanh đầu (`Header.tsx`). `src/app/trinh-dien/page.tsx` giờ gọi `notFound()` nên mở `/trinh-dien` ra 404. Vẫn giữ code `src/client/trinh-dien/`, `src/server/du-lieu/trinh-dien.ts`, `data/eform/trinh-dien.json` và các nhánh `kichBan` trong `EformScreen`. Muốn bật lại thì khôi phục `page.tsx`, cách làm ghi trong chú thích của file.
+- **Lý do:** Chủ dự án muốn tạm cắt trang này để tập trung vào phiếu mẫu theo bệnh trong eForm.
+- **File:** `src/client/chung/Header.tsx`, `src/app/trinh-dien/page.tsx`, `README.md`, `docs/cau-truc-du-an.md`
+- **Kiểm tra:** `npm run lint` và `npx tsc --noEmit` sạch. Dev server: `/` trả 200, HTML chỉ còn link `/` và `/ket-qua`; `/trinh-dien` trả 404.
+- **Ảnh hưởng:** Gần như không làm eForm nhẹ hơn: Next chỉ biên dịch một route khi có người mở nó, và phần dính vào eForm chỉ là vài nhánh `kichBan` nhỏ.
+
+### Gemini free tier: dùng `gemini-3.5-flash-lite`
+- **Loại:** Cấu hình
+- **Thay đổi:** Đổi `GEMINI_MODEL` trong `.env.local` (không commit) sang `gemini-3.5-flash-lite`. Ghi model nên dùng với key miễn phí vào `README.md`, `.env.example`, `docs/kich-ban-thu-bac-si.md` (sửa giới hạn cũ "5 lượt/phút" thành 15 lượt/phút, 500 lượt/ngày). Không đổi code.
+- **Lý do:** Key miễn phí đã hết hạn mức của các model mạnh. Thử 1 lượt bằng ca `ca-01` (lời nói) qua pipeline: `gemini-3.5-flash` báo 503 quá tải; `gemini-3.8-flash` báo 504 sau khoảng 88 giây vì suy nghĩ quá lâu (thêm `thinkingLevel: LOW` thì chỉ mất 2,3 giây, nhưng chưa đưa vào code); `gemma-4-31b-it` mất 75–85 giây khi chạy được, hay lỗi 500/503, giới hạn 16K token/phút; `gemma-4-26b-a4b-it` lỗi 500. `gemini-3.5-flash-lite` mất 2,6 giây, JSON đúng schema ngay lần đầu.
+- **File:** `.env.local` (không commit), `.env.example`, `README.md`, `docs/kich-ban-thu-bac-si.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** Chạy 1 lượt `runPipeline` với ca `ca-01`: 10 trường phiếu khám đúng, chỉ định ra mã `20.13`, 3 thuốc khớp mã, tổng số lượng 28 và 9 đúng. Chưa chạy `npm run eval -- --provider=gemini` cho cả bộ ca.
+- **Ảnh hưởng:** Phải khởi động lại `npm run dev` thì mới nhận model mới. Chất lượng trên cả bộ ca chưa đo, mới thử 1 ca.
+
 ## 2026-11-11
+
+### Ghi phần bảo hiểm bác sĩ hỏi: "thanh toán BHYT có điều kiện"
+- **Loại:** Tài liệu
+- **Thay đổi:** Thêm `docs/tham-khao/bao-hiem-thanh-toan-co-dieu-kien-2026-11-11.md`: lời bác sĩ (không biết dịch vụ nào bên nào trả, trả bao nhiêu, muốn loại bảo hiểm hiện ra), gom các ghi nhận BHYT cũ (03/11, khung tích BHYT ở bước 2 màn Chỉ định, quầy tiếp đón), tra cứu điều kiện/tỷ lệ thanh toán thuốc (TT 37/2024) và dịch vụ kỹ thuật (TT 39/2024), bảng các nguồn trả ở Vinmec (BHYT, bảo lãnh tư nhân, kết hợp), 5 giả thuyết chỗ vướng G1–G5, câu hỏi Mom Test cho bác sĩ và phòng BHYT, hướng làm nếu chọn. Thêm dòng vào mục lục `docs/tham-khao/README.md`.
+- **Lý do:** Bác sĩ TMH hỏi nhóm có làm phần bảo hiểm y tế không. Chưa đổi code.
+- **File:** `docs/tham-khao/bao-hiem-thanh-toan-co-dieu-kien-2026-11-11.md`, `docs/tham-khao/README.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** Chỉ tài liệu. Phần luật là tra cứu ban đầu, chưa được phòng BHYT xác nhận.
 
 ### Trang Trình diễn: 4 kiểu tương tác với máy trên cùng một ca; hiểu lệnh "kê như mọi khi"
 - **Loại:** Tính năng

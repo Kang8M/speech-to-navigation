@@ -139,6 +139,7 @@ export function ResultsView({ sessions }: { sessions: SessionRecord[] }) {
                 <td className="px-3 py-2">{session.kieu_nhap === "noi" ? "Nói" : "Gõ"}</td>
                 <td className="px-3 py-2 whitespace-nowrap">
                   {session.tu_ca_mau ? `Ca mẫu ${session.ca_mau_id ?? ""}` : "Nhập thật"}
+                  {session.mau_id ? ` · Mẫu ${session.mau_id}` : ""}
                 </td>
                 <td className="px-3 py-2">{session.provider}</td>
                 <td className="px-3 py-2 whitespace-nowrap">{formatSeconds(session.thoi_gian_giay)}</td>

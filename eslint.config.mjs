@@ -34,6 +34,11 @@ const eslintConfig = defineConfig([
       ],
     },
   },
+  {
+    // Test chạy bằng node:test (npm test), được import node:* kể cả trong src/shared
+    files: ["src/**/*.test.ts"],
+    rules: { "no-restricted-imports": "off" },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

@@ -1,5 +1,5 @@
 // Sinh prompt từ config/forms/*.json, nên thêm/bớt trường không phải sửa prompt.
-import type { FieldDef, FormConfig, VietTat } from "@/shared/types";
+import type { Draft, FieldDef, FormConfig, VietTat } from "@/shared/types";
 
 function describeField(field: FieldDef): string {
   const parts = [`- ${field.id}: ${field.label}`];
@@ -38,8 +38,19 @@ Các trường cần điền:
 ${forms.map(describeForm).join("\n\n")}`;
 }
 
-export function buildUserPrompt(text: string, previousError?: string): string {
-  const message = `<tom_tat>\n${text}\n</tom_tat>`;
+/** Bác sĩ gọi phiếu mẫu kèm chi tiết: LLM giữ mẫu, chỉ thay chỗ trống và sửa đúng chỗ bác sĩ nói */
+function phanMau(mau: Draft): string {
+  return `
+
+<phieu_mau>
+${JSON.stringify(mau)}
+</phieu_mau>
+
+Bác sĩ chọn phiếu mẫu ở trên. Hãy trả về chính phiếu mẫu này: giữ nguyên câu chữ, chỉ thay chỗ trong ngoặc vuông và sửa đúng những gì bác sĩ nói trong <tom_tat>. Chỗ ngoặc vuông bác sĩ không nhắc tới thì giữ nguyên cả ngoặc. Bác sĩ bỏ thuốc hay chỉ định nào thì bỏ, thêm thì thêm. Với phần bác sĩ sửa, vẫn chỉ ghi điều bác sĩ đã nói.`;
+}
+
+export function buildUserPrompt(text: string, previousError?: string, mau?: Draft): string {
+  const message = `<tom_tat>\n${text}\n</tom_tat>${mau ? phanMau(mau) : ""}`;
   return previousError
     ? `${message}\n\nLần trả lời trước không hợp lệ (${previousError}). Hãy trả lời lại đúng schema.`
     : message;

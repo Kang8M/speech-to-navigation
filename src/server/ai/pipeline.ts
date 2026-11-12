@@ -3,7 +3,7 @@
 import "server-only";
 import type { PipelineResult } from "@/shared/api";
 import { applyCatalogMatch } from "@/shared/match";
-import type { CaseData, Catalogs, FormConfig, VietTat, WarningRules } from "@/shared/types";
+import type { CaseData, Catalogs, Draft, FormConfig, VietTat, WarningRules } from "@/shared/types";
 import { applyTotals } from "@/shared/validate";
 import { extractDraft } from "./llm";
 import { fillDraft, keepAiFieldsOnly } from "./schema";
@@ -19,7 +19,7 @@ export interface PipelineContext {
 export async function runPipeline(
   text: string,
   ctx: PipelineContext,
-  options: { provider: string; ruleOnly?: boolean },
+  options: { provider: string; ruleOnly?: boolean; mau?: Draft },
 ): Promise<PipelineResult> {
   const startedAt = Date.now();
   const extracted = await extractDraft(text, ctx, options);

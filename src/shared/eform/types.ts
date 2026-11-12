@@ -4,6 +4,7 @@ import type { BangSuaChu } from "../giong-noi/sua-chu";
 import type { MauGoiY } from "./goi-y";
 import type { DonDaKe } from "./thoi-quen";
 import type { KetQuaDien } from "./dien-phieu";
+import type { PhieuMau } from "./phieu-mau";
 
 /** cu: dữ liệu có sẵn; ai: AI thêm; xem: AI thêm nhưng chưa chắc, bác sĩ cần xem lại;
  * sua: dữ liệu cũ hoặc AI đã bị bác sĩ sửa; bs: bác sĩ tự nhập */
@@ -149,6 +150,8 @@ export interface EformData {
   suaChu: BangSuaChu;
   /** Các lần tài khoản đang đăng nhập (ca.dang_nhap) đã Lưu đơn, để gợi ý theo thói quen */
   thoiQuen: DonDaKe[];
+  /** Phiếu mẫu theo bệnh (data/eform/phieu-mau.json), mã đã gán ở server */
+  phieuMau: PhieuMau[];
   /** Chỉ có ở trang /trinh-dien: không ghi gì khi Lưu, có kịch bản cho 4 kiểu tương tác */
   trinhDien?: TrinhDienData;
 }

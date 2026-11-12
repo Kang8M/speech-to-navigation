@@ -4,6 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { getProviderName, loadCases, loadCatalogs, loadRules, loadSuaChu, loadVietTat } from "./config";
 import { loadIcd10 } from "./danh-muc";
+import { loadPhieuMau } from "./phieu-mau";
 import { docThoiQuen, MAU_TAI_KHOAN } from "./thoi-quen";
 import { khopBoMau, type MauGoiYGoc } from "@/shared/eform/goi-y";
 import type { CaGia, EformData, MauCauData, QuyTacAi, TuyChon } from "@/shared/eform/types";
@@ -39,5 +40,6 @@ export function loadEformData(taiKhoan?: string): EformData {
     cauMau: { id: CA_MAU, noi: caMau?.input_noi ?? "", goTat: caMau?.input_go_tat ?? "" },
     suaChu: loadSuaChu(),
     thoiQuen: docThoiQuen(ca.dang_nhap),
+    phieuMau: loadPhieuMau(),
   };
 }

@@ -7,6 +7,7 @@ const sessionSchema = z.object({
   kieu_nhap: z.enum(["go", "noi"]),
   tu_ca_mau: z.boolean(),
   ca_mau_id: z.string().max(100).nullable(),
+  mau_id: z.string().max(100).nullable().default(null),
   provider: z.string().max(50),
   thoi_gian_giay: z.number().min(0),
   so_truong_ai_dien: count,

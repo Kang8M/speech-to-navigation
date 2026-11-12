@@ -71,6 +71,10 @@ export interface CaseData {
   hanh_chinh: Values;
   input_noi: string;
   input_go_tat: string;
+  /** Phiếu mẫu tương ứng (data/eform/phieu-mau.json), cho npm run eval-mau */
+  mau_id?: string;
+  /** Câu ngắn kiểu bác sĩ gọi mẫu: tên tắt kèm vài chi tiết riêng của ca */
+  input_mau?: string;
   expected: Draft;
 }
 

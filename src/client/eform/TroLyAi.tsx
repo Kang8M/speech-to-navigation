@@ -6,6 +6,7 @@ import { useEform } from "@/client/eform/EformContext";
 import { BTN_OUTLINE } from "@/client/eform/fields";
 import type { KetQuaDien } from "@/shared/eform/dien-phieu";
 import { goiAiDienNhap } from "@/client/api";
+import { goiYTenMau, ketQuaTheoQuyTac, timPhieuMau, type PhieuMau } from "@/shared/eform/phieu-mau";
 import type { PipelineResult } from "@/shared/api";
 import { suaChu } from "@/shared/giong-noi/sua-chu";
 import type { InputMode } from "@/shared/metrics";
@@ -14,8 +15,8 @@ export type TabId = "phieu" | "chi_dinh" | "don_thuoc";
 
 interface Props {
   ketQua: KetQuaDien | null;
-  /** Mỗi lần AI điền: trả kết quả và đoạn chữ đã gửi để màn hình áp vào phiếu */
-  onDien: (result: PipelineResult, text: string) => void;
+  /** Mỗi lần AI điền: trả kết quả và đoạn chữ đã gửi để màn hình áp vào phiếu; gọi phiếu mẫu thì kèm mẫu */
+  onDien: (result: PipelineResult, text: string, mau?: PhieuMau) => void;
   /** Bác sĩ bắt đầu nói, gõ hoặc nạp câu mẫu: mốc tính thời gian lượt thử */
   onBatDau: (kieuNhap: InputMode, tuCaMau: boolean) => void;
   onHoanTac: (() => void) | null;
@@ -88,8 +89,44 @@ export function TroLyAi({ ketQua, onDien, onBatDau, onHoanTac, onGoTo, onOpenTab
   /** Đoạn chữ của lần điền gần nhất, để biết bác sĩ đã nói hoặc gõ thêm chưa */
   const [daGui, setDaGui] = useState("");
 
+  /** Mẫu bác sĩ gọi nhưng trùng tên nhiều mẫu: hiện nút để chọn */
+  const [luaChon, setLuaChon] = useState<PhieuMau[] | null>(null);
+
+  /** Đổ phiếu mẫu vào phiếu: chỉ có tên mẫu thì không gọi API, có chi tiết thì gọi AI một lần để thay chỗ trống */
+  async function dungMau(mau: PhieuMau, chuDaGui: string, chiTiet = "") {
+    setLuaChon(null);
+    setError(null);
+    if (!chiTiet) {
+      onDien(mau.ketQua, chuDaGui, mau);
+      setDaGui(chuDaGui);
+      return;
+    }
+    setLoading(true);
+    try {
+      onDien(await goiAiDienNhap(chiTiet, "AI không điền được phiếu.", mau.id), chuDaGui, mau);
+      setDaGui(chuDaGui);
+    } catch (err) {
+      // AI lỗi (quá tải, hết lượt) thì vẫn điền theo mẫu, chỗ trống thay bằng quy tắc
+      onDien(ketQuaTheoQuyTac(mau, chiTiet, data.vietTat), chuDaGui, mau);
+      setDaGui(chuDaGui);
+      const lyDo = err instanceof Error ? err.message : "Không gọi được AI.";
+      setError(`${lyDo} Đã điền theo mẫu, chi tiết chỉ thay được bên, số ngày, nhiệt độ; hãy kiểm tra các chỗ vàng.`);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function dien() {
     if (!text.trim() || loading) return;
+    const goi = timPhieuMau(text, data.phieuMau);
+    if (goi?.loai === "nhieu") {
+      setLuaChon(goi.cacMau);
+      return;
+    }
+    if (goi?.loai === "mot") {
+      await dungMau(goi.mau, text, goi.conLai);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -108,6 +145,8 @@ export function TroLyAi({ ketQua, onDien, onBatDau, onHoanTac, onGoTo, onOpenTab
   const tong = ketQua?.daDien.length ?? 0;
   const coChu = text.trim().length > 0;
   const chuMoi = coChu && text !== daGui;
+  // Đang gõ dở tên bệnh mà chưa khớp mẫu nào: gợi ý vài tên mẫu để bấm
+  const tenGoiY = chuMoi && !loading && !timPhieuMau(text, data.phieuMau) ? goiYTenMau(text, data.phieuMau) : [];
   const buoc = dangPhat ? 1 : chuMoi || loading ? 2 : ketQua ? 3 : 1;
 
   // Mỗi lúc chỉ một nút nổi bật: chưa có gì thì nút micro, có chữ mới thì nút Điền, đã điền thì phần duyệt
@@ -178,15 +217,41 @@ export function TroLyAi({ ketQua, onDien, onBatDau, onHoanTac, onGoTo, onOpenTab
             value={text}
             onChange={(e) => {
               setText(e.target.value);
+              setLuaChon(null);
               onBatDau("go", false);
             }}
             onKeyDown={(e) => {
               if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) void dien();
             }}
-            placeholder="Hoặc gõ tắt, VD: LD: đau tai P 4n. TMH: ống tai P có mủ… CĐ: … CLS: NS tai… Đơn: … Hẹn: sau 7n."
+            placeholder="Gõ tên mẫu, VD: mẫu viêm tai giữa cấp, tai T, 3n. Hoặc gõ tắt cả ca: LD: đau tai P 4n. TMH: … CĐ: … Đơn: …"
             className="w-full rounded-lg border border-ef-vien bg-white px-3 py-2 text-sm leading-6 text-ef-chu outline-none placeholder:text-ef-phu/80 focus:border-tim focus:ring-2 focus:ring-tim/20"
           />
         </div>
+
+        {tenGoiY.length > 0 && !luaChon && (
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ef-phu">
+            <span>Mẫu theo bệnh:</span>
+            {tenGoiY.map((mau) => (
+              <button key={mau.id} type="button" className={NUT_CHU} onClick={() => {
+                  void dungMau(mau, mau.ten);
+                  setText("");
+                }}>
+                {mau.ten}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {luaChon && (
+          <div role="group" aria-label="Chọn mẫu" className="space-y-1.5 rounded-lg border border-tim-vien bg-tim-nhat/60 p-3">
+            <p className="text-xs font-semibold text-ef-chu">Tên này khớp nhiều mẫu, chọn một:</p>
+            {luaChon.map((mau) => (
+              <button key={mau.id} type="button" className={NUT_PHU} onClick={() => void dungMau(mau, text, timPhieuMau(text, data.phieuMau)?.conLai ?? "")}>
+                Dùng mẫu: {mau.ten}
+              </button>
+            ))}
+          </div>
+        )}
 
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ef-phu">
           <span>Thử câu mẫu:</span>

@@ -17,8 +17,10 @@ Prototype Next.js 16 (App Router) + React 19 + Tailwind 4. Bác sĩ nói hoặc 
 ```bash
 npm run dev                  # http://localhost:3000, mặc định LLM_PROVIDER=mock
 npm run lint
+npm test                     # test node:test cho src/**/*.test.ts
 npm run build
 npm run eval -- --rule-only  # chấm điểm bộ tách quy tắc, không tốn phí API
+npm run eval-mau             # đo phiếu mẫu theo bệnh đúng sẵn bao nhiêu (mock, không tốn phí)
 npm run cao-du-lieu          # cào lại danh mục thật về data/tham-khao/ (ứng dụng chưa nạp)
 npm run tai-model-giong-noi  # tải model Zipformer về models/, cần cho ASR_PROVIDER=zipformer
 npm run tao-am-thanh-mau     # Windows: giọng máy đọc 11 ca thành data/giong-noi/*.wav

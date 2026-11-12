@@ -8,46 +8,34 @@ Tài liệu cho một buổi thử Trợ lý AI điền phiếu với bác sĩ T
 
 ## Phần 1. Cho bác sĩ
 
-Phiếu trên màn hình là một bệnh nhân giả: **chị Nguyễn Thị Giả, 38 tuổi, dị ứng Penicillin**, đến khám vì đau và chảy mủ tai phải. Cột bên phải là **Trợ lý AI điền phiếu**.
+Phiếu trên màn hình là một bệnh nhân giả: **chị Nguyễn Thị Giả, 38 tuổi, dị ứng Penicillin**. Điều dưỡng đã nhập sẵn lý do khám và bệnh sử. Cột bên phải là **Trợ lý AI điền phiếu**.
 
-### Các bước cho mỗi kịch bản
+Trợ lý có sẵn **39 phiếu mẫu theo bệnh** (viêm tai giữa cấp, viêm mũi xoang cấp, viêm họng cấp, chóng mặt tư thế…). Anh/chị chỉ cần gõ hoặc nói **tên mẫu**, có thể kèm vài chi tiết riêng của bệnh nhân. Phiếu khám, chỉ định và đơn thuốc sẽ được điền theo mẫu, sau đó anh/chị kiểm tra và sửa.
 
-1. Bấm **🎤 Bắt đầu nói** rồi đọc to, giọng như bình thường. Hoặc gõ vào ô bên dưới nếu kịch bản là gõ tắt.
-2. Đọc xong bấm **⏹ Dừng nghe**, rồi bấm **✨ Điền vào phiếu**.
-3. Xem phiếu: chỗ **tím** là AI điền, chỗ **vàng** là AI chưa chắc. Kiểm tra cả ba tab **Phiếu khám**, **Chỉ định dịch vụ** và **Đơn thuốc**.
-4. Sửa chỗ sai như sửa phiếu bình thường. Chỗ vàng mà đã đúng thì bấm **✓ Đúng**.
-5. Muốn nói thêm thì bấm **✨ Điền thêm vào phiếu**. Muốn bỏ lần AI vừa điền thì bấm **↶ Hoàn tác lần AI điền**.
-6. Thấy phiếu đã ổn thì bấm **Lưu**.
-7. **Tải lại trang (F5)** trước khi sang kịch bản tiếp theo.
+### Các bước
 
-### Kịch bản A. Đọc theo mẫu
+1. Gõ vào ô bên phải, hoặc bấm **🎤 Bắt đầu nói** rồi nói, ví dụ:
+   - `mẫu viêm tai giữa cấp`
+   - `vtg cấp, tai T, 3n, sốt 38,5`
 
-**A1. Nói: đợt cấp viêm tai giữa mạn (đúng bệnh nhân trên phiếu)**
+   Gõ được 2 chữ đầu tên bệnh thì bên dưới hiện **Mẫu theo bệnh:** kèm vài tên để bấm chọn.
+2. Bấm **✨ Điền vào phiếu**.
+3. Kiểm tra cả ba tab **Phiếu khám**, **Chỉ định dịch vụ**, **Đơn thuốc**. Chỗ **tím** là điền theo mẫu, chỗ **vàng** là phải xem lại (ví dụ `[phải|trái|2 bên]` còn chưa chọn). Sửa như sửa phiếu bình thường. Chỗ vàng mà đã đúng thì bấm **✓ Đúng**.
+4. Thấy phiếu ổn thì bấm **Lưu**. **Tải lại trang (F5)** trước khi sang kịch bản sau.
 
-> Chị đến khám vì đau tai phải, chảy mủ tai phải 4 ngày. Bệnh sử 4 ngày nay đau tai phải, 2 ngày nay chảy mủ vàng tai phải, nghe kém tai phải, sốt nhẹ, không chóng mặt, đã tự nhỏ thuốc tai không rõ loại không đỡ. Tiền sử viêm tai giữa mạn tính tai phải, viêm mũi dị ứng, tăng huyết áp độ 1, dị ứng penicillin. Toàn thân tỉnh, sốt nhẹ. Khám tai mũi họng thấy ống tai phải có mủ vàng, màng nhĩ phải thủng trung tâm, tai trái bình thường, niêm mạc mũi nề nhẹ, họng bình thường. Chẩn đoán đợt cấp viêm tai giữa mạn tính có mủ tai phải, kèm theo viêm mũi dị ứng. Hướng điều trị nội khoa, làm sạch tai. Chỉ định nội soi tai, đo thính lực đơn âm và làm sạch ống tai hút dịch tai. Kê đơn: Ciprofloxacin nhỏ tai, nhỏ tai phải 5 giọt một lần, ngày 2 lần, 7 ngày. Paracetamol 500 mg uống 1 viên một lần, ngày 3 lần, sau ăn, 5 ngày. Dặn giữ khô tai, không tự ngoáy tai, không bơi. Hẹn tái khám sau 7 ngày.
+Mẫu **chỉ điền vào ô còn trống**: ô đã có chữ (điều dưỡng nhập, anh/chị đã gõ) được giữ nguyên. Muốn bỏ lần vừa điền thì bấm **↶ Hoàn tác lần AI điền**.
 
-**A2. Gõ tắt: cùng ca A1**
+### Kịch bản
 
-Gõ, hoặc dán, vào ô nhập:
+- **M1. Chỉ gõ tên mẫu.** Một bệnh anh/chị hay gặp nhất, ví dụ `mẫu viêm họng cấp`. Sau đó sửa phiếu cho khớp một bệnh nhân anh/chị tự nghĩ ra.
+- **M2. Tên mẫu kèm 2–3 chi tiết.** Ví dụ `vtg cấp, tai P, 2n, sốt 39`, hoặc theo cách anh/chị vẫn gõ tắt.
+- **M3. Nói thay vì gõ.** Bấm 🎤, nói "mẫu viêm mũi xoang cấp, ngạt mũi hai bên, bảy ngày", bấm ⏹ Dừng nghe rồi Điền.
+- **M4. Phiếu đã có chữ.** Gọi một mẫu bất kỳ, xem lý do khám và bệnh sử điều dưỡng nhập sẵn có được giữ nguyên không.
+- **M5. Bệnh chưa có mẫu.** Tóm tắt một ca không có trong danh sách (ví dụ u bã đậu sau tai) đúng như cách anh/chị vẫn đọc hay gõ. Trợ lý sẽ tách cả đoạn như trước.
+- **M6. Thuốc trùng dị ứng.** `mẫu viêm tai giữa cấp`: mẫu có Augmentin trong khi bệnh nhân dị ứng Penicillin. Xem dòng thuốc có cảnh báo đỏ không.
+- **A1. Để so sánh: đọc cả ca.** Đọc to đoạn dưới đây (đúng bệnh nhân trên phiếu), xem mất bao lâu so với gọi mẫu:
 
-> LD: đau tai P, chảy mủ tai P 4n. BS: 4n nay đau tai P, 2n nay chảy mủ vàng tai P, nghe kém tai P, sốt nhẹ, không chóng mặt, đã tự nhỏ thuốc tai không rõ loại không đỡ. TS: VTG mạn tai P, viêm mũi dị ứng, THA độ 1, dị ứng penicillin. TT: tỉnh, sốt nhẹ. TMH: ống tai P có mủ vàng, màng nhĩ P thủng trung tâm, tai T bình thường, niêm mạc mũi nề nhẹ, họng bình thường. CĐ: đợt cấp VTG mạn có mủ tai P. Kèm theo: viêm mũi dị ứng. ĐT: nội khoa, làm sạch tai. CLS: NS tai, đo thính lực đơn âm, làm sạch ống tai hút dịch tai. Đơn: Ciprofloxacin nhỏ tai P 5 giọt x 2 l/n 7n; Paracetamol 500 mg uống 1 v x 3 l/n sau ăn 5n. Dặn: giữ khô tai, không tự ngoáy tai, không bơi. Hẹn: sau 7n.
-
-**A3. Nói: viêm họng cấp, có thuốc trùng dị ứng**
-
-> Chị này đến khám vì đau họng, nuốt đau. Bệnh sử 2 ngày nay đau họng tăng dần, nuốt đau, sốt nhẹ, ho ít. Tiền sử chưa ghi nhận gì đặc biệt. Toàn thân tỉnh, sốt 37,8 độ. Khám tai mũi họng thấy họng đỏ, thành sau họng có xuất tiết, amidan không to, tai mũi bình thường. Chẩn đoán viêm họng cấp. Hướng điều trị nội khoa. Chỉ định test nhanh liên cầu họng. Kê đơn: Augmentin uống 1 viên một lần, ngày 2 lần, sau ăn, 7 ngày. Strepsils ngậm 1 viên một lần, ngày 4 lần, 5 ngày. Paracetamol 500 mg uống 1 viên một lần, ngày 3 lần, khi đau hoặc sốt, 3 ngày. Dặn uống nhiều nước, súc họng nước muối ấm. Hẹn tái khám sau 7 ngày nếu không đỡ.
-
-**A4. Nói: ù tai, nghe kém, nhiều chỉ định**
-
-> Chị này đến khám vì ù tai và nghe kém. Bệnh sử khoảng 2 tháng nay ù tai 2 bên liên tục, tiếng ve kêu, nghe kém dần, không chóng mặt, không chảy tai. Tiền sử tăng huyết áp đang uống thuốc. Toàn thân tỉnh, huyết áp 130 trên 80. Khám tai mũi họng thấy ống tai sạch, màng nhĩ 2 bên bình thường, mũi họng không có gì đặc biệt. Chẩn đoán ù tai, nghe kém 2 bên, kèm theo tăng huyết áp. Hướng điều trị nội khoa, chờ kết quả thính lực. Chỉ định đo thính lực, đo nhĩ lượng và nội soi tai. Kê đơn: Betahistin 16 mg uống 1 viên một lần, ngày 3 lần, sau ăn, 30 ngày. Ginkgo biloba 40 mg uống 1 viên một lần, ngày 3 lần, 30 ngày. Dặn tránh nơi ồn, hạn chế cà phê. Hẹn tái khám sau 1 tháng.
-
-### Kịch bản B. Nói theo cách của bác sĩ
-
-Không có lời mẫu. Bác sĩ tự nghĩ ra một ca TMH và tóm tắt **đúng như cách vẫn đọc hay gõ hằng ngày**: không cần theo thứ tự, không cần nói tên mục, nói tắt hay sửa giữa câu đều được.
-
-- **B1.** Một ca hay gặp nhất trong buổi khám, có kê đơn.
-- **B2.** Một ca trẻ em, có liều theo cân nặng.
-- **B3.** Một ca chỉ làm chỉ định hoặc thủ thuật, không kê thuốc.
-- **B4.** Làm tiếp sau B1: bấm **✨ Điền thêm vào phiếu** rồi nói bổ sung một chỉ định và đổi ngày hẹn tái khám.
+  > Chị đến khám vì đau tai phải, chảy mủ tai phải 4 ngày. Bệnh sử 4 ngày nay đau tai phải, 2 ngày nay chảy mủ vàng tai phải, nghe kém tai phải, sốt nhẹ. Tiền sử viêm tai giữa mạn tính tai phải, dị ứng penicillin. Khám thấy ống tai phải có mủ vàng, màng nhĩ phải thủng trung tâm. Chẩn đoán đợt cấp viêm tai giữa mạn tính có mủ tai phải. Chỉ định nội soi tai, đo thính lực đơn âm, làm sạch ống tai hút dịch tai. Kê Ciprofloxacin nhỏ tai phải 5 giọt một lần, ngày 2 lần, 7 ngày. Paracetamol 500 mg uống 1 viên một lần, ngày 3 lần, sau ăn, 5 ngày. Dặn giữ khô tai, không bơi. Hẹn tái khám sau 7 ngày.
 
 ---
 
@@ -56,39 +44,55 @@ Không có lời mẫu. Bác sĩ tự nghĩ ra một ca TMH và tóm tắt **đ�
 ### Chuẩn bị
 
 - Đặt `ASR_PROVIDER=zipformer` trong `.env.local` (đã tải model bằng `npm run tai-model-giong-noi`) để âm thanh không rời khỏi máy.
-- Chọn `LLM_PROVIDER`. Chạy `mock` thì chỉ A1, A2 cho kết quả tốt (câu soạn sẵn); câu khác tách bằng quy tắc nên rất kém. Kịch bản B cần LLM thật.
-- Nếu dùng `gemini` bằng key miễn phí: giới hạn **5 lượt gọi mỗi phút**, và thỉnh thoảng Google trả lỗi 503 khi quá tải. Đợi khoảng 15 giây giữa hai lần bấm Điền; gặp lỗi thì bấm lại.
-- Mở `/ket-qua` trước buổi thử để biết đã có bao nhiêu lượt cũ.
+- Chọn `LLM_PROVIDER`.
+  - Chỉ gõ tên mẫu (M1, M4, M6) thì **không gọi LLM**, chạy được cả ở `mock`.
+  - Tên mẫu kèm chi tiết (M2, M3) gọi LLM 1 lượt. Ở `mock` thì chỉ thay được bên, số ngày, nhiệt độ bằng quy tắc.
+  - M5 và A1 cần LLM thật mới tách tốt.
+- Nếu dùng `gemini` bằng key miễn phí: đặt `GEMINI_MODEL=gemini-3.5-flash-lite` (**15 lượt gọi mỗi phút, 500 lượt mỗi ngày**, mỗi lượt khoảng 2–3 giây). Model mạnh hơn hết hạn mức rất nhanh. Thỉnh thoảng Google trả lỗi 503 khi quá tải, gặp lỗi thì bấm lại.
+- Mở `/ket-qua` trước buổi thử để biết đã có bao nhiêu lượt cũ. Lượt có dùng mẫu hiện "· Mẫu <id>".
+- Danh sách mẫu và cách gọi tắt: `data/eform/phieu-mau.json` (`ten`, `bi_danh`), hoặc gõ 2 chữ vào ô để hiện gợi ý.
+
+### Mẫu đúng sẵn bao nhiêu (ước tính)
+
+Đo bằng `npm run eval-mau` trên 10 ca mẫu có mẫu tương ứng (ngày 2026-11-12):
+
+| | Chung | Phiếu khám | Chỉ định | Đơn thuốc |
+|---|---|---|---|---|
+| Chỉ gõ tên mẫu | 68,5% | 38,9% | 97,4% | 76,3% |
+| Tên mẫu kèm chi tiết (quy tắc, chưa dùng LLM) | 72,5% | 53,7% | 97,4% | 76,3% |
+
+Chỗ mẫu hay sai nhất là bệnh sử, khám toàn thân, khám chuyên khoa và lời dặn, vì bên tai, con số và câu chữ của từng ca khác mẫu. Hẹn tái khám, hướng điều trị và mã chỉ định gần như luôn đúng. **Mẫu và đáp án đều do nhóm soạn**, nên số thật phải đo ở buổi thử này.
 
 ### Cần biết trước để không bất ngờ
 
-- **Nhận dạng giọng nói hay nghe sai tên thuốc và từ chuyên môn.** Trong lần thử bằng giọng đọc máy ngày 2026-11-11: "Augmentin" thành "cây ổ mẹ tìm", "Betaserc" thành "bệ tạ dẹp", "amidan" thành "mỉ đạn", "tai" thành "thai", "chẩn đoán" thành "chẩn"; khoảng 29% số từ bị sai. Sau khi thêm bước sửa chữ (`config/sua-chu-giong-noi.json`), đo lại bằng `npm run eval-giong-noi` còn khoảng 10% từ sai trên giọng máy; với giọng người thật chưa đo. Tên thuốc vẫn hay sai nhất. Cần ghi lại bác sĩ phản ứng thế nào: gõ sửa ngay, đọc lại, hay bỏ cuộc.
-- **A3 cố ý có Augmentin** trong khi bệnh nhân dị ứng Penicillin: dòng thuốc phải hiện cảnh báo đỏ. Strepsils không có trong danh mục bệnh viện, Augmentin thiếu hàm lượng, nên sẽ hiện vàng "cần xem lại".
-- **Ở B4, nói "đổi liều" một thuốc đã có thì phiếu không đổi và không báo gì**, vì dòng trùng tên bị bỏ qua. Ô do AI điền (ví dụ ngày hẹn) thì được ghi đè; ô bác sĩ đã gõ hoặc đã sửa thì AI không ghi đè. Ghi lại nếu bác sĩ thử đổi liều.
+- **Mẫu có sẵn câu khám kiểu "Tim đều, phổi không ran", "màng nhĩ 2 bên bình thường".** Bác sĩ không khám chỗ đó mà vẫn Lưu thì bệnh án ghi sai. Ghi lại bác sĩ có đọc kỹ từng ô không, hay bấm Lưu luôn.
+- **Tên mẫu chỉ được nhận khi đứng đầu câu hoặc đứng sau chữ "mẫu".** Câu kể cả ca có nhắc tên bệnh ở giữa thì chạy luồng tách cũ. Bác sĩ nói "mẫu…" giữa chừng thì vẫn nhận.
+- **Ô vàng `[phải|trái|2 bên]`, `[số] ngày`** là chỗ mẫu cần bác sĩ điền. Nói kèm chi tiết thì phần lớn được thay tự động; không thay được thì vẫn để vàng.
+- **Nhận dạng giọng nói hay nghe sai tên thuốc và từ chuyên môn.** Lần thử bằng giọng đọc máy ngày 2026-11-11 có khoảng 29% số từ bị sai. Sau bước sửa chữ (`config/sua-chu-giong-noi.json`) còn khoảng 10% trên giọng máy; giọng người thật chưa đo. Tên bệnh ngắn trong lệnh gọi mẫu cũng có thể bị nghe sai. Ghi lại bác sĩ gõ sửa ngay, đọc lại, hay bỏ cuộc.
 - Mỗi lần tải trang chỉ ghi **một** lượt số đo, vào lần Lưu đầu tiên sau khi AI đã điền. Quên tải lại thì kịch bản sau không được ghi.
-- Dùng link "Thử câu mẫu" thì lượt đó không tính vào số trung bình. Ở buổi thử, bác sĩ đọc hoặc gõ thật, không bấm link.
+- Dùng link "Thử câu mẫu" thì lượt đó không tính vào số trung bình. Ở buổi thử, bác sĩ gõ hoặc nói thật.
 
 ### Ghi chép mỗi kịch bản
 
-Số đếm (thời gian, số trường AI điền, đã sửa, bổ sung, khớp danh mục) đã tự ghi ở `/ket-qua`. Người điều phối ghi thêm bằng tay:
+Số đếm (thời gian, số trường AI điền, đã sửa, bổ sung, khớp danh mục, mẫu đã dùng) đã tự ghi ở `/ket-qua`. Người điều phối ghi thêm bằng tay:
 
-| Kịch bản | Chỗ nghe sai | Chỗ AI điền sai hoặc thiếu | Bác sĩ dừng hay do dự ở đâu | Câu bác sĩ nói nguyên văn |
-|---|---|---|---|---|
-| A1 | | | | |
-| A2 | | | | |
-| A3 | | | | |
-| A4 | | | | |
-| B1 | | | | |
-| B2 | | | | |
-| B3 | | | | |
-| B4 | | | | |
+| Kịch bản | Mẫu đã gọi | Chữ nào trong mẫu phải sửa | Ô nào bác sĩ không đọc mà vẫn Lưu | Bác sĩ dừng hay do dự ở đâu | Câu bác sĩ nói nguyên văn |
+|---|---|---|---|---|---|
+| M1 | | | | | |
+| M2 | | | | | |
+| M3 | | | | | |
+| M4 | | | | | |
+| M5 | (không có mẫu) | | | | |
+| M6 | | | | | |
+| A1 | (đọc cả ca) | | | | |
 
 ### Hỏi sau buổi thử
 
 Hỏi về việc đã xảy ra, không hỏi bác sĩ có thích không:
 
-- Ở lượt vừa rồi, chỗ nào anh/chị phải sửa lâu nhất?
+- Ở lượt vừa rồi, chữ nào trong mẫu anh/chị phải sửa?
+- Lần gần nhất điều dưỡng gõ mẫu viết tắt xong, anh/chị sửa những chữ nào?
+- Bộ viết tắt điều dưỡng đang dùng có bao nhiêu mẫu? Ai soạn, lần cuối sửa khi nào?
 - Ca hôm qua anh/chị nhập phiếu và đơn mất bao lâu? Phần nào chiếm nhiều thời gian nhất?
-- Ngoài giờ khám, anh/chị có sửa lại bệnh án không? Lần gần nhất là khi nào, sửa những gì?
-- Anh/chị đang đọc hay gõ tóm tắt theo thứ tự nào? Có mẫu nào hay dùng không?
+- Bệnh nào anh/chị gặp nhiều mà danh sách mẫu chưa có?
 - Lúc nãy chỗ nào anh/chị không tin kết quả và phải đọc lại kỹ?

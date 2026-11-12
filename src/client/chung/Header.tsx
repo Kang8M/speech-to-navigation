@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 
 const LINKS = [
   { href: "/", label: "eForm ngoại trú" },
-  { href: "/trinh-dien", label: "Trình diễn" },
   { href: "/ket-qua", label: "Kết quả thử nghiệm" },
 ];
 

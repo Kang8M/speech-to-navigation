@@ -4,6 +4,36 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-12
 
+### Sửa 2 lỗi trước buổi thử: u bã đậu ra mã viêm tai ngoài, lỗi AI hiện chuỗi JSON tiếng Anh
+- **Loại:** Sửa lỗi
+- **Thay đổi:**
+  - Thêm từ khóa gợi ý cho **L72.1 Kén ở nang lông/tuyến bã** trong `data/eform/icd10.json` (`u bã đậu`, `kén bã đậu`, `nang bã đậu`, `kén tuyến bã`). Trước đó "U bã đậu sau tai phải" ra **H60.9 Viêm tai ngoài**: bỏ dấu thì "bã đậu sau tai" thành "ba dau sau tai", khớp từ khóa "đau tai" (cho xen 2 từ), còn L72.1 có trong danh mục thật nhưng chưa có từ khóa nào.
+  - Thêm `src/shared/loi-ai.ts` (`thongBaoLoiAi`): `/api/extract` không còn trả nguyên lỗi của nhà cung cấp mà đổi thành câu tiếng Việt: quá tải (503) → "AI đang quá tải, bấm Điền lại sau vài giây."; hết lượt (429) → "Đã hết lượt gọi AI trong lúc này, chờ khoảng 1 phút rồi bấm Điền lại."; mất mạng → "Không kết nối được tới AI…"; lỗi khác → "AI không điền được nháp, bấm Điền lại. Vẫn lỗi thì báo người điều phối." Bỏ câu gợi ý `LLM_PROVIDER=mock` (dành cho người chạy máy, không phải bác sĩ). Chi tiết lỗi vẫn in ở terminal (`console.error`).
+- **Lý do:** Chạy thử kịch bản trước buổi thử với bác sĩ: bài 8 gán sai mã ICD, bài 9 gặp Gemini 503 và phiếu hiện `{"error":{"code":503,…"UNAVAILABLE"}}. Có thể đặt LLM_PROVIDER=mock…`.
+- **File:** `data/eform/icd10.json`, `src/shared/loi-ai.ts`, `src/shared/loi-ai.test.ts`, `src/server/du-lieu/icd.test.ts`, `src/app/api/extract/route.ts`, `README.md` (29 mã có từ khóa, câu báo 503), `docs/kich-ban-thu-bac-si.md` (bảng kết quả bài 8 ghi L72.1, câu báo lỗi Gemini).
+- **Kiểm tra:** 5 test mới (1 test ICD dùng danh mục thật, 4 test câu báo lỗi) fail trước khi sửa; sau khi sửa `npm test` 56/56 pass. `npm run lint`, `npx tsc --noEmit` sạch. `npm run eval -- --rule-only` không đổi (Phiếu khám nói 97,1%, gõ tắt 98,1%; Chỉ định nói 92,9%, gõ tắt 100%). Playwright với Gemini: bài 8 ra "L72.1 – Kén ở nang lông/tuyến bã" ở cả 2 ô ICD, 1 chỉ định, 1 thuốc. Cũng chạy bài 2 (`vtg mạn, tai P, 4n`: chỉ còn 2 ô ICD vàng, 3 chỉ định, 2 thuốc) và bài 9 (dán cả ca, bấm lần 2 sau 503: 11 trường, 3 chỉ định, 2 thuốc), khớp kịch bản. Câu báo lỗi mới chưa thấy trên trình duyệt vì không làm Gemini lỗi được theo ý; phần đổi câu có test.
+- **Ảnh hưởng:** Bài 7 và bài 9 bằng giọng nói thật vẫn chưa thử (Playwright không có micro).
+
+### Kịch bản thử với bác sĩ: 10 bài có bước cụ thể, bảng kết quả đúng, danh sách 39 mẫu
+- **Loại:** Tài liệu
+- **Thay đổi:** Viết lại `docs/kich-ban-thu-bac-si.md` để in cho bác sĩ làm theo.
+  - **Phần 1 (cho bác sĩ):** bảng "Thao tác chung" (gọi mẫu, kèm chi tiết, gợi ý tên, nói, màu tím/vàng, ✓ Đúng, Hoàn tác, Lưu, F5) và 10 bài thử, mỗi bài ghi rõ gõ hay nói gì, sẽ thấy gì, phải sửa chỗ nào:
+    1. Gọi mẫu đúng bệnh của bệnh nhân giả (`vtg mạn`).
+    2. Kèm chi tiết (`vtg mạn, tai P, 4n`).
+    3. Bấm gợi ý khi gõ dở (`viêm m`).
+    4. Thuốc trùng dị ứng Penicillin.
+    5. Ô đã gõ thì không bị ghi đè.
+    6. Gọi nhầm rồi hoàn tác.
+    7. Nói thay vì gõ.
+    8. Bệnh chưa có mẫu.
+    9. Đọc cả ca để so thời gian.
+    10. Ca của bác sĩ.
+  - **Phần 2 (cho người điều phối):** bảng kết quả đúng của từng bài (mẫu, ICD10, số chỗ vàng, chỉ định, thuốc), bài nào cần LLM, các lỗi nhỏ còn lại người điều phối cần biết (dấu hai chấm sau "mẫu", hẹn "Khi có bất thường"…), bảng ghi chép theo 10 bài.
+  - **Phụ lục:** 39 mẫu chia theo tai, mũi, họng thanh quản, kèm cách gọi tắt.
+- **Lý do:** Chủ dự án cần kịch bản mẫu để bác sĩ biết phải thao tác những gì khi thử.
+- **File:** `docs/kich-ban-thu-bac-si.md`
+- **Kiểm tra:** Kết quả trong bảng tính bằng script chạy `timPhieuMau` + `dienPhieu` trên ca giả (`loadEformData`). Playwright trên dev server khớp với tài liệu: bài 1 báo "…3 chỉ định, 2 thuốc. Bỏ qua 2 ô đã có chữ. Còn 3 chỗ cần điền"; bài 5 báo "Bỏ qua 3 ô đã có chữ" và ô Hướng điều trị giữ chữ đã gõ; bài 6 Hoàn tác xóa sạch phần mẫu. Bài 2 với Gemini, bài 7 (giọng nói) và bài 8, 9 (LLM tách cả đoạn) chưa chạy lại trên trình duyệt hôm nay.
+
 ### Phiếu mẫu theo bệnh (9/9): sửa lỗi sau review
 - **Loại:** Sửa lỗi
 - **Thay đổi:** Sửa 6 lỗi do agent review toàn bộ thay đổi chỉ ra.

@@ -1,6 +1,6 @@
 # Kịch bản thử với bác sĩ
 
-Tài liệu cho một buổi thử Trợ lý AI điền phiếu với bác sĩ TMH. **Phần 1** in ra đưa bác sĩ đọc, **Phần 2** dành cho người điều phối buổi thử.
+Tài liệu cho một buổi thử Trợ lý AI điền phiếu với bác sĩ TMH. **Phần 1** in ra đưa bác sĩ làm theo. **Phần 2** dành cho người điều phối, có kết quả đúng của từng bài để đối chiếu. **Phụ lục** là danh sách 39 mẫu và cách gọi tắt, in kèm Phần 1.
 
 > **Chỉ dùng thông tin bịa.** Bác sĩ không nói tên, tuổi, PID hay bệnh sử của bệnh nhân thật, kể cả khi đang kể lại một ca quen.
 
@@ -8,34 +8,84 @@ Tài liệu cho một buổi thử Trợ lý AI điền phiếu với bác sĩ T
 
 ## Phần 1. Cho bác sĩ
 
-Phiếu trên màn hình là một bệnh nhân giả: **chị Nguyễn Thị Giả, 38 tuổi, dị ứng Penicillin**. Điều dưỡng đã nhập sẵn lý do khám và bệnh sử. Cột bên phải là **Trợ lý AI điền phiếu**.
+### Bệnh nhân trên màn hình
 
-Trợ lý có sẵn **39 phiếu mẫu theo bệnh** (viêm tai giữa cấp, viêm mũi xoang cấp, viêm họng cấp, chóng mặt tư thế…). Anh/chị chỉ cần gõ hoặc nói **tên mẫu**, có thể kèm vài chi tiết riêng của bệnh nhân. Phiếu khám, chỉ định và đơn thuốc sẽ được điền theo mẫu, sau đó anh/chị kiểm tra và sửa.
+**Chị Nguyễn Thị Giả, 38 tuổi, dị ứng Penicillin** (bệnh nhân giả). Đến khám vì đau và chảy mủ tai phải 4 ngày. Điều dưỡng đã nhập sẵn **Lý do đến khám** và **Bệnh sử**. Từ bài 3 trở đi, coi như đây là một bệnh nhân khác có bệnh ghi trong bài; hai ô điều dưỡng nhập sẵn cứ để nguyên.
 
-### Các bước
+### Thao tác chung
 
-1. Gõ vào ô bên phải, hoặc bấm **🎤 Bắt đầu nói** rồi nói, ví dụ:
-   - `mẫu viêm tai giữa cấp`
-   - `vtg cấp, tai T, 3n, sốt 38,5`
+| Muốn | Làm |
+|---|---|
+| Gọi mẫu | Gõ vào ô ở **cột Trợ lý AI bên phải**, ví dụ `mẫu viêm tai giữa cấp` hoặc `vtg cấp`, rồi bấm **✨ Điền vào phiếu** (hoặc Ctrl+Enter). Tên mẫu phải đứng **đầu câu** hoặc **ngay sau chữ "mẫu"**. |
+| Gọi mẫu kèm chi tiết riêng | Viết chi tiết ngay sau tên mẫu, cách nhau bằng dấu phẩy: `vtg cấp, tai P, 3n, sốt 38,5`. |
+| Không nhớ tên mẫu | Gõ 2–3 chữ đầu tên bệnh, ví dụ `viêm m`. Bên dưới hiện **Mẫu theo bệnh:** kèm vài tên, bấm một tên là điền ngay. |
+| Nói thay vì gõ | Bấm **🎤 Bắt đầu nói**, nói, bấm **⏹ Dừng nghe**. Chữ hiện trong ô; nghe sai thì sửa ngay trong ô rồi mới bấm Điền. |
+| Xem phiếu | Có 3 tab: **Phiếu khám**, **Chỉ định dịch vụ**, **Đơn thuốc**. Chỗ **viền tím** là điền theo mẫu. Chỗ **viền vàng** là phải xem lại. |
+| Chỗ vàng có `[phải\|trái\|2 bên]` hoặc `[số]` | Đó là chỗ mẫu chờ anh/chị điền. Sửa thẳng trong ô, ví dụ đổi `[phải|trái|2 bên]` thành `phải`, `[số]` thành `38`. |
+| Chỗ vàng đã đúng | Bấm **✓ Đúng** cạnh tên ô, hoặc trong danh sách "chỗ cần xem lại" ở cột phải. Mã ICD10 luôn vàng, xem đúng thì bấm ✓ Đúng. |
+| Bỏ lần vừa điền | Bấm **↶ Hoàn tác lần AI điền** ở cột phải. |
+| Xong | Bấm **Lưu** ở thanh dưới đáy. Sau đó **tải lại trang (F5)** trước khi sang bài sau. |
 
-   Gõ được 2 chữ đầu tên bệnh thì bên dưới hiện **Mẫu theo bệnh:** kèm vài tên để bấm chọn.
-2. Bấm **✨ Điền vào phiếu**.
-3. Kiểm tra cả ba tab **Phiếu khám**, **Chỉ định dịch vụ**, **Đơn thuốc**. Chỗ **tím** là điền theo mẫu, chỗ **vàng** là phải xem lại (ví dụ `[phải|trái|2 bên]` còn chưa chọn). Sửa như sửa phiếu bình thường. Chỗ vàng mà đã đúng thì bấm **✓ Đúng**.
-4. Thấy phiếu ổn thì bấm **Lưu**. **Tải lại trang (F5)** trước khi sang kịch bản sau.
+Mẫu **chỉ điền vào ô còn trống**. Ô đã có chữ (điều dưỡng nhập, anh/chị đã gõ) được giữ nguyên, và thông báo sẽ ghi "Bỏ qua N ô đã có chữ". Mẫu không điền **Tiền sử**: ô này anh/chị bấm **Copy** ở bảng lịch sử như vẫn làm.
 
-Mẫu **chỉ điền vào ô còn trống**: ô đã có chữ (điều dưỡng nhập, anh/chị đã gõ) được giữ nguyên. Muốn bỏ lần vừa điền thì bấm **↶ Hoàn tác lần AI điền**.
+### Các bài thử
 
-### Kịch bản
+Làm lần lượt. Mỗi bài xong thì Lưu rồi F5.
 
-- **M1. Chỉ gõ tên mẫu.** Một bệnh anh/chị hay gặp nhất, ví dụ `mẫu viêm họng cấp`. Sau đó sửa phiếu cho khớp một bệnh nhân anh/chị tự nghĩ ra.
-- **M2. Tên mẫu kèm 2–3 chi tiết.** Ví dụ `vtg cấp, tai P, 2n, sốt 39`, hoặc theo cách anh/chị vẫn gõ tắt.
-- **M3. Nói thay vì gõ.** Bấm 🎤, nói "mẫu viêm mũi xoang cấp, ngạt mũi hai bên, bảy ngày", bấm ⏹ Dừng nghe rồi Điền.
-- **M4. Phiếu đã có chữ.** Gọi một mẫu bất kỳ, xem lý do khám và bệnh sử điều dưỡng nhập sẵn có được giữ nguyên không.
-- **M5. Bệnh chưa có mẫu.** Tóm tắt một ca không có trong danh sách (ví dụ u bã đậu sau tai) đúng như cách anh/chị vẫn đọc hay gõ. Trợ lý sẽ tách cả đoạn như trước.
-- **M6. Thuốc trùng dị ứng.** `mẫu viêm tai giữa cấp`: mẫu có Augmentin trong khi bệnh nhân dị ứng Penicillin. Xem dòng thuốc có cảnh báo đỏ không.
-- **A1. Để so sánh: đọc cả ca.** Đọc to đoạn dưới đây (đúng bệnh nhân trên phiếu), xem mất bao lâu so với gọi mẫu:
+**Bài 1. Gọi mẫu đúng bệnh của bệnh nhân, chỉ gõ tên.**
+1. Gõ `vtg mạn`, bấm ✨ Điền vào phiếu.
+2. Xem thông báo phía dưới màn hình: "Đã điền theo mẫu Viêm tai giữa mạn đợt cấp … Bỏ qua 2 ô đã có chữ. Còn 3 chỗ cần điền (tô vàng)."
+3. Tab Phiếu khám: sửa 3 chỗ vàng `[phải|trái|2 bên]` (khám chuyên khoa, mô tả chẩn đoán ban đầu, mô tả chẩn đoán ra viện) thành `phải`. Bấm ✓ Đúng ở mã ICD10 nếu đúng. Tiền sử thì bấm Copy từ lần khám trước.
+4. Tab Chỉ định dịch vụ và tab Đơn thuốc: xem các dòng mẫu đã thêm, bỏ hoặc sửa theo ý anh/chị.
+5. Lưu.
 
-  > Chị đến khám vì đau tai phải, chảy mủ tai phải 4 ngày. Bệnh sử 4 ngày nay đau tai phải, 2 ngày nay chảy mủ vàng tai phải, nghe kém tai phải, sốt nhẹ. Tiền sử viêm tai giữa mạn tính tai phải, dị ứng penicillin. Khám thấy ống tai phải có mủ vàng, màng nhĩ phải thủng trung tâm. Chẩn đoán đợt cấp viêm tai giữa mạn tính có mủ tai phải. Chỉ định nội soi tai, đo thính lực đơn âm, làm sạch ống tai hút dịch tai. Kê Ciprofloxacin nhỏ tai phải 5 giọt một lần, ngày 2 lần, 7 ngày. Paracetamol 500 mg uống 1 viên một lần, ngày 3 lần, sau ăn, 5 ngày. Dặn giữ khô tai, không bơi. Hẹn tái khám sau 7 ngày.
+**Bài 2. Gọi mẫu kèm chi tiết.**
+1. F5. Gõ `vtg mạn, tai P, 4n`, bấm Điền.
+2. Lần này các chỗ `[phải|trái|2 bên]` đã thành "phải", thông báo không còn "chỗ cần điền".
+3. Kiểm tra 3 tab như bài 1, Lưu. So xem bài này nhanh hơn bài 1 bao nhiêu.
+
+**Bài 3. Không nhớ tên mẫu.**
+1. F5. Gõ `viêm m` (chưa bấm Điền).
+2. Bên dưới ô hiện **Mẫu theo bệnh:** Viêm mũi xoang cấp, Viêm mũi dị ứng, Viêm mũi họng cấp, Viêm mũi xoang mạn. Bấm **Viêm mũi dị ứng**.
+3. Sửa chỗ vàng "cuốn dưới to `[phải|trái|2 bên]`" ở khám chuyên khoa. Xem đơn có 3 thuốc (Fexofenadin, Mometason xịt mũi, Natri clorid 0,9%). Lưu.
+
+**Bài 4. Thuốc trùng dị ứng.**
+1. F5. Gõ `mẫu viêm tai giữa cấp`, bấm Điền.
+2. Tab Đơn thuốc: dòng **Augmentin** có cảnh báo đỏ, vì bệnh nhân dị ứng Penicillin. Bấm **Bỏ** ở dòng đó. Nếu muốn kê thuốc khác thì dùng ô **Tìm thuốc**.
+3. Tab Phiếu khám: sửa 4 chỗ vàng (sốt `[số]` độ, màng nhĩ, hai ô mô tả chẩn đoán). Lưu.
+
+**Bài 5. Ô anh/chị đã gõ thì mẫu không ghi đè.**
+1. F5. Ở tab Phiếu khám, gõ vào ô **Hướng điều trị**: `Theo dõi, hẹn nội soi lại`.
+2. Gõ `mẫu viêm tai ngoài` vào cột phải, bấm Điền.
+3. Thông báo ghi "Bỏ qua 3 ô đã có chữ" (lý do, bệnh sử, hướng điều trị). Ô Hướng điều trị vẫn là chữ anh/chị gõ. Lưu.
+
+**Bài 6. Gọi nhầm mẫu rồi đổi.**
+1. F5. Gõ `mẫu viêm họng cấp`, bấm Điền.
+2. Bấm **↶ Hoàn tác lần AI điền**: phiếu trở về như trước khi điền.
+3. Xóa chữ trong ô, gõ `mẫu viêm amidan cấp`, bấm Điền. Sửa chỗ vàng "Sốt `[số]` độ. Hạch dưới hàm `[phải|trái|2 bên]`". Lưu.
+
+**Bài 7. Nói thay vì gõ.**
+1. F5. Bấm 🎤 Bắt đầu nói, nói rõ: "mẫu viêm họng cấp". Bấm ⏹ Dừng nghe.
+2. Xem chữ trong ô. Nếu máy nghe sai (ví dụ thành "mẫu viêm hồng cấp") thì sửa lại cho đúng.
+3. Bấm Điền, sửa chỗ vàng "Sốt `[số]` độ", Lưu.
+
+**Bài 8. Bệnh chưa có mẫu.**
+1. F5. Gõ hoặc dán đoạn sau, rồi bấm Điền:
+
+   > Khối u sau tai phải 6 tháng, mềm, di động, không đau. Chẩn đoán u bã đậu sau tai phải. Chỉ định cắt u bã đậu vùng đầu mặt cổ. Kê Cefixim 200 mg uống 1 viên một lần, ngày 2 lần, sau ăn, 5 ngày. Hẹn cắt chỉ sau 7 ngày.
+
+2. Không có mẫu nên Trợ lý tách cả đoạn. Thông báo ghi "AI đã điền N trường…". Kiểm tra 3 tab, Lưu.
+
+**Bài 9. Để so sánh: đọc cả ca.**
+1. F5. Bấm 🎤, đọc to đoạn dưới (đúng bệnh nhân trên phiếu), bấm ⏹ Dừng nghe, rồi Điền:
+
+   > Chị đến khám vì đau tai phải, chảy mủ tai phải 4 ngày. Bệnh sử 4 ngày nay đau tai phải, 2 ngày nay chảy mủ vàng tai phải, nghe kém tai phải, sốt nhẹ. Tiền sử viêm tai giữa mạn tính tai phải, dị ứng penicillin. Khám thấy ống tai phải có mủ vàng, màng nhĩ phải thủng trung tâm. Chẩn đoán đợt cấp viêm tai giữa mạn tính có mủ tai phải. Chỉ định nội soi tai, đo thính lực đơn âm, làm sạch ống tai hút dịch tai. Kê Ciprofloxacin nhỏ tai phải 5 giọt một lần, ngày 2 lần, 7 ngày. Paracetamol 500 mg uống 1 viên một lần, ngày 3 lần, sau ăn, 5 ngày. Dặn giữ khô tai, không bơi. Hẹn tái khám sau 7 ngày.
+
+2. Kiểm tra, Lưu. So thời gian với bài 1 và bài 2 (cùng bệnh).
+
+**Bài 10. Ca của anh/chị.**
+1. F5. Tự nghĩ một ca hay gặp (bệnh giả), chọn mẫu gần nhất trong Phụ lục. Gõ hoặc nói tên mẫu kèm vài chi tiết theo cách anh/chị vẫn gõ tắt.
+2. Sửa phiếu cho đúng ca đó, Lưu.
 
 ---
 
@@ -44,13 +94,31 @@ Mẫu **chỉ điền vào ô còn trống**: ô đã có chữ (điều dưỡn
 ### Chuẩn bị
 
 - Đặt `ASR_PROVIDER=zipformer` trong `.env.local` (đã tải model bằng `npm run tai-model-giong-noi`) để âm thanh không rời khỏi máy.
-- Chọn `LLM_PROVIDER`.
-  - Chỉ gõ tên mẫu (M1, M4, M6) thì **không gọi LLM**, chạy được cả ở `mock`.
-  - Tên mẫu kèm chi tiết (M2, M3) gọi LLM 1 lượt. Ở `mock` thì chỉ thay được bên, số ngày, nhiệt độ bằng quy tắc.
-  - M5 và A1 cần LLM thật mới tách tốt.
-- Nếu dùng `gemini` bằng key miễn phí: đặt `GEMINI_MODEL=gemini-3.5-flash-lite` (**15 lượt gọi mỗi phút, 500 lượt mỗi ngày**, mỗi lượt khoảng 2–3 giây). Model mạnh hơn hết hạn mức rất nhanh. Thỉnh thoảng Google trả lỗi 503 khi quá tải, gặp lỗi thì bấm lại.
+- Chọn `LLM_PROVIDER`:
+  - Bài 1, 3, 4, 5, 6, 7 (chỉ gọi tên mẫu) **không gọi LLM**, chạy được cả ở `mock`.
+  - Bài 2 và bài 10 (tên mẫu kèm chi tiết) gọi LLM 1 lượt. Ở `mock` chỉ thay được bên (P/T, phải/trái, hai bên), số ngày/tuần/tháng/giờ, nhiệt độ và cân nặng bằng quy tắc.
+  - Bài 8, 9 (tách cả đoạn) cần LLM thật mới tách tốt.
+- Nếu dùng `gemini` bằng key miễn phí: đặt `GEMINI_MODEL=gemini-3.5-flash-lite` (**15 lượt gọi mỗi phút, 500 lượt mỗi ngày**, mỗi lượt khoảng 2–3 giây). Model mạnh hơn hết hạn mức rất nhanh. Thỉnh thoảng Google trả lỗi 503 khi quá tải, phiếu hiện chữ đỏ "AI đang quá tải, bấm Điền lại sau vài giây" (hết lượt thì "chờ khoảng 1 phút"); chi tiết lỗi in ở terminal chạy `npm run dev`. Khi gọi mẫu kèm chi tiết mà AI lỗi, phiếu vẫn được điền theo mẫu bằng quy tắc, kèm thông báo đỏ. Với bài 8, 9 thì bấm lại.
 - Mở `/ket-qua` trước buổi thử để biết đã có bao nhiêu lượt cũ. Lượt có dùng mẫu hiện "· Mẫu <id>".
-- Danh sách mẫu và cách gọi tắt: `data/eform/phieu-mau.json` (`ten`, `bi_danh`), hoặc gõ 2 chữ vào ô để hiện gợi ý.
+- Danh sách mẫu nằm trong Phụ lục, dữ liệu gốc ở `data/eform/phieu-mau.json`.
+
+### Kết quả đúng để đối chiếu
+
+Kiểm tra trên ca giả ngày 2026-11-12. Mã ICD10 luôn hiện vàng. Ô Lý do và Bệnh sử luôn được giữ (2 ô điều dưỡng nhập sẵn).
+
+| Bài | Bác sĩ nhập | Mẫu | ICD10 | Chỗ vàng chờ điền | Chỉ định | Thuốc |
+|---|---|---|---|---|---|---|
+| 1 | `vtg mạn` | Viêm tai giữa mạn đợt cấp | H66.3 | 3: khám chuyên khoa, 2 ô mô tả chẩn đoán (bên tai) | Nội soi tai; Đo thính lực đơn âm; Làm sạch ống tai, hút dịch tai | Ciprofloxacin nhỏ tai; Paracetamol 500 mg |
+| 2 | `vtg mạn, tai P, 4n` | như bài 1 | H66.3 | 0 (bên tai đã thành "phải") | như bài 1 | như bài 1 |
+| 3 | bấm gợi ý "Viêm mũi dị ứng" | Viêm mũi dị ứng | J30.4 | 1: cuốn dưới to (bên) | Nội soi mũi xoang | Fexofenadin; Mometason xịt mũi; Natri clorid 0,9% |
+| 4 | `mẫu viêm tai giữa cấp` | Viêm tai giữa cấp | H66.0 | 4: sốt [số] độ, màng nhĩ, 2 ô mô tả chẩn đoán | Nội soi tai; Đo nhĩ lượng | **Augmentin (cảnh báo đỏ dị ứng)**; Paracetamol 500 mg |
+| 5 | gõ Hướng điều trị trước, rồi `mẫu viêm tai ngoài` | Viêm tai ngoài | H60.3 | 3: khám chuyên khoa, 2 ô mô tả chẩn đoán | Nội soi tai; Làm sạch ống tai, hút dịch tai | Ofloxacin nhỏ tai; Ibuprofen 400 mg |
+| 6 | `mẫu viêm họng cấp` → Hoàn tác → `mẫu viêm amidan cấp` | Viêm amidan cấp | J03.9 | 1 ô có 2 chỗ: sốt [số] độ, hạch dưới hàm (bên) | Tổng phân tích tế bào máu ngoại vi; Định lượng CRP | Cefuroxim 500 mg; Paracetamol 500 mg; Alpha Choay |
+| 7 | nói "mẫu viêm họng cấp" | Viêm họng cấp | J02.9 | 1: sốt [số] độ | Test nhanh liên cầu họng | Paracetamol 500 mg; Alpha Choay |
+| 8 | đoạn u bã đậu | không có mẫu, AI tách cả đoạn | L72.1 (gợi ý theo từ khóa) | tùy LLM | Cắt u bã đậu vùng đầu mặt cổ | Cefixim 200 mg |
+| 9 | đọc cả ca | không dùng mẫu | gợi ý theo từ khóa | tùy LLM và nhận dạng giọng nói | 3 dịch vụ như bài 1 | Ciprofloxacin nhỏ tai; Paracetamol 500 mg |
+
+Bài 5: thông báo phải ghi "Bỏ qua 3 ô đã có chữ", ô Hướng điều trị giữ chữ bác sĩ gõ. Bài 6: sau Hoàn tác, các ô mẫu viêm họng phải biến mất.
 
 ### Mẫu đúng sẵn bao nhiêu (ước tính)
 
@@ -66,33 +134,97 @@ Chỗ mẫu hay sai nhất là bệnh sử, khám toàn thân, khám chuyên kho
 ### Cần biết trước để không bất ngờ
 
 - **Mẫu có sẵn câu khám kiểu "Tim đều, phổi không ran", "màng nhĩ 2 bên bình thường".** Bác sĩ không khám chỗ đó mà vẫn Lưu thì bệnh án ghi sai. Ghi lại bác sĩ có đọc kỹ từng ô không, hay bấm Lưu luôn.
-- **Tên mẫu chỉ được nhận khi đứng đầu câu hoặc đứng sau chữ "mẫu".** Câu kể cả ca có nhắc tên bệnh ở giữa thì chạy luồng tách cũ. Bác sĩ nói "mẫu…" giữa chừng thì vẫn nhận.
-- **Ô vàng `[phải|trái|2 bên]`, `[số] ngày`** là chỗ mẫu cần bác sĩ điền. Nói kèm chi tiết thì phần lớn được thay tự động; không thay được thì vẫn để vàng.
+- **Tên mẫu chỉ được nhận khi đứng đầu câu hoặc ngay sau chữ "mẫu".** Câu kể cả ca có nhắc tên bệnh ở giữa thì chạy luồng tách cũ. Gõ `Mẫu: vtg cấp` (có dấu hai chấm) hay `vtg-cấp` (gạch nối) thì chưa nhận ra mẫu. Ngược lại, câu tự do mở đầu bằng tên mẫu (ví dụ "Ráy tai nhiều…") sẽ bị hiểu là gọi mẫu.
+- **Mẫu có hẹn "Khi có bất thường"** (nút ráy tai, dị vật, viêm mũi họng cấp, hóc xương) vẫn đổi Hẹn tái khám thành "Có" mà không có ngày (vàng). Bác sĩ cần chọn lại "Không".
+- **Gọi lại cùng một mẫu** thì không thêm dòng trùng, nhưng thông báo có thể đếm dư 1 ô bỏ qua (ô Khám các bộ phận khác).
 - **Nhận dạng giọng nói hay nghe sai tên thuốc và từ chuyên môn.** Lần thử bằng giọng đọc máy ngày 2026-11-11 có khoảng 29% số từ bị sai. Sau bước sửa chữ (`config/sua-chu-giong-noi.json`) còn khoảng 10% trên giọng máy; giọng người thật chưa đo. Tên bệnh ngắn trong lệnh gọi mẫu cũng có thể bị nghe sai. Ghi lại bác sĩ gõ sửa ngay, đọc lại, hay bỏ cuộc.
-- Mỗi lần tải trang chỉ ghi **một** lượt số đo, vào lần Lưu đầu tiên sau khi AI đã điền. Quên tải lại thì kịch bản sau không được ghi.
+- Mỗi lần tải trang chỉ ghi **một** lượt số đo, vào lần Lưu đầu tiên sau khi AI đã điền. Quên F5 thì bài sau không được ghi.
 - Dùng link "Thử câu mẫu" thì lượt đó không tính vào số trung bình. Ở buổi thử, bác sĩ gõ hoặc nói thật.
 
-### Ghi chép mỗi kịch bản
+### Ghi chép mỗi bài
 
 Số đếm (thời gian, số trường AI điền, đã sửa, bổ sung, khớp danh mục, mẫu đã dùng) đã tự ghi ở `/ket-qua`. Người điều phối ghi thêm bằng tay:
 
-| Kịch bản | Mẫu đã gọi | Chữ nào trong mẫu phải sửa | Ô nào bác sĩ không đọc mà vẫn Lưu | Bác sĩ dừng hay do dự ở đâu | Câu bác sĩ nói nguyên văn |
+| Bài | Khớp bảng kết quả đúng? | Chữ nào trong mẫu phải sửa | Ô nào bác sĩ không đọc mà vẫn Lưu | Bác sĩ dừng hay do dự ở đâu | Câu bác sĩ nói nguyên văn |
 |---|---|---|---|---|---|
-| M1 | | | | | |
-| M2 | | | | | |
-| M3 | | | | | |
-| M4 | | | | | |
-| M5 | (không có mẫu) | | | | |
-| M6 | | | | | |
-| A1 | (đọc cả ca) | | | | |
+| 1 | | | | | |
+| 2 | | | | | |
+| 3 | | | | | |
+| 4 | | | | | |
+| 5 | | | | | |
+| 6 | | | | | |
+| 7 | | | | | |
+| 8 | | | | | |
+| 9 | | | | | |
+| 10 | | | | | |
 
 ### Hỏi sau buổi thử
 
 Hỏi về việc đã xảy ra, không hỏi bác sĩ có thích không:
 
-- Ở lượt vừa rồi, chữ nào trong mẫu anh/chị phải sửa?
+- Ở bài 1 và bài 2, chữ nào trong mẫu anh/chị phải sửa?
 - Lần gần nhất điều dưỡng gõ mẫu viết tắt xong, anh/chị sửa những chữ nào?
 - Bộ viết tắt điều dưỡng đang dùng có bao nhiêu mẫu? Ai soạn, lần cuối sửa khi nào?
 - Ca hôm qua anh/chị nhập phiếu và đơn mất bao lâu? Phần nào chiếm nhiều thời gian nhất?
 - Bệnh nào anh/chị gặp nhiều mà danh sách mẫu chưa có?
 - Lúc nãy chỗ nào anh/chị không tin kết quả và phải đọc lại kỹ?
+
+---
+
+## Phụ lục. 39 mẫu và cách gọi tắt
+
+Gõ tên đầy đủ hoặc một cách gọi tắt, có dấu hay không dấu đều được (ví dụ `viem tai giua cap`). Có thể thêm "mẫu" phía trước.
+
+**Tai**
+
+| Mẫu | Gọi tắt |
+|---|---|
+| Viêm tai giữa cấp | `vtg cấp`, `vtgc` |
+| Viêm tai giữa cấp trẻ em | `vtg cấp trẻ em`, `vtg trẻ em` |
+| Viêm tai giữa mạn đợt cấp | `vtg mạn`, `vtg mạn đợt cấp`, `đợt cấp vtg mạn` |
+| Viêm tai giữa ứ dịch | `vtg ứ dịch`, `vtg tiết dịch` |
+| Viêm tai ngoài | `vtn`, `vtn cấp`, `viêm tai ngoài cấp` |
+| Nhọt ống tai | `nhọt ống tai ngoài`, `áp xe ống tai` |
+| Nấm ống tai | `nấm tai`, `viêm tai ngoài do nấm` |
+| Nút ráy tai | `ráy tai`, `nút ráy` |
+| Dị vật tai | `dị vật ống tai`, `dv tai` |
+| Tắc vòi tai | `tắc vòi nhĩ`, `rối loạn vòi tai` |
+| Thủng màng nhĩ | `thủng nhĩ`, `thủng màng nhĩ chấn thương` |
+| Ù tai, nghe kém | `ù tai nghe kém` |
+| Điếc đột ngột | `nghe kém đột ngột`, `điếc đột ngột vô căn` |
+| Nghe kém tuổi già | `lão thính`, `nghe kém người cao tuổi` |
+| Chóng mặt tư thế kịch phát lành tính | `chóng mặt tư thế`, `bppv` |
+| Bệnh Ménière | `meniere`, `hội chứng meniere` |
+| Viêm dây thần kinh tiền đình | `viêm tk tiền đình`, `viêm thần kinh tiền đình` |
+
+**Mũi**
+
+| Mẫu | Gọi tắt |
+|---|---|
+| Viêm mũi họng cấp | `vmh cấp`, `cảm thường` |
+| Viêm mũi xoang cấp | `vmx cấp`, `vmxc`, `viêm xoang cấp` |
+| Viêm mũi xoang mạn | `vmx mạn`, `viêm xoang mạn` |
+| Viêm mũi dị ứng | `vmdu`, `vmdư` |
+| Polyp mũi | `polyp mũi xoang`, `polyp hốc mũi` |
+| Vẹo vách ngăn | `lệch vách ngăn`, `vẹo vách ngăn mũi` |
+| Quá phát cuốn mũi | `phì đại cuốn mũi`, `quá phát cuốn dưới` |
+| Nhọt tiền đình mũi | `nhọt mũi`, `nhọt cửa mũi` |
+| Chảy máu mũi | `chảy máu cam`, `cmm` |
+| Dị vật mũi | `dị vật hốc mũi`, `dv mũi` |
+| Viêm VA trẻ em | `viêm va`, `va quá phát` |
+
+**Họng, thanh quản**
+
+| Mẫu | Gọi tắt |
+|---|---|
+| Viêm họng cấp | `vh cấp`, `vhc` |
+| Viêm họng mạn | `vh mạn`, `viêm họng hạt` |
+| Viêm amidan cấp | `viêm amydan cấp`, `amidan cấp` |
+| Viêm amidan mạn | `amidan mạn`, `viêm amydan mạn` |
+| Áp xe quanh amidan | `áp xe amidan`, `áp xe quanh amydan` |
+| Viêm thanh quản cấp | `vtq cấp`, `viêm thanh quản` |
+| Viêm thanh quản mạn | `vtq mạn`, `khàn tiếng mạn` |
+| Hạt xơ dây thanh | `hạt xơ thanh quản`, `u xơ dây thanh` |
+| Polyp dây thanh | `polyp thanh quản` |
+| Trào ngược họng thanh quản | `trào ngược họng thanh quản`, `lpr` |
+| Hóc xương | `hóc xương cá`, `dị vật họng` |

@@ -9,6 +9,7 @@ import {
 } from "@/server/du-lieu/config";
 import { runPipeline } from "@/server/ai/pipeline";
 import { timMauGoc } from "@/server/du-lieu/phieu-mau";
+import { thongBaoLoiAi } from "@/shared/loi-ai";
 
 const requestSchema = z.object({ text: z.string().trim().min(1).max(10000), mau_id: z.string().max(100).optional() });
 
@@ -33,10 +34,7 @@ export async function POST(request: Request) {
     return Response.json(result);
   } catch (error) {
     console.error("Lỗi khi AI điền nháp:", error);
-    const detail = error instanceof Error ? error.message : "Không rõ nguyên nhân";
-    return Response.json(
-      { error: `AI không điền được nháp: ${detail}. Có thể đặt LLM_PROVIDER=mock để demo không cần mạng.` },
-      { status: 502 },
-    );
+    const detail = error instanceof Error ? error.message : "";
+    return Response.json({ error: thongBaoLoiAi(detail) }, { status: 502 });
   }
 }

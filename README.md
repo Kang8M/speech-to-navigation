@@ -269,7 +269,7 @@ Dùng trong buổi họp với bác sĩ, để cho thấy "làm việc với AI"
 - Câu lệnh "kê như mọi khi", "như lần trước", "đơn quen"… dùng được ở cả trang chính. Máy lấy các dòng bác sĩ hay kê (kê từ một nửa số lần trở lên) cho chẩn đoán chính trên phiếu; phiếu chưa có thì dùng mã AI vừa gán. Các dòng này đứng trước dòng AI tách từ câu nói. Chưa có đơn đã kê thì thông báo không lấy được bộ quen.
 - Prompt LLM hiểu hội thoại: lời bệnh nhân (`BN:`) chỉ dùng cho lý do khám, bệnh sử, tiền sử; khám, chẩn đoán, chỉ định, thuốc, lời dặn chỉ lấy từ lời bác sĩ.
 - Ở trang này, bấm Lưu không ghi số đo lượt thử hay đơn đã kê.
-- Kiểu 3, 4 chạy với `mock` thì tách bằng quy tắc nên kém. Nên dùng LLM thật. Gemini miễn phí thỉnh thoảng báo 503 quá tải, bấm lại là được.
+- Kiểu 3, 4 chạy với `mock` thì tách bằng quy tắc nên kém. Nên dùng LLM thật. Gemini miễn phí thỉnh thoảng báo 503 quá tải: phiếu hiện "AI đang quá tải, bấm Điền lại sau vài giây" (`src/shared/loi-ai.ts` đổi lỗi tiếng Anh thành câu tiếng Việt, chi tiết lỗi chỉ in ở terminal), bấm lại là được.
 - Kịch bản (chữ trên thẻ, câu lệnh, hội thoại, 3 đơn đã kê giả) ở `data/eform/trinh-dien.json`. Sửa rồi tải lại trang là có hiệu lực.
 
 | File trong `data/eform/` | Nội dung |
@@ -278,7 +278,7 @@ Dùng trong buổi họp với bác sĩ, để cho thấy "làm việc với AI"
 | `trinh-dien.json` | Kịch bản trang `/trinh-dien`: `kieu` (chữ trên thẻ của 4 kiểu), `lenh` (câu kiểu 3), `hoi_thoai` (hội thoại kiểu 4, `ai` là `BS` hoặc `BN`), `thoi_quen` (đơn đã kê giả, chỉ ghi tên; mã gán bằng `src/shared/match.ts` khi nạp trang) |
 | `phieu-mau.json` | Phiếu mẫu theo bệnh (giả), bác sĩ gọi bằng tên trong ô Trợ lý AI. Mỗi mẫu: `id`, `ten`, `bi_danh` (viết tắt, cách gọi khác; không trùng giữa các mẫu, tránh từ ngắn dễ nhầm như "va"), `icd_ten` (đúng tên một mã trong `data/tham-khao/icd10-tmh.json`, mã do code tra), `kham_khac` (ô Khám các bộ phận khác), `nhap` (cùng dạng nháp của `config/forms`: `phieu_kham`, `chi_dinh`, `ke_don`; không có trường mã). Chỗ riêng của bệnh nhân viết `[phải\|trái\|2 bên]` hoặc `[số] ngày` (đơn vị: ngày, tuần, tháng, giờ, độ, lần, kg). Không ghi `so_luong` chỉ định khi là 1 (eForm tự hiểu là 1). Sửa xong chạy `npm test` để chắc mọi mẫu tra được ICD và mọi dòng khớp chắc danh mục |
 | `goi-y-theo-chan-doan.json` | Bộ mẫu chỉ định, thuốc, lời dặn theo mã ICD10 (giả). Mỗi mẫu: `id`, `ten`, `icd` (danh sách mã), `chi_dinh` (`ten`), `don_thuoc` (`ten`, `ham_luong`, `duong_dung`, `lieu_moi_lan`, `so_lan_ngay`, `thoi_diem`, `so_ngay`, `ghi_chu`), `loi_dan`. Tên nên có trong danh mục bệnh viện `data/catalog/` để khớp chắc mã |
-| `icd10.json` | Từ khóa gợi ý ICD10 (`manh`, `vua`) cho 28 mã TMH hay gặp. Danh sách mã để chọn lấy từ `data/tham-khao/icd10-tmh.json` (367 mã chi tiết); mã ở đây mà nguồn thật không có vẫn được giữ |
+| `icd10.json` | Từ khóa gợi ý ICD10 (`manh`, `vua`) cho 29 mã TMH hay gặp. Danh sách mã để chọn lấy từ `data/tham-khao/icd10-tmh.json` (367 mã chi tiết); mã ở đây mà nguồn thật không có vẫn được giữ |
 | `mau-cau.json` | Mẫu câu theo nhóm lý do khám, chỗ trống viết dạng `[a\|b]` |
 | `quy-tac.json` | Ngưỡng tóm tắt, cách tính điểm, từ phủ định |
 | `thu-vien.json` | Thư viện mẫu câu tĩnh của các ô khác |

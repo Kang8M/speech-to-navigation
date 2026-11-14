@@ -135,6 +135,17 @@ test("local_day_noon_and_carryover", () => {
   assert.equal(selectDayAppointments([early], "2026-11-14").appointments.length, 1);
 });
 
+test("carry_unknown_with_encounter_but_not_unknown_without", () => {
+  // Xung đột lịch hủy + Encounter đang khám của ngày trước: vẫn mang sang, không vào N hôm nay.
+  const conflict = { ...make("G", "2026-11-13T09:00:00+07:00", "unknown"), encounter_id: "enc-G" };
+  const r = selectDayAppointments([conflict], "2026-11-14");
+  assert.deepEqual(r.carriedOpenItems.map((i) => i.appointment.id), ["G"]);
+  assert.equal(r.appointments.length, 0);
+  // unknown không có Encounter (lịch hủy thường) thì không carry.
+  const plain = { ...make("H", "2026-11-13T09:00:00+07:00", "unknown"), encounter_id: null };
+  assert.equal(selectDayAppointments([plain], "2026-11-14").carriedOpenItems.length, 0);
+});
+
 test("conflicting_cancelled_active_is_unknown", () => {
   assert.equal(displayStatus("cancelled", "dang_kham"), "unknown");
   assert.equal(displayStatus("cancelled", "cho_kq_cls"), "unknown");

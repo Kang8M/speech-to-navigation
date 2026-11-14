@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getDashboard } from "@/client/clinic/api";
 import { AppointmentDialog } from "@/client/clinic/AppointmentDialog";
-import { formatClinicDate, formatClinicTime, shiftClinicDate, weekdayLabel } from "@/shared/clinic/format";
+import { formatClinicDate, formatClinicTime, isCompleteClinicDate, shiftClinicDate, weekdayLabel } from "@/shared/clinic/format";
 import { groupAppointments } from "@/shared/clinic/layout";
 import { dashboardHref, type DashboardView } from "@/shared/clinic/links";
 import { toClinicDate } from "@/shared/clinic/schedule";
@@ -83,7 +83,7 @@ export function DashboardScreen({ initialData, initialView }: Props) {
   return (
     <main className="mx-auto w-full max-w-7xl space-y-4 px-4 pb-8 pt-4">
       <header className="space-y-1">
-        <h1 className="text-2xl font-bold text-emr-navy">Lịch khám</h1>
+        <h1 className="text-[18px] font-bold text-emr-navy">Lịch khám</h1>
         <p className="text-[14px] text-ink">
           {weekdayLabel(date)}, {formatClinicDate(date)} · Bác sĩ {data.doctor.name} · {data.facility.name}
         </p>
@@ -104,7 +104,7 @@ export function DashboardScreen({ initialData, initialView }: Props) {
           <input
             type="date"
             value={date}
-            onChange={(e) => e.target.value && goTo(e.target.value)}
+            onChange={(e) => isCompleteClinicDate(e.target.value) && goTo(e.target.value)}
             className="rounded-sm border border-gray-300 bg-white px-2 py-1 text-[13px]"
           />
         </label>

@@ -54,6 +54,8 @@ export function splitByPeriod(items: AppointmentItem[]): { morning: AppointmentI
 }
 
 export const DEFAULT_BLOCK_MINUTES = 30;
+/** Độ dài vẽ tối thiểu để khối đủ chữ; ca ngắn hơn vẫn chiếm chỗ này khi xét trùng giờ, không đè khối kế tiếp. */
+export const MIN_BLOCK_MINUTES = 20;
 const MIN_START_HOUR = 7;
 const MIN_END_HOUR = 18;
 
@@ -87,7 +89,7 @@ export function layoutDay(items: AppointmentItem[]): DayLayout {
         estimated = false;
       }
     }
-    return { item, startMin, endMin: Math.min(endMin, 24 * 60), estimated };
+    return { item, startMin, endMin: Math.min(Math.max(endMin, startMin + MIN_BLOCK_MINUTES), 24 * 60), estimated };
   });
 
   // Cụm trùng giờ: các lịch nối tiếp nhau về thời gian; trong cụm gán cột đầu tiên còn trống.

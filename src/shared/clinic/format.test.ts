@@ -52,3 +52,12 @@ test("gender_capitalizes_or_no_info", () => {
   assert.equal(formatGender(""), NO_INFO);
   assert.equal(formatGender(null), NO_INFO);
 });
+
+test("isCompleteClinicDate_rejects_partial_and_old_years", async () => {
+  const { isCompleteClinicDate } = await import("./format");
+  assert.equal(isCompleteClinicDate("2026-11-14"), true);
+  assert.equal(isCompleteClinicDate("1900-01-01"), true);
+  for (const v of ["", "0002-11-14", "1899-12-31", "2026-02-30", "2026-1-1", "abc", "20261-11-14"]) {
+    assert.equal(isCompleteClinicDate(v), false, v);
+  }
+});

@@ -88,3 +88,18 @@ test("layout_clamps_past_midnight", () => {
   assert.equal(l.blocks[0].endMin, 24 * 60);
   assert.equal(l.endHour, 24);
 });
+
+test("layout_short_appointments_get_min_length_and_do_not_overlap_next_block", () => {
+  // Ca 5 phút lúc 09:00 và ca 09:10: vẽ tối thiểu 20 phút nên phải xếp cạnh nhau, không đè lên nhau.
+  const l = layoutDay([
+    item("A", "2026-11-14T09:00:00+07:00", "2026-11-14T09:05:00+07:00"),
+    item("B", "2026-11-14T09:10:00+07:00", "2026-11-14T09:40:00+07:00"),
+    item("C", "2026-11-14T09:20:00+07:00", "2026-11-14T09:50:00+07:00"),
+  ]);
+  const by = Object.fromEntries(l.blocks.map((b) => [b.item.appointment.id, b]));
+  assert.equal(by.A.endMin - by.A.startMin, 20);
+  assert.equal(by.A.estimated, false);
+  assert.equal(by.A.cols, 2);
+  assert.notEqual(by.A.col, by.B.col);
+  assert.equal(by.C.col, by.A.col, "C bắt đầu sau khi khối A (đến 09:20) kết thúc nên dùng lại cột A");
+});

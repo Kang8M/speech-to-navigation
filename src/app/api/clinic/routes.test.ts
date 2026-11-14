@@ -7,7 +7,9 @@ import { GET as getDashboard } from "./dashboard/route";
 import { GET as getPatient } from "./patients/[patientId]/route";
 
 const BASE = "http://localhost:3000";
-const req = (p: string, headers?: Record<string, string>) => new Request(BASE + p, { headers });
+// Next dựng request.url từ hostname cấu hình của server, nên guard chỉ tin header Host/Origin/Sec-Fetch-Site.
+const req = (p: string, headers?: Record<string, string>) =>
+  new Request(BASE + p, { headers: { Host: "localhost:3000", ...headers } });
 const apptCtx = (appointmentId: string) => ({ params: Promise.resolve({ appointmentId }) });
 const patCtx = (patientId: string) => ({ params: Promise.resolve({ patientId }) });
 
@@ -38,16 +40,18 @@ test("dashboard_bad_date_400", async () => {
 });
 
 test("remote_or_cross_origin_403", async () => {
-  await check(await getDashboard(new Request("http://example.com/api/clinic/dashboard")), 403);
+  // URL luôn là local (giống Next thật); chỉ header của trình duyệt quyết định.
+  await check(await getDashboard(req("/api/clinic/dashboard", { Host: "example.com" })), 403);
   await check(await getDashboard(req("/api/clinic/dashboard", { Origin: "http://evil.example" })), 403);
   await check(await getDashboard(req("/api/clinic/dashboard", { Host: "evil.example" })), 403);
-  await check(
-    await getAppointment(new Request("http://192.168.1.5:3000/x"), apptCtx("LK-000001")),
-    403,
-  );
+  await check(await getAppointment(req("/x", { Host: "192.168.1.5:3000" }), apptCtx("LK-000001")), 403);
+  await check(await getDashboard(req("/api/clinic/dashboard", { Origin: "http://localhost:3999" })), 403);
+  await check(await getDashboard(req("/api/clinic/dashboard", { "Sec-Fetch-Site": "cross-site" })), 403);
+  await check(await getDashboard(new Request(BASE + "/api/clinic/dashboard")), 403); // thiếu Host
   await check(await getDashboard(req("/api/clinic/dashboard?date=2026-11-14", { Origin: BASE })), 200);
-  await check(await getDashboard(new Request("http://[::1]:3000/api/clinic/dashboard")), 200);
-  await check(await getDashboard(new Request("http://127.0.0.1:3000/api/clinic/dashboard")), 200);
+  await check(await getDashboard(req("/api/clinic/dashboard", { "Sec-Fetch-Site": "same-origin" })), 200);
+  await check(await getDashboard(req("/api/clinic/dashboard", { Host: "[::1]:3000" })), 200);
+  await check(await getDashboard(req("/api/clinic/dashboard", { Host: "127.0.0.1:3000" })), 200);
 });
 
 test("appointment_ok_and_not_found_scope", async () => {

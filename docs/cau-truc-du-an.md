@@ -44,7 +44,7 @@ src/
       ports.ts            ClinicActor, EncounterRef, EncounterSource (cổng)
       fixture-source.ts, demo-actor.ts, guard.ts   adapter DEMO tạm: nguồn Encounter giả, actor cố định, guard localhost
       repository.ts, service.ts   đọc + validate data/clinic/, dựng DTO theo bác sĩ và cơ sở
-      page-guard.ts       guard localhost cho page server (dùng lại assertLocalDemoRequest)
+      page-guard.ts       guard localhost cho page server (dùng lại assertLocalDemoRequest); áp cho /dashboard và /benh-nhan/[patientId], có page-guard.test.ts
       errors.ts, http.ts  lỗi có mã HTTP, bọc GET (no-store)
     du-lieu/              đọc/ghi đĩa
       config.ts           nạp config/ và data/catalog, data/cases

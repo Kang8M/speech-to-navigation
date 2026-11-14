@@ -46,15 +46,28 @@ function buildItem(
   facilityEncounters: EncounterRef[],
 ): AppointmentItem {
   const own = facilityEncounters.find((e) => e.appointment_id === appointment.id);
+  // Encounter gắn đúng mã lịch nhưng lệch bệnh nhân/cơ sở/bác sĩ là dữ liệu hỏng: báo lỗi,
+  // không gắn nhầm trạng thái và mã phiếu của người khác vào lịch này.
+  if (
+    own &&
+    (own.patient_id !== appointment.patient_id ||
+      own.facility_id !== appointment.facility_id ||
+      own.doctor_id !== appointment.doctor_id)
+  ) {
+    throw storeError(`Encounter ${own.id} gắn lịch ${appointment.id} nhưng lệch bệnh nhân, cơ sở hoặc bác sĩ`);
+  }
   return {
     appointment,
     patient,
     doctor_name: repo.doctorName(appointment.doctor_id),
     encounter_id: own?.id ?? null,
     status: displayStatus(appointment.scheduling_status, own?.status ?? null),
-    // Có phiếu khác của cùng bệnh nhân; phiếu của chính lượt này không tính là lần khám trước.
+    // Chỉ phiếu khác của cùng bệnh nhân có giờ khám trước giờ hẹn đang xem mới là "lần khám trước".
     has_prior_encounter: facilityEncounters.some(
-      (e) => e.patient_id === appointment.patient_id && e.appointment_id !== appointment.id,
+      (e) =>
+        e.patient_id === appointment.patient_id &&
+        e.appointment_id !== appointment.id &&
+        Date.parse(e.encounter_at) < Date.parse(appointment.starts_at),
     ),
   };
 }

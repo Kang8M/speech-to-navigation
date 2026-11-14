@@ -51,7 +51,7 @@ test("dashboard_has_prior_encounter_excludes_own_encounter", () => {
   const by = (id: string) => d.appointments.find((i) => i.appointment.id === id)!;
   assert.equal(by("LK-000005").has_prior_encounter, true); // 000123 còn phiếu khác
   assert.equal(by("LK-000003").has_prior_encounter, false); // 000125 chưa có phiếu nào
-  assert.equal(by("LK-000002").has_prior_encounter, true); // 000124 có phiếu cũ và phiếu LK-000006
+  assert.equal(by("LK-000002").has_prior_encounter, true); // 000124 có phiếu cũ trước 08:30 (phiếu LK-000006 lúc 13:30 không tính)
 });
 
 test("has_prior_false_when_only_own_encounter", () => {
@@ -74,6 +74,38 @@ test("has_prior_false_when_only_own_encounter", () => {
   const item = loadAppointment(actor, "LK-000005", { repo, now: NOW });
   assert.equal(item.has_prior_encounter, false);
   assert.equal(item.status, "in_progress");
+});
+
+function encounter(over: Record<string, unknown>) {
+  return {
+    id: "enc-x",
+    appointment_id: null,
+    patient_id: "000123",
+    facility_id: "CS01",
+    doctor_id: "BS01",
+    encounter_at: "2026-11-14T13:30:00+07:00",
+    status: "hoan_thanh_kham",
+    summary: null,
+    ...over,
+  };
+}
+
+test("has_prior_only_counts_encounters_before_appointment_start", () => {
+  const mk = (at: string) =>
+    createClinicRepository({ source: { listByFacility: () => [encounter({ encounter_at: at })] } });
+  // LK-000001 bắt đầu 08:00 ngày 14: phiếu 13:30 cùng ngày là sau, không phải lượt trước.
+  assert.equal(loadAppointment(actor, "LK-000001", { repo: mk("2026-11-14T13:30:00+07:00"), now: NOW }).has_prior_encounter, false);
+  assert.equal(loadAppointment(actor, "LK-000001", { repo: mk("2026-11-13T13:30:00+07:00"), now: NOW }).has_prior_encounter, true);
+});
+
+test("encounter_with_mismatched_patient_facility_or_doctor_is_store_error", () => {
+  for (const over of [{ patient_id: "000124" }, { doctor_id: "BS02" }]) {
+    const repo = createClinicRepository({
+      source: { listByFacility: () => [encounter({ appointment_id: "LK-000001", ...over })] },
+    });
+    assert.equal(status(() => loadAppointment(actor, "LK-000001", { repo, now: NOW })), 500, JSON.stringify(over));
+    assert.equal(status(() => loadDashboard(actor, "2026-11-14", { repo, now: NOW })), 500);
+  }
 });
 
 test("dashboard_empty_day_is_real_zero_but_invalid_date_is_400", () => {

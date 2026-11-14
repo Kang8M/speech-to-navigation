@@ -27,7 +27,8 @@ export function EncounterHistory({ items }: { items: HistorySummary[] }) {
                 <div className="min-w-0 flex-1">
                   <p className="break-words text-sm font-medium">{item.summary}</p>
                   <p className="mt-0.5 text-xs text-muted">
-                    {formatClinicDateTimeLenient(item.encounter_at)} · Mã lượt {item.id} · {item.doctor_name}
+                    {formatClinicDateTimeLenient(item.encounter_at)}
+                    {item.appointment_id !== null && <> · Mã lượt {item.appointment_id}</>} · {item.doctor_name}
                   </p>
                 </div>
                 {/* Lịch sử không có encounter_id nên nhãn luôn là "Hủy khám" khi hủy, không hiện "Không khám". */}

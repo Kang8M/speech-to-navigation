@@ -12,6 +12,19 @@ function vnMs(iso: string): number {
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
+/**
+ * Ô chọn ngày bắn onChange cả với năm trung gian khi gõ (vd 0002-11-14): chỉ coi là ngày hoàn chỉnh khi đúng
+ * YYYY-MM-DD, là ngày lịch có thật và năm >= 1900.
+ */
+export function isCompleteClinicDate(value: string): boolean {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!m) return false;
+  const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  if (y < 1900) return false;
+  const t = new Date(Date.UTC(y, mo - 1, d));
+  return t.getUTCFullYear() === y && t.getUTCMonth() === mo - 1 && t.getUTCDate() === d;
+}
+
 /** Số phút kể từ 00:00 giờ Việt Nam của ngày chứa timestamp. */
 export function minutesOfClinicDay(iso: string): number {
   return Math.floor((((vnMs(iso) % DAY_MS) + DAY_MS) % DAY_MS) / 60000);

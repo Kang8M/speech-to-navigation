@@ -50,7 +50,8 @@ export function AppointmentDialog({ appointmentId, returnTo, onClose }: Props) {
   const error = current !== null && "error" in current ? current.error : null;
 
   function close() {
-    setAttempt(0);
+    // Tăng (không reset) để mở lại cùng lịch có khóa mới, không hiện kết quả/lỗi cũ.
+    setAttempt((n) => n + 1);
     onClose();
   }
 

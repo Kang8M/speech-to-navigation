@@ -9,9 +9,15 @@ import type {
 
 async function getJson<T>(url: string, signal: AbortSignal | undefined, loiMacDinh: string): Promise<T> {
   const response = await fetch(url, { cache: "no-store", signal });
-  const data = (await response.json().catch(() => ({}))) as T | Partial<ApiLoi>;
-  if (!response.ok) throw new Error((data as Partial<ApiLoi>).error ?? loiMacDinh);
-  return data as T;
+  if (!response.ok) {
+    const loi = (await response.json().catch(() => ({}))) as Partial<ApiLoi>;
+    throw new Error(loi.error ?? loiMacDinh);
+  }
+  try {
+    return (await response.json()) as T;
+  } catch {
+    throw new Error("Máy chủ trả dữ liệu không đọc được. Vui lòng thử lại.");
+  }
 }
 
 export function getDashboard(date: ClinicDate, signal?: AbortSignal): Promise<DashboardData> {

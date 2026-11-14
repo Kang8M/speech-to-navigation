@@ -34,7 +34,7 @@ export function EncounterGroup({
   return (
     <section className="flex min-w-0 flex-col border border-gray-300 bg-white">
       <div className="flex items-baseline justify-between gap-2 border-b border-gray-300 px-3 py-2">
-        <h2 className="text-[14px] font-bold text-emr-navy">{title}</h2>
+        <h2 className="text-[18px] font-bold text-emr-navy">{title}</h2>
         <span
           className="text-2xl font-bold tabular-nums text-ink"
           aria-label={total === undefined ? `${items.length} ca` : `${items.length} trên ${total}`}

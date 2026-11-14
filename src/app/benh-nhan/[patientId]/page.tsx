@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { PatientScreen } from "@/client/patient/PatientScreen";
 import { safeReturnTo } from "@/shared/clinic/links";
 import { toClinicDate } from "@/shared/clinic/schedule";
 import { demoActor } from "@/server/clinic/demo-actor";
 import { ClinicHttpError } from "@/server/clinic/errors";
+import { assertLocalDemoPage } from "@/server/clinic/page-guard";
 import { loadPatientPage } from "@/server/clinic/service";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = { title: "Hồ sơ bệnh nhân" };
 
@@ -23,6 +27,8 @@ export default async function PatientPage({
   params: Promise<{ patientId: string }>;
   searchParams: Promise<Query>;
 }) {
+  // 403 ném thẳng vào error boundary (không notFound) để không lẫn với hồ sơ không tồn tại.
+  assertLocalDemoPage(await headers(), "/benh-nhan");
   const { patientId } = await params;
   const query = await searchParams;
   const appointmentId = first(query.appointment_id);

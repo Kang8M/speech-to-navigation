@@ -81,6 +81,13 @@ Chú ý: Playwright không tạo lượt tải dữ liệu từ API cho trang b�
 | D.6 | "Xem tất cả" khi khối có hơn 5 dòng: không khối nào trong các ngày đã xem (13/11, 14/11) có hơn 5 dòng | Fixture không có. Logic `items.slice(0, 5)` chưa chạy nút |
 | D.7 | Ô "Chọn ngày" (textbox) | Chưa thử trong lượt này |
 
+## Sửa theo review (2026-11-14, chạy `next dev -p 3101 -H 127.0.0.1`)
+- PASS: `/dashboard?date=2026-11-14` ở 1440px và 390px, cả view danh sách và lịch theo giờ: không tràn ngang; tiêu đề trang và tiêu đề khối đều 18px.
+- PASS: mở popup LK-000001, đóng, mở lại với API chậm 800ms: popup hiện "Đang tải lịch hẹn…" ngay, không hiện lại dữ liệu cũ; sau đó hiện dữ liệu.
+- PASS: `curl -H "Host: evil.example"` vào `/api/clinic/dashboard` trả 403; vào `/benh-nhan/000123` nội dung là lỗi 403 đi qua error boundary (mã HTTP vẫn 200 do Next streaming), không phải notFound.
+- Chưa kiểm sâu: gõ từng ký tự vào ô ngày để thấy năm trung gian (chỉ kiểm bằng test thuần `isCompleteClinicDate`; gõ lại cùng ngày không đổi URL); khối calendar ca ngắn (chỉ kiểm bằng test `layoutDay`, fixture không có ca <20 phút).
+- Để lại, chờ ưu tiên 1: cờ `not_examined` (#5) và `eligibleAppointments` tạm (#10, đã ghi rõ trong code).
+
 ## Chưa kiểm (tổng hợp, tính đến 2026-11-14)
 
 - 3.4, D.6: "Xem tất cả" trên khối lớn hơn 5 dòng (fixture không có).

@@ -4,6 +4,24 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-14
 
+### Sửa các phát hiện review dashboard và hồ sơ bệnh nhân
+- **Loại:** Sửa lỗi, Bảo mật, Giao diện
+- **Thay đổi:**
+  - Trang `/benh-nhan/[patientId]` gọi `assertLocalDemoPage` (403 vào error boundary, không `notFound`). `page-guard.ts` chuyển cả header Host sang guard; thêm `page-guard.test.ts`.
+  - `guard.ts` bỏ phụ thuộc `request.url` (Next dựng từ hostname cấu hình của server): chỉ dựa Host/Origin/Sec-Fetch-Site, thiếu Host là 403. Comment nêu đúng phạm vi: chặn cross-origin và DNS rebinding từ trình duyệt, không chặn client tự đặt Host; nên chạy `next dev -H 127.0.0.1` (ghi vào README). `routes.test.ts` dùng URL local + header khác.
+  - `service.ts` `buildItem`: Encounter gắn đúng mã lịch nhưng lệch bệnh nhân/cơ sở/bác sĩ là lỗi dữ liệu 500, không gắn nhầm. `has_prior_encounter` chỉ tính phiếu cùng bệnh nhân có `encounter_at` trước giờ hẹn của lịch đang xem (phiếu 13:30 không còn là lượt trước của lịch 08:00).
+  - `EncounterHistory`: nhãn "Mã lượt" hiện `appointment_id`, ẩn khi null.
+  - `selectDayAppointments`: ca `unknown` có Encounter của ngày trước được mang sang `carriedOpenItems`.
+  - `AppointmentDialog`: đóng thì tăng bộ đếm, mở lại cùng lịch không hiện kết quả/lỗi cũ.
+  - `clinic/api.ts`: 200 mà body không phải JSON thì ném lỗi tiếng Việt thay vì `{}`.
+  - `DashboardScreen`: ô chọn ngày chỉ điều hướng khi ngày đầy đủ, có thật, năm >= 1900 (`isCompleteClinicDate` mới ở `format.ts`).
+  - Cỡ chữ: tiêu đề trang và tiêu đề khối 18px. `layoutDay` vẽ tối thiểu 20 phút (`MIN_BLOCK_MINUTES`) nên ca ngắn xếp cạnh khối kế tiếp thay vì bị đè.
+  - Để lại, chờ ưu tiên 1: cờ `not_examined` (#5) và `eligibleAppointments` tạm (#10).
+- **Lý do:** Phát hiện của review (Opus) trên nhánh priority-plan-2.
+- **File:** `src/app/benh-nhan/[patientId]/page.tsx`, `src/app/api/clinic/routes.test.ts`, `src/server/clinic/{guard,page-guard,page-guard.test,service,service.test}.ts`, `src/shared/clinic/{schedule,layout,format}.ts` và test tương ứng, `src/client/{clinic/AppointmentDialog,clinic/api,dashboard/DashboardScreen,dashboard/EncounterGroup,patient/EncounterHistory}.tsx`, `README.md`, `docs/cau-truc-du-an.md`, `docs/testing/2026-11-14-dashboard-patient.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** bộ test clinic 60/60 PASS (trước đó 53 + test mới); `npm run lint` và `npx tsc --noEmit` exit 0; kiểm trình duyệt ở 1440/390px xem docs/testing.
+- **Ảnh hưởng:** Request thiếu header Host nay bị 403 (trình duyệt luôn gửi Host).
+
 ### Kiểm tra trình duyệt màn bệnh nhân và đối chiếu dashboard (kiểm thử)
 - **Loại:** Tài liệu
 - **Thay đổi:**

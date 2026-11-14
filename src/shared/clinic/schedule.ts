@@ -148,7 +148,13 @@ export function selectDayAppointments(
   for (const it of items) {
     const day = toClinicDate(it.appointment.starts_at);
     if (day === date) appointments.push(it);
-    else if (day < date && (it.status === "in_progress" || it.status === "waiting_results")) {
+    else if (
+      day < date &&
+      (it.status === "in_progress" ||
+        it.status === "waiting_results" ||
+        // Xung đột lịch hủy + Encounter đang khám: vẫn là việc dở, không được rơi mất.
+        (it.status === "unknown" && it.encounter_id !== null))
+    ) {
       carried.push(it);
     }
   }

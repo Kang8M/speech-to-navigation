@@ -75,3 +75,21 @@ export interface DashboardData {
   totals: DashboardTotals;
   fetchedAt: string;
 }
+
+/** Một dòng trong lịch sử khám: chỉ tóm tắt, không chứa transcript hay dữ liệu AI. */
+export interface HistorySummary {
+  id: string;
+  appointment_id: string | null;
+  encounter_at: string;
+  summary: string;
+  doctor_name: string;
+  status: DisplayStatus;
+}
+
+export interface PatientPageData {
+  patient: PatientProfile;
+  /** Lịch của bác sĩ đang xem cho bệnh nhân này mà còn có thể khám (tạm, chờ policy mở phiếu của ưu tiên 1). */
+  eligibleAppointments: AppointmentItem[];
+  history: HistorySummary[];
+  selectedAppointmentId: string | null;
+}

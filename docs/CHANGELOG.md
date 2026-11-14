@@ -4,6 +4,20 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-14
 
+### Dashboard lịch khám: repository, service và API đọc, độc lập với ưu tiên 1 (Task 2)
+- **Loại:** Tính năng, Dữ liệu
+- **Thay đổi:**
+  - Thêm `src/server/clinic/`: `ports.ts` (cổng `ClinicActor`, `EncounterRef`, `EncounterSource`), `fixture-source.ts` (adapter DEMO sinh EncounterRef giả từ `encounter_status` trong fixture lịch và từ `data/clinic/encounters-demo.json`), `guard.ts` (`assertLocalDemoRequest` tối thiểu: chỉ localhost/127.0.0.1/[::1], từ chối cross-origin với 403), `demo-actor.ts` (actor demo BS01 ở CS01, lấy phía server), `repository.ts` (chỉ đọc, validate Zod, lỗi store ném 500 chứ không trả rỗng), `service.ts` (`loadDashboard`, `loadAppointment`, `loadPatientPage`), `errors.ts`, `http.ts` (bọc GET: guard, no-store, dịch lỗi 400/403/404/500).
+  - Ba route GET: `/api/clinic/dashboard?date=`, `/api/clinic/appointments/[appointmentId]`, `/api/clinic/patients/[patientId]?appointment_id=`. Ngày sai 400, lịch/bệnh nhân ngoài bác sĩ-cơ sở hoặc PID giả 404 như nhau, lỗi store 500 không kèm totals.
+  - Lịch sử khám = mọi phiếu đã lưu cùng cơ sở (gồm bác sĩ khác), loại lượt đang chọn, sắp mới nhất trước. `has_prior_encounter` không tính phiếu của chính lượt đó. Tóm tắt dòng lịch sử lấy `summary` có sẵn, không có thì dùng lý do khám của lịch, không có nữa thì "Chưa có tóm tắt" (không bịa).
+  - `src/shared/clinic/history.ts`: `sortHistory` (giảm dần theo thời điểm, trùng thì ID giảm dần) và `historyNavigation` (`previousId` là lượt mới hơn, `nextId` là lượt cũ hơn). `types.ts` thêm `HistorySummary`, `PatientPageData`.
+  - `src/client/clinic/api.ts`: `getDashboard`, `getAppointment`, `getPatient` (`cache: "no-store"`, AbortSignal).
+  - Dữ liệu giả mới: `data/clinic/directory-demo.json` (tên cơ sở, bác sĩ), `data/clinic/encounters-demo.json` (4 lượt khám cũ giả).
+- **Lý do:** Phần đọc của dashboard và hồ sơ bệnh nhân cần làm trước khi lớp clinical của ưu tiên 1 có trên nhánh này; làm sau một cổng để gộp sau chỉ cần thay adapter.
+- **File:** `src/server/clinic/*`, `src/app/api/clinic/**`, `src/client/clinic/api.ts`, `src/shared/clinic/{history,types}.ts`, `data/clinic/{directory-demo,encounters-demo}.json`
+- **Kiểm tra:** `npx tsx --conditions=react-server --test src/shared/clinic/*.test.ts src/server/clinic/*.test.ts src/app/api/clinic/routes.test.ts` (34 test đạt), `npm run lint` sạch, `npx tsc --noEmit` chỉ còn 3 lỗi có sẵn (`RouteContext`, `LayoutProps`). Chưa chạy qua `npm run dev`.
+- **Ảnh hưởng:** Chưa có giao diện dùng các API này. Để lại cho ưu tiên 1: thay `ClinicActor`/`demo-actor.ts`, `assertLocalDemoRequest` và `EncounterSource` demo bằng bản clinical thật; `appointment-context.ts`, endpoint chi tiết phiếu cũ và `eligibleAppointments` theo policy mở phiếu (hiện chỉ tạm: chưa hủy/kết thúc và không ở tương lai).
+
 ### Dashboard lịch khám: contracts và phép tính (Task 1)
 - **Loại:** Tính năng, Dữ liệu
 - **Thay đổi:**

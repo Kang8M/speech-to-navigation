@@ -2,6 +2,20 @@
 
 Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nhất ở trên cùng. Cách ghi xem `.claude/skills/ghi-tai-lieu/SKILL.md`.
 
+## 2026-11-14
+
+### Dashboard lịch khám: contracts và phép tính (Task 1)
+- **Loại:** Tính năng, Dữ liệu
+- **Thay đổi:**
+  - Thêm `src/shared/clinic/types.ts` (DTO lịch khám, bệnh nhân, bảo hiểm, tổng số, `DashboardData`), `schema.ts` (Zod v4: ngày lịch thực, từ chối `2026-02-30`; timestamp bắt buộc có offset; status lạ bị từ chối; `scheduling_status` chỉ `scheduled`|`cancelled`), `schedule.ts` (hàm thuần: `toClinicDate`, `clinicPeriod`, `displayStatus`, `summarizeAppointments`, `sortAppointments`, `ageAt`, `selectDayAppointments`).
+  - Ngày/giờ tính theo UTC+7 cố định bằng số học (không dùng Intl). Sáng [00:00,12:00), Chiều [12:00,24:00). `remaining` = chưa khám + đang khám + chờ CLS, `unfinished` là tập con của `remaining`; total = completed + remaining + cancelled + other + unknown. Lịch hủy nhưng Encounter đã đang khám/chờ CLS/hoàn thành là xung đột nên thành `unknown`. Ngày sinh tương lai trả "Chưa có thông tin" (không tuổi âm).
+  - Fixture giả `data/clinic/patients.json`, `data/clinic/appointments.json` (2 bác sĩ, 2 cơ sở, 8 ca chuẩn ngày 2026-11-14, ca hôm qua chờ CLS, trùng giờ, thiếu ngày sinh, cả BHYT và bảo lãnh). Nhánh này chưa có Encounter nên mỗi dòng lịch có thêm trường fixture `encounter_status` (tên enum Encounter: `dang_kham`, `cho_kq_cls`, ...; `null` = chưa có Encounter). Ngày trong fixture cố định, chưa sinh theo đồng hồ.
+  - `schedule.test.ts` có `eslint-disable no-restricted-imports` vì `src/shared` cấm `node:*` nhưng test cần `node:test`.
+- **Lý do:** Task 1 của plan "Dashboard lịch khám và thông tin bệnh nhân"; cần nền tính số liệu đúng trước khi dựng giao diện.
+- **File:** `src/shared/clinic/types.ts`, `src/shared/clinic/schema.ts`, `src/shared/clinic/schedule.ts`, `src/shared/clinic/schedule.test.ts`, `data/clinic/patients.json`, `data/clinic/appointments.json`, `docs/CHANGELOG.md`
+- **Kiểm tra:** `npx tsx --conditions=react-server --test src/shared/clinic/schedule.test.ts`: trước khi có `schedule.ts` FAIL (1 fail, không import được module); sau khi implement 6/6 PASS. `npm run lint` sạch. `npx tsc --noEmit`: chỉ còn 3 lỗi có sẵn (`RouteContext`, `LayoutProps` ở `src/app/api/asr/[id]/route.ts`, `src/app/layout.tsx`), không do file mới.
+- **Ảnh hưởng:** Chỉ thêm file mới, chưa nối vào giao diện; không đổi eval.
+
 ## 2026-11-11
 
 ### Tái cấu trúc: tách FE (`src/client`), BE (`src/server`), dùng chung (`src/shared`)

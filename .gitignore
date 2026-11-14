@@ -65,3 +65,16 @@ __pycache__/
 
 # đơn bác sĩ đã kê để gợi ý theo thói quen (tự sinh khi bấm Lưu)
 /data/thoi-quen/*
+
+# Clinical prototype records, revision history and private identity stores
+/data/clinical/
+/data/private/
+/.tmp-*.log
+
+# Optional local Community-1 worker
+/.venv-community/
+/models/community-1/
+
+# Optional native denoiser and implementation scratch artifacts
+/models/denoise/
+/.superpowers/

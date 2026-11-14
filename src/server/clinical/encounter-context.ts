@@ -1,0 +1,76 @@
+import "server-only";
+import fs from "node:fs";
+import path from "node:path";
+import { z } from "zod";
+import type { ClinicalActor, EncounterContext } from "@/shared/clinical/api";
+import type { Encounter } from "@/shared/clinical/types";
+import { loadEncounterEformData } from "@/server/du-lieu/eform";
+import { ClinicalError } from "./repository";
+
+const history = z.object({ ngay: z.string(), bac_si: z.string(), khoa: z.string(), noi_dung: z.string() });
+const result = z.array(z.object({ ngay: z.string(), muc: z.array(z.object({ ten: z.string(), ket_qua: z.string() })) }));
+const caSchema = z.object({
+  dang_nhap: z.string(), co_so: z.string(), pid: z.string(), ma_luot_kham: z.string(), ho_ten: z.string(), gioi_tinh: z.string(), canh_bao_di_ung: z.string(),
+  chinh_sua_cuoi: z.object({ nguoi: z.string(), luc: z.string() }), danh_gia_ban_dau: z.array(z.object({ nhan: z.string(), gia_tri: z.string() })),
+  sinh_hieu: z.object({ mach: z.number(), nhiet_do: z.number(), ha_tam_thu: z.number(), ha_tam_truong: z.number(), spo2: z.number(), nhip_tho: z.number(), chieu_cao: z.number(), can_nang: z.number() }),
+  bac_si_kham: z.string(), phong_kham: z.string(), bac_si_chinh: z.string(), trang_thai: z.string(),
+  lich_su: z.object({ tien_su_ban_than: z.array(history), tien_su_gia_dinh: z.array(history), benh_su: z.array(history), di_ung: z.array(z.object({ ngay: z.string(), loai_phieu: z.string(), loai: z.string(), thong_tin: z.string(), nguoi: z.string() })) }),
+  xet_nghiem: result, chan_doan_hinh_anh: result, can_lam_sang: result, dong_bo_cls: z.string(), gia_tri: z.record(z.string(), z.string()),
+}).passthrough();
+const fixtureSchema = z.object({ version: z.literal(1), synthetic: z.literal(true), contexts: z.array(z.object({
+  appointment_id: z.string().min(1), patient_id: z.string().min(1), facility_id: z.string().min(1), doctor_id: z.string().min(1), age_months: z.number().int().positive(), ca: caSchema,
+})) });
+
+export function validateEncounterContexts(value: unknown) {
+  const fixture = fixtureSchema.parse(value);
+  const appointments = new Set<string>();
+  const patients = new Map<string, string>();
+  for (const item of fixture.contexts) {
+    const key = JSON.stringify([item.facility_id, item.appointment_id]);
+    if (appointments.has(key) || item.ca.pid !== item.patient_id || item.ca.ma_luot_kham !== item.appointment_id || item.ca.dang_nhap !== item.doctor_id) throw new ClinicalError("Ngữ cảnh lượt khám không nhất quán.", 409);
+    appointments.add(key);
+    const patient = JSON.stringify([item.facility_id, item.patient_id]);
+    const identity = JSON.stringify([item.ca.ho_ten, item.ca.gioi_tinh, item.age_months]);
+    if (patients.has(patient) && patients.get(patient) !== identity) throw new ClinicalError("Danh tính bệnh nhân không nhất quán.", 409);
+    patients.set(patient, identity);
+  }
+  return fixture;
+}
+
+function loadContexts() {
+  return validateEncounterContexts(JSON.parse(fs.readFileSync(path.join(/*turbopackIgnore: true*/ process.cwd(), "data", "eform", "encounter-contexts.json"), "utf8"))).contexts;
+}
+
+export function getDemoClinicalActor(): ClinicalActor {
+  return { doctorId: "user_bs01", facilityId: "facility-prototype" };
+}
+
+export function resolveEncounterContext(actor: ClinicalActor, appointmentId: string): EncounterContext {
+  const contexts = loadContexts();
+  const item = contexts.find(row => row.appointment_id === appointmentId && row.facility_id === actor.facilityId);
+  if (!item) {
+    if (contexts.some(row => row.appointment_id === appointmentId)) throw new ClinicalError("Không có quyền truy cập lượt khám tại cơ sở này.", 403);
+    throw new ClinicalError("Không tìm thấy mã khám.", 404);
+  }
+  if (item.doctor_id !== actor.doctorId) throw new ClinicalError("Lượt khám không được phân công cho bác sĩ này.", 403);
+  return { appointmentId: item.appointment_id, patientId: item.patient_id, facilityId: item.facility_id, doctorId: item.doctor_id, data: loadEncounterEformData(item.ca, item.doctor_id) };
+}
+
+/** Metadata stays server-side, outside the model conversation and UI patient fixture shape. */
+export function encounterAgeMonths(context: EncounterContext): number {
+  const item = loadContexts().find(row => row.facility_id === context.facilityId && row.appointment_id === context.appointmentId && row.patient_id === context.patientId && row.doctor_id === context.doctorId);
+  if (!item) throw new ClinicalError("Ngữ cảnh lượt khám không hợp lệ.", 409);
+  return item.age_months;
+}
+
+export function resolveEncounterContextForRecord(actor: ClinicalActor, record: Encounter): EncounterContext {
+  if (record.facility_id !== actor.facilityId || record.examiner_id !== actor.doctorId) throw new ClinicalError("Không có quyền truy cập hồ sơ này.", 403);
+  if (!record.appointment_id) throw new ClinicalError("Hồ sơ chưa gắn mã khám.", 409);
+  const context = resolveEncounterContext(actor, record.appointment_id);
+  if (record.patient_id !== context.patientId) throw new ClinicalError("Hồ sơ không khớp bệnh nhân của mã khám.", 409);
+  return context;
+}
+
+export function listEncounterContexts(actor: ClinicalActor): EncounterContext[] {
+  return loadContexts().filter(row => row.facility_id === actor.facilityId && row.doctor_id === actor.doctorId).map(row => resolveEncounterContext(actor, row.appointment_id));
+}

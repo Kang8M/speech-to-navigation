@@ -13,12 +13,14 @@ src/
     api/extract/          POST: văn bản → nháp đã khớp danh mục (gọi server/ai/pipeline)
     api/asr/, api/asr/[id]/  nhận dạng giọng nói Zipformer (gọi server/ai/asr)
     api/sessions/         lưu, liệt kê số đo lượt thử (gọi server/du-lieu/sessions)
+    benh-nhan/[patientId]/  /benh-nhan/:pid  hồ sơ bệnh nhân (server gọi clinic/service, giao diện ở client/patient)
     api/clinic/           GET dashboard, appointments/[id], patients/[id] (đọc lịch khám, gọi server/clinic/service)
     layout.tsx, globals.css
 
   client/                 FE: chạy trên trình duyệt (component có "use client")
     api.ts                gọi /api/extract, /api/sessions (dùng kiểu trong shared/api.ts)
     clinic/api.ts         gọi /api/clinic/* (no-store, AbortSignal, kiểu trong shared/clinic/types.ts)
+    patient/              trang /benh-nhan/[patientId]: PatientScreen, InsuranceSummary, EncounterHistory, history-controller.ts (hủy request cũ khi tải phiếu)
     chung/                component dùng được ở mọi trang
       MicButton.tsx       nút 🎤: Web Speech hoặc Zipformer (gọi /api/asr)
       CatalogPicker.tsx   ô tìm trong danh mục dịch vụ/thuốc

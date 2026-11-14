@@ -4,6 +4,18 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-14
 
+### Hồ sơ bệnh nhân: màn /benh-nhan/[patientId], danh sách lịch sử, bộ điều phối tải phiếu cũ (Task 5, phần độc lập)
+- **Loại:** Tính năng, Giao diện
+- **Thay đổi:**
+  - Trang `src/app/benh-nhan/[patientId]/` (`page.tsx`, `loading.tsx`, `error.tsx`, `not-found.tsx`): server page chờ `params` và `searchParams` (`appointment_id`, `return_to`), gọi thẳng `loadPatientPage` với actor demo (không fetch API nội bộ). Service trả 404 (PID giả, lịch không thuộc bác sĩ/bệnh nhân) thì ra trang not-found; lỗi khác vào error boundary (nút Thử lại, không dữ liệu giả). `return_to` đi qua `safeReturnTo` (`src/shared/clinic/links.ts`).
+  - `src/client/patient/`: `PatientScreen` (link "Về dashboard", họ tên, PID giữ số 0 đầu, ngày sinh, tuổi theo ngày hẹn hoặc hôm nay, giới tính), `InsuranceSummary` (hai khối BHYT và Bảo hiểm bảo lãnh độc lập; "Không tham gia" chỉ khi known và enrolled=false, "Chưa có thông tin" khi known=false hoặc enrolled=null, nhãn "Hết hạn" khi hạn trước ngày đối chiếu), `EncounterHistory` (giảm dần như server đã sắp; tóm tắt, ngày giờ, mã lượt, bác sĩ, badge; rỗng ghi "Chưa có lịch sử khám"), `StatusBadge`, `format.ts`.
+  - Nút **Tạo phiếu khám** và **Xem phiếu** đều tắt, có chú thích: "Chưa có lịch khám để tạo phiếu" hoặc "Chờ nền ca khám nhiều phiên (ưu tiên 1)"; "Chờ dữ liệu phiếu từ ưu tiên 1". Không điều hướng, không sinh ID.
+  - `history-controller.ts`: `createHistoryLoader<T extends {id}>(fetchDetail)`. Load mới hủy load trước; kết quả và lỗi của load cũ trả null; lỗi của load hiện tại ném lên; `dispose` hủy và chặn mọi cập nhật. Thuần TS, không React.
+- **Lý do:** Phần độc lập của Task 5 plan Dashboard & Bệnh nhân. Popup toàn phiếu, endpoint chi tiết phiếu và `projectHistoricalEncounter` chưa làm vì cần dữ liệu phiếu của ưu tiên 1.
+- **File:** `src/app/benh-nhan/[patientId]/*`, `src/client/patient/*`, `docs/cau-truc-du-an.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** `npx tsx --conditions=react-server --test src/client/patient/history-controller.test.ts`: trước khi có loader FAIL (không import được module), sau đó 5/5 PASS (A chậm B nhanh chỉ B; lỗi A sau B không hiện; lỗi B retry được; dispose). Bộ test clinic hiện có vẫn xanh. `npm run lint` sạch file mới; `npx tsc --noEmit` chỉ còn 3 lỗi có sẵn. Chưa chạy `next dev` và chưa xem trong trình duyệt.
+- **Ảnh hưởng:** Chưa có theme `ef_*` trên nhánh này nên dùng token hiện có (`primary`, `muted`, `xem`, `accent`, `navy`, đỏ Tailwind cho "hủy"). Badge trạng thái là bản riêng trong `src/client/patient/`, hợp nhất với badge dashboard khi có. Ngày đối chiếu tuổi/hạn bảo hiểm lấy từ lịch đang chọn nếu nằm trong lịch đủ điều kiện, không thì hôm nay.
+
 ### Dashboard lịch khám: repository, service và API đọc, độc lập với ưu tiên 1 (Task 2)
 - **Loại:** Tính năng, Dữ liệu
 - **Thay đổi:**

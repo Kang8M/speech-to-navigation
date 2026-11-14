@@ -14,11 +14,14 @@ src/
     api/asr/, api/asr/[id]/  nhận dạng giọng nói Zipformer (gọi server/ai/asr)
     api/sessions/         lưu, liệt kê số đo lượt thử (gọi server/du-lieu/sessions)
     benh-nhan/[patientId]/  /benh-nhan/:pid  hồ sơ bệnh nhân (server gọi clinic/service, giao diện ở client/patient)
+    dashboard/            /dashboard   lịch khám theo ngày (?date=, ?view=list|calendar); page server gọi thẳng loadDashboard
     api/clinic/           GET dashboard, appointments/[id], patients/[id] (đọc lịch khám, gọi server/clinic/service)
     layout.tsx, globals.css
 
   client/                 FE: chạy trên trình duyệt (component có "use client")
     api.ts                gọi /api/extract, /api/sessions (dùng kiểu trong shared/api.ts)
+    dashboard/            trang /dashboard: DashboardScreen, EncounterGroup, AppointmentList, DayCalendar, StatusLegend
+    clinic/status.tsx, AppointmentRow.tsx   nhãn/màu trạng thái và dòng ca khám dùng chung dashboard, bệnh nhân
     clinic/api.ts         gọi /api/clinic/* (no-store, AbortSignal, kiểu trong shared/clinic/types.ts)
     patient/              trang /benh-nhan/[patientId]: PatientScreen, InsuranceSummary, EncounterHistory, history-controller.ts (hủy request cũ khi tải phiếu)
     chung/                component dùng được ở mọi trang
@@ -40,6 +43,7 @@ src/
       ports.ts            ClinicActor, EncounterRef, EncounterSource (cổng)
       fixture-source.ts, demo-actor.ts, guard.ts   adapter DEMO tạm: nguồn Encounter giả, actor cố định, guard localhost
       repository.ts, service.ts   đọc + validate data/clinic/, dựng DTO theo bác sĩ và cơ sở
+      page-guard.ts       guard localhost cho page server (dùng lại assertLocalDemoRequest)
       errors.ts, http.ts  lỗi có mã HTTP, bọc GET (no-store)
     du-lieu/              đọc/ghi đĩa
       config.ts           nạp config/ và data/catalog, data/cases
@@ -53,7 +57,7 @@ src/
     match.ts              khớp danh mục (Fuse.js): nơi DUY NHẤT gán mã dịch vụ/thuốc
     validate.ts           tính tổng số lượng thuốc, cảnh báo
     metrics.ts            kiểu số đo lượt thử, tính trung bình, xuất CSV
-    clinic/               DTO, schema, phép tính lịch (schedule.ts), thứ tự lịch sử khám (history.ts)
+    clinic/               DTO, schema, phép tính lịch (schedule.ts), thứ tự lịch sử khám (history.ts), giờ/ngày VN (format.ts), chia nhóm và bố cục calendar (layout.ts), đường dẫn nội bộ an toàn (links.ts)
     eform/                logic trang /eform, gồm cả "AI" bằng rule (xem dưới)
 
 config/  data/  scripts/  models/  docs/   giữ nguyên ở gốc (dữ liệu, script, tài liệu)

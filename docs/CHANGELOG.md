@@ -4,6 +4,20 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-14
 
+### Dashboard lịch khám: trang /dashboard với danh sách và lịch theo giờ (Task 3)
+- **Loại:** Tính năng, Giao diện
+- **Thay đổi:**
+  - Trang `src/app/dashboard/` (`page.tsx`, `loading.tsx`, `error.tsx`): server page chờ `searchParams` (`date`, `view`), mặc định hôm nay giờ Việt Nam và `list`, ngày sai quay về hôm nay. Gọi thẳng `loadDashboard` với actor demo; chạy guard local qua `src/server/clinic/page-guard.ts` (dựng Request từ Host/Origin/Sec-Fetch-Site rồi dùng `assertLocalDemoRequest`).
+  - `src/client/dashboard/`: `DashboardScreen` (tiêu đề, ngày, nút Ngày trước/Hôm nay/Ngày sau/chọn ngày/Làm mới, tổng N, ba khối, dòng hủy/kết thúc khác/chưa xác định, khối ca ngày trước, chuyển Danh sách / Lịch theo giờ lưu trong URL), `EncounterGroup` (tối đa 5 dòng, "Xem tất cả", khối rỗng) và `OtherEncounters`, `AppointmentList` (Sáng/Chiều), `DayCalendar` (trục 07 đến 18 giờ, mở rộng khi có ca ngoài giờ, khối 30 phút khi thiếu giờ kết thúc, lịch trùng giờ xếp cạnh nhau, nhãn "Bây giờ" chỉ hôm nay), `StatusLegend`.
+  - `src/client/clinic/status.tsx` (nhãn và màu 9 trạng thái, "Không khám" khi Encounter `khong_kham`), `AppointmentRow.tsx`.
+  - `src/shared/clinic/`: `format.ts` (giờ/ngày VN, cộng ngày, thứ), `layout.ts` (`groupAppointments`, `splitByPeriod`, `layoutDay`), `links.ts` (`safeReturnTo`, `dashboardHref`, `patientHref`) cùng test.
+  - `Header.tsx`: thêm link "Lịch khám"; đường dẫn `/benh-nhan/*` cũng sáng mục này. Không đổi `/`.
+  - Làm mới: mỗi ngày là một thể hiện riêng (`key` theo ngày), request bị hủy khi rời trang hoặc khi bấm lại, có số thứ tự nên response cũ không ghi đè; lỗi làm mới giữ số liệu cũ kèm cảnh báo, không đưa về 0.
+- **Lý do:** Task 3 plan Dashboard và Bệnh nhân. Popup lịch hẹn (Task 4) làm ở mục sau; tạm thời bấm dòng chỉ hiện dòng "Đã chọn lịch".
+- **File:** `src/app/dashboard/*`, `src/client/dashboard/*`, `src/client/clinic/{status.tsx,AppointmentRow.tsx}`, `src/client/chung/Header.tsx`, `src/server/clinic/page-guard.ts`, `src/shared/clinic/{format,layout,links}.ts` và test, `docs/testing/2026-11-14-dashboard-patient.md`, `docs/cau-truc-du-an.md`
+- **Kiểm tra:** test mới `format/links/layout` trước khi có module FAIL, sau đó PASS (toàn bộ `src/shared/clinic/*.test.ts` 19+ test). `npm run lint` sạch ở file mới, `npx tsc --noEmit` chỉ còn 3 lỗi có sẵn. Trình duyệt thật ở 1440/1024/390px: số 8/2/4/2/1/1 đúng, không tràn ngang; kết quả chi tiết và mục chưa kiểm ở `docs/testing/2026-11-14-dashboard-patient.md`.
+- **Ảnh hưởng:** Theme `ef_*` chưa có trên nhánh này, dùng token hiện có (`emr-navy`, `emr-blue`, `xem`, `accent`, `primary`, `ink`, `muted`, đỏ `#c9302c` như eform). Chưa kiểm "Xem tất cả" với dữ liệu thật (không khối nào quá 5 dòng).
+
 ### Hồ sơ bệnh nhân: màn /benh-nhan/[patientId], danh sách lịch sử, bộ điều phối tải phiếu cũ (Task 5, phần độc lập)
 - **Loại:** Tính năng, Giao diện
 - **Thay đổi:**

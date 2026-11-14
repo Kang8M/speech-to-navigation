@@ -4,6 +4,18 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-14
 
+### Dashboard lịch khám: popup lịch hẹn và đường vào hồ sơ bệnh nhân (Task 4)
+- **Loại:** Tính năng, Giao diện
+- **Thay đổi:**
+  - `src/client/clinic/ClinicDialog.tsx`: hộp thoại modal dùng `<dialog>` gốc (focus trap, Escape, aria-modal do trình duyệt lo), thêm khôi phục focus, khóa cuộn nền, cuộn nội dung riêng, chỉ đóng khi bấm đúng nền, gần toàn màn hình ở màn hẹp.
+  - `AppointmentDialog.tsx`: gọi `getAppointment` (no-store, AbortController), có loading, lỗi và Thử lại; kết quả gắn khóa `id#lần thử` nên kết quả muộn của lịch khác không hiện. Hiện mã lịch/lượt, UUID hồ sơ nếu có, PID, họ tên, tuổi theo ngày hẹn, ngày sinh, giờ hẹn, bác sĩ, trạng thái, nội dung đầy đủ.
+  - `AppointmentActions.tsx`: link "Xem thông tin bệnh nhân" (có lượt trước) hoặc "Thông tin bệnh nhân" kèm "Chưa có lịch sử khám"; href `/benh-nhan/<PID>?appointment_id=&return_to=` qua `patientHref` (`safeReturnTo` chỉ nhận đường nội bộ). Nút Tạo/Mở phiếu khám tắt, chú thích "Chờ nền ca khám nhiều phiên (ưu tiên 1)"; không điều hướng ca mẫu, không sinh Encounter hay UUID.
+  - `DashboardScreen` gắn dialog, thay dòng "Đã chọn lịch" tạm của Task 3.
+- **Lý do:** Task 4 plan Dashboard và Bệnh nhân. `safeReturnTo` và test đã có từ commit Task 3 (`src/shared/clinic/links.ts`).
+- **File:** `src/client/clinic/{ClinicDialog,AppointmentDialog,AppointmentActions}.tsx`, `src/client/dashboard/DashboardScreen.tsx`, `docs/testing/2026-11-14-dashboard-patient.md`, `docs/cau-truc-du-an.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** `npx tsx --conditions=react-server --test src/shared/clinic/*.test.ts src/server/clinic/*.test.ts src/app/api/clinic/routes.test.ts` 45/45 PASS, `npm run lint` sạch, `npx tsc --noEmit` chỉ 3 lỗi có sẵn. Trình duyệt thật: mở bằng click/Enter, Tab giữ trong popup, Escape trả focus và mở khóa cuộn, lỗi/Thử lại, 390px; mục chưa kiểm ghi ở checklist (click nền thật, slow fetch, Shift+Tab).
+- **Ảnh hưởng:** Chưa có nút mở phiếu thật; chờ nền ca khám nhiều phiên của ưu tiên 1.
+
 ### Dashboard lịch khám: trang /dashboard với danh sách và lịch theo giờ (Task 3)
 - **Loại:** Tính năng, Giao diện
 - **Thay đổi:**

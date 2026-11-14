@@ -22,6 +22,7 @@ src/
     api.ts                gọi /api/extract, /api/sessions (dùng kiểu trong shared/api.ts)
     dashboard/            trang /dashboard: DashboardScreen, EncounterGroup, AppointmentList, DayCalendar, StatusLegend
     clinic/status.tsx, AppointmentRow.tsx   nhãn/màu trạng thái và dòng ca khám dùng chung dashboard, bệnh nhân
+    clinic/ClinicDialog, AppointmentDialog, AppointmentActions   popup lịch hẹn (dialog gốc) và link/nút thao tác
     clinic/api.ts         gọi /api/clinic/* (no-store, AbortSignal, kiểu trong shared/clinic/types.ts)
     patient/              trang /benh-nhan/[patientId]: PatientScreen, InsuranceSummary, EncounterHistory, history-controller.ts (hủy request cũ khi tải phiếu)
     chung/                component dùng được ở mọi trang

@@ -29,4 +29,21 @@ Phạm vi file này: Task 3 (dashboard) và Task 4 (popup lịch hẹn) của pl
 
 ## Task 4: Popup lịch hẹn
 
-(Điền sau khi chạy.)
+Ảnh lưu ngoài repo (thư mục scratchpad của phiên): `cal-1440.png`, `list-390.png`, `dialog-390.png`.
+
+| # | Kiểm tra | Kết quả |
+| --- | --- | --- |
+| 4.1 | Click dòng (list) mở popup; Enter trên dòng đang focus cũng mở | PASS |
+| 4.2 | Popup đủ trường: mã lịch/lượt, UUID hồ sơ (nếu có), PID giữ 000123, họ tên, tuổi, ngày sinh, giờ hẹn kèm giờ kết thúc, bác sĩ, trạng thái, nội dung đầy đủ | PASS (LK-000001, LK-000004, LK-000007) |
+| 4.3 | Tuổi theo ngày hẹn: sinh 15/11/2000, hẹn 14/11/2026 là 25 tuổi (chưa qua sinh nhật); thiếu ngày sinh ghi "Chưa có thông tin" | PASS |
+| 4.4 | Mở từ calendar, kể cả khối lịch trùng giờ LK-000004 | PASS (390px). Mở từ khối ca ngày trước, Ca hủy/Kết thúc khác, Còn lại, Đang khám: chưa mở riêng, chỉ mở từ danh sách Sáng/Chiều |
+| 4.5 | Tab 3 lần vẫn ở trong popup | PASS |
+| 4.6 | Escape đóng, trả focus về đúng dòng đã mở, mở khóa cuộn nền (`body.style.overflow` là `hidden` khi mở, rỗng khi đóng) | PASS |
+| 4.7 | Click vùng nội dung không đóng; click nền (click có target là chính `<dialog>`) đóng | PASS nhưng bằng sự kiện tổng hợp, chưa nhấp chuột thật vào ::backdrop |
+| 4.8 | Lỗi tải (giả lập 500 một lần) hiện lỗi và nút Thử lại; Thử lại tải được | PASS |
+| 4.9 | Link "Xem thông tin bệnh nhân" khi có lượt trước; "Thông tin bệnh nhân" kèm "Chưa có lịch sử khám" khi chưa có | PASS: LK-000001 và LK-000004 thuộc nhóm đầu; LK-000007 (PID 000125) hiện nhánh thứ hai |
+| 4.10 | Link `/benh-nhan/000123?appointment_id=LK-000001&return_to=%2Fdashboard%3Fdate%3D2026-11-14%26view%3Dlist` | PASS về href; chưa bấm đi vì trang bệnh nhân do việc khác |
+| 4.11 | Nút Tạo/Mở phiếu khám tắt kèm "Chờ nền ca khám nhiều phiên (ưu tiên 1)"; ca hủy không có nút | PASS |
+| 4.12 | Popup 390px gần toàn màn hình, đọc được | PASS (ảnh `dialog-390.png`) |
+| 4.13 | Nội dung rất dài; slow fetch A rồi B | Chưa kiểm. Popup là modal nên không mở B khi A còn mở; chống kết quả muộn bằng khóa `id#lần thử` và AbortController, chưa thử có độ trễ |
+| 4.14 | Click nền bằng chuột thật, Shift+Tab, Tab quay vòng qua phần tử cuối | Chưa kiểm |

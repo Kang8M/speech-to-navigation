@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getDashboard } from "@/client/clinic/api";
+import { AppointmentDialog } from "@/client/clinic/AppointmentDialog";
 import { formatClinicDate, formatClinicTime, shiftClinicDate, weekdayLabel } from "@/shared/clinic/format";
 import { groupAppointments } from "@/shared/clinic/layout";
 import { dashboardHref, type DashboardView } from "@/shared/clinic/links";
@@ -191,15 +192,7 @@ export function DashboardScreen({ initialData, initialView }: Props) {
         )}
       </section>
 
-      {/* Task 3: chưa có popup; dòng này chỉ báo ca được chọn cho tới khi AppointmentDialog được gắn. */}
-      {openId !== null && (
-        <div role="status" className="fixed bottom-4 left-1/2 z-40 -translate-x-1/2 bg-emr-navy px-3 py-2 text-[13px] text-white">
-          Đã chọn lịch {openId}
-          <button type="button" className="ml-3 underline" onClick={() => setOpenId(null)}>
-            Đóng
-          </button>
-        </div>
-      )}
+      <AppointmentDialog appointmentId={openId} returnTo={dashboardHref(date, view)} onClose={() => setOpenId(null)} />
     </main>
   );
 }

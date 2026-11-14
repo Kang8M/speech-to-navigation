@@ -58,7 +58,7 @@ src/
     match.ts              khớp danh mục (Fuse.js): nơi DUY NHẤT gán mã dịch vụ/thuốc
     validate.ts           tính tổng số lượng thuốc, cảnh báo
     metrics.ts            kiểu số đo lượt thử, tính trung bình, xuất CSV
-    clinic/               DTO, schema, phép tính lịch (schedule.ts), thứ tự lịch sử khám (history.ts), giờ/ngày VN (format.ts), chia nhóm và bố cục calendar (layout.ts), đường dẫn nội bộ an toàn (links.ts)
+    clinic/               DTO, schema, phép tính lịch (schedule.ts), thứ tự lịch sử khám (history.ts), giờ/ngày VN và nhãn thiếu dữ liệu, định dạng hồ sơ bệnh nhân (format.ts), chia nhóm và bố cục calendar (layout.ts), đường dẫn nội bộ an toàn (links.ts)
     eform/                logic trang /eform, gồm cả "AI" bằng rule (xem dưới)
 
 config/  data/  scripts/  models/  docs/   giữ nguyên ở gốc (dữ liệu, script, tài liệu)

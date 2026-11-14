@@ -1,6 +1,6 @@
+import { StatusBadge } from "@/client/clinic/status";
+import { formatClinicDateTimeLenient } from "@/shared/clinic/format";
 import type { HistorySummary } from "@/shared/clinic/types";
-import { formatDateTime } from "./format";
-import { StatusBadge } from "./StatusBadge";
 
 const NOTE_ID = "history-view-note";
 
@@ -27,10 +27,11 @@ export function EncounterHistory({ items }: { items: HistorySummary[] }) {
                 <div className="min-w-0 flex-1">
                   <p className="break-words text-sm font-medium">{item.summary}</p>
                   <p className="mt-0.5 text-xs text-muted">
-                    {formatDateTime(item.encounter_at)} · Mã lượt {item.id} · {item.doctor_name}
+                    {formatClinicDateTimeLenient(item.encounter_at)} · Mã lượt {item.id} · {item.doctor_name}
                   </p>
                 </div>
-                <StatusBadge status={item.status} />
+                {/* Lịch sử không có encounter_id nên nhãn luôn là "Hủy khám" khi hủy, không hiện "Không khám". */}
+                <StatusBadge item={{ status: item.status, encounter_id: null }} />
                 <button
                   type="button"
                   disabled

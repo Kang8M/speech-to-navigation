@@ -4,6 +4,19 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-14
 
+### Gộp badge trạng thái và định dạng ngày của màn bệnh nhân vào bản dùng chung (refactor)
+- **Loại:** Dọn dẹp
+- **Thay đổi:**
+  - Xóa `src/client/patient/StatusBadge.tsx` (kèm TODO "hợp nhất"). `EncounterHistory` dùng `StatusBadge` của `src/client/clinic/status.tsx`, truyền `{ status, encounter_id: null }` vì lịch sử không có mã lượt: nhãn "Hủy khám" giữ như cũ, không đổi thành "Không khám".
+  - Xóa `src/client/patient/format.ts`. Chuyển các hàm còn thiếu sang `src/shared/clinic/format.ts`: `NO_INFO`, `formatOptionalClinicDate` (thay `formatDate`: null là "Chưa có thông tin", chuỗi lạ giữ nguyên), `formatClinicDateTimeLenient` (thay `formatDateTime`: timestamp lạ trả nguyên chuỗi thay vì ném lỗi), `formatGender`.
+  - `src/shared/clinic/schedule.ts` dùng chung `NO_INFO` từ `format.ts` thay hằng số trùng.
+  - `PatientScreen`, `InsuranceSummary`, `EncounterHistory` import từ shared.
+  - Thêm test cho ba hàm mới trong `src/shared/clinic/format.test.ts`.
+- **Lý do:** Hai cặp trùng chức năng (badge trạng thái và định dạng ngày) đã có TODO hợp nhất từ Task 5.
+- **File:** `src/client/patient/{StatusBadge.tsx,format.ts}` (xóa), `src/client/patient/{EncounterHistory,InsuranceSummary,PatientScreen}.tsx`, `src/shared/clinic/{format,format.test,schedule}.ts`, `docs/CHANGELOG.md`, `docs/cau-truc-du-an.md`
+- **Kiểm tra:** `npx tsx --conditions=react-server --test src/shared/clinic/*.test.ts src/server/clinic/*.test.ts src/app/api/clinic/routes.test.ts src/client/patient/*.test.ts`: baseline 50/50 PASS, sau refactor 53/53 PASS (3 test mới). `npx eslint .` exit 0. `npx tsc --noEmit` exit 0, không có lỗi (không còn 3 lỗi có sẵn như các mục trước ghi). Chưa kiểm tra trên trình duyệt ở bước này.
+- **Ảnh hưởng:** Badge trạng thái ở màn bệnh nhân nhỏ hơn về đệm và cỡ chữ (theo bản dashboard: `px-1.5 text-[11px] rounded-sm`), nhãn và màu không đổi. Hành vi ngày/giờ với dữ liệu hợp lệ không đổi.
+
 ### Dashboard lịch khám: popup lịch hẹn và đường vào hồ sơ bệnh nhân (Task 4)
 - **Loại:** Tính năng, Giao diện
 - **Thay đổi:**

@@ -46,3 +46,23 @@ export function weekdayLabel(date: ClinicDate): string {
   const [y, m, d] = date.split("-").map(Number);
   return WEEKDAYS[new Date(Date.UTC(y, m - 1, d)).getUTCDay()];
 }
+
+/** Nhãn khi thiếu dữ liệu hiển thị (ngày sinh, giới tính, BHYT...). */
+export const NO_INFO = "Chưa có thông tin";
+
+/** YYYY-MM-DD -> DD/MM/YYYY; null -> NO_INFO; chuỗi lạ giữ nguyên để không bịa dữ liệu. */
+export function formatOptionalClinicDate(date: string | null): string {
+  if (date === null) return NO_INFO;
+  return /^\d{4}-\d{2}-\d{2}$/.test(date) ? formatClinicDate(date) : date;
+}
+
+/** Như formatClinicDateTime nhưng timestamp lạ trả nguyên chuỗi, không ném lỗi (tránh vỡ màn hiển thị). */
+export function formatClinicDateTimeLenient(iso: string): string {
+  return Number.isNaN(Date.parse(iso)) ? iso : formatClinicDateTime(iso);
+}
+
+/** Giới tính viết hoa chữ cái đầu; rỗng hoặc null -> NO_INFO. */
+export function formatGender(gender: string | null): string {
+  if (!gender) return NO_INFO;
+  return gender.charAt(0).toUpperCase() + gender.slice(1);
+}

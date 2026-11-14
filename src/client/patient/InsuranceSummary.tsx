@@ -1,4 +1,4 @@
-import { formatDate, NO_INFO } from "./format";
+import { formatOptionalClinicDate, NO_INFO } from "@/shared/clinic/format";
 import type { ClinicDate, InsuranceInfo, InsuranceKind, PatientProfile } from "@/shared/clinic/types";
 
 const KINDS: { kind: InsuranceKind; title: string }[] = [
@@ -30,7 +30,7 @@ function InsuranceBlock({ title, info, today }: { title: string; info: Insurance
   const range =
     info.valid_from === null && info.valid_to === null
       ? null
-      : `${info.valid_from ? formatDate(info.valid_from) : "?"} – ${info.valid_to ? formatDate(info.valid_to) : "?"}`;
+      : `${info.valid_from ? formatOptionalClinicDate(info.valid_from) : "?"} – ${info.valid_to ? formatOptionalClinicDate(info.valid_to) : "?"}`;
 
   return (
     <section aria-label={title} className="rounded border border-gray-300 bg-white p-3">

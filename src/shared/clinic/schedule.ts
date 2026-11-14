@@ -6,6 +6,7 @@ import type {
   DashboardTotals,
   DisplayStatus,
 } from "./types";
+import { NO_INFO } from "./format";
 
 const VN_OFFSET_MS = 7 * 60 * 60 * 1000; // Asia/Ho_Chi_Minh = UTC+7 cố định, không DST
 
@@ -119,7 +120,6 @@ export function sortAppointments(items: AppointmentItem[]): AppointmentItem[] {
   });
 }
 
-const NO_INFO = "Chưa có thông tin";
 
 function parseDate(s: ClinicDate): [number, number, number] | null {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);

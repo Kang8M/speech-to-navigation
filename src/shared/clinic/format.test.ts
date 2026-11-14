@@ -1,7 +1,18 @@
 /* eslint-disable no-restricted-imports -- file test chỉ chạy bằng node:test, không vào bundle trình duyệt */
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { formatClinicDate, formatClinicDateTime, formatClinicTime, minutesOfClinicDay, shiftClinicDate, weekdayLabel } from "./format";
+import {
+  formatClinicDate,
+  formatClinicDateTime,
+  formatClinicDateTimeLenient,
+  formatClinicTime,
+  formatGender,
+  formatOptionalClinicDate,
+  minutesOfClinicDay,
+  NO_INFO,
+  shiftClinicDate,
+  weekdayLabel,
+} from "./format";
 
 test("format_time_date_vn", () => {
   assert.equal(formatClinicTime("2026-11-14T08:05:00+07:00"), "08:05");
@@ -21,4 +32,23 @@ test("shift_date_crosses_month_and_year", () => {
 test("weekday_label_vi", () => {
   assert.equal(weekdayLabel("2026-11-14"), "Thứ bảy");
   assert.equal(weekdayLabel("2026-11-15"), "Chủ nhật");
+});
+
+test("optional_date_keeps_unknown_text", () => {
+  assert.equal(formatOptionalClinicDate(null), NO_INFO);
+  assert.equal(formatOptionalClinicDate("2026-11-04"), "04/11/2026");
+  assert.equal(formatOptionalClinicDate("04/11/2026"), "04/11/2026");
+  assert.equal(formatOptionalClinicDate(""), "");
+});
+
+test("datetime_lenient_passthrough_invalid", () => {
+  assert.equal(formatClinicDateTimeLenient("2026-11-13T17:30:00Z"), "14/11/2026 00:30");
+  assert.equal(formatClinicDateTimeLenient("khong-phai-ngay"), "khong-phai-ngay");
+});
+
+test("gender_capitalizes_or_no_info", () => {
+  assert.equal(formatGender("nam"), "Nam");
+  assert.equal(formatGender("nữ"), "Nữ");
+  assert.equal(formatGender(""), NO_INFO);
+  assert.equal(formatGender(null), NO_INFO);
 });

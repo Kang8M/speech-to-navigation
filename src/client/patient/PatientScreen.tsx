@@ -1,8 +1,8 @@
 import Link from "next/link";
+import { formatGender, formatOptionalClinicDate } from "@/shared/clinic/format";
 import { ageAt } from "@/shared/clinic/schedule";
 import type { ClinicDate, PatientPageData } from "@/shared/clinic/types";
 import { EncounterHistory } from "./EncounterHistory";
-import { formatDate, formatGender } from "./format";
 import { InsuranceSummary } from "./InsuranceSummary";
 
 interface Props {
@@ -45,7 +45,7 @@ export function PatientScreen({ data, returnTo, referenceDate }: Props) {
             </h1>
             <dl className="mt-3 grid grid-cols-2 gap-x-6 gap-y-2 sm:grid-cols-4">
               <Field label="PID" value={patient.id} />
-              <Field label="Ngày sinh" value={formatDate(patient.date_of_birth)} />
+              <Field label="Ngày sinh" value={formatOptionalClinicDate(patient.date_of_birth)} />
               <Field label="Tuổi" value={ageAt(patient.date_of_birth, referenceDate)} />
               <Field label="Giới tính" value={formatGender(patient.gender)} />
             </dl>

@@ -2,7 +2,93 @@
 
 Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nhất ở trên cùng. Cách ghi xem `.claude/skills/ghi-tai-lieu/SKILL.md`.
 
+## 2026-11-14
+
+### Một lượt khám nhiều phiên ghi âm: giao diện và nối client (Task 5 giao diện, Task 6 client, Task 7)
+- **Loại:** Tính năng, Sửa lỗi
+- **Thay đổi:**
+  - Trang chính mở qua `EncounterWorkspace`: thanh **Lượt khám** (`EncounterSwitcher`) chọn theo mã khám; chuyển lượt đi qua `recording-controller` (dừng micro, chữ cuối, chốt phiên, rồi mới tải lượt kia). Phiếu còn thay đổi chưa lưu thì chặn chuyển; còn nội dung ghi hoặc gõ chưa kiểm tra thì hiện hộp "Ở lại / Bỏ phần chưa duyệt và chuyển". Cảnh báo khi đóng tab lúc còn dữ liệu chưa lưu hoặc đang ghi âm.
+  - `clinical-api.ts` viết lại: mở lượt, danh sách, phiên ghi âm (start/heartbeat/finalize/content/recover), privacy và extract kèm `binding`, đề xuất thay đổi, duyệt theo phạm vi, đổi trạng thái.
+  - `TroLyAi.tsx`: mỗi lần kiểm tra riêng tư gắn đúng phiên (tạo phiên nhập tay nếu chưa có, tăng phiên bản nội dung khi chữ đổi), lưu bản chép lời đã kiểm tra vào phiên, rồi mới tạo bản nháp. Nút "Áp dụng bản nháp" và "Hoàn tác" được thay bằng `ClinicalChanges.tsx`: bác sĩ chấp nhận hoặc từ chối từng đề xuất cũ/mới, server áp dụng.
+  - `RecordingSessions.tsx`: lịch sử phiên (giờ, trạng thái, bản chép lời đã kiểm tra, nút bỏ phần chưa duyệt), không có nút nghe lại.
+  - `EformScreen.tsx`: duyệt theo từng phần (phiếu ban đầu, kết luận, tóm tắt, từng chỉ định) và ba nút **Chờ kết quả / Tiếp tục khám / Hoàn tất lượt khám**; chỉ in khi mọi phần đang đúng bản đã duyệt, nội dung in lấy từ hồ sơ đã lưu; bỏ "Phiếu mới".
+  - `MicButton.tsx`, `DenoisedMic.tsx`: thêm `beforeStart`, `onCaptureReady`, `onCaptureFailed`, `onStopRequest`, `onText(text, binding)`; `stop()` trả đúng lần dừng đang chạy để bên ngoài chỉ chốt phiên sau khi chữ cuối đã giao.
+  - Server: route `approve` dùng duyệt theo phạm vi; route mới `POST /api/clinical/transition`; lưu phiếu không còn đổi trạng thái sang hoặc khỏi Chờ KQ CLS và Hoàn thành khám (chỉ qua transition).
+- **Lý do:** hoàn thành chặng 1 của plan ưu tiên 1; client cũ gọi privacy/extract không kèm binding nên bị server trả 400.
+- **Sửa lỗi phát hiện khi chạy thật:** (1) route `recording` làm mất hành động của thao tác `content` vì trùng khóa `action`; nay gửi trong `content_action`. (2) Chọn mã ICD cho chẩn đoán do AI đề xuất (vai trò chưa rõ) để lại một dòng chẩn đoán thừa không mã, làm duyệt bị chặn; nay thay đúng dòng đang hiện (`src/shared/clinical/eform.ts`, có test). (3) Lưu phiếu có thể đặt thẳng "Hoàn thành khám" bỏ qua kiểm tra duyệt.
+- **File:** `src/client/clinical-api.ts`, `src/client/api.ts`, `src/client/eform/{EncounterWorkspace,EncounterSwitcher,RecordingSessions,ClinicalChanges,EformScreen,TroLyAi,BanIn}.tsx`, `src/client/eform/encounter-bridge.ts`, `src/client/chung/{MicButton,DenoisedMic}.tsx`, `src/app/page.tsx`, `src/app/api/clinical/{approve,recording,transition}/route.ts`, `src/server/clinical/service.ts`, `src/shared/clinical/eform.ts`, test `service.test.ts` và `eform.test.ts`, `README.md`, `docs/superpowers/plans/PRIORITIES.md`, plan ưu tiên 1
+- **Kiểm tra:** 195 test đạt; `npx tsc --noEmit` và `npx eslint src` sạch; `npm run clinical:check` đạt; `npm run build` đạt; `npm run eval -- --rule-only` chạy bình thường (bộ tách quy tắc không đổi). Trình duyệt (dữ liệu giả, AI mock): mở A, nhập tay, kiểm tra riêng tư, bản nháp, chấp nhận đề xuất, Chờ kết quả, chuyển B, quay lại A còn nguyên phiên và tóm tắt, Tiếp tục khám; duyệt riêng phiếu ban đầu và tóm tắt, sửa kết luận thì bản duyệt ban đầu vẫn còn; tải lại trang mở đúng hồ sơ. **Chưa kiểm tra:** thu âm bằng micro thật (máy chưa có model Zipformer), Ctrl+P xem bản in, hai tab cùng bấm ghi âm, kịch bản A1/B1/A2 qua micro.
+- **Ảnh hưởng:** trang `/` luôn mở một lượt theo mã khám (không còn "Phiếu mới", `?bs=` bị bỏ). Trang `/trinh-dien` không gắn lượt khám nên Trợ lý lâm sàng chỉ hiện thông báo. Dữ liệu local cũ có hai hồ sơ cùng mã khám sẽ báo "Có nhiều hồ sơ cho cùng mã khám"; bản trùng được chuyển sang `data/clinical/_trung-ma-kham/` (git bỏ qua). Chưa có API đọc chữ của bản chép lời đã duyệt nên lịch sử phiên chỉ hiện thông tin bản.
+- **Còn lại của plan:** Task 8 chưa nghiệm thu nên plan vẫn ở `pending`.
+
+### Một lượt khám nhiều phiên ghi âm: nền server (Task 1–6), chưa có giao diện
+
+Plan: `docs/superpowers/plans/pending/2026-11-14-interrupted-encounters.md`. Phần server và logic dùng chung đã chạy và có test; giao diện chuyển lượt (Task 7) và nghiệm thu (Task 8) chưa làm, nên plan vẫn ở `pending`.
+
+- **Đã có từ các lượt trước (nay được ghi lại):** schema 1.2 và migrator (`config/clinical/*.schema.json`, `migrations.ts`), mở đúng mã khám (`encounter-context.ts`, `repository.ts`, `data/eform/encounter-contexts.json`), duyệt theo phạm vi và snapshot (`approvals.ts`, `approval-service.ts`), phiên ghi âm và lease giữa các tab (`recording-service.ts`), privacy/extraction gắn theo `{encounter, session, content_revision}` (`bound-privacy.ts`, `reviewed-transcripts.ts`, route `privacy`/`extract`), `recording-controller.ts`.
+- **Sửa 4 test đang hỏng:**
+  - `approvals.ts`: `approvalScopeForPath` giờ chỉ nhận trường lâm sàng có trong danh sách (sinh hiệu, thông tin khác, trường lồng của dị ứng/hẹn tái khám, nội dung chỉ định/nhóm); `measured_at`, `source_system`, `review`, `created_at` không còn thuộc phạm vi duyệt nào.
+  - `recording-service.ts`: không cho bắt đầu ghi âm khi lượt đang `cho_kq_cls` (phải tiếp tục khám trước); finalize lặp lại sau khi đã dừng nhưng lỗi trước lúc đóng lease sẽ đóng lease, nhờ vậy thiết bị được giải phóng. Sửa khóa `action` bị ghi đè trong digest của yêu cầu nội dung.
+  - `privacy.test.ts`: test route cập nhật theo luồng bắt buộc `binding`; yêu cầu không có binding phải trả 400 và không cấp ticket.
+  - `recording-service.test.ts`: bỏ `require()` để lint đạt.
+- **Task 5, đề xuất thay đổi dùng chung:** `src/shared/clinical/changes.ts` thêm `proposeClinicalChanges` và `applyClinicalChanges` (id ổn định theo run, chỉ áp phần được chấp nhận, lệch giá trị gốc thì báo `StaleChangeError`, retry không lặp, ghi `change_decisions`, `ai_runs` và nguồn). `service.ts` thêm `proposeClinicalChangesForActor`/`decideClinicalChangesForActor`: server tự dựng bộ đề xuất từ run đã lưu, run chỉ mở trong đúng lượt khám đã gắn (403 nếu khác). Bỏ `ai_run_ids` khỏi lưu hồ sơ nên không còn đường tự áp AI vượt qua bước duyệt.
+- **Route mới:** `POST /api/clinical/changes` (propose/decide), `POST /api/clinical/recording` (start/heartbeat/finalize/content/recover), `POST /api/clinical/open` (mở hoặc dùng lại lượt theo mã khám), `GET /api/clinical/encounters` (danh sách đang khám và mã khám có thể mở).
+- **Kiểm tra:** `npx tsx --conditions=react-server --test "src/**/*.test.ts"` 172 đạt, 0 lỗi; `npx tsc --noEmit` và `npx eslint src` sạch; `npm run clinical:check` đạt. Chưa chạy `npm run build`, chưa kiểm tra trong trình duyệt.
+- **Chưa làm (để phiên sau; danh sách có checkbox ở cuối file plan):** `src/client/clinical-api.ts` và `TroLyAi.tsx` vẫn gọi privacy/extract không kèm binding nên sẽ bị server từ chối (400); chưa có `EncounterSwitcher`, `RecordingSessions`, `ClinicalChanges`; `EformScreen.tsx`, `BanIn.tsx` và hai microphone chưa nối với `recording-controller`; Task 8 (kịch bản nghiệm thu, build, tài liệu người dùng) chưa làm.
+
+## 2026-11-13
+
+### Kiểm chứng DeepFilterNet3 CPU local
+
+- Hoàn thiện kiểm chứng lựa chọn mặc định tắt, audio sạch cho VAD/STT, audio gốc cho diarization, session cố định mode và retry/rollback.
+- Bổ sung test DeepFilterNet kết hợp Community-1 và file dài qua ranh giới khối; 94 Python tests, 129 TypeScript tests, typecheck và lint đạt.
+- Xác nhận executable v0.5.6 đúng SHA-256, smoke native thật và benchmark 5/25/51 giây; chưa có WER. Chi tiết cài đặt, giới hạn và kết quả tại `docs/STT.md`.
+- Bỏ qua runtime/model DeepFilterNet trong Git và loại thư mục runtime/cache sinh tự động khỏi ESLint.
+
+### Community-1 local tùy chọn cho file
+
+- Thêm worker CPU riêng và lựa chọn hậu xử lý file sau Zipformer; giữ overlap/timeline, không bật cho phiên micro.
+- Tách venv PyTorch khỏi STT, guard RAM và một tác vụ; runtime inference offline/telemetry tắt.
+- Setup/download script, UI báo chưa sẵn sàng, tests API/adapter giả lập. Weights và benchmark thật chờ người dùng cấp quyền HF; Community-1 không phải khử nhiễu.
+
+### Ổn định gán người nói với model hiện có
+
+- Cập nhật hồ sơ bằng quan sát khớp mạnh; từ chối mơ hồ và không gộp hai cụm đang nói đồng thời vào cùng ID.
+- Lấy phần sạch trong lượt chồng giọng một phần; bỏ gán theo giọng gần450ms, giữ chưa rõ tại ranh giới và khoảng trống.
+- Chống cộng trùng vùng giọng và từ chối embedding bị tràn norm;60 Python tests đạt.
+- Kiểm thử model thật5+3 giây, A/B/A và rollback hồ sơ khi diarization lỗi. Chưa công bố mức tăng accuracy trên bản ghi Tim mạch chưa có nhãn.
+
+### Phân loại dữ liệu và chặn AI bên ngoài
+
+- Bệnh án đã masking vẫn cấp 2: chỉ nội bộ và bắt buộc đồng ý; cấp 3 hợp đồng/prompt mật bị chặn khỏi AI. Không tự nâng mức sau khi lọc.
+- Chặn cloud LLM và Web Speech cho luồng bệnh án; giữ mock/rules và Zipformer cục bộ.
+- Bổ sung masking tuổi/giới tính/ngày giờ, cảnh báo bệnh hiếm/tái định danh; giữ tên thuốc, số đo, liều và khoảng thời gian lâm sàng.
+- Quy tắc và giới hạn: docs/DATA-USE-POLICY.md.
+
+### Silero VAD cho micro và file
+
+- Giữ Zipformer; thêm Silero ONNX cục bộ, không thêm PyTorch. Chỉ nhận dạng khoảng lời nói và giữ timestamp bản gốc; không dùng RMS làm fallback.
+- Setup tải model kiểm SHA-256; health/start/UI kiểm tra VAD và báo thiếu/lỗi model rõ ràng.
+- Kiểm thử chọn đoạn, offset timestamp và bỏ qua khi không có lời nói; chạy smoke model thật với mẫu lời nói/khoảng lặng/nhiễu tổng hợp. Chưa kết luận mức cải thiện độ chính xác trên hội thoại lâm sàng.
+
+
+### Bỏ giới hạn tải file audio
+
+- Gỡ chặn 30 giây/20 MB ở giao diện, chuẩn hóa audio, proxy và backend STT; giữ kiểm tra định dạng và dữ liệu âm thanh hợp lệ.
+- Gỡ timeout cố định khoảng 2 phút cho nhận dạng file tải lên; vẫn cho phép hủy từ giao diện.
+- Thêm kiểm thử nhận file 31 giây và WAV 660 giây (>20 MB), cùng kiểm thử proxy chuyển đủ dữ liệu.
+
 ## 2026-11-12
+
+### Luồng clinical task 2–5: JSON, riêng tư, AI, lưu và duyệt
+
+- **Phạm vi:** Phiếu khám ngoại trú TMH và chỉ định dịch vụ. Kê đơn do bác sĩ thực hiện riêng; tạm hoãn cải tiến phân tách giọng và chờ ghi âm phòng khám.
+- **Dữ liệu:** `config/clinical` là nguồn schema 1.1.0, có TypeScript sinh tự động, validator, adapter hai màn và repository JSON ghi nguyên tử/kiểm revision/lưu lịch sử. Clinical và private data được gitignore.
+- **Riêng tư/AI:** Lọc text cục bộ và server, ticket chờ kiểm tra thủ công trước model; trích xuất có schema, quote/role/số/bên/phủ định và chống Rx lọt vào text tự do. Lưu artifact đã lọc, retry có giới hạn và không gọi lại khi provider lỗi. Endpoint raw `/api/extract` trả 410.
+- **Giao diện:** Xem transcript và nháp, áp dụng có kiểm soát, giữ sửa tay; Lưu nháp và Lưu phiếu/chỉ định dùng cùng API, tải lại theo URL hồ sơ. Có giai đoạn chẩn đoán kèm, bên/vị trí dịch vụ và thông tin chung chỉ định. Duyệt phía server, chỉ in bản đã duyệt; sửa tiếp làm mất hiệu lực duyệt.
+- **Tích hợp:** Gom root `app` STT vào `src/app` để tránh Next.js bỏ qua eForm. Giữ engine STT hiện có.
+- **Xác minh:** 113 test đạt; typecheck, lint, schema check và production build đạt. Chrome headless kiểm luồng privacy → mock → áp dụng → lưu/tải lại → duyệt/in và chặn in sau sửa, không lỗi JavaScript. Chưa gọi model trả phí hay kiểm chất lượng trên ghi âm thật.
+- **Giới hạn:** Dữ liệu giả, chưa có auth/HIS thật; bộ lọc quy tắc cần kiểm tra thủ công, chưa phải khử định danh tự động đã kiểm định. Hướng dẫn: `docs/CLINICAL-WORKFLOW.md`.
 
 ### Phiếu mẫu theo bệnh (9/9): sửa lỗi sau review
 - **Loại:** Sửa lỗi

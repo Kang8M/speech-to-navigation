@@ -4,6 +4,14 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-14
 
+### Chuyển trang và API thử nghiệm STT từ `app/` sang `src/app/`
+- **Loại:** Dọn dẹp
+- **Thay đổi:** di chuyển nguyên văn (nội dung không đổi) `app/stt/page.tsx` và `app/api/stt/{route.ts,session/route.ts,session/[id]/route.ts}` sang `src/app/...`.
+- **Lý do:** dự án có thư mục `src/app`, Next.js chỉ dùng một thư mục `app`, nên các route đặt ở `app/` ở gốc không được phục vụ.
+- **File:** `app/stt/page.tsx`, `app/api/stt/route.ts`, `app/api/stt/session/route.ts`, `app/api/stt/session/[id]/route.ts` (xóa) và các file cùng tên dưới `src/app/` (thêm).
+- **Kiểm tra:** so sánh từng file cũ với file mới: giống nhau ngoài ký tự xuống dòng; `npm run build` liệt kê `/stt`, `/api/stt`, `/api/stt/session`, `/api/stt/session/[id]`.
+- **Ảnh hưởng:** đường dẫn trang và API không đổi; chỉ thay vị trí file.
+
 ### Một lượt khám nhiều phiên ghi âm: giao diện và nối client (Task 5 giao diện, Task 6 client, Task 7)
 - **Loại:** Tính năng, Sửa lỗi
 - **Thay đổi:**

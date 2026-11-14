@@ -2,7 +2,7 @@
 
 Chạy `npx next dev -p 3101`, mở `http://localhost:3101/dashboard` bằng Playwright (Chromium). Dữ liệu giả trong `data/clinic/`, ngày thử là 14/11/2026 (ngày chạy). Ảnh chụp lưu ngoài repo. Chỉ ghi PASS khi đã chạy thật.
 
-Phạm vi file này: Task 3 (dashboard) và Task 4 (popup lịch hẹn) của plan Dashboard và Bệnh nhân, ứng với nghiệm thu 1, 2, 3, 8 của thiết kế. Nghiệm thu 4 đến 7 thuộc hồ sơ bệnh nhân và nút tạo phiếu (Task 5, 6), chưa nằm ở đây.
+Phạm vi file này: Task 3 (dashboard) và Task 4 (popup lịch hẹn) của plan Dashboard và Bệnh nhân, ứng với nghiệm thu 1, 2, 3, 8 của thiết kế. Phần màn bệnh nhân (nghiệm thu 4 đến 7 của thiết kế, Task 5) nằm ở mục "Màn bệnh nhân" bên dưới.
 
 ## Task 3: Dashboard
 
@@ -22,7 +22,7 @@ Phạm vi file này: Task 3 (dashboard) và Task 4 (popup lịch hẹn) của pl
 | 3.12 | Nhãn "Bây giờ" hiện khi xem hôm nay (14:58 lúc chụp) | PASS; bị ẩn khi xem 15/11 (calendar, không có "Bây giờ") |
 | 3.13 | Chú giải trạng thái đủ 9 mục, mỗi mục có nhãn chữ, luôn nằm trên cả list và calendar | PASS (ảnh `cal-1440.png`) |
 | 3.14 | Không tràn ngang: 1440 (scrollWidth 1425 so với 1440 viewport), 1024 (1009 so với 1024), 390 (375 so với 390), cả list và calendar ở 390 | PASS (chênh lệch là thanh cuộn) |
-| 3.15 | Nút Ngày trước / Hôm nay / Ngày sau / chọn ngày / Làm mới | PASS: Ngày sau chuyển 14 sang 15/11 (N=1, giữ view=calendar), Hôm nay quay về 14/11; nạp trực tiếp ?date=2026-11-13 đúng. Chưa thử Ngày trước, ô chọn ngày, Làm mới |
+| 3.15 | Nút Ngày trước / Hôm nay / Ngày sau / chọn ngày / Làm mới | PASS: Ngày sau chuyển 14 sang 15/11 (N=1, giữ view=calendar), Hôm nay quay về 14/11; nạp trực tiếp ?date=2026-11-13 đúng. Ngày trước và Làm mới đã thử, xem mục "Dashboard: đối chiếu bổ sung"; ô chọn ngày chưa thử |
 | 3.16 | Đổi Danh sách / Lịch theo giờ cập nhật URL (`view=`) | PASS: bấm "Lịch theo giờ" đổi URL thành ?date=2026-11-14&view=calendar |
 | 3.17 | Response làm mới của ngày A không ghi đè ngày B | Chưa kiểm trong trình duyệt. Cơ chế: mỗi ngày là một thể hiện (`key`), request bị hủy khi rời ngày và có số thứ tự |
 | 3.18 | Lỗi và đang tải (`error.tsx`, `loading.tsx`) | Chưa kiểm |
@@ -42,8 +42,54 @@ Phạm vi file này: Task 3 (dashboard) và Task 4 (popup lịch hẹn) của pl
 | 4.7 | Click vùng nội dung không đóng; click nền (click có target là chính `<dialog>`) đóng | PASS nhưng bằng sự kiện tổng hợp, chưa nhấp chuột thật vào ::backdrop |
 | 4.8 | Lỗi tải (giả lập 500 một lần) hiện lỗi và nút Thử lại; Thử lại tải được | PASS |
 | 4.9 | Link "Xem thông tin bệnh nhân" khi có lượt trước; "Thông tin bệnh nhân" kèm "Chưa có lịch sử khám" khi chưa có | PASS: LK-000001 và LK-000004 thuộc nhóm đầu; LK-000007 (PID 000125) hiện nhánh thứ hai |
-| 4.10 | Link `/benh-nhan/000123?appointment_id=LK-000001&return_to=%2Fdashboard%3Fdate%3D2026-11-14%26view%3Dlist` | PASS về href; chưa bấm đi vì trang bệnh nhân do việc khác |
+| 4.10 | Link `/benh-nhan/000123?appointment_id=LK-000001&return_to=%2Fdashboard%3Fdate%3D2026-11-14%26view%3Dlist` | PASS: đã bấm và tới đúng trang (xem D.1 bên dưới) |
 | 4.11 | Nút Tạo/Mở phiếu khám tắt kèm "Chờ nền ca khám nhiều phiên (ưu tiên 1)"; ca hủy không có nút | PASS |
 | 4.12 | Popup 390px gần toàn màn hình, đọc được | PASS (ảnh `dialog-390.png`) |
 | 4.13 | Nội dung rất dài; slow fetch A rồi B | Chưa kiểm. Popup là modal nên không mở B khi A còn mở; chống kết quả muộn bằng khóa `id#lần thử` và AbortController, chưa thử có độ trễ |
 | 4.14 | Click nền bằng chuột thật, Shift+Tab, Tab quay vòng qua phần tử cuối | Chưa kiểm |
+
+## Màn bệnh nhân (kiểm ngày 2026-11-14, Task 5 phần đã làm)
+
+Chạy trên `http://localhost:3101` bằng Playwright (Chromium), dữ liệu giả trong `data/clinic/`. Kết quả đọc từ accessibility snapshot và `innerText` của trang thật. Không có ảnh chụp lưu trong repo; snapshot tạm đã xóa sau khi ghi kết quả.
+
+| # | Kiểm tra | Kết quả |
+| --- | --- | --- |
+| 5.1 | `/benh-nhan/000123?appointment_id=LK-000001&return_to=%2Fdashboard%3Fdate%3D2026-11-14%26view%3Dlist`: BHYT "Có tham gia" (BHYT Mẫu · Mức 80%, mã MAU-0001, hiệu lực 01/01/2026 – 31/12/2026); bảo lãnh "Không tham gia"; tuổi 25 khi sinh 15/11/2000 và đối chiếu 14/11/2026 | PASS |
+| 5.1b | Link "← Về dashboard" giữ ngày/view (`/dashboard?date=2026-11-14&view=list`); đã bấm, quay về đúng ngày và view | PASS |
+| 5.1c | Nút "Tạo phiếu khám" tắt, có chú thích "Chờ nền ca khám nhiều phiên (ưu tiên 1)" | PASS |
+| 5.1d | Lịch sử giảm dần: 14/11/2026 10:00, 20/10/2026 09:00, 05/09/2026 14:30; nút "Xem phiếu" tắt | PASS |
+| 5.2 | `/benh-nhan/000124`: BHYT "Không tham gia"; bảo lãnh "Hết hạn" (hiệu lực 01/06/2026 – 31/10/2026, trước 14/11/2026); tuổi "2 tháng" (sinh 14/09/2026) | PASS |
+| 5.3 | `/benh-nhan/000125`: ngày sinh, tuổi, giới tính đều "Chưa có thông tin"; BHYT và bảo lãnh cũng "Chưa có thông tin" | PASS |
+| 5.4 | `/benh-nhan/999999` và `/benh-nhan/000123?appointment_id=XXX`: đều hiện "Không tìm thấy bệnh nhân" và link về dashboard, không có dữ liệu giả | PASS |
+| 5.5 | `/benh-nhan/000123?return_to=https://evil.example`: link "← Về dashboard" có href `/dashboard` | PASS |
+| 5.6 | Không tràn ngang trên `/benh-nhan/000123`: 1440px (scrollWidth 1440 = clientWidth), 1024px (1024 = 1024), 390px (375 = 375). Chỉ kiểm trang bệnh nhân, không kiểm lại dashboard ở 390px trong lượt này | PASS |
+| 5.6b | Lịch sử rỗng (`/benh-nhan/000125`) hiện "Chưa có lịch sử khám" | PASS |
+| 5.7 | Network trên `/benh-nhan/000123`: chỉ GET (trang, `_next` asset, font). Không POST, không gọi `/api/*`, không gọi mic hay AI | PASS |
+
+Chú ý: Playwright không tạo lượt tải dữ liệu từ API cho trang bệnh nhân, vì trang gọi thẳng service ở server (RSC), nên không có request `/api/clinic/patients/*` nào trên trang này.
+
+### Dashboard: đối chiếu bổ sung (mục 7 của lượt này)
+
+| # | Kiểm tra | Kết quả |
+| --- | --- | --- |
+| D.1 | Dashboard `date=2026-11-14&view=list` → bấm dòng LK-000001 → popup → "Xem thông tin bệnh nhân" đi tới `/benh-nhan/000123?appointment_id=LK-000001&return_to=...`, tiêu đề "Bệnh nhân Mẫu A" | PASS |
+| D.1b | Từ màn bệnh nhân bấm "Về dashboard" quay về `/dashboard?date=2026-11-14&view=list` | PASS |
+| D.2 | "‹ Ngày trước": 14/11 sang 13/11, giữ `view=list`. Ngày 13/11: tổng 1, Còn lại 1/1 (LK-000009 16:00, PID 000126), Đang khám/chờ kết quả 1/1, khối ngày trước "0 ca" (không lặp ca) | PASS |
+| D.3 | Nút "Làm mới": có request `GET /api/clinic/dashboard?date=2026-11-13` trả 200. Nhãn "Cập nhật lúc" vẫn 15:06 vì cùng phút, nên không phân biệt được thời điểm làm mới | Một phần: gọi lại được, cập nhật nhãn thời gian không kiểm được trong cùng phút |
+| D.4 | Chuyển "Lịch theo giờ" đổi URL thành `view=calendar`, nút có `aria-pressed=true` | PASS |
+| D.5 | Mốc 12:00 (nhóm Sáng/Chiều): giờ hẹn trong fixture là 08:00, 08:30, 09:00, 10:00, 13:30, 14:00, 15:00, 16:00 (13/11 và 14/11). Không có 11:59 hay 12:00 | Không có dữ liệu để kiểm. Đã có test đơn vị `layout.test.ts` và `schedule.test.ts` |
+| D.6 | "Xem tất cả" khi khối có hơn 5 dòng: không khối nào trong các ngày đã xem (13/11, 14/11) có hơn 5 dòng | Fixture không có. Logic `items.slice(0, 5)` chưa chạy nút |
+| D.7 | Ô "Chọn ngày" (textbox) | Chưa thử trong lượt này |
+
+## Chưa kiểm (tổng hợp, tính đến 2026-11-14)
+
+- 3.4, D.6: "Xem tất cả" trên khối lớn hơn 5 dòng (fixture không có).
+- 3.10, D.5: mốc 12:00 với ca thật ở 11:59 và 12:00 (fixture không có).
+- 3.17: làm mới với hai ngày chạy đua, response cũ không ghi đè (chưa có độ trễ giả lập).
+- 3.18: trạng thái lỗi và đang tải của dashboard (`error.tsx`, `loading.tsx`).
+- 4.13: slow fetch A rồi B trong popup (chưa có độ trễ giả lập).
+- 4.14: click nền bằng chuột thật vào `::backdrop`, Shift+Tab, Tab quay vòng qua phần tử cuối.
+- D.3: làm mới thấy nhãn "Cập nhật lúc" đổi (cần chờ qua phút khác hoặc đọc thời gian từ response).
+- D.7: ô chọn ngày.
+- 5.6 ở 390px cho trang bệnh nhân với lịch sử dài (chỉ có 3 dòng ở fixture).
+- Nút Tạo phiếu khám và Xem phiếu không bấm được, đúng theo thiết kế của lượt này.

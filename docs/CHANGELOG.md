@@ -4,6 +4,18 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-14
 
+### Kiểm tra trình duyệt màn bệnh nhân và đối chiếu dashboard (kiểm thử)
+- **Loại:** Tài liệu
+- **Thay đổi:**
+  - Chạy `next dev -p 3101` và kiểm bằng Playwright (Chromium) trên dữ liệu giả: `/benh-nhan/000123` (có lịch, BHYT có tham gia, bảo lãnh không tham gia), `/benh-nhan/000124` (bảo lãnh hết hạn, tuổi tính bằng tháng), `/benh-nhan/000125` (thiếu thông tin, lịch sử rỗng), `/benh-nhan/999999` và `appointment_id=XXX` (không tìm thấy), `return_to` ra ngoài (link về `/dashboard`).
+  - Đối chiếu dashboard: popup LK-000001 → "Xem thông tin bệnh nhân" → "Về dashboard" giữ ngày và view; "Ngày trước" sang 13/11 giữ view; "Làm mới" gọi lại API; chuyển "Lịch theo giờ".
+  - Ghi kết quả PASS/FAIL/chưa kiểm vào `docs/testing/2026-11-14-dashboard-patient.md`: mục "Màn bệnh nhân", mục "Dashboard: đối chiếu bổ sung" và mục "Chưa kiểm" tổng hợp. Sửa câu phạm vi và hai dòng cũ (3.15, 4.10) cho khớp.
+  - Không sửa code ứng dụng.
+- **Lý do:** Nghiệm thu trình duyệt cho màn bệnh nhân (Task 5) và các mục dashboard còn thiếu, theo yêu cầu kiểm tra thật trước khi báo xong.
+- **File:** `docs/testing/2026-11-14-dashboard-patient.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** Đã chạy thật trên `http://localhost:3101`: 1440, 1024 và 390px không tràn ngang trên trang bệnh nhân; Network trang bệnh nhân chỉ có GET. Các mục không kiểm được (fixture không có ca 11:59/12:00 và khối quá 5 dòng; slow fetch; click nền bằng chuột thật) ghi rõ trong tài liệu, không ghi PASS.
+- **Ảnh hưởng:** Không đổi code. Bug phát hiện trong lượt này: không có.
+
 ### Gộp badge trạng thái và định dạng ngày của màn bệnh nhân vào bản dùng chung (refactor)
 - **Loại:** Dọn dẹp
 - **Thay đổi:**

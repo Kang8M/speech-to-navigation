@@ -67,5 +67,5 @@ Triển khai theo thứ tự task của plan WER CLI:
 | Plan | Người phụ trách | Trạng thái tại 14/11/2026 | Blocker cần theo dõi |
 | --- | --- | --- | --- |
 | Nhiều phiên ghi âm | Chưa phân công | Đang triển khai — Task 1–7 xong, còn Task 8 nghiệm thu | Kiểm chứng micro thật và kịch bản hai bệnh nhân |
-| Dashboard và bệnh nhân | Chưa phân công | Pending — bố cục/cách tính đã chốt, chi tiết chờ duyệt | Duyệt chi tiết; phụ thuộc nhiều phiên trước Task 6 |
+| Dashboard và bệnh nhân | Chưa phân công | Đang triển khai (16/11/2026) — Task 1–6 xong, còn Task 7 nghiệm thu | Kiểm hai tab mở cùng lúc, rời eForm khi còn micro, mốc 12:00 |
 | WER CLI | Chưa phân công | Pending — chưa triển khai | Xếp lịch kiểm chứng native/micro khi tới bước bàn giao |

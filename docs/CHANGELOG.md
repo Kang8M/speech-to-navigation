@@ -2,6 +2,22 @@
 
 Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nhất ở trên cùng. Cách ghi xem `.claude/skills/ghi-tai-lieu/SKILL.md`.
 
+## 2026-11-16
+
+### Dashboard và màn bệnh nhân nối với phiếu khám thật: xem phiếu cũ, mở/tiếp tục phiếu
+- **Loại:** Tính năng
+- **Thay đổi:**
+  - Dữ liệu dashboard (`data/clinic/`) đổi sang định danh của lớp clinical (cơ sở `facility-prototype`, bác sĩ `user_bs01`/`user_bs02`, PID `GIA-*`, mã lượt `LK-GIA-*`). Bộ 8 ca cũ (CS01, BS01, 000123...) chuyển sang `data/clinic-test/`, chỉ dùng cho test.
+  - Dashboard và màn bệnh nhân đọc phiếu thật: `src/server/clinic/clinical-source.ts` đọc `data/clinical/encounters` cùng 4 phiếu cũ giả trong `data/clinic/history/` (tạo bằng `npm run tao-lich-su-clinic`; script này cũng thêm ngữ cảnh khám `LK-GIA-0458` cho bệnh nhân mới vào `data/eform/encounter-contexts.json`). Actor lấy từ `getDemoClinicalActor()`, bỏ `demoActor` cố định.
+  - Chính sách mở phiếu một nơi (`appointment-context.ts`): `AppointmentItem` có `can_open` và `open_reason` (`eligible`, `cancelled`, `future`, `terminal`, `unknown`, `no_context`). `eligibleAppointments` của màn bệnh nhân lọc theo đúng chính sách này, thay điều kiện tạm trước đó.
+  - Task 5: API `GET /api/clinic/patients/[id]/encounters/[encounterId]` trả phiếu cũ đã chiếu chỉ đọc (`projection.ts`, không có transcript, lần chạy AI hay nguồn dữ liệu); nút "Xem phiếu" mở popup toàn phiếu có Mới hơn/Cũ hơn, bỏ kết quả muộn.
+  - Task 6: `POST /api/clinic/appointments/[id]/open` kiểm lại quyền và chính sách ở server rồi mở/dùng lại phiếu qua `openEncounter` của lớp clinical. Nút "Mở/Tiếp tục phiếu khám" (popup lịch hẹn) và "Tạo phiếu khám" (màn bệnh nhân, có hộp chọn khi nhiều lịch) chuyển sang `/?ho_so=<mã>`. Thêm `findEncounterContextIdentity` vào `encounter-context.ts` (tra định danh nhẹ, không dựng dữ liệu phiếu).
+  - Test dùng `src/server/clinic/testing.ts` (kho fixture và actor CS01/BS01); `setClinicRepositoryForTest`, `setClinicActorForTest` cho test route.
+- **Lý do:** hai bộ dữ liệu (dashboard và phiếu khám) không khớp định danh nên không mở được phiếu hay xem phiếu cũ; yêu cầu hoàn thiện plan Dashboard và bệnh nhân sau khi gộp nhánh.
+- **File:** `data/clinic/*`, `data/clinic/history/*`, `data/clinic-test/*`, `data/eform/encounter-contexts.json`, `scripts/tao-lich-su-clinic.ts`, `package.json`, `src/server/clinic/{ports,clinical-source,demo-actor,repository,service,appointment-context,open,testing,errors}.ts`, `src/server/clinic/{open,service,repository}.test.ts`, `src/app/api/clinic/**`, `src/app/{dashboard,benh-nhan}/**` (đổi actor), `src/server/clinical/encounter-context{,.test}.ts`, `src/shared/clinic/{types,projection,projection.test,schedule.test,layout.test}.ts`, `src/client/clinic/{api,open-appointment,open-appointment.test,OpenAppointmentButton,AppointmentActions}`, `src/client/patient/{PatientScreen,EncounterHistory,EncounterHistoryDialog,HistoricalEncounterView,AppointmentPicker,CreateEncounter}.tsx`.
+- **Kiểm tra:** `npm test` 267 đạt; `npx tsc --noEmit` sạch; `npx eslint src` 0 lỗi. Trình duyệt (`next dev -p 3101`, mở bằng `localhost`): dashboard 16/11 đúng số liệu và ca chờ từ hôm trước; bấm "Mở phiếu khám" ở LK-GIA-0457 tạo hồ sơ và eForm hiện đúng "Nguyễn Thị Giả · LK-GIA-0457"; màn bệnh nhân GIA-000123: "Xem phiếu" mở phiếu 20/10, Mới hơn/Cũ hơn đúng (2/3, 3/3), chỉ có request GET; không chọn lịch thì "Tạo phiếu khám" hiện hộp chọn 2 lịch. `npm run clinical:check` báo "Clinical types are stale" cả khi chưa có thay đổi này (đã thử bằng `git stash`), không do thay đổi này.
+- **Ảnh hưởng:** dashboard mặc định hiện lịch cố định 15–17/11/2026 (không tự dịch theo ngày chạy; ngày khác dùng `?date=`). Hãy mở bằng `localhost`: với `next dev -H 127.0.0.1` truy cập bằng `127.0.0.1` thì lớp clinical trả "Nguồn yêu cầu không hợp lệ". Chưa kiểm: hai tab mở cùng lúc, rời eForm khi còn micro/chưa lưu, phiếu cũ đã duyệt (nhãn "Đã duyệt"), mốc 12:00 và khối trên 5 dòng.
+
 ## 2026-11-14
 
 ### Chuyển trang và API thử nghiệm STT từ `app/` sang `src/app/`

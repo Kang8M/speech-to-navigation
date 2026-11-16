@@ -45,6 +45,12 @@ export function getDemoClinicalActor(): ClinicalActor {
   return { doctorId: "user_bs01", facilityId: "facility-prototype" };
 }
 
+/** Tra nhanh định danh của ngữ cảnh theo mã lịch, không dựng dữ liệu phiếu; null nếu cơ sở này không có. */
+export function findEncounterContextIdentity(facilityId: string, appointmentId: string): { appointmentId: string; patientId: string; facilityId: string; doctorId: string } | null {
+  const item = loadContexts().find(row => row.appointment_id === appointmentId && row.facility_id === facilityId);
+  return item ? { appointmentId: item.appointment_id, patientId: item.patient_id, facilityId: item.facility_id, doctorId: item.doctor_id } : null;
+}
+
 export function resolveEncounterContext(actor: ClinicalActor, appointmentId: string): EncounterContext {
   const contexts = loadContexts();
   const item = contexts.find(row => row.appointment_id === appointmentId && row.facility_id === actor.facilityId);

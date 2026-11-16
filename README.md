@@ -58,7 +58,9 @@ Sao chép `.env.example` thành `.env.local`, rồi sửa:
 | `openai` | `OPENAI_API_KEY`, `OPENAI_MODEL` | Trả JSON theo schema, sai schema thì thử lại 1 lần. |
 | `gemini` | `GEMINI_API_KEY`, `GEMINI_MODEL` | Key lấy ở Google AI Studio. Trả JSON theo schema (`responseJsonSchema`), sai schema thì thử lại 1 lần. Key miễn phí nên đặt `GEMINI_MODEL=gemini-3.5-flash-lite` (khoảng 2–3 giây/lượt). Gemma 4 (`gemma-4-31b-it`, `gemma-4-26b-a4b-it`) mất 75–85 giây/lượt và hay lỗi 500. `gemini-3.8-flash` với mức suy nghĩ mặc định bị 504 sau khoảng 90 giây. |
 
-Các trang `/dashboard`, `/benh-nhan/...` và API `/api/clinic/*` chỉ kiểm header Host/Origin/Sec-Fetch-Site (chặn trình duyệt gọi chéo origin và DNS rebinding); client không phải trình duyệt tự đặt được Host nên không bị chặn. Muốn máy khác trong mạng không vào được, chạy `npx next dev -H 127.0.0.1` (đừng dùng `-H 0.0.0.0`).
+Các trang `/dashboard`, `/benh-nhan/...` và API `/api/clinic/*` chỉ kiểm header Host/Origin/Sec-Fetch-Site (chặn trình duyệt gọi chéo origin và DNS rebinding); client không phải trình duyệt tự đặt được Host nên không bị chặn. Muốn máy khác trong mạng không vào được, chạy `npx next dev -H 127.0.0.1` (đừng dùng `-H 0.0.0.0`), nhưng hãy mở trang bằng `localhost`: eForm gọi guard của lớp clinical và báo "Nguồn yêu cầu không hợp lệ" nếu truy cập bằng `127.0.0.1`.
+
+Dashboard (`/dashboard`) và hồ sơ bệnh nhân (`/benh-nhan/<PID>`) đọc phiếu khám thật của lớp clinical (`data/clinical/encounters`) cùng 4 phiếu cũ giả trong `data/clinic/history/` (tạo lại bằng `npm run tao-lich-su-clinic`). Lịch, bệnh nhân và danh bạ nằm ở `data/clinic/`, cùng định danh với `data/eform/encounter-contexts.json`; lịch chỉ mở được phiếu khi có ngữ cảnh khám tương ứng. Từ popup lịch hẹn hoặc màn bệnh nhân bấm "Mở phiếu khám" để sang eForm đúng bệnh nhân; "Xem phiếu" ở lịch sử mở toàn bộ phiếu cũ ở chế độ chỉ đọc. Bộ 8 ca dùng cho test nằm ở `data/clinic-test/`.
 
 Khởi động lại `npm run dev` sau khi sửa `.env.local`. Header của ứng dụng hiện chế độ đang dùng.
 

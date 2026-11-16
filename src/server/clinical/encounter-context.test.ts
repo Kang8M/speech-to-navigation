@@ -25,7 +25,7 @@ test("server contexts replace complete patient data and preserve leading zero ap
   b.data.ca.ho_ten = "changed";
   assert.equal(resolveEncounterContext(actor, "000123").data.ca.ho_ten, "Trần Văn Mô Phỏng");
   assert.deepEqual(loadEformData().ca, a.data.ca);
-  assert.equal(listEncounterContexts(actor).length, 3);
+  assert.equal(listEncounterContexts(actor).length, 4); // thêm LK-GIA-0458 (bệnh nhân mới) cho dashboard
 });
 
 test("context authorization uses server doctor and facility, never patient identifiers", () => {

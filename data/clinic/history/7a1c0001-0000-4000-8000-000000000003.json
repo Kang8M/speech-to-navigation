@@ -1,0 +1,150 @@
+{
+  "schema_version": "1.2.0",
+  "id": "7a1c0001-0000-4000-8000-000000000003",
+  "revision": 1,
+  "patient_id": "GIA-000456",
+  "appointment_id": "LK-GIA-0450",
+  "facility_id": "facility-prototype",
+  "department_id": "tmh",
+  "room_id": null,
+  "bed_id": null,
+  "examiner_id": "user_bs01",
+  "primary_doctor_id": "user_bs01",
+  "delegated_doctor_id": null,
+  "encounter_at": "2026-11-15T09:00:00+07:00",
+  "referral_source": null,
+  "status": "hoan_thanh_kham",
+  "tuoi_thang_tai_kham": null,
+  "sinh_hieu": {
+    "mach": {
+      "value": null,
+      "unit": null
+    },
+    "nhiet_do": {
+      "value": null,
+      "unit": null
+    },
+    "ha_tam_thu": {
+      "value": null,
+      "unit": null
+    },
+    "ha_tam_truong": {
+      "value": null,
+      "unit": null
+    },
+    "spo2": {
+      "value": null,
+      "unit": null
+    },
+    "nhip_tho": {
+      "value": null,
+      "unit": null
+    },
+    "chieu_cao": {
+      "value": null,
+      "unit": null
+    },
+    "can_nang": {
+      "value": null,
+      "unit": null
+    },
+    "bmi": {
+      "value": null,
+      "unit": null
+    },
+    "measured_at": null,
+    "source_system": null,
+    "source_record_id": null
+  },
+  "phieu_kham": {
+    "ly_do_kham": "Đau họng, ho",
+    "benh_su": "Đau họng 2 ngày, ho khan, sốt nhẹ.",
+    "tien_su_ban_than": null,
+    "tien_su_gia_dinh": null,
+    "di_ung": {
+      "trang_thai": "chua_de_cap",
+      "loai": [],
+      "mo_ta": null
+    },
+    "co_thuoc_dang_dung": null,
+    "thuoc_dang_dung": [],
+    "co_pttt": null,
+    "kham_toan_than": "Tỉnh, tiếp xúc tốt.",
+    "kham_chuyen_khoa": {
+      "mo_ta": "Họng đỏ, amidan quá phát độ II, không mủ.",
+      "tai": null,
+      "mui": null,
+      "vom": null,
+      "hong": null
+    },
+    "kham_khac": null,
+    "ghi_chu_ket_qua": null,
+    "da_xu_ly": null,
+    "huong_dieu_tri": "Súc họng nước muối, uống nhiều nước.",
+    "loi_dan": null,
+    "hen_tai_kham": {
+      "co_hen": null,
+      "nguyen_van": null,
+      "sau_bao_lau": {
+        "value": null,
+        "unit": null
+      },
+      "ngay_cu_the": null
+    },
+    "tinh_trang_ra_vien": null
+  },
+  "chan_doan": [
+    {
+      "id": "7a1c0001-0000-4000-8000-0000000000d1",
+      "noi_dung": {
+        "giai_doan": "ra_vien",
+        "mo_ta": "Viêm họng cấp",
+        "muc_do_khang_dinh": "xac_dinh",
+        "vai_tro": "chinh"
+      },
+      "icd": {
+        "catalog_id": null,
+        "code_system": "ICD-10",
+        "code": "J02.9",
+        "display": "Viêm họng cấp",
+        "catalog_version": null,
+        "trang_thai": "bac_si_chon",
+        "ung_vien_ids": []
+      },
+      "review": {
+        "trang_thai": "chua_duyet",
+        "reviewer_id": null,
+        "reviewed_at": null
+      }
+    }
+  ],
+  "lich_su": [],
+  "danh_gia_ban_dau": [],
+  "ket_qua": [],
+  "dong_bo_cls_luc": null,
+  "chi_dinh": {
+    "de_cap": "khong_chi_dinh",
+    "items": [],
+    "groups": []
+  },
+  "thong_tin_khac": {
+    "chuyen_noi_soi": null,
+    "xn_benh_tat": null,
+    "xn_bhxh": null,
+    "xn_me": null
+  },
+  "ai_runs": [],
+  "nguon_du_lieu": [],
+  "audit": {
+    "created_at": "2026-11-15T09:00:00+07:00",
+    "created_by": "user_bs01",
+    "updated_at": "2026-11-15T09:00:00+07:00",
+    "updated_by": "user_bs01",
+    "approved_at": null,
+    "approved_by": null
+  },
+  "tom_tat": "Viêm họng cấp, hẹn tái khám (dữ liệu giả)",
+  "recording_sessions": [],
+  "approval_versions": [],
+  "change_decisions": []
+}

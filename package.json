@@ -18,6 +18,7 @@
     "cao-du-lieu": "tsx scripts/cao-du-lieu.ts",
     "tai-model-giong-noi": "tsx scripts/tai-model-giong-noi.ts",
     "tao-am-thanh-mau": "tsx --conditions=react-server scripts/tao-am-thanh-mau.ts",
+    "tao-lich-su-clinic": "tsx --conditions=react-server scripts/tao-lich-su-clinic.ts",
     "eval-giong-noi": "tsx --conditions=react-server scripts/eval-giong-noi.ts"
   },
   "dependencies": {

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import fs from "node:fs";
-import { getDemoClinicalActor, resolveEncounterContext, listEncounterContexts, validateEncounterContexts } from "./encounter-context";
+import { createWalkInContext, getDemoClinicalActor, resolveEncounterContext, listEncounterContexts, validateEncounterContexts } from "./encounter-context";
 import { loadEformData } from "@/server/du-lieu/eform";
 import { ClinicalError } from "./repository";
 
@@ -49,4 +49,21 @@ test("fixture validation rejects identity corruption, duplicate appointments and
   const otherFacility = fixture(); const other = structuredClone(otherFacility.contexts[0]); other.facility_id = "second";
   otherFacility.contexts.push(other);
   assert.doesNotThrow(() => validateEncounterContexts(otherFacility));
+});
+
+test("khám mới tạo ngữ cảnh riêng cho đúng bệnh nhân, mỗi lần một mã, và từ chối bệnh nhân không có hồ sơ mẫu", () => {
+  const actor = getDemoClinicalActor();
+  const made: string[] = [];
+  try {
+    const a = createWalkInContext(actor, "GIA-000123");
+    const b = createWalkInContext(actor, "GIA-000123");
+    made.push(a.appointmentId, b.appointmentId);
+    assert.notEqual(a.appointmentId, b.appointmentId);
+    assert.equal(a.patientId, "GIA-000123");
+    assert.deepEqual(a.data.ca.gia_tri, {});
+    assert.equal(resolveEncounterContext(actor, a.appointmentId).patientId, "GIA-000123");
+    assert.throws(() => createWalkInContext(actor, "GIA-KHONG-CO"), (error: unknown) => error instanceof ClinicalError && error.status === 409);
+  } finally {
+    for (const id of made) fs.rmSync(`data/clinical/walk-in-contexts/${id}.json`, { force: true });
+  }
 });

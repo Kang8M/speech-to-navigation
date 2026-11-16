@@ -1,6 +1,7 @@
 import "server-only";
 import fs from "node:fs";
 import path from "node:path";
+import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import type { ClinicalActor, EncounterContext } from "@/shared/clinical/api";
 import type { Encounter } from "@/shared/clinical/types";
@@ -17,9 +18,11 @@ const caSchema = z.object({
   lich_su: z.object({ tien_su_ban_than: z.array(history), tien_su_gia_dinh: z.array(history), benh_su: z.array(history), di_ung: z.array(z.object({ ngay: z.string(), loai_phieu: z.string(), loai: z.string(), thong_tin: z.string(), nguoi: z.string() })) }),
   xet_nghiem: result, chan_doan_hinh_anh: result, can_lam_sang: result, dong_bo_cls: z.string(), gia_tri: z.record(z.string(), z.string()),
 }).passthrough();
-const fixtureSchema = z.object({ version: z.literal(1), synthetic: z.literal(true), contexts: z.array(z.object({
+const contextSchema = z.object({
   appointment_id: z.string().min(1), patient_id: z.string().min(1), facility_id: z.string().min(1), doctor_id: z.string().min(1), age_months: z.number().int().positive(), ca: caSchema,
-})) });
+});
+const fixtureSchema = z.object({ version: z.literal(1), synthetic: z.literal(true), contexts: z.array(contextSchema) });
+type ContextRow = z.infer<typeof contextSchema>;
 
 export function validateEncounterContexts(value: unknown) {
   const fixture = fixtureSchema.parse(value);
@@ -37,8 +40,47 @@ export function validateEncounterContexts(value: unknown) {
   return fixture;
 }
 
-function loadContexts() {
-  return validateEncounterContexts(JSON.parse(fs.readFileSync(path.join(/*turbopackIgnore: true*/ process.cwd(), "data", "eform", "encounter-contexts.json"), "utf8"))).contexts;
+/** Ngữ cảnh của phiếu "khám mới" (không theo lịch hẹn), sinh lúc chạy, nằm cạnh phiếu thật và đã gitignore cùng data/clinical. */
+function walkInDir() {
+  return path.join(/*turbopackIgnore: true*/ process.cwd(), "data", "clinical", "walk-in-contexts");
+}
+
+function loadWalkInContexts(): ContextRow[] {
+  const dir = walkInDir();
+  if (!fs.existsSync(dir)) return [];
+  const rows: ContextRow[] = [];
+  for (const name of fs.readdirSync(dir).filter(file => file.endsWith(".json")).sort()) {
+    const parsed = contextSchema.safeParse(JSON.parse(fs.readFileSync(path.join(dir, name), "utf8")));
+    if (parsed.success) rows.push(parsed.data);
+  }
+  return rows;
+}
+
+function loadContexts(): ContextRow[] {
+  const base = validateEncounterContexts(JSON.parse(fs.readFileSync(path.join(/*turbopackIgnore: true*/ process.cwd(), "data", "eform", "encounter-contexts.json"), "utf8"))).contexts;
+  const taken = new Set(base.map(row => JSON.stringify([row.facility_id, row.appointment_id])));
+  return [...base, ...loadWalkInContexts().filter(row => !taken.has(JSON.stringify([row.facility_id, row.appointment_id])))];
+}
+
+/**
+ * Tạo ngữ cảnh cho một phiếu khám ngoại trú mới của bệnh nhân: lấy danh tính, tiền sử và cận lâm sàng từ ngữ cảnh gần nhất
+ * của chính bệnh nhân (cùng cơ sở, cùng bác sĩ), bỏ nội dung lượt cũ, cấp mã lượt riêng. Chỉ dữ liệu giả.
+ */
+export function createWalkInContext(actor: ClinicalActor, patientId: string): EncounterContext {
+  const base = [...loadContexts()].reverse().find(row => row.patient_id === patientId && row.facility_id === actor.facilityId && row.doctor_id === actor.doctorId);
+  if (!base) throw new ClinicalError("Chưa có hồ sơ mẫu của bệnh nhân này để tạo phiếu mới.", 409);
+  const appointmentId = `LK-NEW-${randomUUID().slice(0, 8).toUpperCase()}`;
+  const ca = structuredClone(base.ca);
+  ca.ma_luot_kham = appointmentId;
+  ca.gia_tri = {};
+  ca.trang_thai = "Đang khám";
+  const row: ContextRow = { ...base, appointment_id: appointmentId, ca };
+  const dir = walkInDir();
+  fs.mkdirSync(dir, { recursive: true });
+  const file = path.join(dir, `${appointmentId}.json`);
+  fs.writeFileSync(`${file}.tmp`, JSON.stringify(row, null, 2));
+  fs.renameSync(`${file}.tmp`, file);
+  return resolveEncounterContext(actor, appointmentId);
 }
 
 export function getDemoClinicalActor(): ClinicalActor {

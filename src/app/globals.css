@@ -23,6 +23,9 @@
   --color-ef-dam: var(--ef_dam);
   --color-ef-do: var(--ef_do);
   --color-ef-do-nhat: color-mix(in srgb, var(--ef_do) 8%, white);
+  /* Dashboard lịch khám và hồ sơ bệnh nhân: xanh thao tác chính và xanh đậm cho tiêu đề (trước đây chưa khai báo nên nền không hiện) */
+  --color-emr-blue: var(--ef_xanh);
+  --color-emr-navy: var(--navy);
   --color-tim: var(--ai_tim);
   --color-tim-nhat: color-mix(in srgb, var(--ai_tim) 7%, white);
   --color-tim-vien: color-mix(in srgb, var(--ai_tim) 35%, white);

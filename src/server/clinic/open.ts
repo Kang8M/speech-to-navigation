@@ -1,14 +1,14 @@
 import "server-only";
 // Mở (hoặc dùng lại) phiếu khám cho một lịch. Chính sách mở lấy từ cùng nơi với danh sách (appointment-context),
 // định danh bệnh nhân/bác sĩ/cơ sở lấy từ ngữ cảnh khám của lớp clinical, không bao giờ từ client.
-import { resolveEncounterContext } from "@/server/clinical/encounter-context";
+import { createWalkInContext, resolveEncounterContext } from "@/server/clinical/encounter-context";
 import { ClinicalError } from "@/server/clinical/repository";
 import { openEncounter } from "@/server/clinical/service";
 import type { ClinicalResponse, EncounterContext } from "@/shared/clinical/api";
 import type { OpenReason } from "@/shared/clinic/types";
 import { ClinicHttpError, storeError } from "./errors";
 import type { ClinicActor } from "./ports";
-import { type ClinicServiceDeps, loadAppointment } from "./service";
+import { type ClinicServiceDeps, context, loadAppointment } from "./service";
 
 export interface OpenDeps extends ClinicServiceDeps {
   /** Chỉ cho test. */
@@ -39,6 +39,23 @@ export function openAppointmentEncounter(
     if (context.patientId !== item.appointment.patient_id) throw storeError(`Ngữ cảnh ${appointmentId} lệch bệnh nhân của lịch`);
     const response = (deps.open ?? openEncounter)(context);
     return { encounter_id: response.record.id, appointment_id: appointmentId };
+  } catch (error) {
+    if (error instanceof ClinicalError) {
+      if (error.status === 409 || error.status === 403 || error.status === 404) throw new ClinicHttpError(error.status, error.message);
+      throw storeError(error.message);
+    }
+    throw error;
+  }
+}
+
+/** "Tạo mới phiếu khám": phiếu ngoại trú mới của bệnh nhân, không gắn lịch hẹn. Mỗi lần gọi tạo một phiếu mới. */
+export function createPatientEncounter(actor: ClinicActor, patientId: string, deps: ClinicServiceDeps = {}): { encounter_id: string; appointment_id: string } {
+  const { repo } = context(deps);
+  if (!repo.getPatient(actor.facility_id, patientId)) throw new ClinicHttpError(404, "Không tìm thấy bệnh nhân.");
+  try {
+    const trusted = createWalkInContext({ doctorId: actor.doctor_id, facilityId: actor.facility_id }, patientId);
+    const response = openEncounter(trusted);
+    return { encounter_id: response.record.id, appointment_id: trusted.appointmentId };
   } catch (error) {
     if (error instanceof ClinicalError) {
       if (error.status === 409 || error.status === 403 || error.status === 404) throw new ClinicHttpError(error.status, error.message);

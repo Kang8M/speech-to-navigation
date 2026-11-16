@@ -1,8 +1,10 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getHistoricalEncounter } from "@/client/clinic/api";
 import { ClinicDialog } from "@/client/clinic/ClinicDialog";
+import { openHref } from "@/client/clinic/open-appointment";
 import { historyNavigation } from "@/shared/clinic/history";
 import type { HistoricalEncounterViewModel, HistorySummary } from "@/shared/clinic/types";
 import { HistoricalEncounterView } from "./HistoricalEncounterView";
@@ -39,6 +41,21 @@ export function EncounterHistoryDialog({
   const [state, setState] = useState<State>({ id: selectedId, status: "loading" });
   const [attempt, setAttempt] = useState(0);
   const bodyRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const [note, setNote] = useState<{ id: string; text: string } | null>(null);
+  const detailNote = note?.id === selectedId ? note.text : "";
+
+  // Mở phiếu ở eForm nếu hồ sơ có trong kho phiếu thật; bản lưu cũ chỉ để xem thì báo rõ, không điều hướng.
+  async function openDetail() {
+    setNote(null);
+    try {
+      const response = await fetch(`/api/clinical/encounters/${encodeURIComponent(selectedId)}`, { cache: "no-store" });
+      if (response.ok) return router.push(openHref(selectedId));
+    } catch {
+      /* rơi xuống thông báo bên dưới */
+    }
+    setNote({ id: selectedId, text: "Phiếu này là bản lưu cũ, chưa mở được trên eForm." });
+  }
 
   useEffect(() => {
     let live = true;
@@ -73,7 +90,15 @@ export function EncounterHistoryDialog({
           <button type="button" className={NAV_BTN} disabled={nav.nextId === null} onClick={() => nav.nextId && onSelect(nav.nextId)}>
             Cũ hơn ›
           </button>
+          <button
+            type="button"
+            onClick={() => void openDetail()}
+            className="ml-auto rounded-sm border border-emr-blue bg-white px-3 py-1 text-[13px] font-medium text-emr-blue hover:bg-soft"
+          >
+            Chi tiết phiếu khám
+          </button>
         </div>
+        {detailNote !== "" && <p role="status" className="text-[13px] text-[#a02622]">{detailNote}</p>}
         {(current === null || current.status === "loading") && (
           <p role="status" className="py-6 text-center text-[13px] text-muted">
             Đang tải phiếu khám…

@@ -78,3 +78,20 @@ export async function openAppointment(appointmentId: string): Promise<{ encounte
     throw new Error("Máy chủ trả dữ liệu không đọc được. Vui lòng thử lại.");
   }
 }
+
+/** "Tạo mới phiếu khám": tạo phiếu ngoại trú mới của bệnh nhân. Server tự lấy bác sĩ/cơ sở; client chỉ gửi mã bệnh nhân. */
+export async function createEncounter(patientId: string): Promise<{ encounter_id: string; appointment_id: string }> {
+  const response = await fetch(`/api/clinic/patients/${encodeURIComponent(patientId)}/encounters`, {
+    method: "POST",
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    const loi = (await response.json().catch(() => ({}))) as Partial<ApiLoi>;
+    throw new Error(loi.error ?? "Không tạo được phiếu khám.");
+  }
+  try {
+    return (await response.json()) as { encounter_id: string; appointment_id: string };
+  } catch {
+    throw new Error("Máy chủ trả dữ liệu không đọc được. Vui lòng thử lại.");
+  }
+}

@@ -11,7 +11,7 @@ Phạm vi file này: Task 3 (dashboard) và Task 4 (popup lịch hẹn) của pl
 | 3.1 | Bộ 8 ca: tổng 8, Hoàn thành 2/8, Còn lại 4/8, Đang khám / chờ kết quả 2/8, Ca hủy 1, Kết thúc khác 1, Chưa xác định 0 | PASS (đọc từ trang thật) |
 | 3.2 | Mỗi khối có list thật: đúng 2 / 4 / 2 dòng, mỗi dòng đúng mã LK-00000x và PID giữ số 0 đầu (000123...) | PASS |
 | 3.3 | Nhãn "Đang khám / chờ kết quả" ghi rõ "Nằm trong số Còn lại, không cộng thêm"; ca 10:00 và 13:30 xuất hiện ở cả Còn lại và khối này | PASS |
-| 3.4 | Mặc định tối đa 5 dòng và "Xem tất cả (n)" | Chưa kiểm bằng dữ liệu thật: bộ 8 ca không có khối nào quá 5 dòng. Logic nằm trong `EncounterGroup` (`items.slice(0, 5)`), chưa chạy nút |
+| 3.4 | Khối cao cố định, nhiều ca thì cuộn trong khung (thay cho "Xem tất cả", đổi 16/11/2026) | Chưa kiểm với hơn 10 ca |
 | 3.5 | Khối rỗng có thông báo riêng (ngày 13/11: "Chưa có ca nào hoàn thành.", khối ca ngày trước "Không có ca nào còn dở từ ngày trước.") | PASS |
 | 3.6 | Dòng "Ca hủy: 1 · Kết thúc khác: 1 · Chưa xác định: 0" mở danh sách khi bấm; mục 0 bị tắt | PASS: bấm "Kết thúc khác" mở danh sách có ca nhập viện LK-000008 (aria-expanded=true) |
 | 3.7 | Khối "Chưa hoàn tất từ ngày trước" hiện ca LK-000009 (13/11 16:00) khi xem 14/11, không tính vào N | PASS |

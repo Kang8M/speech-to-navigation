@@ -24,7 +24,7 @@ function Field({ label, value }: { label: string; value: string }) {
 }
 
 export function PatientScreen({ data, returnTo, referenceDate }: Props) {
-  const { patient, eligibleAppointments, history } = data;
+  const { patient, history } = data;
 
   return (
     <main className="mx-auto w-full max-w-5xl space-y-5 px-4 py-5">
@@ -45,7 +45,7 @@ export function PatientScreen({ data, returnTo, referenceDate }: Props) {
               <Field label="Giới tính" value={formatGender(patient.gender)} />
             </dl>
           </div>
-          <CreateEncounter items={eligibleAppointments} selectedAppointmentId={data.selectedAppointmentId} />
+          <CreateEncounter patientId={patient.id} />
         </div>
       </section>
 

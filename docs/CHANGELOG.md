@@ -4,6 +4,19 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-16
 
+### Chỉnh giao diện dashboard/bệnh nhân theo góp ý; "Tạo mới phiếu khám" tạo phiếu ngoại trú mới
+- **Loại:** Tính năng, Giao diện, Sửa lỗi
+- **Thay đổi:**
+  - Màn bệnh nhân: nút **Tạo mới phiếu khám** luôn dùng được, tạo một phiếu khám ngoại trú mới (không theo lịch hẹn) rồi mở ở eForm. Server (`POST /api/clinic/patients/[patientId]/encounters`) lấy bác sĩ/cơ sở từ actor, tạo ngữ cảnh riêng mã `LK-NEW-xxxxxxxx` từ ngữ cảnh gần nhất của bệnh nhân (giữ danh tính, tiền sử, cận lâm sàng; bỏ nội dung lượt cũ), lưu ở `data/clinical/walk-in-contexts/` (đã gitignore) và mở phiếu qua `openEncounter`. Mỗi lần bấm tạo một phiếu mới; bệnh nhân chưa có hồ sơ mẫu thì trả 409. Bỏ hộp chọn lịch `AppointmentPicker` (không còn dùng).
+  - Lịch sử khám: phân trang, tối đa 10 phiếu mỗi trang (Trước/Sau, "Trang x/y").
+  - Dashboard: bỏ khối "Đang khám / chờ kết quả" (trùng ý nghĩa với "Còn lại"); "Còn lại" ghi thêm "Chưa khám · Đang khám · Chờ kết quả CLS". Khối cao cố định, nhiều ca thì cuộn trong khung (bỏ "Xem tất cả").
+  - Màu: khai báo `emr-blue`/`emr-navy` trong `globals.css` (trước chưa có nên nền không sinh ra, nút "Lịch theo giờ" đang chọn bị chữ trắng trên nền trắng); danh sách Sáng nền vàng nhạt, Chiều nền xanh nhạt; nút Đóng của popup nền đỏ chữ trắng.
+  - Popup: `<dialog>` modal dùng `h-fit` thay `h-auto` (h-auto bị kéo giãn hết chiều cao nên có khoảng trắng); popup co theo nội dung, quá cao thì cuộn.
+- **Lý do:** góp ý của bác sĩ/người dùng trên ảnh chụp màn hình dashboard và màn bệnh nhân.
+- **File:** `src/app/globals.css`, `src/client/clinic/{ClinicDialog,api}.tsx`, `src/client/dashboard/{DashboardScreen,EncounterGroup,AppointmentList}.tsx`, `src/client/patient/{CreateEncounter,EncounterHistory,PatientScreen}.tsx`, `src/client/patient/AppointmentPicker.tsx` (xóa), `src/server/clinic/{open,service}.ts`, `src/server/clinical/encounter-context{,.test}.ts`, `src/app/api/clinic/patients/[patientId]/encounters/route.ts`.
+- **Kiểm tra:** `npm test` 268 đạt (thêm test ngữ cảnh khám mới); `npx tsc --noEmit` sạch; `npx eslint src` 0 lỗi. Trình duyệt: nút Lịch theo giờ đang chọn nền xanh đậm chữ trắng; popup lịch hẹn cao 489px thay vì 714px; bấm "Tạo mới phiếu khám" ở GIA-000123 mở `/?ho_so=<mã>` với phiếu trống. Chưa kiểm phân trang với hơn 10 phiếu và màn 375px.
+- **Ảnh hưởng:** popup phiếu cũ có nút "Chi tiết phiếu khám": phiếu có trong kho phiếu thật thì mở ở eForm (`/?ho_so=<mã>`), bản lưu cũ giả (`data/clinic/history`) thì báo "chưa mở được trên eForm" (`EncounterHistoryDialog.tsx`; đã kiểm phiếu thật, nhánh bản lưu cũ chỉ kiểm qua API trả 404). Phiếu khám mới không xuất hiện trong lịch hẹn của dashboard (chỉ trong lịch sử bệnh nhân).
+
 ### Dashboard và màn bệnh nhân nối với phiếu khám thật: xem phiếu cũ, mở/tiếp tục phiếu
 - **Loại:** Tính năng
 - **Thay đổi:**

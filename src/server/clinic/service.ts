@@ -35,7 +35,7 @@ export interface ClinicServiceDeps {
 
 const NO_SUMMARY = "Chưa có tóm tắt";
 
-function context(deps: ClinicServiceDeps) {
+export function context(deps: ClinicServiceDeps) {
   return {
     repo: deps.repo ?? getClinicRepository(),
     now: deps.now ?? (() => new Date().toISOString()),

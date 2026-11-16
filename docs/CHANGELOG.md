@@ -4,6 +4,14 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-16
 
+### Chốt chặn R11, đồng ý R14, nhật ký R13 cho bộ che PII
+- **Loại:** Tính năng
+- **Thay đổi:** Thêm `checkResidualPii(clean, known, allowlist)` chặn bản sạch còn sót PII trước khi gọi AI: (a) giá trị đã biết (so khớp không dấu, dài hơn 2 ký tự), (b) dãy số dài kể cả tách khoảng trắng (bỏ phần trong nhãn), (c) họ trong `HO_VIET` + ít nhất một âm tiết, không cần chữ hoa, bỏ qua nhãn và cụm trong allowlist (so không dấu), (d) email/URL. Trích đoạn lấy từ bản sạch, tối đa 40 ký tự. Thêm `aiRouteFor(consent)` (R14: không đồng ý thì `local_only`) và `buildAuditEntry` (R13: chỉ số đếm, kết quả chốt chặn, hàm băm do máy chủ cung cấp; không mang chữ thô hay chữ sạch). Chưa nối vào luồng nào.
+  - Lưu ý: so không dấu nên R11c sinh dương tính giả với họ trùng từ thường ("ba" = bá, "sử" trong "tiền sử", "uống" = uông, "cao huyết áp", "mai"). Người gọi truyền allowlist để bỏ qua; chưa có allowlist mặc định.
+- **Lý do:** Bước chặn cuối của màn demo luồng dữ liệu: nghi ngờ còn sót thì không gọi AI. Bắt được cả ca bộ che bỏ sót như "chi le thi hoa tho kho" không dấu.
+- **File:** `src/shared/clinical/pii/{gate,audit,index}.ts`, `src/shared/clinical/pii/gate.test.ts`, `docs/CHANGELOG.md`
+- **Kiểm tra:** `npx tsx --conditions=react-server --test src/shared/clinical/pii/gate.test.ts` đạt 10/10; `redact.test.ts` vẫn 20/20; `npx eslint src lib` không lỗi (5 cảnh báo có sẵn).
+
 ### Bộ che PII tự động pii-auto-1 (R1–R8, nhãn R10)
 - **Loại:** Tính năng
 - **Thay đổi:** Thêm module thuần TS `src/shared/clinical/pii/`: `redactPii(raw, known)` che tên đã biết (so khớp không dấu, tách khoảng trắng), tên người dò bằng từ điển họ (`HO_VIET`) nên không cần chữ hoa, địa chỉ/địa danh, ngày tháng, liên hệ (điện thoại, email, URL, IP), mã định danh (CCCD, biển số, PID, tài khoản), thông tin nhạy cảm (quốc tịch, tôn giáo, hôn nhân), nội dung ngoài khám, cùng tuổi/giới tính. Trả về bản sạch, danh sách span trên bản thô và số lần mỗi rule. Nhãn dạng `[KIND_n]` đếm theo thứ tự xuất hiện, cùng giá trị cùng nhãn; bệnh nhân/bác sĩ không số. Không sửa `privacy.ts` (`redactTranscript` cũ giữ nguyên). Chưa nối vào luồng nào.

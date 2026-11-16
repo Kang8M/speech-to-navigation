@@ -4,5 +4,6 @@ export { PII_POLICY_VERSION } from "./types";
 export type { KnownIdentifier, PiiLabelKind, PiiRule, PiiSpan, RedactionResult } from "./types";
 export { checkResidualPii, aiRouteFor } from "./gate";
 export type { AiRoute, GateReason, GateResult } from "./gate";
+export { DEFAULT_CLINICAL_ALLOWLIST } from "./gate";
 export { buildAuditEntry } from "./audit";
 export type { PiiAuditEntry } from "./audit";

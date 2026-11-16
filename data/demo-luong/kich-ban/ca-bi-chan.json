@@ -1,0 +1,15 @@
+{
+  "id": "ca-bi-chan",
+  "ten": "Ca bị chặn: tên người lạ còn sót sau khi che",
+  "benh_nhan_id": "GIA-000789",
+  "mode": "conversation",
+  "doan": [
+    { "vai_tro": "benh_nhan", "text": "tôi tên lê văn mới bị đau họng hai ngày nay" },
+    { "vai_tro": "benh_nhan", "text": "hôm qua đỗ quốc việt mua thuốc giúp nhưng tôi vẫn đau họng uống paracetamol 500 mg" }
+  ],
+  "expected": {
+    "phai_che": ["lê văn mới"],
+    "phai_giu": ["đau họng", "paracetamol 500 mg"],
+    "bi_chan": true
+  }
+}

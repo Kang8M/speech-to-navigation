@@ -1,0 +1,37 @@
+import type { ClinicalExtraction } from "../clinical/api";
+import type { EformSnapshot } from "../clinical/eform";
+import type { AiRoute, GateResult, PiiAuditEntry, PiiRule, PiiSpan } from "../clinical/pii";
+
+export type DemoSource = { kind: "kich_ban"; id: string } | { kind: "audio" };
+
+export interface KichBan {
+  id: string;
+  ten: string;
+  benh_nhan_id: string;
+  mode: "conversation" | "dictation";
+  dong_y_override?: boolean;
+  doan: { vai_tro: "bac_si" | "benh_nhan" | "nguoi_nha"; text: string }[];
+  expected: { phai_che: string[]; phai_giu: string[]; bi_chan: boolean };
+}
+
+export type DemoStep = "stt" | "ban_tho" | "che" | "ai" | "luu";
+
+export interface DemoFieldSource { nguon: "ai" | "bac_si"; phien: number | null; xung_dot?: { phien: number; gia_tri_ai: string } }
+
+export interface DemoPhieu {
+  encounter_id: string;
+  appointment_id: string;
+  revision: number;
+  status: string;
+  duyet: { luc: string; boi: string } | null;
+  sessions: { sequence: number; at: string; counts: Record<PiiRule, number>; clean: string }[];
+  snapshot: EformSnapshot;
+  sources: Record<string, DemoFieldSource>;
+}
+
+export type DemoEvent =
+  | { buoc: "stt"; trang_thai: "xong"; ms: number; du_lieu: { engine: string; text: string; audio_ms: number | null } }
+  | { buoc: "ban_tho"; trang_thai: "xong"; ms: number; du_lieu: { raw: string; spans: PiiSpan[]; mode: "conversation" | "dictation" } }
+  | { buoc: "che"; trang_thai: "xong" | "bi_chan"; ms: number; du_lieu: { clean: string; counts: Record<PiiRule, number>; gate: GateResult; ai_route: AiRoute; dong_y: { trang_thai: boolean; luc: string | null } } }
+  | { buoc: "ai"; trang_thai: "xong" | "loi"; ms: number; du_lieu: { provider: string; model: string; prompt_version: string; payload_preview: string; extraction?: ClinicalExtraction; loi?: string } }
+  | { buoc: "luu"; trang_thai: "xong" | "loi"; ms: number; du_lieu: { phieu: DemoPhieu; file: string; sha256: string; audit: PiiAuditEntry; loi?: string } };

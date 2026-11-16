@@ -78,3 +78,7 @@ __pycache__/
 # Optional native denoiser and implementation scratch artifacts
 /models/denoise/
 /.superpowers/
+
+# Dữ liệu chạy demo luồng dữ liệu (kịch bản mẫu được commit)
+/data/demo-luong/*
+!/data/demo-luong/kich-ban/

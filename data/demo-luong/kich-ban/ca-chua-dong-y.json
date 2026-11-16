@@ -1,0 +1,16 @@
+{
+  "id": "ca-chua-dong-y",
+  "ten": "Ca chưa đồng ý xử lý AI: chỉ chạy cục bộ",
+  "benh_nhan_id": "GIA-000456",
+  "mode": "dictation",
+  "dong_y_override": false,
+  "doan": [
+    { "vai_tro": "bac_si", "text": "bệnh nhân nam 35 tuổi tên trần văn mô phỏng điện thoại 0900000456 đến khám vì ù tai trái 2 tuần" },
+    { "vai_tro": "bac_si", "text": "khám màng nhĩ trái bình thường chỉ định đo thính lực kê betahistine 16 mg ngày 2 lần" }
+  ],
+  "expected": {
+    "phai_che": ["trần văn mô phỏng", "0900000456"],
+    "phai_giu": ["ù tai trái", "betahistine 16 mg ngày 2 lần"],
+    "bi_chan": false
+  }
+}

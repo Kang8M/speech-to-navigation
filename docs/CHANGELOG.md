@@ -4,6 +4,13 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-16
 
+### Dữ liệu giả, kịch bản mẫu và giá trị đã biết cho demo luồng dữ liệu
+- **Loại:** Tính năng
+- **Thay đổi:** `data/clinic/patients.json` thêm trường giả tùy chọn cho mỗi bệnh nhân: `dong_y_xu_ly_ai {trang_thai, luc}`, `nguoi_nha[]`, `noi_lam_viec`, `dia_chi`, `dien_thoai` (schema `PatientProfileSchema` nhận các trường này, đều optional nên fixture cũ vẫn hợp lệ; file được định dạng lại nên diff dài). Thêm 3 kịch bản `data/demo-luong/kich-ban/{ca-chuan,ca-chua-dong-y,ca-bi-chan}.json`; `.gitignore` bỏ qua `data/demo-luong/*` trừ `kich-ban/`. Thêm `src/shared/demo-luong/types.ts` (kiểu dùng chung `KichBan`, `DemoEvent`, `DemoPhieu`...), `src/server/demo-luong/known-identifiers.ts` (`knownIdentifiersFor` gom tên, mã, điện thoại, địa chỉ, nơi làm việc, người nhà, nhân viên và cờ đồng ý AI) và `kich-ban.ts` (`listKichBan`, `loadKichBan` chỉ nhận id `[a-z0-9-]`, lỗi 404; `demoAllowlist` gồm thuật ngữ TMH, tên thuốc và dịch vụ trong danh mục, đã bỏ dấu). `pii/index.ts` export thêm `DEFAULT_CLINICAL_ALLOWLIST`.
+- **Lý do:** Cung cấp đầu vào giả và danh sách giá trị đã biết cho luồng demo che PII; ca bị chặn chứng minh chốt chặn R11c hoạt động.
+- **File:** `data/clinic/patients.json`, `src/shared/clinic/schema.ts`, `data/demo-luong/kich-ban/*.json`, `src/shared/demo-luong/types.ts`, `src/server/demo-luong/{known-identifiers,kich-ban}.ts`, `src/server/demo-luong/kich-ban.test.ts`, `src/shared/clinical/pii/index.ts`, `.gitignore`, `docs/CHANGELOG.md`
+- **Kiểm tra:** `npx tsx --conditions=react-server --test src/server/demo-luong/kich-ban.test.ts` đạt 8/8; `npm test` 309/310 (một lỗi có sẵn ở `encounter-context.test.ts`); `npx eslint src lib` không lỗi.
+
 ### Chốt chặn R11, đồng ý R14, nhật ký R13 cho bộ che PII
 - **Loại:** Tính năng
 - **Thay đổi:** Thêm `checkResidualPii(clean, known, allowlist)` chặn bản sạch còn sót PII trước khi gọi AI: (a) giá trị đã biết (so khớp không dấu, dài hơn 2 ký tự), (b) dãy số dài kể cả tách khoảng trắng (bỏ phần trong nhãn), (c) tên người còn sót, dò bằng đúng logic của R2 (họ có dấu khớp đúng, họ không dấu trừ họ mơ hồ, đuôi không phải từ dừng hay cặp từ thường; `redact.ts` export `isHo`, `isCommonHoPair`, `nameTailEnd` để dùng chung), không cần chữ hoa, bỏ qua nhãn, (d) email/URL. Trích đoạn lấy từ bản sạch, tối đa 40 ký tự. Thêm `aiRouteFor(consent)` (R14: không đồng ý thì `local_only`) và `buildAuditEntry` (R13: chỉ số đếm, kết quả chốt chặn, hàm băm do máy chủ cung cấp; không mang chữ thô hay chữ sạch). Chưa nối vào luồng nào.

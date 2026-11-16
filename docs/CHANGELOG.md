@@ -4,6 +4,13 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-16
 
+### Bộ che PII tự động pii-auto-1 (R1–R8, nhãn R10)
+- **Loại:** Tính năng
+- **Thay đổi:** Thêm module thuần TS `src/shared/clinical/pii/`: `redactPii(raw, known)` che tên đã biết (so khớp không dấu, tách khoảng trắng), tên người dò bằng từ điển họ (`HO_VIET`) nên không cần chữ hoa, địa chỉ/địa danh, ngày tháng, liên hệ (điện thoại, email, URL, IP), mã định danh (CCCD, biển số, PID, tài khoản), thông tin nhạy cảm (quốc tịch, tôn giáo, hôn nhân), nội dung ngoài khám, cùng tuổi/giới tính. Trả về bản sạch, danh sách span trên bản thô và số lần mỗi rule. Nhãn dạng `[KIND_n]` đếm theo thứ tự xuất hiện, cùng giá trị cùng nhãn; bệnh nhân/bác sĩ không số. Không sửa `privacy.ts` (`redactTranscript` cũ giữ nguyên). Chưa nối vào luồng nào.
+- **Lý do:** Bước đầu của màn demo luồng dữ liệu: bản thô từ STT (chữ thường, không dấu câu) phải được che PII trước khi đến AI.
+- **File:** `src/shared/clinical/pii/{types,ho-viet,redact,index}.ts`, `src/shared/clinical/pii/redact.test.ts`, `docs/CHANGELOG.md`
+- **Kiểm tra:** `npx tsx --conditions=react-server --test src/shared/clinical/pii/redact.test.ts` đạt 14/14; eslint sạch trên thư mục mới. `npm test` toàn bộ: 281/282, một lỗi có sẵn ở `encounter-context.test.ts` (đếm phiếu lịch sử 5 thay vì 4), không liên quan thay đổi này.
+
 ### Thiết kế màn demo luồng dữ liệu và bộ rule PII tự động (chờ duyệt)
 - **Loại:** Tài liệu
 - **Thay đổi:** Thêm bản thiết kế màn `/demo-luong`: STT → bản thô → che PII tự động trên máy chủ → AI → lưu → phiếu khám để bác sĩ duyệt lần cuối, có hai chế độ xem (Bác sĩ/Lãnh đạo và Kỹ thuật). Đề xuất 14 rule PII (R1–R14), có chốt chặn không gọi AI khi nghi ngờ còn sót, và cờ đồng ý xử lý AI lấy lúc tiếp đón. Sau bước rà soát: STT trả chữ thường nên dò tên bằng từ điển họ; một phiếu khám có nhiều phiên ghi âm, kèm nút "+ Phiếu khám mới"; ô bác sĩ đã sửa không bị phiên sau ghi đè. AI đợt này chỉ là mock; nối model thật để đợt sau.

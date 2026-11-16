@@ -197,3 +197,14 @@ test("deidentification: mock vẫn chạy local kể cả khi bệnh nhân chưa
     assert.equal(result.provider, "mock");
   }
 });
+
+test("deidentification với đích external (có call): theo đồng ý trong proof, cấp 2 và cấp 3 vẫn chặn", async t => {
+  const directory = temp(t);
+  const call = async () => "{}";
+  const base = { directory, provider: "openai", model: "test", call, noCache: true };
+  const ok = await extractClinical("t", { ...base, approvedTranscript: () => input(), deidentification: deid(true) });
+  assert.ok(ok.run_id);
+  await assert.rejects(extractClinical("t", { ...base, approvedTranscript: () => input(), deidentification: deid(false) }), { message: "Bệnh nhân chưa đồng ý xử lý AI — chỉ được chạy bộ tách local." });
+  await assert.rejects(extractClinical("t", { ...base, approvedTranscript: () => input() }), /cấp 2/i);
+  await assert.rejects(extractClinical("t", { ...base, approvedTranscript: () => input("bac_si", "Hợp đồng khám sức khỏe."), deidentification: deid(true) }), /cấp 3/i);
+});

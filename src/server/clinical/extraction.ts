@@ -204,7 +204,7 @@ export interface ClinicalExtractionOptions {
   /** Server/test dependency injection only; never accepted by the HTTP route. */
   approvedTranscript?: (ticket: string) => Transcript;
   directory?: string;
-  /** Bản đã qua chốt chặn PII (luồng /demo-luong); đồng ý của bệnh nhân lấy từ proof. */
+  /** Chỉ phía máy chủ, phải do chốt chặn R11 (pii-auto-1) cấp; không bao giờ nhận từ body request. Đồng ý của bệnh nhân lấy từ proof. */
   deidentification?: DeidentificationProof;
   /** Bỏ đọc cache bộ nhớ và run-index; vẫn ghi file lượt chạy. */
   noCache?: boolean;
@@ -258,8 +258,8 @@ export async function extractClinical(ticket: string, options: ClinicalExtractio
   // function can declare itself internal; only the built-in local rules are enabled.
   let level: ReturnType<typeof classifyData>;
   try {
-    level = classifyData(transcript.segments.map(segment => segment.text).join("\n"), "clinical");
-    assertDataUseAllowed(level, provider === "mock" && !options.call ? "internal" : "external", true);
+    level = classifyData(transcript.segments.map(segment => segment.text).join("\n"), "clinical", options.deidentification);
+    assertDataUseAllowed(level, provider === "mock" && !options.call ? "internal" : "external", options.deidentification ? options.deidentification.consent : true);
   } catch (error) {
     throw new ClinicalError(error instanceof Error ? error.message : "Chính sách dữ liệu từ chối xử lý.", 403);
   }

@@ -17,6 +17,7 @@ Tên thuốc công khai không biến thông tin một người bệnh dùng thu
 - Bản thô không ghi đĩa. Bộ che `pii-auto-1` (che định danh, chốt chặn R11 chặn nếu còn sót, đồng ý R14, nhật ký R13) chạy trước; chỉ khi chốt chặn qua mới có `DeidentificationProof { policy_version: "pii-auto-1", gate_passed: true, consent }` và `classifyData` trả `deidentified`. Nội dung cấp 3 vẫn là `restricted` dù có proof.
 - Đồng ý (`consent`) lấy từ hồ sơ bệnh nhân. R14: chưa đồng ý thì chỉ chạy bộ tách local; đường ra ngoài bị chặn ở `assertDataUseAllowed`.
 - Tùy chọn `noCache` của `extractClinical` bỏ đọc cache/run-index để mỗi lần demo chạy lại thật; vẫn ghi file lượt chạy.
+- Với provider `mock`, trích xuất vẫn chạy cục bộ (đích nội bộ); hiện chưa có adapter AI bên ngoài thật, nên nhánh "ra ngoài" mới được kiểm bằng test với `call` được tiêm.
 - Căn cứ tham chiếu (không phải kết luận pháp lý): Luật 91/2025 Điều 2.1, 14.6, 20, 26, 30; Nghị định 356/2025; HIPAA §164.514(b)(2). Chốt chặn tự động không chứng minh ẩn danh tuyệt đối: tuổi, giới, thời điểm và bệnh hiếm vẫn có thể tái định danh.
 
 ## Cơ chế thực thi

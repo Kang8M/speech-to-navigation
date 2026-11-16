@@ -9,7 +9,8 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 - **Thay đổi:** `data-policy.ts` thêm cấp `deidentified`, kiểu `DeidentificationProof` và tham số `proof` cho `classifyData` (proof `pii-auto-1` hợp lệ, không restricted thì trả `deidentified`). `assertDataUseAllowed`: `deidentified` ra ngoài khi có đồng ý, chưa đồng ý thì ném "Bệnh nhân chưa đồng ý xử lý AI — chỉ được chạy bộ tách local."; `masked_internal` ra ngoài vẫn bị chặn. `extractClinical` nhận `deidentification` (truyền vào `classifyData`, lấy đồng ý từ proof) và `noCache` (bỏ đọc cache bộ nhớ và run-index, không gộp inflight, vẫn ghi run). Không truyền hai tùy chọn thì hành vi cũ. `docs/DATA-USE-POLICY.md` thêm mục cấp deidentified, nêu rõ chỉ áp dụng `/demo-luong`, eForm `/` giữ duyệt thủ công.
 - **Lý do:** Để luồng demo chạy không qua phiếu duyệt riêng tư thủ công mà vẫn giữ đường chặn cấp 2 và cấp 3.
 - **File:** `src/shared/clinical/data-policy.ts`, `src/server/clinical/extraction.ts`, hai file test tương ứng, `docs/DATA-USE-POLICY.md`, `docs/CHANGELOG.md`
-- **Kiểm tra:** data-policy.test.ts và extraction.test.ts 19/19; impact `assertDataUseAllowed`, `extractClinical`, `classifyData` đều LOW.
+- **Sửa sau rà soát vòng 1:** bản đầu chưa nối proof vào `extractClinical` (vẫn truyền đồng ý `true` cứng) dù mô tả ở trên; nay đã nối thật và có test đích external (có `call`): đồng ý thì qua, chưa đồng ý bị chặn đúng thông báo, không proof vẫn chặn cấp 2, văn bản cấp 3 vẫn chặn. JSDoc ghi rõ proof chỉ phía máy chủ.
+- **Kiểm tra:** data-policy.test.ts và extraction.test.ts 20/20; impact `assertDataUseAllowed`, `extractClinical`, `classifyData` đều LOW.
 
 ### Dữ liệu giả, kịch bản mẫu và giá trị đã biết cho demo luồng dữ liệu
 - **Loại:** Tính năng

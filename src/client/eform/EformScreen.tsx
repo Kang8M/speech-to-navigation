@@ -15,6 +15,7 @@ import { TroLyAi, type TabId } from "@/client/eform/TroLyAi";
 import { dienPhieu, gopTruongMoi, type DongChiDinh, type DongThuoc, type KetQuaDien } from "@/shared/eform/dien-phieu";
 import { demLuot } from "@/shared/eform/do-luong";
 import { demChoTrong } from "@/shared/eform/mau-cau";
+import type { KetQuaGoTat } from "@/shared/eform/go-tat";
 import { icdTheoMau, type PhieuMau } from "@/shared/eform/phieu-mau";
 import { chiGiuCot, COT_CHI_DINH, COT_THUOC, ghepGoiY, goiYThoiQuen, hayKe, nhuMoiKhi } from "@/shared/eform/thoi-quen";
 import type { EformData, KichBan, Nguon, Truong } from "@/shared/eform/types";
@@ -186,17 +187,20 @@ export function EformScreen({ data, kichBan }: { data: EformData; kichBan?: Kich
     return { icd, chiDinh: lay(quen.chiDinh), donThuoc: lay(quen.donThuoc) };
   };
 
-  const aiDien = (result: PipelineResult, text: string, mau?: PhieuMau) => {
-    const kq = mau
-      ? dienPhieu(result.draft, result.matches, data, api.get, { chiOTrong: true, icd: icdTheoMau(mau, result.draft) })
+  const aiDien = (result: PipelineResult, text: string, mau?: PhieuMau, goTat?: KetQuaGoTat) => {
+    const maGoTat = goTat?.daDung ?? [];
+    // Mẫu và gõ tắt chỉ điền ô còn trống, giống bác sĩ tự gõ tắt vào ô
+    const kq = mau || maGoTat.length > 0
+      ? dienPhieu(result.draft, result.matches, data, api.get, { chiOTrong: true, icd: mau && icdTheoMau(mau, result.draft) })
       : dienPhieu(result.draft, result.matches, data, api.get);
-    if (mau?.khamKhac) {
-      // Ô Khám các bộ phận khác không có trong schema LLM: lấy thẳng từ mẫu, chỉ khi ô đang trống
+    const khamKhac = goTat?.cacO.kham_khac ?? mau?.khamKhac;
+    if (khamKhac) {
+      // Ô Khám các bộ phận khác không có trong schema LLM: lấy thẳng từ gõ tắt hoặc mẫu, chỉ khi ô đang trống
       const nhan = "Khám các bộ phận khác";
       if (api.get("kham_khac").value.trim()) kq.boQua.push(nhan);
       else {
-        const nguon = demChoTrong(mau.khamKhac) > 0 ? "xem" : "ai";
-        kq.truong.kham_khac = { value: mau.khamKhac, nguon };
+        const nguon = demChoTrong(khamKhac) > 0 ? "xem" : "ai";
+        kq.truong.kham_khac = { value: khamKhac, nguon };
         kq.daDien.push({ id: "kham_khac", nhan, nguon });
       }
     }
@@ -221,17 +225,24 @@ export function EformScreen({ data, kichBan }: { data: EformData; kichBan?: Kich
       : quenChiDinh.length + quenThuoc.length > 0
         ? ` Đã lấy ${quenThuoc.length} thuốc, ${quenChiDinh.length} chỉ định anh/chị hay kê cho ${quen.icd}.`
         : ` Chưa có đơn anh/chị đã kê cho ${quen.icd ?? "chẩn đoán này"} nên chưa lấy được bộ quen.`;
+    const ghiChuGoTat = maGoTat.length > 0 ? ` Gõ tắt: ${maGoTat.join(", ")}.` : "";
+    const boQua = kq.boQua.length > 0 ? ` Bỏ qua ${kq.boQua.length} ô đã có chữ.` : "";
+    if (!mau && result.provider === "go-tat") {
+      notify(`Đã điền gõ tắt ${maGoTat.join(", ")}: ${kq.daDien.length} ô.${boQua}`);
+      return;
+    }
     if (mau) {
       const choTrong = Object.values(kq.truong).reduce((tong, o) => tong + demChoTrong(o.value), 0);
       notify(
         `Đã điền theo mẫu ${mau.ten}: ${kq.daDien.length} ô, ${themChiDinh.length} chỉ định, ${themThuoc.length} thuốc.` +
-          (kq.boQua.length > 0 ? ` Bỏ qua ${kq.boQua.length} ô đã có chữ.` : "") +
+          boQua +
           (choTrong > 0 ? ` Còn ${choTrong} chỗ cần điền (tô vàng).` : "") +
+          ghiChuGoTat +
           ghiChuQuen,
       );
       return;
     }
-    notify(`AI đã điền ${kq.daDien.length} trường, ${themChiDinh.length} chỉ định, ${themThuoc.length} thuốc.${ghiChuQuen}`);
+    notify(`AI đã điền ${kq.daDien.length} trường, ${themChiDinh.length} chỉ định, ${themThuoc.length} thuốc.${maGoTat.length > 0 ? boQua : ""}${ghiChuGoTat}${ghiChuQuen}`);
   };
 
   const hoanTac = () => {

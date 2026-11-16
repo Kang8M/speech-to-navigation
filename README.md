@@ -64,7 +64,7 @@ Cuối cùng số đọc thành chữ được đổi sang chữ số khi đứn
 ### Đo nhận dạng giọng nói
 
 ```bash
-npm run tao-am-thanh-mau     # Windows: giọng máy đọc 11 ca thành data/giong-noi/<id>.tts.wav
+npm run tao-am-thanh-mau     # Windows: giọng máy đọc từng ca thành data/giong-noi/<id>.tts.wav
 npm run eval-giong-noi       # thêm --chi-tiet để in từng câu, --nhan-lai để nhận dạng lại từ đầu
 ```
 
@@ -107,7 +107,7 @@ Trường mã có thêm `catalog` (tên danh mục), `name_field` (trường tê
 Các cấu hình khác:
 
 - `config/viet-tat.json`: bảng từ viết tắt. Khóa một chữ cái phân biệt hoa thường và phải đứng riêng thành từ.
-- `config/canh-bao.json`: cách tính tổng số lượng thuốc (`tinh_tong`). Các khóa tuổi trẻ em, cân nặng là của cảnh báo trên trang cũ đã bỏ, hiện không dùng.
+- `config/canh-bao.json`: cách tính tổng số lượng thuốc (`tinh_tong`). Có `truong_so_luong_ke` (số bác sĩ nói rõ, ví dụ "kê 10 viên") thì lấy số đó, không thì liều × số lần/ngày × số ngày với thuốc đếm được. `don_vi_viet_tat` bung đơn vị gõ tắt trong liều ("1 v" → "1 viên") trước khi tính. Các khóa tuổi trẻ em, cân nặng là của cảnh báo trên trang cũ đã bỏ, hiện không dùng.
 - `config/theme.json`: màu giao diện. Các khóa `ef_*` là màu của trang eForm (nền, viền, chữ, xanh thao tác chính, đỏ dị ứng), `ai_tim` là màu tím đánh dấu phần AI điền, `xem` là màu vàng đất "cần xem lại".
 - Danh mục ứng dụng nạp gồm hai phần, ghép ở `src/server/du-lieu/danh-muc.ts`:
   - **Danh mục bệnh viện soạn tay** `data/catalog/dich-vu.json` (30 mục), `data/catalog/thuoc.json` (33 thuốc): có `ten_khac` (tên bác sĩ hay gọi) và được khớp trước. Dịch vụ có kỹ thuật tương ứng trong TT 23/2024 dùng mã thật (ví dụ `20.13` Nội soi tai mũi họng); 11 dịch vụ TT 23 không có (khám TMH, nội soi tai riêng, lấy ráy, test nhanh liên cầu, CT xoang...) giữ mã giả `DV-TMH-*`. Thuốc giữ mã nội bộ giả `TH-*`.
@@ -160,10 +160,10 @@ Trang **Kết quả thử nghiệm** có bảng các lượt, số liệu trung 
 ```bash
 npm run eval                          # dùng LLM_PROVIDER trong .env.local (mặc định mock)
 npm run eval -- --rule-only           # chỉ chạy bộ tách bằng quy tắc, làm mốc so sánh
-npm run eval -- --provider=anthropic  # chọn nhà cung cấp, tốn phí API (22 lượt gọi)
+npm run eval -- --provider=anthropic  # chọn nhà cung cấp, tốn phí API (24 lượt gọi)
 ```
 
-Script chạy cả 11 ca (bản nói và bản gõ tắt) qua pipeline, in độ chính xác theo từng phần và từng trường.
+Script chạy cả 12 ca (bản nói và bản gõ tắt) qua pipeline, in độ chính xác theo từng phần và từng trường.
 
 - **Chính xác = Đúng / (Đúng + Sai + Thiếu + Thừa).** Trường cả hai bên đều trống không được tính.
 - **Thừa** là pipeline điền trường bác sĩ không nói, cần đặc biệt chú ý.
@@ -178,6 +178,15 @@ npm run eval-mau -- --provider=gemini  # mức 2 gọi LLM thật, mỗi ca có 
 ```
 
 Chấm phiếu mẫu (`data/eform/phieu-mau.json`) so với `expected` của các ca có `mau_id` trong `data/cases/`, cùng cách chấm với `npm run eval` (phần chấm dùng chung ở `scripts/cham-diem.ts`). **Mức 1** là chỉ có mẫu, tức bác sĩ chỉ gõ tên mẫu. **Mức 2** là mẫu kèm câu chi tiết ngắn `input_mau` của ca (ví dụ `"vtg cấp trẻ em, tai P, 3n, sốt 38"`). Script in thêm số "không tính tiền sử", vì mẫu không điền tiền sử, ô đó bác sĩ Copy từ lần khám trước. Đây chỉ là **ước tính**: mẫu và đáp án đều do nhóm soạn, số thật phải đo khi bác sĩ thử.
+
+### Đo câu quen của bác sĩ (`npm run eval-go-tat`)
+
+```bash
+npm run eval-go-tat -- --provider=gemini                     # bộ giả + data/eform/go-tat-ca.json, 2 lượt mỗi ca
+npm run eval-go-tat -- --provider=gemini --tai-khoan=user_bs01  # bộ riêng data/go-tat/user_bs01.json + user_bs01.ca.json (local)
+```
+
+Mỗi ca chạy 2 lần: không có và có câu quen trong prompt. **Nguyên văn** = số câu quen ra đúng nguyên văn / số câu mong đợi. **Thừa** = câu quen của ý bác sĩ không nói, phải bằng 0. Gemini quá tải (503) thì chờ 10 giây thử lại một lần; giữa các lượt chờ 4,5 giây cho khỏi vượt 15 lượt/phút. Ở `mock` hai cột như nhau vì bộ tách quy tắc không dùng câu quen.
 
 ### Test (`npm test`)
 
@@ -219,6 +228,14 @@ Chỗ khác với EMR là **cột "✨ Trợ lý AI điền phiếu" bên phải
 - Chỗ riêng của bệnh nhân trong mẫu (`[phải|trái|2 bên]`, `[số] ngày`) hiện vàng để bác sĩ sửa. Mã ICD10 tra theo tên ICD của mẫu, luôn vàng như mọi mã ICD AI điền.
 - Thông báo: "Đã điền theo mẫu …: N ô, X chỉ định, Y thuốc. Bỏ qua K ô đã có chữ. Còn M chỗ cần điền (tô vàng)." Hoàn tác dùng chung nút "↶ Hoàn tác lần AI điền". Lưu thì số đo lượt thử ghi thêm `mau_id`, trang Kết quả hiện "Mẫu <id>".
 
+**Bộ gõ tắt riêng của bác sĩ** (như macro UniKey; `src/shared/eform/go-tat.ts`, `src/server/du-lieu/go-tat.ts`):
+
+- Mỗi tài khoản một file `data/go-tat/<tài khoản>.json` (không đưa lên git vì có thể là câu chữ thật của bác sĩ, định dạng xem `data/go-tat/README.md`). Chưa có file thì dùng bộ giả `data/eform/go-tat-mau.json`. Mỗi mã gắn với một ô: `kham_toan_than`, `kham_chuyen_khoa`, `kham_khac`, `chan_doan_chinh`, `loi_dan`… hoặc `tu` (từ ngắn bung tại chỗ, ví dụ `k` → không).
+- Gõ các mã vào ô Trợ lý AI, ví dụ `ttbt tbt mv hv, vmx, ldmh rm`, rồi bấm Điền. Mỗi mã bung **đúng câu của bác sĩ** vào đúng ô, không gọi AI. Nhiều mã cùng ô thì nối theo thứ tự gõ (ô khám xuống dòng, ô khác thêm dấu chấm nếu câu trước chưa có). Mã phân biệt hoa thường và phải đứng riêng (`tbt:` hay `ktbt` không tính). Chỉ điền ô còn trống, như phiếu mẫu.
+- Mã chẩn đoán (`vmx` → viêm mũi xoang cấp) còn gọi mẫu theo bệnh cùng tên, để có chỉ định và đơn thuốc; câu gõ tắt thay câu mẫu ở cùng ô. Phần không phải mã đi tiếp vào luồng mẫu hoặc AI như cũ, với từ ngắn đã bung.
+- **AI viết theo câu quen của bác sĩ**: `/api/extract` nhận thêm `tai_khoan`; server đưa các câu trong bộ gõ tắt vào system prompt (thẻ `<cau_quen>`, theo từng trường). Bác sĩ nói "tai bình thường" thì AI ghi nguyên văn câu tả tai bình thường của bác sĩ đó. Ô Khám các bộ phận khác và từ ngắn không đưa vào prompt.
+- Thông báo: "Đã điền gõ tắt tbt, mv…: N ô." hoặc thêm "Gõ tắt: …" vào thông báo mẫu/AI.
+
 | Quy tắc | Chi tiết |
 |---|---|
 | Màu | Tím = AI điền (ô có vạch tím bên trái). Vàng = AI chưa chắc, cần xem lại (vạch vàng; bấm "✓ Đúng" ngay cạnh nhãn trường hoặc trong cột AI, hoặc sửa để bỏ đánh dấu). |
@@ -227,7 +244,7 @@ Chỗ khác với EMR là **cột "✨ Trợ lý AI điền phiếu" bên phải
 | Mã dịch vụ, thuốc | Do `src/shared/match.ts` khớp danh mục. Khớp chưa chắc thì dòng vàng, có ô chọn lại: bấm vào hiện ứng viên AI tìm được, gõ để tìm trong cả danh mục. |
 | Ô tìm danh mục | Tìm dịch vụ, tìm thuốc, ICD10 đều là ô gõ để tìm (`TimDanhMuc.tsx`, tìm mờ theo tên, tên khác, hoạt chất, mã; hiểu từ viết tắt), hiện tối đa 30 kết quả. Mục có nhãn **DM BV** là danh mục bệnh viện. |
 | Nói nhiều lần | Lần điền sau chỉ thêm dòng chỉ định/thuốc chưa có (trùng mã thì bỏ qua). |
-| Đơn thuốc | Tổng số lượng tự tính theo `config/canh-bao.json`. Thuốc cùng nhóm với dị ứng trên header (ví dụ Penicillin → Augmentin, Amoxicillin) hiện cảnh báo đỏ; danh sách nhóm chỉ là minh họa. |
+| Đơn thuốc | Cột **Khi cần** cho thuốc dùng khi đau, khi sốt: tích vào thì ô Lần/ngày thành số lần tối đa, được để trống. AI tự tích khi bác sĩ nói "khi đau", "khi sốt", "khi cần" (bộ mẫu cũ ghi "Khi đau" ở Thời điểm cũng được tính). Ô **Tổng SL** gõ được: bác sĩ nói "kê 10 viên" thì AI điền 10; để trống thì tự tính theo `config/canh-bao.json` (số tự tính hiện mờ trong ô). Thuốc khi cần chưa có số lần, chưa có tổng thì ô viền vàng. Thuốc cùng nhóm với dị ứng trên header (ví dụ Penicillin → Augmentin, Amoxicillin) hiện cảnh báo đỏ; danh sách nhóm chỉ là minh họa. |
 
 **✨ Gợi ý theo chẩn đoán** nằm đầu tab Chỉ định dịch vụ và tab Đơn thuốc:
 
@@ -276,8 +293,10 @@ Dùng trong buổi họp với bác sĩ, để cho thấy "làm việc với AI"
 |---|---|
 | `ca-gia.json` | Ca giả và lịch sử khám |
 | `trinh-dien.json` | Kịch bản trang `/trinh-dien`: `kieu` (chữ trên thẻ của 4 kiểu), `lenh` (câu kiểu 3), `hoi_thoai` (hội thoại kiểu 4, `ai` là `BS` hoặc `BN`), `thoi_quen` (đơn đã kê giả, chỉ ghi tên; mã gán bằng `src/shared/match.ts` khi nạp trang) |
+| `go-tat-mau.json` | Bộ gõ tắt giả, dùng khi tài khoản chưa có `data/go-tat/<tài khoản>.json`: `ma`, `o` (ô nhận câu), `noi_dung` |
+| `go-tat-ca.json` | Ca giả cho `npm run eval-go-tat`: `noi` (bác sĩ nói tự do), `mong_doi` (theo trường: các mã có câu phải ra nguyên văn) |
 | `phieu-mau.json` | Phiếu mẫu theo bệnh (giả), bác sĩ gọi bằng tên trong ô Trợ lý AI. Mỗi mẫu: `id`, `ten`, `bi_danh` (viết tắt, cách gọi khác; không trùng giữa các mẫu, tránh từ ngắn dễ nhầm như "va"), `icd_ten` (đúng tên một mã trong `data/tham-khao/icd10-tmh.json`, mã do code tra), `kham_khac` (ô Khám các bộ phận khác), `nhap` (cùng dạng nháp của `config/forms`: `phieu_kham`, `chi_dinh`, `ke_don`; không có trường mã). Chỗ riêng của bệnh nhân viết `[phải\|trái\|2 bên]` hoặc `[số] ngày` (đơn vị: ngày, tuần, tháng, giờ, độ, lần, kg). Không ghi `so_luong` chỉ định khi là 1 (eForm tự hiểu là 1). Sửa xong chạy `npm test` để chắc mọi mẫu tra được ICD và mọi dòng khớp chắc danh mục |
-| `goi-y-theo-chan-doan.json` | Bộ mẫu chỉ định, thuốc, lời dặn theo mã ICD10 (giả). Mỗi mẫu: `id`, `ten`, `icd` (danh sách mã), `chi_dinh` (`ten`), `don_thuoc` (`ten`, `ham_luong`, `duong_dung`, `lieu_moi_lan`, `so_lan_ngay`, `thoi_diem`, `so_ngay`, `ghi_chu`), `loi_dan`. Tên nên có trong danh mục bệnh viện `data/catalog/` để khớp chắc mã |
+| `goi-y-theo-chan-doan.json` | Bộ mẫu chỉ định, thuốc, lời dặn theo mã ICD10 (giả). Mỗi mẫu: `id`, `ten`, `icd` (danh sách mã), `chi_dinh` (`ten`), `don_thuoc` (`ten`, `ham_luong`, `duong_dung`, `lieu_moi_lan`, `so_lan_ngay`, `thoi_diem`, `so_ngay`, `ghi_chu`, không bắt buộc `so_luong_ke`), `loi_dan`. Thuốc có `thoi_diem` bắt đầu bằng "Khi" được coi là dùng khi cần. Tên nên có trong danh mục bệnh viện `data/catalog/` để khớp chắc mã |
 | `icd10.json` | Từ khóa gợi ý ICD10 (`manh`, `vua`) cho 29 mã TMH hay gặp. Danh sách mã để chọn lấy từ `data/tham-khao/icd10-tmh.json` (367 mã chi tiết); mã ở đây mà nguồn thật không có vẫn được giữ |
 | `mau-cau.json` | Mẫu câu theo nhóm lý do khám, chỗ trống viết dạng `[a\|b]` |
 | `quy-tac.json` | Ngưỡng tóm tắt, cách tính điểm, từ phủ định |
@@ -291,6 +310,7 @@ config/         cấu hình form, màu, viết tắt, cảnh báo
 data/catalog/   danh mục bệnh viện soạn tay (khớp trước danh mục thật)
 data/cases/     ca giả
 data/sessions/  kết quả các lượt thử (tự sinh, không đưa lên git)
+data/go-tat/    bộ gõ tắt riêng từng tài khoản bác sĩ (không đưa lên git, trừ README)
 data/thoi-quen/ đơn từng tài khoản bác sĩ đã Lưu, cho gợi ý theo thói quen (tự sinh, không đưa lên git)
 data/giong-noi/ file âm thanh để đo nhận dạng giọng nói (tự sinh hoặc tự ghi, không đưa lên git, trừ README)
 data/eform/     ca giả, danh mục và quy tắc của trang eForm

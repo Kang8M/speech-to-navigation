@@ -1,0 +1,32 @@
+[
+  {
+    "id": "gt-01",
+    "noi": "Bệnh nhân tỉnh, thể trạng tốt. Tai hai bên bình thường. Mũi niêm mạc phù nề, cuốn dưới to, khe giữa đọng dịch nhày. Họng niêm mạc đỏ, thành sau họng có dịch chảy xuống. Chẩn đoán viêm mũi xoang cấp. Dặn xịt rửa mũi nước muối sáng tối, tránh khói bụi.",
+    "mong_doi": { "kham_toan_than": ["ttot"], "kham_chuyen_khoa": ["tbth", "mnde", "hnde"], "chan_doan_chinh": ["vmxc"], "loi_dan": ["ldmui"] }
+  },
+  {
+    "id": "gt-02",
+    "noi": "Khám tai, mũi, họng đều bình thường. Chẩn đoán viêm họng cấp. Dặn súc họng nước muối ấm sau ăn, hạn chế đồ lạnh. Khám lại sau 1 tuần, sốt cao hay khó thở thì đến sớm.",
+    "mong_doi": { "kham_chuyen_khoa": ["tbth", "mbth", "hbth"], "chan_doan_chinh": ["vhc"], "loi_dan": ["ldhong", "hen1t"] }
+  },
+  {
+    "id": "gt-03",
+    "noi": "Khàn tiếng 3 ngày. Soi thanh quản dây thanh hai bên đỏ, phù nhẹ, khép chưa kín. Mũi bình thường, họng bình thường. Chẩn đoán viêm thanh quản cấp. Dặn nghỉ giọng, nói nhỏ, uống đủ nước ấm.",
+    "mong_doi": { "kham_chuyen_khoa": ["tqnde", "mbth", "hbth"], "chan_doan_chinh": ["vtqc"], "loi_dan": ["ldgiong"] }
+  },
+  {
+    "id": "gt-04",
+    "noi": "Ống tai phải có nút ráy bít kín, tai trái sạch. Mũi họng bình thường. Chẩn đoán nút ráy tai phải. Dặn giữ khô tai, không tự lấy ráy, đau tai tăng hay chảy dịch thì quay lại khám.",
+    "mong_doi": { "kham_chuyen_khoa": ["mbth", "hbth"], "loi_dan": ["ldtai"] }
+  },
+  {
+    "id": "gt-05",
+    "noi": "Ợ chua, nuốt vướng 2 tháng. Họng bình thường, thanh quản bình thường. Dặn ăn tối sớm, không nằm ngay sau ăn, kê cao gối khi ngủ.",
+    "mong_doi": { "kham_chuyen_khoa": ["hbth", "tqbth"], "loi_dan": ["ldtn"] }
+  },
+  {
+    "id": "gt-06",
+    "noi": "Toàn thân bình thường. Mũi niêm mạc nề, cuốn dưới to, khe giữa có dịch nhày. Chẩn đoán viêm mũi xoang cấp.",
+    "mong_doi": { "kham_toan_than": ["ttot"], "kham_chuyen_khoa": ["mnde"], "chan_doan_chinh": ["vmxc"] }
+  }
+]

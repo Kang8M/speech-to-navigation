@@ -15,9 +15,14 @@ async function postJson<T>(url: string, body: unknown, loiMacDinh: string): Prom
 }
 
 /** AI tách văn bản thành nháp Phiếu khám, Chỉ định, Đơn thuốc (dùng LLM_PROVIDER của server).
- * Có mauId thì text là phần chi tiết bác sĩ nói thêm sau tên mẫu, AI thay chỗ trống trong mẫu đó */
-export function goiAiDienNhap(text: string, loiMacDinh = "Không gọi được AI.", mauId?: string): Promise<PipelineResult> {
-  const body: ExtractRequest = mauId ? { text, mau_id: mauId } : { text };
+ * Có mauId thì text là phần chi tiết bác sĩ nói thêm sau tên mẫu, AI thay chỗ trống trong mẫu đó.
+ * Có taiKhoan thì AI viết theo câu quen trong bộ gõ tắt của bác sĩ đó */
+export function goiAiDienNhap(
+  text: string,
+  loiMacDinh = "Không gọi được AI.",
+  { mauId, taiKhoan }: { mauId?: string; taiKhoan?: string } = {},
+): Promise<PipelineResult> {
+  const body: ExtractRequest = { text, ...(mauId && { mau_id: mauId }), ...(taiKhoan && { tai_khoan: taiKhoan }) };
   return postJson<PipelineResult>("/api/extract", body, loiMacDinh);
 }
 

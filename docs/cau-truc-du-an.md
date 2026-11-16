@@ -73,7 +73,7 @@ Có hai loại "AI", đặt ở hai nơi khác nhau vì chạy ở hai nơi khá
 | Loại | Thư mục | Chạy ở | Gồm |
 |---|---|---|---|
 | **AI thật** (gọi LLM, chạy model) | `src/server/ai/` | server | tách văn bản thành nháp (`pipeline.ts` → `llm/*`), nhận dạng giọng nói (`asr.ts`) |
-| **AI bằng rule** (mock, không gọi LLM) | `src/shared/eform/` | trình duyệt (và server lúc nạp trang) | tóm tắt lịch sử (`tom-tat.ts`), gợi ý ICD10 (`icd.ts`), gợi ý mẫu câu (`mau-cau.ts`), gợi ý theo chẩn đoán (`goi-y.ts`) và theo thói quen từng bác sĩ (`thoi-quen.ts`), đổ kết quả AI vào phiếu (`dien-phieu.ts`); sửa chữ sau nhận dạng giọng nói ở `src/shared/giong-noi/sua-chu.ts` |
+| **AI bằng rule** (mock, không gọi LLM) | `src/shared/eform/` | trình duyệt (và server lúc nạp trang) | tóm tắt lịch sử (`tom-tat.ts`), gợi ý ICD10 (`icd.ts`), gợi ý mẫu câu (`mau-cau.ts`), gợi ý theo chẩn đoán (`goi-y.ts`) và theo thói quen từng bác sĩ (`thoi-quen.ts`), bộ gõ tắt riêng (`go-tat.ts`), đổ kết quả AI vào phiếu (`dien-phieu.ts`); sửa chữ sau nhận dạng giọng nói ở `src/shared/giong-noi/sua-chu.ts` |
 
 `src/server/ai/llm/rules.ts` cũng là rule nhưng nằm ở server vì nó là một "nhà cung cấp" của pipeline (dùng cho `mock` và `--rule-only`).
 
@@ -86,7 +86,7 @@ Muốn thay một tính năng rule bằng LLM thật (ví dụ tóm tắt lịch
 
 **Giọng nói Zipformer:** `MicButton.tsx` → `GET /api/asr` (chế độ) → `POST /api/asr` (mở phiên) → `POST /api/asr/[id]` mỗi 0,4 giây (PCM 16 kHz, nhận `{ chot, tam }`) → `DELETE /api/asr/[id]`. Mỗi câu chốt (cả Web Speech) đi qua `shared/giong-noi/sua-chu.ts › suaChu` trong `TroLyAi.tsx` với bảng `data.suaChu` (`config/sua-chu-giong-noi.json`) rồi mới vào ô nhập.
 
-**Nạp trang eForm (`/`):** `src/app/page.tsx` (server) đọc `?bs=` rồi gọi `server/du-lieu/eform.ts › loadEformData` (đọc `data/eform/`, gán mã cho bộ mẫu gợi ý, đọc `data/thoi-quen/<tài khoản>.json`) → truyền xuống `EformScreen` (client). Các gợi ý rule chạy trên trình duyệt với dữ liệu đó, không gọi API.
+**Nạp trang eForm (`/`):** `src/app/page.tsx` (server) đọc `?bs=` rồi gọi `server/du-lieu/eform.ts › loadEformData` (đọc `data/eform/`, gán mã cho bộ mẫu gợi ý, đọc `data/thoi-quen/<tài khoản>.json` và bộ gõ tắt `server/du-lieu/go-tat.ts › docGoTat`) → truyền xuống `EformScreen` (client). Các gợi ý rule chạy trên trình duyệt với dữ liệu đó, không gọi API.
 
 **Đo lượt thử:** `TroLyAi.tsx` báo `onBatDau` (gõ, bấm 🎤, bấm câu mẫu) → `EformScreen` ghi mốc giờ → bấm Lưu lần đầu sau khi AI điền → `shared/eform/do-luong.ts › demLuot` đếm → `client/api.ts › luuLuotThu` → `POST /api/sessions` → `server/du-lieu/sessions.ts` ghi `data/sessions/` → trang `/ket-qua` đọc lại.
 
@@ -111,6 +111,7 @@ Muốn thay một tính năng rule bằng LLM thật (ví dụ tóm tắt lịch
 | Kiểm tra dị ứng | `shared/eform/di-ung.ts` | `DonThuocTab`, `GoiYTheoChanDoan` | Mọi chỗ thêm thuốc nên gọi `trungDiUng` |
 | Sửa chữ giọng nói | `shared/giong-noi/sua-chu.ts` + `config/sua-chu-giong-noi.json` | `TroLyAi`, `scripts/eval-giong-noi.ts` | Màn mới có nút micro thì gọi `suaChu(cau, data.suaChu)` trên từng câu `onText` |
 | Gợi ý theo thói quen | `shared/eform/thoi-quen.ts`, `/api/thoi-quen` | `GoiYTheoChanDoan`, `EformScreen` | `ghepGoiY` trả nhóm thói quen trước, bộ mẫu sau, dùng chung cho tab Chỉ định và Đơn thuốc |
+| Bộ gõ tắt riêng | `shared/eform/go-tat.ts`, `server/du-lieu/go-tat.ts` | `TroLyAi`, `EformScreen`, `/api/extract` (câu quen vào prompt), `scripts/eval-go-tat.ts` | `tachGoTat` bung mã thành câu theo ô, `chenGoTat` đặt câu đó lên kết quả mẫu hay AI |
 
 ## Thêm mới thì đặt ở đâu
 

@@ -56,7 +56,11 @@ export interface WarningRules {
     truong_lieu: string;
     truong_so_lan: string;
     truong_so_ngay: string;
+    /** Số lượng bác sĩ nói rõ ("kê 10 viên"), dùng thay cho số tự tính */
+    truong_so_luong_ke: string;
     don_vi_dem: string[];
+    /** Đơn vị bác sĩ gõ tắt trong liều ("1 v"), bung ra trước khi tính tổng */
+    don_vi_viet_tat: Record<string, string>;
   };
 }
 

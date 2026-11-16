@@ -70,6 +70,11 @@ Quy ước: BS = bác sĩ, BN = bệnh nhân. Không ghi tên riêng (BN, BS kê
 8. **Liều tính theo "mg hoạt chất ⇄ viên"**: hợp thuốc viên; khớp lời phàn nàn buổi sáng là thuốc bôi/nhỏ/xịt khó nhập.
 9. Location ghi "Phòng Khám Mắt" trong khi order @ Phòng Khám TMH → hỏi: do liên chuyên khoa hay BN đăng ký nhiều phòng trong một lượt?
 
+## Bổ sung 16/11/2026 – thuốc dùng khi cần (ghi chép tay của người quan sát)
+- BS nói khi kê lại thuốc trên OH, **thuốc giảm đau khó kê liều mỗi ngày** vì bệnh nhân chỉ uống khi đau, nhưng hệ thống cứ bắt kê liều dùng cố định.
+- Màn 2 có ô When required (PRN), nhưng chưa rõ BS có dùng không, và tích vào thì còn phải nhập Frequency, Supply length không. Câu hỏi đã đưa vào `docs/kich-ban-thu-bac-si.md` (phần Hỏi sau buổi thử).
+- Prototype làm theo: cột **Khi cần** trên bảng đơn, lần/ngày thành số lần tối đa (để trống được), tổng số lượng lấy số BS nói ("kê 10 viên"), giới hạn ("cách nhau 4–6 giờ") vào ghi chú.
+
 ## Hướng AI rút ra
 - **Kê đơn bằng một câu** (gõ hoặc nói): "Augmentin 1g, ngày 2 lần sáng tối, cùng bữa ăn, 7 ngày" → AI tách thành các trường Dose / Frequency / ghi chú / Supply length / Supply Qty, khớp với danh mục thuốc, BS chỉ xác nhận. Làm được trong bản mẫu.
 - **Gợi ý đơn theo chẩn đoán lấy từ EMR**: điền sẵn thuốc + liều + lời dặn theo bộ mẫu bệnh hay gặp (câu hỏi số 2 cho BS).

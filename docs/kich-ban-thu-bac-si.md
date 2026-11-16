@@ -87,6 +87,19 @@ Làm lần lượt. Mỗi bài xong thì Lưu rồi F5.
 1. F5. Tự nghĩ một ca hay gặp (bệnh giả), chọn mẫu gần nhất trong Phụ lục. Gõ hoặc nói tên mẫu kèm vài chi tiết theo cách anh/chị vẫn gõ tắt.
 2. Sửa phiếu cho đúng ca đó, Lưu.
 
+**Bài 11. Gõ tắt của anh/chị.** (Chỉ làm khi người điều phối đã nạp bộ gõ tắt UniKey của anh/chị.)
+1. F5. Gõ các mã gõ tắt anh/chị vẫn dùng, cách nhau bằng dấu cách hoặc dấu phẩy, ví dụ khám bình thường, khám bất thường, chẩn đoán, lời dặn. Bấm Điền.
+2. Xem mỗi câu có vào đúng ô không (khám toàn thân, khám chuyên khoa, khám các bộ phận khác, chẩn đoán, lời dặn). Mã chẩn đoán có mẫu theo bệnh cùng tên thì chỉ định và đơn thuốc cũng được thêm.
+3. F5. Lần này **nói** (hoặc gõ câu thường, không dùng mã), ví dụ "tai bình thường, mũi cuốn nề có dịch, dặn rửa mũi". Xem AI có viết đúng câu quen của anh/chị không. Lưu.
+
+**Bài 12. Thuốc giảm đau dùng khi cần.**
+1. F5. Gõ hoặc nói, rồi bấm Điền:
+
+   > Kê Augmentin 625 mg uống 1 viên một lần, ngày 2 lần, sau ăn, 7 ngày. Paracetamol 500 mg uống 1 viên khi đau, cách nhau 4 đến 6 giờ, tối đa 4 viên một ngày, kê 10 viên.
+
+2. Tab Đơn thuốc: dòng Paracetamol đã tích **Khi cần**, ô Lần/ngày để trống (chữ mờ "tối đa"), Tổng SL là 10, ghi chú có "cách nhau 4 đến 6 giờ, tối đa 4 viên một ngày". Dòng Augmentin không tích, Tổng SL tự tính 14 (chữ mờ).
+3. Thử bỏ số 10 ở Tổng SL: ô viền vàng vì thuốc khi cần chưa có số lần, chưa có tổng. Gõ lại số lượng anh/chị muốn. Lưu.
+
 ---
 
 ## Phần 2. Cho người điều phối
@@ -101,6 +114,8 @@ Làm lần lượt. Mỗi bài xong thì Lưu rồi F5.
 - Nếu dùng `gemini` bằng key miễn phí: đặt `GEMINI_MODEL=gemini-3.5-flash-lite` (**15 lượt gọi mỗi phút, 500 lượt mỗi ngày**, mỗi lượt khoảng 2–3 giây). Model mạnh hơn hết hạn mức rất nhanh. Thỉnh thoảng Google trả lỗi 503 khi quá tải, phiếu hiện chữ đỏ "AI đang quá tải, bấm Điền lại sau vài giây" (hết lượt thì "chờ khoảng 1 phút"); chi tiết lỗi in ở terminal chạy `npm run dev`. Khi gọi mẫu kèm chi tiết mà AI lỗi, phiếu vẫn được điền theo mẫu bằng quy tắc, kèm thông báo đỏ. Với bài 8, 9 thì bấm lại.
 - Mở `/ket-qua` trước buổi thử để biết đã có bao nhiêu lượt cũ. Lượt có dùng mẫu hiện "· Mẫu <id>".
 - Danh sách mẫu nằm trong Phụ lục, dữ liệu gốc ở `data/eform/phieu-mau.json`.
+- Bài 11: chép bộ gõ tắt UniKey của bác sĩ thành `data/go-tat/<tài khoản>.json` (định dạng ở `data/go-tat/README.md`; tài khoản mặc định của ca giả là `user_bs01`). Thư mục này không lên git. Chưa có file thì trang dùng bộ giả `data/eform/go-tat-mau.json`, bác sĩ sẽ không nhận ra mã nào. Bước 1 không gọi LLM; bước 3 gọi LLM 1 lượt.
+- Đo trước bằng `npm run eval-go-tat -- --provider=gemini --tai-khoan=<tài khoản>` (cần thêm `<tài khoản>.ca.json`). Ngày 2026-11-12 với bộ thật của một bác sĩ: câu quen ra nguyên văn 10,3% khi không đưa câu quen vào prompt, 89,7% khi có, không câu thừa.
 
 ### Kết quả đúng để đối chiếu
 
@@ -117,6 +132,7 @@ Kiểm tra trên ca giả ngày 2026-11-12. Mã ICD10 luôn hiện vàng. Ô Lý
 | 7 | nói "mẫu viêm họng cấp" | Viêm họng cấp | J02.9 | 1: sốt [số] độ | Test nhanh liên cầu họng | Paracetamol 500 mg; Alpha Choay |
 | 8 | đoạn u bã đậu | không có mẫu, AI tách cả đoạn | L72.1 (gợi ý theo từ khóa) | tùy LLM | Cắt u bã đậu vùng đầu mặt cổ | Cefixim 200 mg |
 | 9 | đọc cả ca | không dùng mẫu | gợi ý theo từ khóa | tùy LLM và nhận dạng giọng nói | 3 dịch vụ như bài 1 | Ciprofloxacin nhỏ tai; Paracetamol 500 mg |
+| 12 | đoạn Augmentin + Paracetamol khi đau | không dùng mẫu | không có (đoạn không có chẩn đoán) | 0 | không có | Augmentin 625 mg (Tổng SL 14); Paracetamol 500 mg **khi cần**, Tổng SL 10 |
 
 Bài 5: thông báo phải ghi "Bỏ qua 3 ô đã có chữ", ô Hướng điều trị giữ chữ bác sĩ gõ. Bài 6: sau Hoàn tác, các ô mẫu viêm họng phải biến mất.
 
@@ -157,6 +173,7 @@ Số đếm (thời gian, số trường AI điền, đã sửa, bổ sung, kh�
 | 8 | | | | | |
 | 9 | | | | | |
 | 10 | | | | | |
+| 11 | | | | | |
 
 ### Hỏi sau buổi thử
 
@@ -168,6 +185,9 @@ Hỏi về việc đã xảy ra, không hỏi bác sĩ có thích không:
 - Ca hôm qua anh/chị nhập phiếu và đơn mất bao lâu? Phần nào chiếm nhiều thời gian nhất?
 - Bệnh nào anh/chị gặp nhiều mà danh sách mẫu chưa có?
 - Lúc nãy chỗ nào anh/chị không tin kết quả và phải đọc lại kỹ?
+- Lần gần nhất kê thuốc giảm đau "khi đau" trên OH, anh/chị nhập gì vào ô số lần/ngày và số ngày? Có tích ô When required (PRN) không, tích rồi hệ thống còn bắt nhập gì?
+- Ở bài 12, ô Lần/ngày của thuốc khi cần nên để trống hay ghi số lần tối đa? Tổng số lượng anh/chị thường kê theo số viên hay theo số ngày?
+- Ở bài 11 bước 3, anh/chị chỉ nói ngắn (ví dụ "dặn rửa mũi") mà AI ghi cả câu quen dài hơn ("…bằng nước muối sinh lý hoặc bình rửa mũi xoang"). Chỗ đó anh/chị giữ hay sửa?
 
 ---
 

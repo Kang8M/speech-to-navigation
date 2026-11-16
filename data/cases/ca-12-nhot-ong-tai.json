@@ -1,0 +1,57 @@
+{
+  "id": "ca-12",
+  "ten": "Nhọt ống tai ngoài, thuốc giảm đau dùng khi cần",
+  "hanh_chinh": {
+    "ho_ten": "Người Giả Số Mười Hai",
+    "tuoi": 34,
+    "gioi": "Nam",
+    "can_nang": 65
+  },
+  "input_noi": "Ừ anh này đến khám vì đau tai trái. Bệnh sử 2 ngày nay đau tai trái tăng dần, đau nhiều khi nhai, không sốt, không chảy dịch tai. Tiền sử khỏe mạnh, không dị ứng thuốc. Toàn thân tỉnh, không sốt. Khám tai mũi họng thấy ống tai ngoài trái có nhọt sưng đỏ, chưa vỡ mủ, màng nhĩ trái bình thường, tai phải bình thường. Chẩn đoán nhọt ống tai ngoài trái. Hướng điều trị nội khoa. Chỉ định nội soi tai mũi họng 1 lần. Kê đơn: Augmentin 625 mg uống 1 viên một lần, ngày 2 lần, sau ăn, 7 ngày. Paracetamol 500 mg uống 1 viên khi đau, cách nhau 4 đến 6 giờ, tối đa 4 viên một ngày, kê 10 viên. Dặn giữ khô tai, không ngoáy tai. Hẹn tái khám sau 7 ngày.",
+  "input_go_tat": "LD: đau tai T. BS: 2n nay đau tai T tăng dần, đau nhiều khi nhai, không sốt, không chảy dịch tai. TS: khỏe mạnh, không dị ứng thuốc. TT: tỉnh, không sốt. TMH: ống tai ngoài T có nhọt sưng đỏ, chưa vỡ mủ, màng nhĩ T bình thường, tai P bình thường. CĐ: nhọt ống tai ngoài T. ĐT: nội khoa. CLS: NSTMH 1 lần. Đơn: Augmentin 625 mg uống 1 v x 2 l/n sau ăn 7n; Paracetamol 500 mg uống 1 v khi đau, cách nhau 4 đến 6 giờ, tối đa 4 viên một ngày, kê 10 v. Dặn: giữ khô tai, không ngoáy tai. Hẹn: sau 7n.",
+  "expected": {
+    "phieu_kham": {
+      "ly_do_kham": "Đau tai trái",
+      "benh_su": "2 ngày nay đau tai trái tăng dần, đau nhiều khi nhai, không sốt, không chảy dịch tai",
+      "tien_su": "Khỏe mạnh, không dị ứng thuốc",
+      "kham_toan_than": "Tỉnh, không sốt",
+      "kham_chuyen_khoa": "Ống tai ngoài trái có nhọt sưng đỏ, chưa vỡ mủ, màng nhĩ trái bình thường, tai phải bình thường",
+      "chan_doan_chinh": "Nhọt ống tai ngoài trái",
+      "huong_dieu_tri": "Điều trị nội khoa",
+      "loi_dan": "Giữ khô tai, không ngoáy tai",
+      "hen_tai_kham": "Sau 7 ngày"
+    },
+    "chi_dinh": [
+      {
+        "ma_dich_vu": "20.13",
+        "ten_dich_vu": "Nội soi tai mũi họng",
+        "so_luong": 1
+      }
+    ],
+    "ke_don": [
+      {
+        "ma_thuoc": "TH-001",
+        "ten_thuoc": "Augmentin",
+        "ham_luong": "625 mg",
+        "duong_dung": "Uống",
+        "lieu_moi_lan": "1 viên",
+        "so_lan_ngay": 2,
+        "thoi_diem": "Sau ăn",
+        "so_ngay": 7,
+        "tong_so_luong": 14
+      },
+      {
+        "ma_thuoc": "TH-013",
+        "ten_thuoc": "Paracetamol",
+        "ham_luong": "500 mg",
+        "duong_dung": "Uống",
+        "lieu_moi_lan": "1 viên",
+        "khi_can": "Có",
+        "thoi_diem": "Khi đau",
+        "so_luong_ke": 10,
+        "tong_so_luong": 10,
+        "ghi_chu": "Cách nhau 4 đến 6 giờ, tối đa 4 viên một ngày"
+      }
+    ]
+  }
+}

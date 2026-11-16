@@ -6,6 +6,7 @@ import { useEform } from "@/client/eform/EformContext";
 import { BTN_OUTLINE } from "@/client/eform/fields";
 import type { KetQuaDien } from "@/shared/eform/dien-phieu";
 import { goiAiDienNhap } from "@/client/api";
+import { chenGoTat, ketQuaGoTat, tachGoTat, type KetQuaGoTat } from "@/shared/eform/go-tat";
 import { goiYTenMau, ketQuaTheoQuyTac, timPhieuMau, type PhieuMau } from "@/shared/eform/phieu-mau";
 import type { PipelineResult } from "@/shared/api";
 import { suaChu } from "@/shared/giong-noi/sua-chu";
@@ -15,8 +16,8 @@ export type TabId = "phieu" | "chi_dinh" | "don_thuoc";
 
 interface Props {
   ketQua: KetQuaDien | null;
-  /** Mỗi lần AI điền: trả kết quả và đoạn chữ đã gửi để màn hình áp vào phiếu; gọi phiếu mẫu thì kèm mẫu */
-  onDien: (result: PipelineResult, text: string, mau?: PhieuMau) => void;
+  /** Mỗi lần AI điền: trả kết quả và đoạn chữ đã gửi để màn hình áp vào phiếu; gọi phiếu mẫu thì kèm mẫu, có gõ tắt thì kèm các mã đã bung */
+  onDien: (result: PipelineResult, text: string, mau?: PhieuMau, goTat?: KetQuaGoTat) => void;
   /** Bác sĩ bắt đầu nói, gõ hoặc nạp câu mẫu: mốc tính thời gian lượt thử */
   onBatDau: (kieuNhap: InputMode, tuCaMau: boolean) => void;
   onHoanTac: (() => void) | null;
@@ -28,6 +29,11 @@ interface Props {
   vanBanDau?: string;
   /** Trang trình diễn kiểu 4: hội thoại giả, phát lại từng câu như máy đang nghe */
   hoiThoai?: { ai: "BS" | "BN"; cau: string }[];
+}
+
+/** Câu gõ tắt thay câu cùng ô trong kết quả mẫu hay AI */
+function chenVao(result: PipelineResult, goTat?: KetQuaGoTat): PipelineResult {
+  return goTat?.daDung.length ? { ...result, draft: chenGoTat(result.draft, goTat.cacO) } : result;
 }
 
 /** Khoảng cách giữa hai câu khi phát lại hội thoại mẫu */
@@ -89,25 +95,28 @@ export function TroLyAi({ ketQua, onDien, onBatDau, onHoanTac, onGoTo, onOpenTab
   /** Đoạn chữ của lần điền gần nhất, để biết bác sĩ đã nói hoặc gõ thêm chưa */
   const [daGui, setDaGui] = useState("");
 
-  /** Mẫu bác sĩ gọi nhưng trùng tên nhiều mẫu: hiện nút để chọn */
-  const [luaChon, setLuaChon] = useState<PhieuMau[] | null>(null);
+  /** Mẫu bác sĩ gọi nhưng trùng tên nhiều mẫu: hiện nút để chọn, giữ lại chi tiết và gõ tắt đã tách */
+  const [luaChon, setLuaChon] = useState<{ cacMau: PhieuMau[]; chiTiet: string; goTat: KetQuaGoTat } | null>(null);
+  /** AI viết theo câu quen trong bộ gõ tắt của bác sĩ đang đăng nhập */
+  const taiKhoan = data.ca.dang_nhap;
 
   /** Đổ phiếu mẫu vào phiếu: chỉ có tên mẫu thì không gọi API, có chi tiết thì gọi AI một lần để thay chỗ trống */
-  async function dungMau(mau: PhieuMau, chuDaGui: string, chiTiet = "") {
+  async function dungMau(mau: PhieuMau, chuDaGui: string, chiTiet = "", goTat?: KetQuaGoTat) {
     setLuaChon(null);
     setError(null);
     if (!chiTiet) {
-      onDien(mau.ketQua, chuDaGui, mau);
+      onDien(chenVao(mau.ketQua, goTat), chuDaGui, mau, goTat);
       setDaGui(chuDaGui);
       return;
     }
     setLoading(true);
     try {
-      onDien(await goiAiDienNhap(chiTiet, "AI không điền được phiếu.", mau.id), chuDaGui, mau);
+      const result = await goiAiDienNhap(chiTiet, "AI không điền được phiếu.", { mauId: mau.id, taiKhoan });
+      onDien(chenVao(result, goTat), chuDaGui, mau, goTat);
       setDaGui(chuDaGui);
     } catch (err) {
       // AI lỗi (quá tải, hết lượt) thì vẫn điền theo mẫu, chỗ trống thay bằng quy tắc
-      onDien(ketQuaTheoQuyTac(mau, chiTiet, data.vietTat), chuDaGui, mau);
+      onDien(chenVao(ketQuaTheoQuyTac(mau, chiTiet, data.vietTat), goTat), chuDaGui, mau, goTat);
       setDaGui(chuDaGui);
       const lyDo = err instanceof Error ? err.message : "Không gọi được AI.";
       setError(`${lyDo} Đã điền theo mẫu, chi tiết chỉ thay được bên, số ngày, nhiệt độ; hãy kiểm tra các chỗ vàng.`);
@@ -118,19 +127,32 @@ export function TroLyAi({ ketQua, onDien, onBatDau, onHoanTac, onGoTo, onOpenTab
 
   async function dien() {
     if (!text.trim() || loading) return;
-    const goi = timPhieuMau(text, data.phieuMau);
+    // Mã gõ tắt của bác sĩ bung vào ô trước; phần còn lại gọi mẫu hoặc AI như cũ
+    const goTat = tachGoTat(text, data.goTat);
+    const chu = goTat.conLai;
+    const theoTen = chu ? timPhieuMau(chu, data.phieuMau) : null;
+    // Mã chẩn đoán trong bộ gõ tắt ("vmx" → viêm mũi xoang cấp) cũng gọi mẫu cùng tên, để có chỉ định và đơn
+    const theoChanDoan = !theoTen && goTat.cacO.chan_doan_chinh ? timPhieuMau(goTat.cacO.chan_doan_chinh, data.phieuMau) : null;
+    const goi = theoTen ?? theoChanDoan;
+    const chiTiet = theoTen ? theoTen.conLai : chu;
     if (goi?.loai === "nhieu") {
-      setLuaChon(goi.cacMau);
+      setLuaChon({ cacMau: goi.cacMau, chiTiet, goTat });
       return;
     }
     if (goi?.loai === "mot") {
-      await dungMau(goi.mau, text, goi.conLai);
+      await dungMau(goi.mau, text, chiTiet, goTat);
+      return;
+    }
+    if (!chu) {
+      onDien(ketQuaGoTat(goTat.cacO), text, undefined, goTat);
+      setDaGui(text);
+      setError(null);
       return;
     }
     setLoading(true);
     setError(null);
     try {
-      onDien(await goiAiDienNhap(text, "AI không điền được phiếu."), text);
+      onDien(chenVao(await goiAiDienNhap(chu, "AI không điền được phiếu.", { taiKhoan }), goTat), text, undefined, goTat);
       setDaGui(text);
     } catch (err) {
       setError(err instanceof Error ? err.message : "AI không điền được phiếu.");
@@ -245,8 +267,8 @@ export function TroLyAi({ ketQua, onDien, onBatDau, onHoanTac, onGoTo, onOpenTab
         {luaChon && (
           <div role="group" aria-label="Chọn mẫu" className="space-y-1.5 rounded-lg border border-tim-vien bg-tim-nhat/60 p-3">
             <p className="text-xs font-semibold text-ef-chu">Tên này khớp nhiều mẫu, chọn một:</p>
-            {luaChon.map((mau) => (
-              <button key={mau.id} type="button" className={NUT_PHU} onClick={() => void dungMau(mau, text, timPhieuMau(text, data.phieuMau)?.conLai ?? "")}>
+            {luaChon.cacMau.map((mau) => (
+              <button key={mau.id} type="button" className={NUT_PHU} onClick={() => void dungMau(mau, text, luaChon.chiTiet, luaChon.goTat)}>
                 Dùng mẫu: {mau.ten}
               </button>
             ))}

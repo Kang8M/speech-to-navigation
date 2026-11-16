@@ -32,6 +32,9 @@ Các trường bác sĩ hay tự nhập/sửa: bệnh sử, lý do đến khám,
 - Bác sĩ (03/11): "đau đầu" với thao tác phần mềm khi tìm thông tin bệnh nhân, tìm thông tin loại bệnh; bệnh nhân khám nhiều lần nhưng không có bộ lọc, phải mở danh sách từng ngày ra xem.
 - Bác sĩ (03/11): muốn xem BHYT ngay trên EMR, có hệ thống phân tích BHYT để biết thuốc nào bị hạn chế khi kê đơn; theo bác sĩ, các bệnh viện khác đã nối kê đơn với BHYT.
 
+- Bác sĩ (16/11): khi kê lại thuốc trên OH, thuốc giảm đau khó kê liều mỗi ngày vì bệnh nhân chỉ uống khi đau, nhưng hệ thống cứ bắt kê liều dùng cố định.
+- 16/11/2026: BS cho xem thao tác điền thông tin cho bệnh nhân **khám nội trú**: phải điền rất nhiều thông tin, có rất nhiều loại phiếu khám. Prototype hiện chỉ làm ngoại trú, nên mới ghi nhận, chưa làm.
+
 ## Ý tưởng liên quan đến prototype
 1. **Trợ lý giọng nói / văn bản điền bệnh án**: bác sĩ tự đọc tóm tắt sau khám (chỉ giọng bác sĩ, không ghi âm cuộc hội thoại với bệnh nhân) → AI chia vào đúng các trường phiếu khám (+ nối sang đơn thuốc). Kết hợp **mẫu điền sẵn** cho ca TMH hay gặp (viêm tai, viêm mũi họng ở trẻ).
    - Giá trị: giảm gánh nặng nhận thức + giảm thời gian ở ca thiếu điều dưỡng và ca phải sửa lại.

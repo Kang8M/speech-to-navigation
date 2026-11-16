@@ -10,10 +10,12 @@
     { "id": "ham_luong", "label": "Hàm lượng", "type": "text", "required": false, "hint": "Ví dụ: 500 mg", "ai_fill": true },
     { "id": "duong_dung", "label": "Đường dùng", "type": "select", "options": ["Uống", "Ngậm", "Xịt mũi", "Nhỏ mũi", "Rửa mũi", "Nhỏ tai", "Súc họng", "Khí dung", "Bôi"], "required": false, "hint": "", "ai_fill": true },
     { "id": "lieu_moi_lan", "label": "Liều mỗi lần", "type": "text", "required": true, "hint": "Ví dụ: 1 viên", "ai_fill": true },
-    { "id": "so_lan_ngay", "label": "Số lần/ngày", "type": "number", "required": true, "hint": "", "ai_fill": true },
+    { "id": "khi_can", "label": "Dùng khi cần", "type": "select", "options": ["Có"], "required": false, "hint": "Chọn Có khi thuốc chỉ dùng khi đau, khi sốt, khi cần, không theo giờ cố định", "ai_fill": true },
+    { "id": "so_lan_ngay", "label": "Số lần/ngày", "type": "number", "required": false, "hint": "Thuốc dùng khi cần: số lần tối đa mỗi ngày, bác sĩ không nói thì để trống", "ai_fill": true },
     { "id": "thoi_diem", "label": "Thời điểm dùng", "type": "text", "required": false, "hint": "Ví dụ: Sau ăn sáng, tối", "ai_fill": true },
-    { "id": "so_ngay", "label": "Số ngày", "type": "number", "required": true, "hint": "", "ai_fill": true },
-    { "id": "tong_so_luong", "label": "Tổng số lượng", "type": "number", "required": false, "hint": "Tự tính với thuốc đếm được (viên, gói, ống)", "ai_fill": false },
+    { "id": "so_ngay", "label": "Số ngày", "type": "number", "required": false, "hint": "", "ai_fill": true },
+    { "id": "so_luong_ke", "label": "Số lượng kê", "type": "number", "required": false, "hint": "Chỉ ghi khi bác sĩ nói rõ tổng số, ví dụ \"kê 10 viên\" thì ghi 10", "ai_fill": true },
+    { "id": "tong_so_luong", "label": "Tổng số lượng", "type": "number", "required": false, "hint": "Lấy số lượng kê nếu bác sĩ nói, không thì tự tính với thuốc đếm được (viên, gói, ống)", "ai_fill": false },
     { "id": "ghi_chu", "label": "Ghi chú", "type": "text", "required": false, "hint": "", "ai_fill": true }
   ]
 }

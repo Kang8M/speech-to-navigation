@@ -84,3 +84,19 @@ test("gopTruongMoi bỏ ô bị sửa trong lúc chờ AI", () => {
   assert.equal(ra.huong_dieu_tri, bsGo);
   assert.equal(ra.loi_dan.value, "Giữ khô tai");
 });
+
+test("thuốc dùng khi cần: lấy cờ của AI, hoặc nhận ra từ 'Khi đau' ở thời điểm dùng", () => {
+  const draft: Draft = {
+    phieu_kham: {},
+    chi_dinh: [],
+    ke_don: [
+      { ten_thuoc: "Paracetamol", lieu_moi_lan: "1 viên", khi_can: "Có", so_luong_ke: 10 },
+      { ten_thuoc: "Ibuprofen", lieu_moi_lan: "1 viên", so_lan_ngay: 3, thoi_diem: "Khi đau" },
+      { ten_thuoc: "Augmentin", lieu_moi_lan: "1 viên", so_lan_ngay: 2, thoi_diem: "Sau ăn" },
+    ],
+  };
+  const { donThuoc } = dienPhieu(draft, {}, DATA, getTu({}));
+  assert.deepEqual(donThuoc.map((row) => row.khi_can), [true, true, false]);
+  assert.equal(donThuoc[0].so_luong_ke, "10");
+  assert.equal(donThuoc[0].so_lan_ngay, "");
+});

@@ -56,3 +56,7 @@ next-env.d.ts
 
 # đơn bác sĩ đã kê để gợi ý theo thói quen (tự sinh khi bấm Lưu)
 /data/thoi-quen/*
+
+# bộ gõ tắt riêng của bác sĩ (có thể là câu chữ thật), mỗi tài khoản một file
+/data/go-tat/*
+!/data/go-tat/README.md

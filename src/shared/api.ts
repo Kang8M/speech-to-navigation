@@ -15,6 +15,8 @@ export interface ExtractRequest {
   text: string;
   /** Có khi bác sĩ gọi phiếu mẫu kèm chi tiết: text là phần chi tiết, server lấy mẫu theo id */
   mau_id?: string;
+  /** Tài khoản bác sĩ đang đăng nhập: server đưa câu quen trong bộ gõ tắt của bác sĩ (data/go-tat/) vào prompt */
+  tai_khoan?: string;
 }
 
 /** POST /api/extract trả về: nháp đã khớp danh mục và tính tổng số lượng */

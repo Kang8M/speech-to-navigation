@@ -11,16 +11,27 @@ import { computeTotal } from "@/shared/validate";
 
 const CELL = "w-full rounded-md border border-ef-vien bg-white px-2 py-1 text-[13px] outline-none focus:border-ef-xanh focus:ring-2 focus:ring-ef-xanh/20";
 
-const COT: { key: keyof DongThuoc; nhan: string; rong: string }[] = [
+type Cot = { key: "duong_dung" | "lieu_moi_lan" | "so_lan_ngay" | "thoi_diem" | "so_ngay"; nhan: string; rong: string };
+
+/** Cột trước và sau ô "Khi cần" */
+const COT_TRUOC: Cot[] = [
   { key: "duong_dung", nhan: "Đường dùng", rong: "w-24" },
   { key: "lieu_moi_lan", nhan: "Liều/lần", rong: "w-20" },
+];
+const COT_SAU: Cot[] = [
   { key: "so_lan_ngay", nhan: "Lần/ngày", rong: "w-16" },
   { key: "thoi_diem", nhan: "Thời điểm", rong: "w-24" },
   { key: "so_ngay", nhan: "Số ngày", rong: "w-16" },
 ];
 
+function moTaSoLan(row: DongThuoc): string {
+  if (!row.lieu_moi_lan) return "";
+  if (!row.khi_can) return `${row.lieu_moi_lan} × ${row.so_lan_ngay} lần/ngày`;
+  return row.so_lan_ngay ? `${row.lieu_moi_lan} khi cần, tối đa ${row.so_lan_ngay} lần/ngày` : `${row.lieu_moi_lan} khi cần`;
+}
+
 export function moTaLieu(row: DongThuoc): string {
-  return [row.ham_luong, row.duong_dung, row.lieu_moi_lan && `${row.lieu_moi_lan} × ${row.so_lan_ngay} lần/ngày`, row.thoi_diem, row.so_ngay && `${row.so_ngay} ngày`, row.ghi_chu]
+  return [row.ham_luong, row.duong_dung, moTaSoLan(row), row.thoi_diem, row.so_ngay && `${row.so_ngay} ngày`, row.so_luong_ke && `SL ${row.so_luong_ke}`, row.ghi_chu]
     .filter(Boolean)
     .join(" · ");
 }
@@ -43,7 +54,7 @@ export function DonThuocTab({ rows, onChange }: { rows: DongThuoc[]; onChange: (
   const add = (item: CatalogItem) => {
     onChange([
       ...rows,
-      { ...chon(item), duong_dung: "", lieu_moi_lan: "", so_lan_ngay: "", thoi_diem: "", so_ngay: "", ghi_chu: "", nguon: "bs", ung_vien: [] } as DongThuoc,
+      { ...chon(item), duong_dung: "", lieu_moi_lan: "", khi_can: false, so_lan_ngay: "", thoi_diem: "", so_ngay: "", so_luong_ke: "", ghi_chu: "", nguon: "bs", ung_vien: [] } as DongThuoc,
     ]);
   };
 
@@ -110,12 +121,20 @@ export function DonThuocTab({ rows, onChange }: { rows: DongThuoc[]; onChange: (
                 <thead>
                   <tr className="bg-ef-nen text-left text-xs font-semibold text-ef-phu">
                     <th className="border-b border-ef-vien px-2.5 py-2">Thuốc</th>
-                    {COT.map((cot) => (
+                    {COT_TRUOC.map((cot) => (
                       <th key={cot.key} className={`${cot.rong} border-b border-ef-vien px-2.5 py-2`}>
                         {cot.nhan}
                       </th>
                     ))}
-                    <th className="w-16 border-b border-ef-vien px-2.5 py-2">Tổng SL</th>
+                    <th className="w-14 border-b border-ef-vien px-2.5 py-2 text-center" title="Thuốc dùng khi đau, khi sốt: lần/ngày là số lần tối đa, có thể để trống">
+                      Khi cần
+                    </th>
+                    {COT_SAU.map((cot) => (
+                      <th key={cot.key} className={`${cot.rong} border-b border-ef-vien px-2.5 py-2`}>
+                        {cot.nhan}
+                      </th>
+                    ))}
+                    <th className="w-20 border-b border-ef-vien px-2.5 py-2">Tổng SL</th>
                     <th className="border-b border-ef-vien px-2.5 py-2">Ghi chú</th>
                     <th className="w-10 border-b border-ef-vien px-2.5 py-2" />
                   </tr>
@@ -123,9 +142,20 @@ export function DonThuocTab({ rows, onChange }: { rows: DongThuoc[]; onChange: (
                 <tbody>
                   {rows.map((row, index) => {
                     const item = thuoc.find((t) => t.ma === row.ma);
-                    const tong = computeTotal(
+                    const tuTinh = computeTotal(
                       { lieu_moi_lan: row.lieu_moi_lan, so_lan_ngay: row.so_lan_ngay, so_ngay: row.so_ngay },
                       data.canhBao,
+                    );
+                    const oNhap = (cot: Cot) => (
+                      <td key={cot.key} className="border-b border-ef-vien px-2.5 py-2">
+                        <input
+                          aria-label={`${cot.nhan}${cot.key === "so_lan_ngay" && row.khi_can ? " tối đa" : ""} ${row.ten}`}
+                          value={row[cot.key]}
+                          placeholder={cot.key === "so_lan_ngay" && row.khi_can ? "tối đa" : undefined}
+                          onChange={(e) => update(index, { [cot.key]: e.target.value })}
+                          className={CELL}
+                        />
+                      </td>
                     );
                     const diUngTrung = trungDiUng(row.ten, item, diUng);
                     return (
@@ -156,18 +186,26 @@ export function DonThuocTab({ rows, onChange }: { rows: DongThuoc[]; onChange: (
                             </div>
                           )}
                         </td>
-                        {COT.map((cot) => (
-                          <td key={cot.key} className="border-b border-ef-vien px-2.5 py-2">
-                            <input
-                              aria-label={`${cot.nhan} ${row.ten}`}
-                              value={String(row[cot.key] ?? "")}
-                              onChange={(e) => update(index, { [cot.key]: e.target.value })}
-                              className={CELL}
-                            />
-                          </td>
-                        ))}
-                        <td className="border-b border-ef-vien bg-ef-nen px-2.5 py-2 text-center tabular-nums" title="Tự tính: liều × lần/ngày × số ngày">
-                          {tong ?? "–"}
+                        {COT_TRUOC.map(oNhap)}
+                        <td className="border-b border-ef-vien px-2.5 py-2 text-center">
+                          <input
+                            type="checkbox"
+                            aria-label={`Dùng khi cần ${row.ten}`}
+                            checked={Boolean(row.khi_can)}
+                            onChange={(e) => update(index, { khi_can: e.target.checked })}
+                            className="mt-1.5 size-4 accent-ef-xanh"
+                          />
+                        </td>
+                        {COT_SAU.map(oNhap)}
+                        <td className="border-b border-ef-vien bg-ef-nen px-2.5 py-2" title="Để trống thì tự tính: liều × lần/ngày × số ngày">
+                          <input
+                            aria-label={`Tổng số lượng ${row.ten}`}
+                            inputMode="numeric"
+                            value={row.so_luong_ke ?? ""}
+                            placeholder={tuTinh === null ? (row.khi_can ? "nhập" : "–") : String(tuTinh)}
+                            onChange={(e) => update(index, { so_luong_ke: e.target.value })}
+                            className={`${CELL} text-center tabular-nums ${row.khi_can && !row.so_luong_ke && tuTinh === null ? "border-xem/60" : ""}`}
+                          />
                         </td>
                         <td className="border-b border-ef-vien px-2.5 py-2">
                           <input

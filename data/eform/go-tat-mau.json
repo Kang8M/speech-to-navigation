@@ -1,0 +1,22 @@
+[
+  { "ma": "ttot", "o": "kham_toan_than", "noi_dung": "Bệnh nhân tỉnh, thể trạng tốt, da niêm mạc hồng, không phù." },
+  { "ma": "ptot", "o": "kham_khac", "noi_dung": "Tim nhịp đều. Phổi rì rào phế nang rõ, không rale." },
+  { "ma": "tbth", "o": "kham_chuyen_khoa", "noi_dung": "Tai: ống tai 2 bên khô sạch, màng nhĩ 2 bên sáng, nón sáng rõ." },
+  { "ma": "mbth", "o": "kham_chuyen_khoa", "noi_dung": "Mũi: niêm mạc hồng, cuốn không to, khe giữa sạch." },
+  { "ma": "hbth", "o": "kham_chuyen_khoa", "noi_dung": "Họng: niêm mạc hồng, amidan 2 bên không to, không mủ." },
+  { "ma": "tqbth", "o": "kham_chuyen_khoa", "noi_dung": "Thanh quản: dây thanh 2 bên trắng, khép kín, di động tốt." },
+  { "ma": "mnde", "o": "kham_chuyen_khoa", "noi_dung": "Mũi: niêm mạc phù nề, cuốn dưới to, khe giữa đọng dịch nhày." },
+  { "ma": "hnde", "o": "kham_chuyen_khoa", "noi_dung": "Họng: niêm mạc đỏ, thành sau họng có dịch chảy xuống." },
+  { "ma": "tqnde", "o": "kham_chuyen_khoa", "noi_dung": "Thanh quản: dây thanh 2 bên đỏ, phù nhẹ, khép chưa kín." },
+  { "ma": "vmxc", "o": "chan_doan_chinh", "noi_dung": "viêm mũi xoang cấp" },
+  { "ma": "vhc", "o": "chan_doan_chinh", "noi_dung": "viêm họng cấp" },
+  { "ma": "vtqc", "o": "chan_doan_chinh", "noi_dung": "viêm thanh quản cấp" },
+  { "ma": "ldtai", "o": "loi_dan", "noi_dung": "Giữ khô tai, không tự lấy ráy, quay lại khám nếu đau tai tăng hoặc chảy dịch." },
+  { "ma": "ldmui", "o": "loi_dan", "noi_dung": "Xịt rửa mũi bằng nước muối mỗi sáng tối, tránh khói bụi." },
+  { "ma": "ldhong", "o": "loi_dan", "noi_dung": "Súc họng nước muối ấm sau ăn, hạn chế đồ lạnh." },
+  { "ma": "ldgiong", "o": "loi_dan", "noi_dung": "Nghỉ giọng, nói nhỏ, uống đủ nước ấm." },
+  { "ma": "ldtn", "o": "loi_dan", "noi_dung": "Ăn tối sớm, không nằm ngay sau ăn, kê cao gối khi ngủ." },
+  { "ma": "hen1t", "o": "loi_dan", "noi_dung": "Khám lại sau 1 tuần hoặc sớm hơn nếu sốt cao, khó thở." },
+  { "ma": "kco", "o": "tu", "noi_dung": "không có" },
+  { "ma": "bth", "o": "tu", "noi_dung": "bình thường" }
+]

@@ -8,6 +8,7 @@ import type { LlmCall } from "./types";
 import { buildSystemPrompt, buildUserPrompt } from "../prompt";
 import { buildDraftZod, buildJsonSchema } from "../schema";
 import { dienChoTrongNhap } from "@/shared/eform/phieu-mau";
+import type { GoTat } from "@/shared/eform/go-tat";
 import type { Draft } from "@/shared/types";
 
 const MAX_ATTEMPTS = 2;
@@ -24,6 +25,8 @@ export interface ExtractOptions {
   ruleOnly?: boolean;
   /** Phiếu mẫu bác sĩ gọi (data/eform/phieu-mau.json › nhap): text là phần chi tiết nói thêm sau tên mẫu */
   mau?: Draft;
+  /** Câu quen trong bộ gõ tắt của bác sĩ (data/go-tat/), đưa vào system prompt để AI viết đúng giọng bác sĩ */
+  cauQuen?: GoTat[];
 }
 
 function parseDraft(json: string, ctx: MockContext): { draft: Draft } | { error: string } {
@@ -50,7 +53,7 @@ export async function extractDraft(
   const call = PROVIDERS[options.provider];
   if (!call) throw new Error(`LLM_PROVIDER không hợp lệ: ${options.provider}`);
 
-  const system = buildSystemPrompt(ctx.forms, ctx.vietTat);
+  const system = buildSystemPrompt(ctx.forms, ctx.vietTat, options.cauQuen);
   const schema = buildJsonSchema(ctx.forms);
   let previousError: string | undefined;
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {

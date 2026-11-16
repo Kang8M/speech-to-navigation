@@ -10,6 +10,8 @@
     "truong_lieu": "lieu_moi_lan",
     "truong_so_lan": "so_lan_ngay",
     "truong_so_ngay": "so_ngay",
-    "don_vi_dem": ["viên", "gói", "ống"]
+    "truong_so_luong_ke": "so_luong_ke",
+    "don_vi_dem": ["viên", "gói", "ống"],
+    "don_vi_viet_tat": { "v": "viên" }
   }
 }

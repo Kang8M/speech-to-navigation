@@ -96,9 +96,23 @@ const ROUTES: [RegExp, string][] = [
 ];
 
 const TIMING =
-  /(trước ăn sáng(?: \d+ phút)?|sau ăn sáng|sau ăn|trước ăn|buổi sáng|buổi tối|khi sốt(?: trên [\d,.]+ độ)?|khi đau(?: hoặc sốt)?)|(?<=\d\s*lần\s*\/\s*ngày\s)(sáng|tối)/iu;
+  /(trước ăn sáng(?: \d+ phút)?|sau ăn sáng|sau ăn|trước ăn|buổi sáng|buổi tối|khi sốt(?: trên [\d,.]+ độ)?|khi đau(?: hoặc sốt)?|khi cần)|(?<=\d\s*lần\s*\/\s*ngày\s)(sáng|tối)/iu;
 
-function parseDrug(line: string, catalogs: Catalogs, vietTat: VietTat): Values | null {
+/** Thuốc dùng khi cần: "khi đau", "khi sốt", "lúc ngạt"… */
+const KHI_CAN = /(?:^|\s)(?:khi|lúc|nếu)\s+(?:đau|sốt|cần|ho|ngạt|ngứa)/iu;
+/** Tổng số lượng bác sĩ nói rõ: "kê 10 viên", "tổng 20 viên", "số lượng 10" */
+const SO_LUONG_KE = /(?:^|\s)(?:kê|tổng(?: cộng| số)?|số lượng)\s*:?\s*(\d+)(?:\s*(?:viên|gói|ống|chai|lọ|tuýp|hộp))?(?![\p{L}\d])/iu;
+/** Giới hạn của thuốc dùng khi cần, chép nguyên vào ghi chú */
+const GIOI_HAN = [
+  /cách(?: nhau)?(?: ít nhất)?\s*\d+(?:\s*(?:-|–|đến)\s*\d+)?\s*(?:giờ|tiếng)/iu,
+  /(?:tối đa|không quá)\s*\d+\s*(?:viên|gói|ống)\s*(?:\/|một|mỗi|trong)?\s*ngày/iu,
+];
+
+function parseDrug(original: string, catalogs: Catalogs, vietTat: VietTat): Values | null {
+  const stated = original.match(SO_LUONG_KE);
+  const limits = GIOI_HAN.map((pattern) => original.match(pattern)?.[0]).filter((text): text is string => Boolean(text));
+  // Bỏ số lượng kê và giới hạn ra khỏi câu để không nhầm với liều mỗi lần, số ngày
+  const line = [stated?.[0], ...limits].reduce<string>((text, part) => (part ? text.replace(part, " ") : text), original);
   const strength = line.match(/(\d+(?:[.,]\d+)?)\s*(mcg|mg|g|%)(?![\p{L}])/iu);
   const dose = line.match(/(\d+(?:[.,/]\d+)?)\s*(viên|gói|xịt|giọt|ml|ống)(\s+mỗi bên)?/iu);
   const times = line.match(/(?:x\s*|ngày\s+)(\d+)\s*lần|(\d+)\s*lần\s*\/\s*ngày/iu);
@@ -108,7 +122,9 @@ function parseDrug(line: string, catalogs: Catalogs, vietTat: VietTat): Values |
 
   const firstNumber = line.search(/\d/);
   const beforeNumber = firstNumber >= 0 ? line.slice(0, firstNumber) : line;
-  let name = clean(beforeNumber.split(",")[0]).replace(/\s+(?:uống|trái|phải)\s*$/iu, "");
+  let name = clean(beforeNumber.split(",")[0])
+    .replace(/\s+(?:khi|lúc|nếu)\s.*$/iu, "")
+    .replace(/\s+(?:uống|trái|phải)\s*$/iu, "");
   if (findExact(name, catalogs["thuoc"] ?? [], vietTat).length === 0) {
     name = name.replace(/\s+(?:uống|ngậm|xịt mũi|nhỏ mũi|rửa mũi|nhỏ tai|súc họng|nhỏ)(?:\s+(?:trái|phải))?\s*$/iu, "").trim();
   }
@@ -119,9 +135,12 @@ function parseDrug(line: string, catalogs: Catalogs, vietTat: VietTat): Values |
     ham_luong: strength ? `${strength[1]} ${strength[2].toLowerCase()}` : null,
     duong_dung: route,
     lieu_moi_lan: dose ? `${dose[1]} ${dose[2].toLowerCase()}${dose[3] ?? ""}` : null,
+    khi_can: KHI_CAN.test(line) ? "Có" : null,
     so_lan_ngay: times ? Number(times[1] ?? times[2]) : null,
     thoi_diem: timing ? capitalize(timing[0]) : null,
     so_ngay: days ? Number(days[1]) : null,
+    so_luong_ke: stated ? Number(stated[1]) : null,
+    ghi_chu: limits.length > 0 ? capitalize(limits.join(", ")) : null,
   };
 }
 

@@ -21,9 +21,10 @@ npm test                     # test node:test cho src/**/*.test.ts
 npm run build
 npm run eval -- --rule-only  # chấm điểm bộ tách quy tắc, không tốn phí API
 npm run eval-mau             # đo phiếu mẫu theo bệnh đúng sẵn bao nhiêu (mock, không tốn phí)
+npm run eval-go-tat -- --provider=gemini  # đo AI viết đúng câu quen của bác sĩ (tốn lượt LLM, hỏi trước)
 npm run cao-du-lieu          # cào lại danh mục thật về data/tham-khao/ (ứng dụng chưa nạp)
 npm run tai-model-giong-noi  # tải model Zipformer về models/, cần cho ASR_PROVIDER=zipformer
-npm run tao-am-thanh-mau     # Windows: giọng máy đọc 11 ca thành data/giong-noi/*.wav
+npm run tao-am-thanh-mau     # Windows: giọng máy đọc từng ca thành data/giong-noi/*.wav
 npm run eval-giong-noi       # đo nhận dạng giọng nói + bộ sửa chữ (config/sua-chu-giong-noi.json)
 ```
 

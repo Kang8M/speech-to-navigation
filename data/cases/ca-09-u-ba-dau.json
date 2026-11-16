@@ -21,7 +21,7 @@
     ],
     "ke_don": [
       { "ma_thuoc": "TH-007", "ten_thuoc": "Cefixim", "ham_luong": "200 mg", "duong_dung": "Uống", "lieu_moi_lan": "1 viên", "so_lan_ngay": 2, "thoi_diem": "Sau ăn", "so_ngay": 5, "tong_so_luong": 10 },
-      { "ma_thuoc": "TH-013", "ten_thuoc": "Paracetamol", "ham_luong": "500 mg", "duong_dung": "Uống", "lieu_moi_lan": "1 viên", "so_lan_ngay": 3, "thoi_diem": "Khi đau", "so_ngay": 3, "tong_so_luong": 9 }
+      { "ma_thuoc": "TH-013", "ten_thuoc": "Paracetamol", "ham_luong": "500 mg", "duong_dung": "Uống", "lieu_moi_lan": "1 viên", "khi_can": "Có", "so_lan_ngay": 3, "thoi_diem": "Khi đau", "so_ngay": 3, "tong_so_luong": 9 }
     ]
   }
 }

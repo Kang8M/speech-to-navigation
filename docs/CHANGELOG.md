@@ -86,6 +86,112 @@ Plan: `docs/superpowers/plans/pending/2026-11-14-interrupted-encounters.md`. Ph�
 - Gỡ timeout cố định khoảng 2 phút cho nhận dạng file tải lên; vẫn cho phép hủy từ giao diện.
 - Thêm kiểm thử nhận file 31 giây và WAV 660 giây (>20 MB), cùng kiểm thử proxy chuyển đủ dữ liệu.
 
+### Sửa các phát hiện review dashboard và hồ sơ bệnh nhân
+- **Loại:** Sửa lỗi, Bảo mật, Giao diện
+- **Thay đổi:**
+  - Trang `/benh-nhan/[patientId]` gọi `assertLocalDemoPage` (403 vào error boundary, không `notFound`). `page-guard.ts` chuyển cả header Host sang guard; thêm `page-guard.test.ts`.
+  - `guard.ts` bỏ phụ thuộc `request.url` (Next dựng từ hostname cấu hình của server): chỉ dựa Host/Origin/Sec-Fetch-Site, thiếu Host là 403. Comment nêu đúng phạm vi: chặn cross-origin và DNS rebinding từ trình duyệt, không chặn client tự đặt Host; nên chạy `next dev -H 127.0.0.1` (ghi vào README). `routes.test.ts` dùng URL local + header khác.
+  - `service.ts` `buildItem`: Encounter gắn đúng mã lịch nhưng lệch bệnh nhân/cơ sở/bác sĩ là lỗi dữ liệu 500, không gắn nhầm. `has_prior_encounter` chỉ tính phiếu cùng bệnh nhân có `encounter_at` trước giờ hẹn của lịch đang xem (phiếu 13:30 không còn là lượt trước của lịch 08:00).
+  - `EncounterHistory`: nhãn "Mã lượt" hiện `appointment_id`, ẩn khi null.
+  - `selectDayAppointments`: ca `unknown` có Encounter của ngày trước được mang sang `carriedOpenItems`.
+  - `AppointmentDialog`: đóng thì tăng bộ đếm, mở lại cùng lịch không hiện kết quả/lỗi cũ.
+  - `clinic/api.ts`: 200 mà body không phải JSON thì ném lỗi tiếng Việt thay vì `{}`.
+  - `DashboardScreen`: ô chọn ngày chỉ điều hướng khi ngày đầy đủ, có thật, năm >= 1900 (`isCompleteClinicDate` mới ở `format.ts`).
+  - Cỡ chữ: tiêu đề trang và tiêu đề khối 18px. `layoutDay` vẽ tối thiểu 20 phút (`MIN_BLOCK_MINUTES`) nên ca ngắn xếp cạnh khối kế tiếp thay vì bị đè.
+  - Để lại, chờ ưu tiên 1: cờ `not_examined` (#5) và `eligibleAppointments` tạm (#10).
+- **Lý do:** Phát hiện của review (Opus) trên nhánh priority-plan-2.
+- **File:** `src/app/benh-nhan/[patientId]/page.tsx`, `src/app/api/clinic/routes.test.ts`, `src/server/clinic/{guard,page-guard,page-guard.test,service,service.test}.ts`, `src/shared/clinic/{schedule,layout,format}.ts` và test tương ứng, `src/client/{clinic/AppointmentDialog,clinic/api,dashboard/DashboardScreen,dashboard/EncounterGroup,patient/EncounterHistory}.tsx`, `README.md`, `docs/cau-truc-du-an.md`, `docs/testing/2026-11-14-dashboard-patient.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** bộ test clinic 60/60 PASS (trước đó 53 + test mới); `npm run lint` và `npx tsc --noEmit` exit 0; kiểm trình duyệt ở 1440/390px xem docs/testing.
+- **Ảnh hưởng:** Request thiếu header Host nay bị 403 (trình duyệt luôn gửi Host).
+
+### Kiểm tra trình duyệt màn bệnh nhân và đối chiếu dashboard (kiểm thử)
+- **Loại:** Tài liệu
+- **Thay đổi:**
+  - Chạy `next dev -p 3101` và kiểm bằng Playwright (Chromium) trên dữ liệu giả: `/benh-nhan/000123` (có lịch, BHYT có tham gia, bảo lãnh không tham gia), `/benh-nhan/000124` (bảo lãnh hết hạn, tuổi tính bằng tháng), `/benh-nhan/000125` (thiếu thông tin, lịch sử rỗng), `/benh-nhan/999999` và `appointment_id=XXX` (không tìm thấy), `return_to` ra ngoài (link về `/dashboard`).
+  - Đối chiếu dashboard: popup LK-000001 → "Xem thông tin bệnh nhân" → "Về dashboard" giữ ngày và view; "Ngày trước" sang 13/11 giữ view; "Làm mới" gọi lại API; chuyển "Lịch theo giờ".
+  - Ghi kết quả PASS/FAIL/chưa kiểm vào `docs/testing/2026-11-14-dashboard-patient.md`: mục "Màn bệnh nhân", mục "Dashboard: đối chiếu bổ sung" và mục "Chưa kiểm" tổng hợp. Sửa câu phạm vi và hai dòng cũ (3.15, 4.10) cho khớp.
+  - Không sửa code ứng dụng.
+- **Lý do:** Nghiệm thu trình duyệt cho màn bệnh nhân (Task 5) và các mục dashboard còn thiếu, theo yêu cầu kiểm tra thật trước khi báo xong.
+- **File:** `docs/testing/2026-11-14-dashboard-patient.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** Đã chạy thật trên `http://localhost:3101`: 1440, 1024 và 390px không tràn ngang trên trang bệnh nhân; Network trang bệnh nhân chỉ có GET. Các mục không kiểm được (fixture không có ca 11:59/12:00 và khối quá 5 dòng; slow fetch; click nền bằng chuột thật) ghi rõ trong tài liệu, không ghi PASS.
+- **Ảnh hưởng:** Không đổi code. Bug phát hiện trong lượt này: không có.
+
+### Gộp badge trạng thái và định dạng ngày của màn bệnh nhân vào bản dùng chung (refactor)
+- **Loại:** Dọn dẹp
+- **Thay đổi:**
+  - Xóa `src/client/patient/StatusBadge.tsx` (kèm TODO "hợp nhất"). `EncounterHistory` dùng `StatusBadge` của `src/client/clinic/status.tsx`, truyền `{ status, encounter_id: null }` vì lịch sử không có mã lượt: nhãn "Hủy khám" giữ như cũ, không đổi thành "Không khám".
+  - Xóa `src/client/patient/format.ts`. Chuyển các hàm còn thiếu sang `src/shared/clinic/format.ts`: `NO_INFO`, `formatOptionalClinicDate` (thay `formatDate`: null là "Chưa có thông tin", chuỗi lạ giữ nguyên), `formatClinicDateTimeLenient` (thay `formatDateTime`: timestamp lạ trả nguyên chuỗi thay vì ném lỗi), `formatGender`.
+  - `src/shared/clinic/schedule.ts` dùng chung `NO_INFO` từ `format.ts` thay hằng số trùng.
+  - `PatientScreen`, `InsuranceSummary`, `EncounterHistory` import từ shared.
+  - Thêm test cho ba hàm mới trong `src/shared/clinic/format.test.ts`.
+- **Lý do:** Hai cặp trùng chức năng (badge trạng thái và định dạng ngày) đã có TODO hợp nhất từ Task 5.
+- **File:** `src/client/patient/{StatusBadge.tsx,format.ts}` (xóa), `src/client/patient/{EncounterHistory,InsuranceSummary,PatientScreen}.tsx`, `src/shared/clinic/{format,format.test,schedule}.ts`, `docs/CHANGELOG.md`, `docs/cau-truc-du-an.md`
+- **Kiểm tra:** `npx tsx --conditions=react-server --test src/shared/clinic/*.test.ts src/server/clinic/*.test.ts src/app/api/clinic/routes.test.ts src/client/patient/*.test.ts`: baseline 50/50 PASS, sau refactor 53/53 PASS (3 test mới). `npx eslint .` exit 0. `npx tsc --noEmit` exit 0, không có lỗi (không còn 3 lỗi có sẵn như các mục trước ghi). Chưa kiểm tra trên trình duyệt ở bước này.
+- **Ảnh hưởng:** Badge trạng thái ở màn bệnh nhân nhỏ hơn về đệm và cỡ chữ (theo bản dashboard: `px-1.5 text-[11px] rounded-sm`), nhãn và màu không đổi. Hành vi ngày/giờ với dữ liệu hợp lệ không đổi.
+
+### Dashboard lịch khám: popup lịch hẹn và đường vào hồ sơ bệnh nhân (Task 4)
+- **Loại:** Tính năng, Giao diện
+- **Thay đổi:**
+  - `src/client/clinic/ClinicDialog.tsx`: hộp thoại modal dùng `<dialog>` gốc (focus trap, Escape, aria-modal do trình duyệt lo), thêm khôi phục focus, khóa cuộn nền, cuộn nội dung riêng, chỉ đóng khi bấm đúng nền, gần toàn màn hình ở màn hẹp.
+  - `AppointmentDialog.tsx`: gọi `getAppointment` (no-store, AbortController), có loading, lỗi và Thử lại; kết quả gắn khóa `id#lần thử` nên kết quả muộn của lịch khác không hiện. Hiện mã lịch/lượt, UUID hồ sơ nếu có, PID, họ tên, tuổi theo ngày hẹn, ngày sinh, giờ hẹn, bác sĩ, trạng thái, nội dung đầy đủ.
+  - `AppointmentActions.tsx`: link "Xem thông tin bệnh nhân" (có lượt trước) hoặc "Thông tin bệnh nhân" kèm "Chưa có lịch sử khám"; href `/benh-nhan/<PID>?appointment_id=&return_to=` qua `patientHref` (`safeReturnTo` chỉ nhận đường nội bộ). Nút Tạo/Mở phiếu khám tắt, chú thích "Chờ nền ca khám nhiều phiên (ưu tiên 1)"; không điều hướng ca mẫu, không sinh Encounter hay UUID.
+  - `DashboardScreen` gắn dialog, thay dòng "Đã chọn lịch" tạm của Task 3.
+- **Lý do:** Task 4 plan Dashboard và Bệnh nhân. `safeReturnTo` và test đã có từ commit Task 3 (`src/shared/clinic/links.ts`).
+- **File:** `src/client/clinic/{ClinicDialog,AppointmentDialog,AppointmentActions}.tsx`, `src/client/dashboard/DashboardScreen.tsx`, `docs/testing/2026-11-14-dashboard-patient.md`, `docs/cau-truc-du-an.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** `npx tsx --conditions=react-server --test src/shared/clinic/*.test.ts src/server/clinic/*.test.ts src/app/api/clinic/routes.test.ts` 45/45 PASS, `npm run lint` sạch, `npx tsc --noEmit` chỉ 3 lỗi có sẵn. Trình duyệt thật: mở bằng click/Enter, Tab giữ trong popup, Escape trả focus và mở khóa cuộn, lỗi/Thử lại, 390px; mục chưa kiểm ghi ở checklist (click nền thật, slow fetch, Shift+Tab).
+- **Ảnh hưởng:** Chưa có nút mở phiếu thật; chờ nền ca khám nhiều phiên của ưu tiên 1.
+
+### Dashboard lịch khám: trang /dashboard với danh sách và lịch theo giờ (Task 3)
+- **Loại:** Tính năng, Giao diện
+- **Thay đổi:**
+  - Trang `src/app/dashboard/` (`page.tsx`, `loading.tsx`, `error.tsx`): server page chờ `searchParams` (`date`, `view`), mặc định hôm nay giờ Việt Nam và `list`, ngày sai quay về hôm nay. Gọi thẳng `loadDashboard` với actor demo; chạy guard local qua `src/server/clinic/page-guard.ts` (dựng Request từ Host/Origin/Sec-Fetch-Site rồi dùng `assertLocalDemoRequest`).
+  - `src/client/dashboard/`: `DashboardScreen` (tiêu đề, ngày, nút Ngày trước/Hôm nay/Ngày sau/chọn ngày/Làm mới, tổng N, ba khối, dòng hủy/kết thúc khác/chưa xác định, khối ca ngày trước, chuyển Danh sách / Lịch theo giờ lưu trong URL), `EncounterGroup` (tối đa 5 dòng, "Xem tất cả", khối rỗng) và `OtherEncounters`, `AppointmentList` (Sáng/Chiều), `DayCalendar` (trục 07 đến 18 giờ, mở rộng khi có ca ngoài giờ, khối 30 phút khi thiếu giờ kết thúc, lịch trùng giờ xếp cạnh nhau, nhãn "Bây giờ" chỉ hôm nay), `StatusLegend`.
+  - `src/client/clinic/status.tsx` (nhãn và màu 9 trạng thái, "Không khám" khi Encounter `khong_kham`), `AppointmentRow.tsx`.
+  - `src/shared/clinic/`: `format.ts` (giờ/ngày VN, cộng ngày, thứ), `layout.ts` (`groupAppointments`, `splitByPeriod`, `layoutDay`), `links.ts` (`safeReturnTo`, `dashboardHref`, `patientHref`) cùng test.
+  - `Header.tsx`: thêm link "Lịch khám"; đường dẫn `/benh-nhan/*` cũng sáng mục này. Không đổi `/`.
+  - Làm mới: mỗi ngày là một thể hiện riêng (`key` theo ngày), request bị hủy khi rời trang hoặc khi bấm lại, có số thứ tự nên response cũ không ghi đè; lỗi làm mới giữ số liệu cũ kèm cảnh báo, không đưa về 0.
+- **Lý do:** Task 3 plan Dashboard và Bệnh nhân. Popup lịch hẹn (Task 4) làm ở mục sau; tạm thời bấm dòng chỉ hiện dòng "Đã chọn lịch".
+- **File:** `src/app/dashboard/*`, `src/client/dashboard/*`, `src/client/clinic/{status.tsx,AppointmentRow.tsx}`, `src/client/chung/Header.tsx`, `src/server/clinic/page-guard.ts`, `src/shared/clinic/{format,layout,links}.ts` và test, `docs/testing/2026-11-14-dashboard-patient.md`, `docs/cau-truc-du-an.md`
+- **Kiểm tra:** test mới `format/links/layout` trước khi có module FAIL, sau đó PASS (toàn bộ `src/shared/clinic/*.test.ts` 19+ test). `npm run lint` sạch ở file mới, `npx tsc --noEmit` chỉ còn 3 lỗi có sẵn. Trình duyệt thật ở 1440/1024/390px: số 8/2/4/2/1/1 đúng, không tràn ngang; kết quả chi tiết và mục chưa kiểm ở `docs/testing/2026-11-14-dashboard-patient.md`.
+- **Ảnh hưởng:** Theme `ef_*` chưa có trên nhánh này, dùng token hiện có (`emr-navy`, `emr-blue`, `xem`, `accent`, `primary`, `ink`, `muted`, đỏ `#c9302c` như eform). Chưa kiểm "Xem tất cả" với dữ liệu thật (không khối nào quá 5 dòng).
+
+### Hồ sơ bệnh nhân: màn /benh-nhan/[patientId], danh sách lịch sử, bộ điều phối tải phiếu cũ (Task 5, phần độc lập)
+- **Loại:** Tính năng, Giao diện
+- **Thay đổi:**
+  - Trang `src/app/benh-nhan/[patientId]/` (`page.tsx`, `loading.tsx`, `error.tsx`, `not-found.tsx`): server page chờ `params` và `searchParams` (`appointment_id`, `return_to`), gọi thẳng `loadPatientPage` với actor demo (không fetch API nội bộ). Service trả 404 (PID giả, lịch không thuộc bác sĩ/bệnh nhân) thì ra trang not-found; lỗi khác vào error boundary (nút Thử lại, không dữ liệu giả). `return_to` đi qua `safeReturnTo` (`src/shared/clinic/links.ts`).
+  - `src/client/patient/`: `PatientScreen` (link "Về dashboard", họ tên, PID giữ số 0 đầu, ngày sinh, tuổi theo ngày hẹn hoặc hôm nay, giới tính), `InsuranceSummary` (hai khối BHYT và Bảo hiểm bảo lãnh độc lập; "Không tham gia" chỉ khi known và enrolled=false, "Chưa có thông tin" khi known=false hoặc enrolled=null, nhãn "Hết hạn" khi hạn trước ngày đối chiếu), `EncounterHistory` (giảm dần như server đã sắp; tóm tắt, ngày giờ, mã lượt, bác sĩ, badge; rỗng ghi "Chưa có lịch sử khám"), `StatusBadge`, `format.ts`.
+  - Nút **Tạo phiếu khám** và **Xem phiếu** đều tắt, có chú thích: "Chưa có lịch khám để tạo phiếu" hoặc "Chờ nền ca khám nhiều phiên (ưu tiên 1)"; "Chờ dữ liệu phiếu từ ưu tiên 1". Không điều hướng, không sinh ID.
+  - `history-controller.ts`: `createHistoryLoader<T extends {id}>(fetchDetail)`. Load mới hủy load trước; kết quả và lỗi của load cũ trả null; lỗi của load hiện tại ném lên; `dispose` hủy và chặn mọi cập nhật. Thuần TS, không React.
+- **Lý do:** Phần độc lập của Task 5 plan Dashboard & Bệnh nhân. Popup toàn phiếu, endpoint chi tiết phiếu và `projectHistoricalEncounter` chưa làm vì cần dữ liệu phiếu của ưu tiên 1.
+- **File:** `src/app/benh-nhan/[patientId]/*`, `src/client/patient/*`, `docs/cau-truc-du-an.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** `npx tsx --conditions=react-server --test src/client/patient/history-controller.test.ts`: trước khi có loader FAIL (không import được module), sau đó 5/5 PASS (A chậm B nhanh chỉ B; lỗi A sau B không hiện; lỗi B retry được; dispose). Bộ test clinic hiện có vẫn xanh. `npm run lint` sạch file mới; `npx tsc --noEmit` chỉ còn 3 lỗi có sẵn. Chưa chạy `next dev` và chưa xem trong trình duyệt.
+- **Ảnh hưởng:** Chưa có theme `ef_*` trên nhánh này nên dùng token hiện có (`primary`, `muted`, `xem`, `accent`, `navy`, đỏ Tailwind cho "hủy"). Badge trạng thái là bản riêng trong `src/client/patient/`, hợp nhất với badge dashboard khi có. Ngày đối chiếu tuổi/hạn bảo hiểm lấy từ lịch đang chọn nếu nằm trong lịch đủ điều kiện, không thì hôm nay.
+
+### Dashboard lịch khám: repository, service và API đọc, độc lập với ưu tiên 1 (Task 2)
+- **Loại:** Tính năng, Dữ liệu
+- **Thay đổi:**
+  - Thêm `src/server/clinic/`: `ports.ts` (cổng `ClinicActor`, `EncounterRef`, `EncounterSource`), `fixture-source.ts` (adapter DEMO sinh EncounterRef giả từ `encounter_status` trong fixture lịch và từ `data/clinic/encounters-demo.json`), `guard.ts` (`assertLocalDemoRequest` tối thiểu: chỉ localhost/127.0.0.1/[::1], từ chối cross-origin với 403), `demo-actor.ts` (actor demo BS01 ở CS01, lấy phía server), `repository.ts` (chỉ đọc, validate Zod, lỗi store ném 500 chứ không trả rỗng), `service.ts` (`loadDashboard`, `loadAppointment`, `loadPatientPage`), `errors.ts`, `http.ts` (bọc GET: guard, no-store, dịch lỗi 400/403/404/500).
+  - Ba route GET: `/api/clinic/dashboard?date=`, `/api/clinic/appointments/[appointmentId]`, `/api/clinic/patients/[patientId]?appointment_id=`. Ngày sai 400, lịch/bệnh nhân ngoài bác sĩ-cơ sở hoặc PID giả 404 như nhau, lỗi store 500 không kèm totals.
+  - Lịch sử khám = mọi phiếu đã lưu cùng cơ sở (gồm bác sĩ khác), loại lượt đang chọn, sắp mới nhất trước. `has_prior_encounter` không tính phiếu của chính lượt đó. Tóm tắt dòng lịch sử lấy `summary` có sẵn, không có thì dùng lý do khám của lịch, không có nữa thì "Chưa có tóm tắt" (không bịa).
+  - `src/shared/clinic/history.ts`: `sortHistory` (giảm dần theo thời điểm, trùng thì ID giảm dần) và `historyNavigation` (`previousId` là lượt mới hơn, `nextId` là lượt cũ hơn). `types.ts` thêm `HistorySummary`, `PatientPageData`.
+  - `src/client/clinic/api.ts`: `getDashboard`, `getAppointment`, `getPatient` (`cache: "no-store"`, AbortSignal).
+  - Dữ liệu giả mới: `data/clinic/directory-demo.json` (tên cơ sở, bác sĩ), `data/clinic/encounters-demo.json` (4 lượt khám cũ giả).
+- **Lý do:** Phần đọc của dashboard và hồ sơ bệnh nhân cần làm trước khi lớp clinical của ưu tiên 1 có trên nhánh này; làm sau một cổng để gộp sau chỉ cần thay adapter.
+- **File:** `src/server/clinic/*`, `src/app/api/clinic/**`, `src/client/clinic/api.ts`, `src/shared/clinic/{history,types}.ts`, `data/clinic/{directory-demo,encounters-demo}.json`
+- **Kiểm tra:** `npx tsx --conditions=react-server --test src/shared/clinic/*.test.ts src/server/clinic/*.test.ts src/app/api/clinic/routes.test.ts` (34 test đạt), `npm run lint` sạch, `npx tsc --noEmit` chỉ còn 3 lỗi có sẵn (`RouteContext`, `LayoutProps`). Chưa chạy qua `npm run dev`.
+- **Ảnh hưởng:** Chưa có giao diện dùng các API này. Để lại cho ưu tiên 1: thay `ClinicActor`/`demo-actor.ts`, `assertLocalDemoRequest` và `EncounterSource` demo bằng bản clinical thật; `appointment-context.ts`, endpoint chi tiết phiếu cũ và `eligibleAppointments` theo policy mở phiếu (hiện chỉ tạm: chưa hủy/kết thúc và không ở tương lai).
+
+### Dashboard lịch khám: contracts và phép tính (Task 1)
+- **Loại:** Tính năng, Dữ liệu
+- **Thay đổi:**
+  - Thêm `src/shared/clinic/types.ts` (DTO lịch khám, bệnh nhân, bảo hiểm, tổng số, `DashboardData`), `schema.ts` (Zod v4: ngày lịch thực, từ chối `2026-02-30`; timestamp bắt buộc có offset; status lạ bị từ chối; `scheduling_status` chỉ `scheduled`|`cancelled`), `schedule.ts` (hàm thuần: `toClinicDate`, `clinicPeriod`, `displayStatus`, `summarizeAppointments`, `sortAppointments`, `ageAt`, `selectDayAppointments`).
+  - Ngày/giờ tính theo UTC+7 cố định bằng số học (không dùng Intl). Sáng [00:00,12:00), Chiều [12:00,24:00). `remaining` = chưa khám + đang khám + chờ CLS, `unfinished` là tập con của `remaining`; total = completed + remaining + cancelled + other + unknown. Lịch hủy nhưng Encounter đã đang khám/chờ CLS/hoàn thành là xung đột nên thành `unknown`. Ngày sinh tương lai trả "Chưa có thông tin" (không tuổi âm).
+  - Fixture giả `data/clinic/patients.json`, `data/clinic/appointments.json` (2 bác sĩ, 2 cơ sở, 8 ca chuẩn ngày 2026-11-14, ca hôm qua chờ CLS, trùng giờ, thiếu ngày sinh, cả BHYT và bảo lãnh). Nhánh này chưa có Encounter nên mỗi dòng lịch có thêm trường fixture `encounter_status` (tên enum Encounter: `dang_kham`, `cho_kq_cls`, ...; `null` = chưa có Encounter). Ngày trong fixture cố định, chưa sinh theo đồng hồ.
+  - `schedule.test.ts` có `eslint-disable no-restricted-imports` vì `src/shared` cấm `node:*` nhưng test cần `node:test`.
+- **Lý do:** Task 1 của plan "Dashboard lịch khám và thông tin bệnh nhân"; cần nền tính số liệu đúng trước khi dựng giao diện.
+- **File:** `src/shared/clinic/types.ts`, `src/shared/clinic/schema.ts`, `src/shared/clinic/schedule.ts`, `src/shared/clinic/schedule.test.ts`, `data/clinic/patients.json`, `data/clinic/appointments.json`, `docs/CHANGELOG.md`
+- **Kiểm tra:** `npx tsx --conditions=react-server --test src/shared/clinic/schedule.test.ts`: trước khi có `schedule.ts` FAIL (1 fail, không import được module); sau khi implement 6/6 PASS. `npm run lint` sạch. `npx tsc --noEmit`: chỉ còn 3 lỗi có sẵn (`RouteContext`, `LayoutProps` ở `src/app/api/asr/[id]/route.ts`, `src/app/layout.tsx`), không do file mới.
+- **Ảnh hưởng:** Chỉ thêm file mới, chưa nối vào giao diện; không đổi eval.
 ## 2026-11-12
 
 ### Luồng clinical task 2–5: JSON, riêng tư, AI, lưu và duyệt

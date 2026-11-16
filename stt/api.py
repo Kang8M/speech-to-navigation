@@ -6,21 +6,31 @@ import logging
 from fastapi import FastAPI, HTTPException, Request
 from starlette.concurrency import run_in_threadpool
 
-from stt.audio import contains_speech, decode_canonical_wav
+from stt.audio import decode_canonical_wav
+from stt.vad import SileroVad, transcribe_speech
 from stt.engine import LocalEngine
 from stt.errors import VoiceAudioValidationError, VoiceNoSpeechError, VoicePayloadTooLargeError
-from stt.diarization import LocalDiarizer
+from stt.diarization import LocalDiarizer, tokens_to_words, attribute_words
+from stt.community import CommunityDiarizer
+from stt.denoise import DeepFilterDenoiser
 from stt.diarized_sessions import SessionStore, SessionError
 
-MAX_AUDIO_SECONDS = 30
-MAX_AUDIO_BYTES = MAX_AUDIO_SECONDS * 16_000 * 2 + 4096
 logger = logging.getLogger(__name__)
 
 
-def create_app(engine=None, diarizer=None):
+def create_app(engine=None, diarizer=None, vad=None, community=None, denoiser=None):
     engine = engine if engine is not None else LocalEngine()
     diarizer = diarizer if diarizer is not None else LocalDiarizer()
-    sessions = SessionStore(engine, diarizer)
+    vad = vad if vad is not None else SileroVad()
+    community = community if community is not None else CommunityDiarizer()
+    denoiser = denoiser if denoiser is not None else DeepFilterDenoiser()
+    sessions = SessionStore(engine, diarizer, vad=vad, denoiser=denoiser)
+
+    def denoise_mode(request):
+        mode = request.headers.get('x-stt-denoise', 'off')
+        if mode not in {'off', 'deepfilternet3'}:
+            raise HTTPException(400, 'DENOISE_MODE_INVALID')
+        return mode == 'deepfilternet3'
 
     @asynccontextmanager
     async def lifespan(app):
@@ -33,15 +43,18 @@ def create_app(engine=None, diarizer=None):
 
     @app.get('/health')
     def health():
-        return {**engine.status(), 'diarization_ready': diarizer.ready(), 'max_audio_seconds': MAX_AUDIO_SECONDS,
-                'max_audio_bytes': MAX_AUDIO_BYTES}
+        return {**engine.status(), 'diarization_ready': diarizer.ready(), 'vad_ready': vad.ready(), 'community_ready': community.ready(), 'denoise_ready': denoiser.ready(), 'max_audio_seconds': None,
+                'max_audio_bytes': None}
 
     @app.post('/sessions')
-    def create_session():
+    def create_session(request: Request):
+        denoise = denoise_mode(request)
+        if denoise and not denoiser.ready():
+            raise HTTPException(503, 'DENOISE_NOT_READY')
         if not diarizer.ready():
             raise HTTPException(503, 'DIARIZATION_MODEL_MISSING')
         try:
-            return sessions.create()
+            return sessions.create(denoise=denoise)
         except SessionError as error:
             raise HTTPException(error.status, error.code) from None
 
@@ -61,19 +74,31 @@ def create_app(engine=None, diarizer=None):
         finally:
             engine.lock.release()
 
-    def recognize(audio, session_id=None, sequence=0, start_frame=0, diarize_file=False):
+    def recognize(audio, session_id=None, sequence=0, start_frame=0, diarize_file=False, file_diarizer="onnx", denoise=False, explicit_mode=None):
         if not engine.lock.acquire(blocking=False):
             raise HTTPException(429, 'STT_BUSY')
         try:
             if session_id:
-                return sessions.process(session_id, sequence, start_frame, audio)
+                return sessions.process(session_id, sequence, start_frame, audio, denoise=explicit_mode)
+            if diarize_file and file_diarizer == "community1":
+                if not community.ready():
+                    raise RuntimeError('COMMUNITY_NOT_READY')
+                speech_audio = denoiser.enhance(audio) if denoise else audio
+                result = transcribe_speech(engine, vad, speech_audio)
+                del speech_audio
+                # Release the native recognizer before loading the isolated torch worker.
+                if hasattr(engine, 'close'): engine.close()
+                regions = community.regions(audio)
+                words = attribute_words(tokens_to_words(result.tokens, result.timestamps, audio.duration_ms / 1000), regions)
+                return {'words': words, 'transcript': ' '.join(word['text'] for word in words),
+                        'replace_from_ms': 0, 'stable_until_ms': audio.duration_ms, 'audio_ms': audio.duration_ms,
+                        'inference_ms': result.inference_ms, 'no_speech': not words, 'final': True,
+                        'diarizer': 'community1', 'denoiser': 'deepfilternet3' if denoise else 'off'}
             if diarize_file:
-                return sessions.file(audio)
-            if not contains_speech(audio, min_frame_rms=0.005, min_speech_ms=100,
-                                   max_frame_rms_threshold=0.02):
-                raise VoiceNoSpeechError()
-            result = engine.transcribe(audio)
-            return {**asdict(result), 'audio_ms': audio.duration_ms, 'no_speech': False}
+                return sessions.file(audio, denoise=denoise)
+            result = transcribe_speech(engine, vad, denoiser.enhance(audio) if denoise else audio)
+            return {**asdict(result), 'audio_ms': audio.duration_ms, 'no_speech': False,
+                    'denoiser': 'deepfilternet3' if denoise else 'off'}
         except VoiceNoSpeechError:
             return {'transcript': '', 'no_speech': True, 'audio_ms': audio.duration_ms,
                     'language': 'vi', 'inference_ms': 0}
@@ -89,7 +114,9 @@ def create_app(engine=None, diarizer=None):
         except HTTPException:
             raise
         except RuntimeError as error:
-            if str(error) in {'DIARIZATION_MODEL_MISSING', 'DIARIZATION_MODEL_INVALID'}:
+            if str(error).startswith(('COMMUNITY_', 'DENOISE_')):
+                raise HTTPException(503, str(error)) from None
+            if str(error) in {'DIARIZATION_MODEL_MISSING', 'DIARIZATION_MODEL_INVALID', 'STT_VAD_MODEL_MISSING', 'STT_VAD_MODEL_INVALID'}:
                 raise HTTPException(503, str(error)) from None
             logger.exception('Local STT inference failed')
             raise HTTPException(503, 'STT_INFERENCE_FAILED') from None
@@ -101,7 +128,12 @@ def create_app(engine=None, diarizer=None):
 
     @app.post('/transcribe')
     async def transcribe(request: Request):
+        denoise = denoise_mode(request)
         session_id = request.headers.get('x-stt-session')
+        file_diarizer = request.headers.get('x-stt-diarizer', 'onnx')
+        if file_diarizer not in {'onnx', 'community1'} or (file_diarizer == 'community1' and
+                (session_id or request.headers.get('x-stt-diarize') != '1')):
+            raise HTTPException(400, 'STT_DIARIZER_INVALID')
         sequence = start_frame = 0
         if session_id:
             try:
@@ -113,20 +145,18 @@ def create_app(engine=None, diarizer=None):
                 raise HTTPException(400, 'STT_CHUNK_METADATA_INVALID') from None
         payload = bytearray()
         async for chunk in request.stream():
-            if len(payload) + len(chunk) > MAX_AUDIO_BYTES:
-                raise HTTPException(413, 'AUDIO_TOO_LARGE')
             payload.extend(chunk)
         try:
             audio = decode_canonical_wav(bytes(payload),
                                          mime_type=request.headers.get('content-type', ''),
-                                         max_audio_bytes=MAX_AUDIO_BYTES,
-                                         max_audio_seconds=MAX_AUDIO_SECONDS, allow_silence=bool(session_id))
+                                         allow_silence=bool(session_id))
         except VoicePayloadTooLargeError as error:
             raise HTTPException(413, error.reason_code) from None
         except VoiceAudioValidationError as error:
             raise HTTPException(400, error.reason_code) from None
         return await run_in_threadpool(recognize, audio, session_id, sequence, start_frame,
-                                       request.headers.get('x-stt-diarize') == '1')
+                                       request.headers.get('x-stt-diarize') == '1', file_diarizer, denoise,
+                                       denoise if 'x-stt-denoise' in request.headers else None)
 
     return app
 

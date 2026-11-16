@@ -39,3 +39,28 @@ test("browser fetch is called without the client as its receiver throughout the 
     "POST /api/stt/session", "POST /api/stt", "POST /api/stt/session/browser-session", "DELETE /api/stt/session/browser-session",
   ]);
 });
+
+
+test("missing or invalid VAD is actionable and never retried", async () => {
+  for (const code of ["STT_VAD_MODEL_MISSING", "STT_VAD_MODEL_INVALID", "DENOISE_NOT_READY", "DENOISE_FAILED"]) {
+    let attempts = 0;
+    const client = await SpeakerSessionClient.create(new AbortController().signal, async (url) => {
+      if (url === "/api/stt/session") return Response.json({ session_id: "test" });
+      attempts++;
+      return Response.json({ detail: code }, { status: 503 });
+    });
+    await assert.rejects(client.transcribe(encodePcm16Wav(new Float32Array(16000))), new RegExp(code));
+    assert.equal(attempts, 1);
+  }
+});
+
+test("denoise choice binds to session creation and is not changed by chunk retries", async () => {
+  const calls: { url: string; mode: string | null }[] = [];
+  const client = await SpeakerSessionClient.create(new AbortController().signal, async (url, init) => {
+    calls.push({ url: String(url), mode: new Headers(init?.headers).get("X-STT-Denoise") });
+    if (url === "/api/stt/session") return Response.json({ session_id: "clean" });
+    return Response.json({ transcript: "", inference_ms: 1 });
+  }, "deepfilternet3");
+  await client.transcribe(encodePcm16Wav(new Float32Array(16000)));
+  assert.deepEqual(calls, [{ url: "/api/stt/session", mode: "deepfilternet3" }, { url: "/api/stt", mode: null }]);
+});

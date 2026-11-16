@@ -218,9 +218,6 @@ export async function canonicalizeAudioBlob(
   if (decoded.length <= 0 || decoded.numberOfChannels <= 0) {
     throw new Error("VOICE_AUDIO_EMPTY");
   }
-  if (decoded.length / decoded.sampleRate > 30) {
-    throw new Error("VOICE_AUDIO_TOO_LONG");
-  }
 
   const channels = Array.from({ length: decoded.numberOfChannels }, (_, channel) =>
     decoded.getChannelData(channel),

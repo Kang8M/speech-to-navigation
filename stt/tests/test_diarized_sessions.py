@@ -1,4 +1,6 @@
+from stt.tests.vad_helpers import AllSpeech
 from types import SimpleNamespace
+from dataclasses import replace
 
 import numpy as np
 import pytest
@@ -21,7 +23,44 @@ class Diarizer:
 
 
 def store():
-    return SessionStore(Engine(), Diarizer())
+    return SessionStore(Engine(), Diarizer(), vad=AllSpeech())
+
+
+def test_denoising_uses_rolling_context_keeps_raw_speaker_audio_and_retries_once():
+    clean_windows, raw_windows = [], []
+    class Denoiser:
+        def enhance(self, audio):
+            clean_windows.append(audio.frame_count)
+            return replace(audio, waveform=np.full_like(audio.waveform, 0.125))
+    class CleanEngine(Engine):
+        def transcribe(self, audio):
+            assert np.all(audio.waveform == 0.125)
+            return super().transcribe(audio)
+    class RawDiarizer(Diarizer):
+        def regions(self, samples, profiles):
+            raw_windows.append(samples.copy())
+            assert not np.all(samples == 0.125)
+            return super().regions(samples, profiles)
+    subject = SessionStore(CleanEngine(), RawDiarizer(), vad=AllSpeech(), denoiser=Denoiser())
+    key = subject.create(denoise=True)['session_id']
+    audio = decode(wav_bytes(seconds=5))
+    first = subject.process(key, 1, 0, audio)
+    assert subject.process(key, 1, 0, audio) == first
+    subject.process(key, 2, 80000, audio)
+    assert clean_windows == [80000, 160000]
+    np.testing.assert_array_equal(raw_windows[0], audio.waveform)
+    assert first['denoiser'] == 'deepfilternet3'
+
+
+def test_denoise_failure_does_not_commit_session_state():
+    class Denoiser:
+        def enhance(self, audio): raise RuntimeError('DENOISE_FAILED')
+    subject = SessionStore(Engine(), Diarizer(), vad=AllSpeech(), denoiser=Denoiser())
+    key = subject.create(denoise=True)['session_id']
+    with pytest.raises(RuntimeError, match='DENOISE_FAILED'):
+        subject.process(key, 1, 0, decode(wav_bytes(seconds=5)))
+    assert subject.sessions[key].sequence == 0
+    assert subject.sessions[key].total_frames == 0
 
 
 def test_5_plus_3_seconds_is_redecoded_as_one_8_second_turn():
@@ -82,7 +121,7 @@ def test_timestamp_drift_across_freeze_boundary_never_drops_or_duplicates_word(o
 
 def test_session_capacity_expiry_and_chunk_bounds():
     import time
-    subject = SessionStore(Engine(), Diarizer(), max_sessions=1)
+    subject = SessionStore(Engine(), Diarizer(), max_sessions=1, vad=AllSpeech())
     key = subject.create()['session_id']
     with pytest.raises(SessionError, match='STT_SESSIONS_FULL'): subject.create()
     with pytest.raises(SessionError, match='STT_CHUNK_TOO_LONG'):
@@ -91,3 +130,22 @@ def test_session_capacity_expiry_and_chunk_bounds():
     replacement = subject.create()['session_id']
     assert replacement != key
     with pytest.raises(SessionError, match='STT_SESSION_EXPIRED'): subject.finalize(key)
+
+
+def test_failed_diarization_does_not_poison_session_speaker_profiles():
+    subject = store(); key = subject.create()['session_id']
+    audio = decode(wav_bytes(seconds=5))
+    subject.process(key, 1, 0, audio)
+    before = subject.sessions[key].profiles.vectors[0].copy()
+    original = subject.diarizer.regions
+    def fail(samples, profiles):
+        profiles.vectors[0][:] = 0
+        raise RuntimeError('diarization failed')
+    subject.diarizer.regions = fail
+    with pytest.raises(RuntimeError, match='diarization failed'):
+        subject.process(key, 2, 80000, audio)
+    np.testing.assert_array_equal(subject.sessions[key].profiles.vectors[0], before)
+    assert subject.sessions[key].sequence == 1
+    subject.diarizer.regions = original
+    retry = subject.process(key, 2, 80000, audio)
+    assert {word['speaker'] for word in retry['words']} == {1}

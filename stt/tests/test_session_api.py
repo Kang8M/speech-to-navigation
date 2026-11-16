@@ -1,3 +1,4 @@
+from stt.tests.vad_helpers import AllSpeech
 from threading import Lock
 from types import SimpleNamespace
 
@@ -18,7 +19,7 @@ class ApiDiarizer(Diarizer):
 
 
 def test_session_lifecycle_retry_silence_and_finalization():
-    with TestClient(create_app(ApiEngine(), ApiDiarizer())) as client:
+    with TestClient(create_app(ApiEngine(), ApiDiarizer(), vad=AllSpeech())) as client:
         key = client.post('/sessions').json()['session_id']
         headers = {'Content-Type': 'audio/wav', 'X-STT-Session': key, 'X-STT-Sequence': '1', 'X-STT-Start-Frame': '0'}
         first = client.post('/transcribe', headers=headers, content=wav_bytes(seconds=5))
@@ -36,9 +37,35 @@ def test_session_lifecycle_retry_silence_and_finalization():
 
 def test_missing_models_and_bad_sequence_are_actionable():
     diarizer = ApiDiarizer()
-    with TestClient(create_app(ApiEngine(), diarizer)) as client:
+    with TestClient(create_app(ApiEngine(), diarizer, vad=AllSpeech())) as client:
         key = client.post('/sessions').json()['session_id']
         response = client.post('/transcribe', content=wav_bytes(), headers={'Content-Type': 'audio/wav', 'X-STT-Session': key})
         assert response.status_code == 400
         diarizer.ready = lambda: False
         assert client.post('/sessions').json()['detail'] == 'DIARIZATION_MODEL_MISSING'
+
+
+def test_denoise_selection_is_fixed_for_session_and_errors_do_not_advance():
+    from dataclasses import replace
+    class Denoiser:
+        calls = 0
+        def ready(self): return True
+        def enhance(self, audio):
+            self.calls += 1
+            if self.calls == 1: raise RuntimeError('DENOISE_FAILED')
+            return replace(audio, waveform=audio.waveform * 0.9)
+    denoiser = Denoiser()
+    with TestClient(create_app(ApiEngine(), ApiDiarizer(), vad=AllSpeech(), denoiser=denoiser)) as client:
+        key = client.post('/sessions', headers={'X-STT-Denoise': 'deepfilternet3'}).json()['session_id']
+        headers = {'Content-Type': 'audio/wav', 'X-STT-Session': key, 'X-STT-Sequence': '1', 'X-STT-Start-Frame': '0'}
+        failed = client.post('/transcribe', headers=headers, content=wav_bytes())
+        assert failed.status_code == 503
+        assert failed.json()['detail'] == 'DENOISE_FAILED'
+        success = client.post('/transcribe', headers=headers, content=wav_bytes())
+        assert success.status_code == 200, success.text
+        assert success.json()['denoiser'] == 'deepfilternet3'
+        assert client.post('/transcribe', headers=headers, content=wav_bytes()).json() == success.json()
+        assert denoiser.calls == 2
+        conflict = client.post('/transcribe', headers={**headers, 'X-STT-Denoise': 'off'}, content=wav_bytes())
+        assert conflict.status_code == 409
+        assert conflict.json()['detail'] == 'DENOISE_MODE_CONFLICT'

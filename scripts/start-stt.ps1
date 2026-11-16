@@ -26,7 +26,7 @@ if ($null -eq $health) {
         if ($backend.HasExited) { throw 'STT service exited. Read logs/stt-backend.err.log.' }
     }
 }
-if (!$health.ready -or $health.backend -ne 'sherpa-onnx') { throw 'STT model/service is not ready. Run npm run stt:setup and inspect logs.' }
+if (!$health.ready -or !$health.vad_ready -or $health.backend -ne 'sherpa-onnx') { throw 'STT model/service is not ready. Run npm run stt:setup and inspect logs.' }
 if (!$BackendOnly) {
     if (!(Test-Path -LiteralPath 'node_modules/next/dist/bin/next')) { throw 'Run npm ci first.' }
     $webReady = $false

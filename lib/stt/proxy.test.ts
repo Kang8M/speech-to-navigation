@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { proxyStt, proxySttSession, MAX_AUDIO_BYTES } from "./proxy";
+import { proxyStt, proxySttSession } from "./proxy";
 
 test("proxy reports unavailable backend and preserves upstream errors", async () => {
   const failed = await proxyStt(new Request("http://localhost/api/stt"), async () => { throw new Error("offline"); });
@@ -16,13 +16,19 @@ test("proxy reports unavailable backend and preserves upstream errors", async ()
   assert.equal((await upstream.json()).detail, "AUDIO_SILENT");
 });
 
-test("proxy rejects oversized streamed input before contacting backend", async () => {
+test("proxy forwards uploads larger than 20 MB without an inference timeout", async () => {
+  const payload = new Uint8Array(21 * 1024 * 1024);
   let contacted = false;
   const response = await proxyStt(new Request("http://localhost/api/stt", {
-    method: "POST", body: new Uint8Array(MAX_AUDIO_BYTES + 1), headers: { "Content-Type": "audio/wav" },
-  }), async () => { contacted = true; return Response.json({}); });
-  assert.equal(response.status, 413);
-  assert.equal(contacted, false);
+    method: "POST", body: payload, headers: { "Content-Type": "audio/wav" },
+  }), async (_url, init) => {
+    contacted = true;
+    assert.equal((init?.body as Uint8Array).byteLength, payload.byteLength);
+    assert.equal(init?.signal, undefined);
+    return Response.json({});
+  });
+  assert.equal(response.status, 200);
+  assert.equal(contacted, true);
 });
 
 test("speaker session metadata survives proxy and session paths cannot escape", async () => {
@@ -36,4 +42,30 @@ test("speaker session metadata survives proxy and session paths cannot escape", 
   });
   const response = await proxySttSession(new Request("http://localhost/api/stt/session/x", { method: "DELETE" }), "../health");
   assert.equal(response.status, 400);
+});
+
+
+test("selected local file diarizer reaches the backend", async () => {
+  const response = await proxyStt(new Request("http://localhost/api/stt", { method: "POST", body: "wav", headers: {
+    "Content-Type": "audio/wav", "X-STT-Diarize": "1", "X-STT-Diarizer": "community1",
+  }}), async (_url, init) => {
+    assert.equal(new Headers(init?.headers).get("X-STT-Diarizer"), "community1");
+    return Response.json({});
+  });
+  assert.equal(response.status, 200);
+});
+
+test("denoise selection reaches backend for file and session creation", async () => {
+  for (const session of [false, true]) {
+    const request = new Request("http://localhost/api/stt", { method: "POST", body: session ? undefined : "wav",
+      headers: { "Content-Type": "audio/wav", "X-STT-Denoise": "deepfilternet3" } });
+    let mode: string | null = null;
+    const send: typeof fetch = async (_url, init) => {
+      mode = new Headers(init?.headers).get("X-STT-Denoise");
+      return Response.json({});
+    };
+    const response = session ? await proxySttSession(request, undefined, send) : await proxyStt(request, send);
+    assert.equal(response.status, 200);
+    assert.equal(mode, "deepfilternet3");
+  }
 });

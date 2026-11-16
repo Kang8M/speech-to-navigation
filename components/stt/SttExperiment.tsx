@@ -8,9 +8,27 @@ import { reviseWords, speakerTurns } from "@/lib/stt/speakers";
 
 type Phase = "idle" | "opening" | "recording" | "processing";
 type Result = SttResult;
-type Health = { ready: boolean; loaded?: boolean; model_id?: string; revision?: string; detail?: string; diarization_ready?: boolean };
+type Health = { ready: boolean; loaded?: boolean; model_id?: string; revision?: string; detail?: string; community_ready?: boolean; vad_ready?: boolean; diarization_ready?: boolean; denoise_ready?: boolean };
 
 const MESSAGES: Record<string, string> = {
+  DENOISE_NOT_READY: "DeepFilterNet3 chưa sẵn sàng. Cài runtime và tải model local rồi kiểm tra lại.",
+  DENOISE_RUNTIME_MISSING: "Chưa cài runtime DeepFilterNet3. Chạy npm run stt:denoise:setup rồi kiểm tra lại.",
+  DENOISE_MODEL_MISSING: "Chưa có model DeepFilterNet3. Chạy npm run stt:denoise:setup rồi kiểm tra lại.",
+  DENOISE_INVALID_AUDIO: "Audio đầu vào khử nhiễu không hợp lệ. Thử thu lại hoặc chọn file WAV khác.",
+  DENOISE_INVALID_OUTPUT: "WAV sau khử nhiễu không hợp lệ. Xem logs/stt-backend.err.log hoặc tắt khử nhiễu để thử lại.",
+  DENOISE_OUTPUT_INVALID: "WAV sau khử nhiễu không hợp lệ. Xem logs/stt-backend.err.log hoặc tắt khử nhiễu để thử lại.",
+  DENOISE_MODE_INVALID: "Chế độ khử nhiễu không hợp lệ. Chọn lại Tắt hoặc DeepFilterNet3.",
+  DENOISE_MODE_CONFLICT: "Chế độ khử nhiễu của phiên đã thay đổi. Kết thúc và mở phiên mới.",
+  DENOISE_FAILED: "Khử nhiễu local thất bại. Kiểm tra logs/stt-backend.err.log hoặc tắt khử nhiễu để thử lại.",
+  DENOISE_TIMEOUT: "Khử nhiễu quá thời gian chờ. Thử file ngắn hơn hoặc tắt khử nhiễu.",
+  COMMUNITY_NOT_READY: "Community-1 chưa sẵn sàng. Cần cài runtime và tải model local.",
+  COMMUNITY_MODEL_MISSING: "Chưa tải model Community-1 vào máy.",
+  COMMUNITY_RUNTIME_MISSING: "Chưa cài môi trường Community-1 riêng.",
+  COMMUNITY_MEMORY_LOW: "RAM trống chưa đủ để bắt đầu Community-1. Đóng bớt ứng dụng hoặc chọn chế độ ONNX hiện tại.",
+  COMMUNITY_FAILED: "Community-1 không xử lý được. Bản thu không được gửi ra ngoài máy.",
+  COMMUNITY_TIMEOUT: "Community-1 chưa hoàn tất trong thời gian xử lý cấu hình.",
+  STT_VAD_MODEL_MISSING: "Chưa có model Silero VAD. Chạy npm run stt:setup rồi kiểm tra lại.",
+  STT_VAD_MODEL_INVALID: "Model Silero VAD không hợp lệ. Chạy lại npm run stt:setup.",
   DIARIZATION_MODEL_MISSING: "Chưa có model phân biệt người nói. Chạy npm run stt:setup rồi kiểm tra lại.",
   STT_SESSION_EXPIRED: "Phiên nhận dạng đã hết hạn. Bắt đầu phiên mới để tiếp tục.",
   STT_CHUNK_CONFLICT: "Không xác nhận được thứ tự âm thanh của phiên. Hãy bắt đầu phiên mới.",
@@ -23,9 +41,6 @@ const MESSAGES: Record<string, string> = {
   STT_BUSY: "Model đang xử lý một bản thu khác. Hãy thử lại sau vài giây.",
   STT_TIMEOUT: "Nhận dạng quá thời gian chờ. Hãy thử đoạn âm thanh ngắn hơn.",
   AUDIO_SILENT: "Bản thu im lặng. Hãy kiểm tra micro và nói lại.",
-  AUDIO_TOO_LARGE: "Âm thanh vượt giới hạn. Hãy dùng đoạn tối đa 30 giây.",
-  AUDIO_TOO_LONG: "Hãy chọn đoạn âm thanh tối đa 30 giây.",
-  VOICE_AUDIO_TOO_LONG: "Hãy chọn đoạn âm thanh tối đa 30 giây.",
   VOICE_AUDIO_TYPE_UNSUPPORTED: "Định dạng chưa được hỗ trợ. Hãy thử WAV, MP3, M4A, WebM hoặc Ogg.",
   VOICE_AUDIO_DECODE_FAILED: "Trình duyệt không đọc được file âm thanh này. Hãy thử WAV hoặc MP3.",
   NotAllowedError: "Chưa được cấp quyền micro. Cho phép micro trong trình duyệt rồi thử lại.",
@@ -41,6 +56,9 @@ function errorMessage(error: unknown) {
 }
 
 export function SttExperiment() {
+  const [denoise, setDenoise] = useState<"off" | "deepfilternet3">("off");
+  const [fileDiarizer, setFileDiarizer] = useState("onnx");
+  const [consent, setConsent] = useState(false);
   const [phase, setPhase] = useState<Phase>("idle");
   const [seconds, setSeconds] = useState(0);
   const [health, setHealth] = useState<Health | null>(null);
@@ -98,13 +116,11 @@ export function SttExperiment() {
     setPhase("processing");
     const controller = new AbortController();
     request.current = controller;
-    const timeout = setTimeout(() => controller.abort(), 125000);
     try {
-      if (blob.size > 20 * 1024 * 1024) throw new Error("AUDIO_TOO_LARGE");
       const wav = await canonicalizeAudioBlob(blob);
       if (current !== generation.current) return;
       const response = await fetch("/api/stt", {
-        method: "POST", headers: { "Content-Type": "audio/wav", "X-STT-Diarize": "1" }, body: wav, signal: controller.signal,
+        method: "POST", headers: { "Content-Type": "audio/wav", "X-STT-Diarize": "1", "X-STT-Diarizer": fileDiarizer, "X-STT-Denoise": denoise }, body: wav, signal: controller.signal,
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.detail || "STT_INFERENCE_FAILED");
@@ -115,11 +131,10 @@ export function SttExperiment() {
     } catch (cause) {
       if (current === generation.current) setError(controller.signal.aborted ? MESSAGES.STT_TIMEOUT : errorMessage(cause));
     } finally {
-      clearTimeout(timeout);
       if (current === generation.current) {
         request.current = null;
         busy.current = false;
-        setPhase("idle");
+        setPhase("idle"); setConsent(false);
       }
     }
   }
@@ -132,13 +147,13 @@ export function SttExperiment() {
     catch (cause) { setError(errorMessage(cause)); }
     finally {
       if (capture.current === active) {
-        capture.current = null; busy.current = false; setPhase("idle");
+        capture.current = null; busy.current = false; setPhase("idle"); setConsent(false);
       }
     }
   }
 
   async function start() {
-    if (busy.current) return;
+    if (busy.current || !consent) return;
     busy.current = true;
     const current = ++generation.current;
     setError(""); setResult(null); setCopied(false); setSeconds(0); setPending(0); setSource("Phiên micro"); setPhase("opening");
@@ -147,7 +162,7 @@ export function SttExperiment() {
     let speakerSession: SpeakerSessionClient | null = null;
     try {
       if (!navigator.mediaDevices?.getUserMedia || typeof AudioWorkletNode === "undefined") throw new Error("MIC_UNSUPPORTED");
-      speakerSession = await SpeakerSessionClient.create(controller.signal);
+      speakerSession = await SpeakerSessionClient.create(controller.signal, fetch, denoise);
       const session = speakerSession;
       if (current !== generation.current) { await session.close(); return; }
       const active = await openContinuousSession({
@@ -162,7 +177,7 @@ export function SttExperiment() {
           if (sequence) {
             generation.current += 1;
             capture.current?.cancel(); controller.abort();
-            capture.current = null; request.current = null; busy.current = false; setPhase("idle"); setPending(0);
+            capture.current = null; request.current = null; busy.current = false; setPhase("idle"); setConsent(false); setPending(0);
           }
         },
         onElapsed: (elapsed) => { if (current === generation.current) setSeconds(elapsed); },
@@ -170,7 +185,7 @@ export function SttExperiment() {
         onStopping: () => { if (current === generation.current) setPhase("processing"); },
         onStopped: () => {
           if (current === generation.current) {
-            capture.current = null; request.current = null; busy.current = false; setPhase("idle");
+            capture.current = null; request.current = null; busy.current = false; setPhase("idle"); setConsent(false);
           }
         },
         onFinish: async () => {
@@ -185,12 +200,12 @@ export function SttExperiment() {
     } catch (cause) {
       controller.abort();
       await speakerSession?.close();
-      if (current === generation.current) { setError(errorMessage(cause)); busy.current = false; setPhase("idle"); }
+      if (current === generation.current) { setError(errorMessage(cause)); busy.current = false; setPhase("idle"); setConsent(false); }
     }
   }
 
   function upload(file?: File) {
-    if (!file || busy.current) return;
+    if (!file || busy.current || !consent) return;
     busy.current = true;
     setError(""); setResult(null); setCopied(false); setSource(file.name);
     const mime = file.type || ({ wav: "audio/wav", mp3: "audio/mpeg", m4a: "audio/mp4", ogg: "audio/ogg", webm: "audio/webm", flac: "audio/flac" }[file.name.split(".").pop()?.toLowerCase() || ""]);
@@ -198,7 +213,10 @@ export function SttExperiment() {
   }
 
   const idle = phase === "idle";
-  const ready = health?.ready === true && health?.diarization_ready === true;
+  const denoiseReady = denoise === "off" || health?.denoise_ready === true;
+  const ready = denoiseReady && health?.ready === true && health?.diarization_ready === true && health?.vad_ready === true;
+  const fileReady = denoiseReady && health?.ready === true && health?.vad_ready === true
+    && (fileDiarizer === "community1" ? health?.community_ready === true : health?.diarization_ready === true);
   const turns = result?.words ? speakerTurns(result.words) : [];
   return (
     <main className="mx-auto w-full max-w-4xl space-y-6 px-5 py-8">
@@ -214,25 +232,40 @@ export function SttExperiment() {
         </div>
         <p className="mt-2 break-all text-sm text-muted">Zipformer · sherpa-onnx · tiếng Việt · CPU · phiên micro không giới hạn thời gian</p>
         {health?.revision && <p className="mt-1 break-all text-xs text-muted">Revision: {health.revision} · {health.loaded ? "Đã nạp vào RAM" : "Nạp model trong lượt đầu"}</p>}
-        {health && !ready && <p className="mt-3 text-sm text-warn-text">{MESSAGES[health.detail || (health.ready ? "DIARIZATION_MODEL_MISSING" : "STT_MODEL_MISSING")] || MESSAGES.STT_BACKEND_UNAVAILABLE}</p>}
+        {health && !ready && denoiseReady && <p className="mt-3 text-sm text-warn-text">{MESSAGES[health.detail || (health.ready ? (health.vad_ready !== true ? "STT_VAD_MODEL_MISSING" : "DIARIZATION_MODEL_MISSING") : "STT_MODEL_MISSING")] || MESSAGES.STT_BACKEND_UNAVAILABLE}</p>}
       </section>
       <section aria-label="Âm thanh đầu vào" className="space-y-4 rounded-lg border border-primary/20 bg-white p-5">
         <h3 className="text-lg font-semibold">1. Chọn âm thanh</h3>
+        <label className="flex items-start gap-2 text-sm"><input type="checkbox" checked={consent} disabled={!idle} onChange={(event) => setConsent(event.target.checked)} />Tôi đồng ý xử lý audio và transcript trên máy trong phiên này. Dữ liệu bệnh án không gửi tới AI bên ngoài.</label>
+        <label className="block text-sm">Khử nhiễu cho file và micro
+          <select value={denoise} disabled={!idle} onChange={(event) => setDenoise(event.target.value as "off" | "deepfilternet3")} className="ml-2 rounded border p-1">
+            <option value="off">Tắt (mặc định)</option>
+            <option value="deepfilternet3">DeepFilterNet3 local</option>
+          </select>
+        </label>
+        {denoise !== "off" && <p role="status" className="text-xs text-muted">Khử nhiễu trên máy trước nhận dạng; dùng WAV tạm cục bộ và xóa sau xử lý. {!health?.denoise_ready && MESSAGES.DENOISE_NOT_READY}</p>}
+        <label className="block text-sm">Phân tách người nói cho file tải lên
+          <select value={fileDiarizer} disabled={!idle} onChange={(event) => setFileDiarizer(event.target.value)} className="ml-2 rounded border p-1">
+            <option value="onnx">ONNX hiện tại</option>
+            <option value="community1">Community-1 local (hậu xử lý)</option>
+          </select>
+        </label>
+        {fileDiarizer === "community1" && <p className="text-xs text-muted">Chỉ áp dụng file tải lên; chạy CPU sau Zipformer. Community-1 phân tách người nói, không khử nhiễu. Có ghi file tạm cục bộ và xóa sau xử lý. {!health?.community_ready && "Chưa sẵn sàng: cần cài runtime và tải weights."}</p>}
         <div className="flex flex-wrap items-center gap-4">
-          <button type="button" disabled={phase === "opening" || phase === "processing" || (idle && !ready)}
+          <button type="button" disabled={phase === "opening" || phase === "processing" || (idle && (!ready || !consent))}
             onClick={() => phase === "recording" ? void stopSession() : void start()}
             aria-pressed={phase === "recording"}
             className="min-w-48 rounded bg-primary px-5 py-3 font-medium text-white disabled:opacity-50">
             {phase === "recording" ? "Kết thúc phiên" : phase === "opening" ? "Đang mở micro…" : phase === "processing" ? "Đang nhận dạng…" : "Bắt đầu phiên micro"}
           </button>
           <label className="block text-sm">Hoặc tải file âm thanh
-            <input type="file" accept=".wav,.mp3,.m4a,.webm,.ogg,.flac,audio/*" disabled={!idle || !ready}
+            <input type="file" accept=".wav,.mp3,.m4a,.webm,.ogg,.flac,audio/*" disabled={!idle || !fileReady || !consent}
               className="mt-1 block max-w-full text-sm file:mr-3 file:rounded file:border file:bg-soft file:px-3 file:py-2 disabled:opacity-50"
               onChange={(event) => { upload(event.target.files?.[0]); event.target.value = ""; }} />
           </label>
         </div>
-        <p aria-live="polite" className="text-sm text-muted">{phase === "recording" ? `Đang thu ${Math.floor(seconds / 60)} phút ${seconds % 60} giây · ${pending} đoạn đang xử lý/chờ. Văn bản cập nhật trong lúc thu.` : "Micro mở liên tục đến khi kết thúc. Tách đoạn ở khoảng nghỉ hoặc tối đa 5 giây để trả text dần. File tải lên: tối đa 20 MB và 30 giây."}</p>
-        <p className="text-xs text-muted">Micro cần quyền trình duyệt; mở bằng localhost hoặc HTTPS. Âm thanh chỉ xử lý trong bộ nhớ, không lưu lịch sử bản thu.</p>
+        <p aria-live="polite" className="text-sm text-muted">{phase === "recording" ? `Đang thu ${Math.floor(seconds / 60)} phút ${seconds % 60} giây · ${pending} đoạn đang xử lý/chờ. Văn bản cập nhật trong lúc thu.` : "Micro mở liên tục đến khi kết thúc. Tách đoạn ở khoảng nghỉ hoặc tối đa 5 giây để trả text dần. File tải lên không giới hạn dung lượng hoặc thời lượng."}</p>
+        <p className="text-xs text-muted">Micro cần quyền trình duyệt; mở bằng localhost hoặc HTTPS. Khi tắt khử nhiễu, ONNX xử lý audio trong bộ nhớ. DeepFilterNet3 và Community-1 dùng WAV tạm cục bộ và xóa sau xử lý; không lưu lịch sử bản thu.</p>
       </section>
       {phase === "processing" && <p role="status" className="text-sm text-primary">Đã dừng thu. Đang xử lý nốt {pending} đoạn còn lại…</p>}
       {error && <p role="alert" className="rounded border border-warn bg-white p-4 text-warn-text">{error}</p>}

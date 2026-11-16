@@ -22,6 +22,8 @@ if (!$SkipModel) {
     if ($LASTEXITCODE -ne 0) { throw 'Model download failed. Rerun this script to resume.' }
     & $python -m stt.download_diarization
     if ($LASTEXITCODE -ne 0) { throw 'Diarization model download failed. Rerun this script to resume.' }
+    & $python -m stt.download_vad
+    if ($LASTEXITCODE -ne 0) { throw 'Silero VAD model download failed.' }
     & $python -m stt.smoke
     if ($LASTEXITCODE -ne 0) { throw 'Real STT model smoke test failed.' }
     & $python -m stt.diarization_smoke

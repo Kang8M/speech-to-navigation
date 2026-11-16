@@ -16,17 +16,27 @@ test("P-018 WAV encoding is mono 16kHz PCM16 with correct samples", async () => 
   assert.equal(targetFrameCount(44100, 44100), 16000);
 });
 
-test("empty, unsupported and overlong audio fail before upload", async () => {
+test("empty and unsupported audio fail before upload", async () => {
   await assert.rejects(canonicalizeAudioBlob(new Blob([], { type: "audio/wav" })), /VOICE_AUDIO_EMPTY/);
   await assert.rejects(canonicalizeAudioBlob(new Blob(["x"], { type: "text/plain" })), /VOICE_AUDIO_TYPE_UNSUPPORTED/);
+ });
+
+test("audio longer than 30 seconds is normalized without a duration cap", async () => {
   let closed = false;
-  await assert.rejects(canonicalizeAudioBlob(new Blob(["x"], { type: "audio/wav" }), {
+  const samples = new Float32Array(16000 * 31);
+  const result = await canonicalizeAudioBlob(new Blob(["x"], { type: "audio/wav" }), {
     createDecodeContext: () => ({
-      decodeAudioData: async () => ({ numberOfChannels: 1, length: 16000 * 31, sampleRate: 16000,
-        getChannelData: () => new Float32Array(16000 * 31) }),
+      decodeAudioData: async () => ({ numberOfChannels: 1, length: samples.length, sampleRate: 16000,
+        getChannelData: () => samples }),
       close: async () => { closed = true; },
     }),
-    createOfflineContext: () => { throw new Error("Must reject before resampling"); },
-  }), /VOICE_AUDIO_TOO_LONG/);
+    createOfflineContext: () => ({
+      destination: {},
+      createBuffer: () => ({ copyToChannel: () => {} }),
+      createBufferSource: () => ({ buffer: null, connect: () => {}, start: () => {} }),
+      startRendering: async () => ({ getChannelData: () => samples }),
+    }),
+  });
+  assert.equal(result.size, 44 + samples.length * 2);
   assert.equal(closed, true);
 });

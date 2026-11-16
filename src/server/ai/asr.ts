@@ -30,7 +30,7 @@ const INTERIM_STEP = 0.4 * ASR_SAMPLE_RATE;
 const IDLE_MS = 60_000;
 
 export function getAsrProvider(): string {
-  return process.env.ASR_PROVIDER?.trim() || "web";
+  return process.env.ASR_PROVIDER?.trim() || "zipformer";
 }
 
 export function modelSanSang(): boolean {

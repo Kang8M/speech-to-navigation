@@ -11,8 +11,8 @@ export class SpeakerSessionClient {
     this.send = (input, init) => send(input, init);
   }
 
-  static async create(signal: AbortSignal, send: typeof fetch = fetch) {
-    const response = await send("/api/stt/session", { method: "POST", signal });
+  static async create(signal: AbortSignal, send: typeof fetch = fetch, denoise: "off" | "deepfilternet3" = "off") {
+    const response = await send("/api/stt/session", { method: "POST", signal, headers: { "X-STT-Denoise": denoise } });
     const data = await response.json();
     if (!response.ok) throw new Error(data.detail || "STT_BACKEND_UNAVAILABLE");
     return new SpeakerSessionClient(data.session_id, signal, send);
@@ -30,7 +30,7 @@ export class SpeakerSessionClient {
       }
       const data = await response.json();
       if (response.ok) return data;
-      const retryable = response.status === 429 || (response.status >= 500 && !["DIARIZATION_MODEL_MISSING", "STT_HOTWORDS_INVALID"].includes(data.detail));
+      const retryable = response.status === 429 || (response.status >= 500 && !String(data.detail).startsWith("DENOISE_") && !["DIARIZATION_MODEL_MISSING", "STT_HOTWORDS_INVALID", "STT_VAD_MODEL_MISSING", "STT_VAD_MODEL_INVALID"].includes(data.detail));
       if (!retryable || attempt >= 2 || this.signal.aborted) throw new Error(data.detail || "STT_INFERENCE_FAILED");
       await new Promise((resolve) => setTimeout(resolve, 250 * 2 ** attempt));
     }

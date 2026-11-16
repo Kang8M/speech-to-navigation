@@ -18,22 +18,40 @@ class Region:
 class SpeakerProfiles:
     def __init__(self):
         self.vectors: list[np.ndarray] = []
+        self.observations: list[int] = []
 
-    def identify(self, embedding) -> int | None:
+    def identify(self, embedding, *, excluded: set[int] | None = None) -> int | None:
         vector = np.asarray(embedding, dtype=np.float32)
-        norm = float(np.linalg.norm(vector))
-        if not np.isfinite(vector).all() or norm < 1e-8:
+        if vector.ndim != 1 or vector.size == 0 or (self.vectors and vector.shape != self.vectors[0].shape):
+            return None
+        with np.errstate(over="ignore", invalid="ignore"):
+            norm = float(np.linalg.norm(vector))
+        if not np.isfinite(vector).all() or not np.isfinite(norm) or norm < 1e-8:
             return None
         vector = vector / norm
         scores = [float(vector @ profile) for profile in self.vectors]
         if scores:
             best = int(np.argmax(scores))
+            margin = scores[best] - max((score for i, score in enumerate(scores) if i != best), default=-1)
+            if margin < 0.08:
+                return None
             if scores[best] >= 0.55:
-                if len(scores) == 2 and abs(scores[0] - scores[1]) < 0.08:
+                if best + 1 in (excluded or set()):
                     return None
+                # Learn from confident observations only; bound the weight of any
+                # single rolling-window observation rather than replacing the voice.
+                if scores[best] >= 0.8 and margin >= 0.15:
+                    weight = 1 / min(self.observations[best] + 1, 20)
+                    combined = (1 - weight) * self.vectors[best] + weight * vector
+                    self.vectors[best] = combined / np.linalg.norm(combined)
+                    self.observations[best] += 1
                 return best + 1
+            # A weak mismatch is not enough evidence to create a new identity.
+            if scores[best] >= 0.45:
+                return None
         if len(self.vectors) < 2:
             self.vectors.append(vector.copy())
+            self.observations.append(1)
             return len(self.vectors)
         return None
 
@@ -62,18 +80,49 @@ def attribute_words(words: list[dict], regions: list[Region]) -> list[dict]:
     output = []
     for word in words:
         # Transducer timestamps are emission estimates, not forced alignment.
-        point = word['start_ms'] / 1000 + min(0.08, (word['end_ms'] - word['start_ms']) / 2000)
-        active = [region for region in regions if region.start <= point < region.end]
-        if not active and regions:
-            nearest = min(regions, key=lambda region: min(abs(point - region.start), abs(point - region.end)))
-            if min(abs(point - nearest.start), abs(point - nearest.end)) <= 0.45:
-                active = [nearest]
+        start = word['start_ms'] / 1000
+        end = max(start + 0.001, min(word['end_ms'] / 1000, start + 0.16))
+        # The estimated end may include a pause or the next turn. Trust at most
+        # 160ms near emission; never borrow a voice across a silent gap.
+        active = [region for region in regions if region.start < end and region.end > start]
         speakers = {region.speaker for region in active}
-        acoustic_clusters = {region.cluster if region.cluster is not None else region.speaker if region.speaker is not None else id(region) for region in active}
-        overlap = len(acoustic_clusters) > 1
-        output.append({**word, 'speaker': next(iter(speakers)) if len(speakers) == 1 and not overlap else None,
+        def cluster(region):
+            return region.cluster if region.cluster is not None else region.speaker if region.speaker is not None else id(region)
+        overlap = any(cluster(a) != cluster(b) and min(a.end, b.end, end) > max(a.start, b.start, start)
+                      for i, a in enumerate(active) for b in active[i + 1:])
+        # Require most of the trusted interval to be covered, and no conflicting
+        # sequential turn. Sequential changes are uncertain, not overlapping speech.
+        # Measure the union: duplicate same-cluster segments are not extra speech.
+        covered = 0.0
+        cursor = start
+        for left, right in sorted((max(region.start, start), min(region.end, end)) for region in active):
+            covered += max(0.0, right - max(left, cursor))
+            cursor = max(cursor, right)
+        output.append({**word, 'speaker': next(iter(speakers)) if len(speakers) == 1 and not overlap and covered >= 0.6 * (end-start) else None,
                        'overlap': overlap})
     return output
+
+
+def clean_speech(samples, regions: list[Region], cluster: int) -> np.ndarray:
+    """Pool available speech, subtracting overlap rather than dropping a whole turn."""
+    intervals = []
+    for region in regions:
+        if region.cluster != cluster:
+            continue
+        pieces = [(max(0, round(region.start * 16000)), min(len(samples), round(region.end * 16000)))]
+        for other in regions:
+            if other.cluster == cluster:
+                continue
+            left, right = round(other.start * 16000), round(other.end * 16000)
+            pieces = [(a, b) for start, end in pieces for a, b in
+                      ((start, min(end, left)), (max(start, right), end)) if b > a]
+        intervals.extend((a, b) for a, b in pieces if b > a)
+    # Merge repeated/adjacent regions so duplicated segmentation cannot overcount.
+    merged = []
+    for start, end in sorted(intervals):
+        if merged and start <= merged[-1][1]: merged[-1] = (merged[-1][0], max(end, merged[-1][1]))
+        else: merged.append((start, end))
+    return np.concatenate([samples[start:end] for start, end in merged])[:6 * 16000] if merged else np.empty(0, dtype=np.float32)
 
 
 class LocalDiarizer:
@@ -107,25 +156,24 @@ class LocalDiarizer:
         if len(samples) < 8000:
             return []
         segments = self._model.process(np.asarray(samples, dtype=np.float32)).sort_by_start_time()
+        duration = len(samples) / 16000
+        segments = [Region(max(0, region.start), min(duration, region.end), None, region.speaker)
+                    for region in segments if min(duration, region.end) > max(0, region.start)]
         mapping = {}
-        for segment in segments:
-            if segment.speaker in mapping:
-                continue
-            # Extract only clean/non-overlapped speech from this local cluster.
-            pieces = []
-            for region in segments:
-                if region.speaker != segment.speaker:
-                    continue
-                if any(other.speaker != region.speaker and other.start < region.end and other.end > region.start for other in segments):
-                    continue
-                pieces.append(samples[max(0, int(region.start * 16000)):min(len(samples), int(region.end * 16000))])
-            clean = np.concatenate(pieces)[:6 * 16000] if pieces else np.empty(0, dtype=np.float32)
-            mapping[segment.speaker] = None
+        # Stable first-occurrence ordering preserves the session's initial IDs.
+        for cluster in dict.fromkeys(region.cluster for region in segments):
+            clean = clean_speech(samples, segments, cluster)
+            mapping[cluster] = None
             if len(clean) >= 12800:
                 stream = self._extractor.create_stream()
                 stream.accept_waveform(16000, clean)
                 stream.input_finished()
                 if self._extractor.is_ready(stream):
-                    mapping[segment.speaker] = profiles.identify(self._extractor.compute(stream))
-        duration = len(samples) / 16000
-        return [Region(max(0, region.start), min(duration, region.end), mapping[region.speaker], region.speaker) for region in segments]
+                    # Different local clusters may be fragments of the same voice.
+                    # They must not share an identity when active simultaneously.
+                    excluded = {mapping[other.cluster] for region in segments if region.cluster == cluster
+                                for other in segments if other.cluster in mapping and other.cluster != cluster
+                                and min(region.end, other.end) > max(region.start, other.start)
+                                and mapping[other.cluster] is not None}
+                    mapping[cluster] = profiles.identify(self._extractor.compute(stream), excluded=excluded)
+        return [Region(region.start, region.end, mapping[region.cluster], region.cluster) for region in segments]

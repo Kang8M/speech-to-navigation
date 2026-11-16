@@ -7,7 +7,8 @@ from uuid import uuid4
 
 import numpy as np
 
-from stt.audio import CanonicalAudio, contains_speech
+from stt.audio import CanonicalAudio
+from stt.vad import SileroVad, transcribe_speech
 from stt.diarization import SpeakerProfiles, tokens_to_words, attribute_words
 from stt.errors import VoiceNoSpeechError
 
@@ -60,6 +61,7 @@ class SessionError(Exception):
 
 @dataclass
 class Session:
+    denoise: bool = False
     samples: np.ndarray = field(default_factory=lambda: np.empty(0, dtype=np.float32))
     profiles: SpeakerProfiles = field(default_factory=SpeakerProfiles)
     total_frames: int = 0
@@ -74,7 +76,9 @@ class Session:
 
 
 class SessionStore:
-    def __init__(self, engine, diarizer, *, max_sessions=8, ttl_seconds=600):
+    def __init__(self, engine, diarizer, *, max_sessions=8, ttl_seconds=600, vad=None, denoiser=None):
+        self.vad = vad if vad is not None else SileroVad()
+        self.denoiser = denoiser
         self.engine = engine
         self.diarizer = diarizer
         self.sessions: dict[str, Session] = {}
@@ -88,14 +92,15 @@ class SessionStore:
             if now - self.sessions[key].touched > self.ttl_seconds:
                 del self.sessions[key]
 
-    def create(self):
+    def create(self, *, denoise=False):
         with self.lock:
             self._prune()
             if len(self.sessions) >= self.max_sessions:
                 raise SessionError('STT_SESSIONS_FULL', 503)
             key = str(uuid4())
-            self.sessions[key] = Session()
-            return {'session_id': key, 'max_speakers': 2, 'revision_ms': REVISION_MS}
+            self.sessions[key] = Session(denoise=denoise)
+            return {'session_id': key, 'max_speakers': 2, 'revision_ms': REVISION_MS,
+                    'denoiser': 'deepfilternet3' if denoise else 'off'}
 
     def _get(self, key):
         self._prune()
@@ -107,11 +112,13 @@ class SessionStore:
         with self.lock:
             self.sessions.pop(key, None)
 
-    def process(self, key: str, sequence: int, start_frame: int, audio: CanonicalAudio):
+    def process(self, key: str, sequence: int, start_frame: int, audio: CanonicalAudio, *, denoise=None):
         if audio.frame_count > 80000:
             raise SessionError('STT_CHUNK_TOO_LONG', 400)
         with self.lock:
             original = self._get(key)
+            if denoise is not None and denoise != original.denoise:
+                raise SessionError('DENOISE_MODE_CONFLICT', 409)
             if sequence == original.sequence and original.response:
                 if audio.utterance_ref != original.last_ref or start_frame != original.last_start:
                     raise SessionError('STT_CHUNK_CONFLICT')
@@ -131,14 +138,16 @@ class SessionStore:
         window = CanonicalAudio(state.samples, 16000, len(state.samples), duration_ms, f'{key}:{sequence}')
         words = []
         inference_ms = 0
-        if contains_speech(window, min_frame_rms=0.005, min_speech_ms=100, max_frame_rms_threshold=0.02):
+        try:
+            if state.denoise and self.denoiser is None:
+                raise RuntimeError('DENOISE_NOT_READY')
+            speech_window = self.denoiser.enhance(window) if state.denoise else window
+            result = transcribe_speech(self.engine, self.vad, speech_window)
             regions = self.diarizer.regions(state.samples, state.profiles)
-            try:
-                result = self.engine.transcribe(window)
-                inference_ms = result.inference_ms
-                words = attribute_words(tokens_to_words(result.tokens, result.timestamps, len(state.samples) / 16000), regions)
-            except VoiceNoSpeechError:
-                pass
+            inference_ms = result.inference_ms
+            words = attribute_words(tokens_to_words(result.tokens, result.timestamps, len(state.samples) / 16000), regions)
+        except VoiceNoSpeechError:
+            pass
         for word in words:
             word['start_ms'] += offset_ms
             word['end_ms'] += offset_ms
@@ -153,6 +162,7 @@ class SessionStore:
             'transcript': ' '.join(word['text'] for word in words), 'no_speech': not words,
             'audio_ms': total_ms, 'chunk_audio_ms': audio.duration_ms, 'inference_ms': inference_ms,
             'processing_ms': round((monotonic() - started) * 1000), 'final': False,
+            'denoiser': 'deepfilternet3' if state.denoise else 'off',
         }
         state.sequence = sequence
         state.last_ref = audio.utterance_ref
@@ -179,8 +189,8 @@ class SessionStore:
             state.touched = monotonic()
             return copy.deepcopy(state.response)
 
-    def file(self, audio: CanonicalAudio):
-        key = self.create()['session_id']
+    def file(self, audio: CanonicalAudio, *, denoise=False):
+        key = self.create(denoise=denoise)['session_id']
         words = []
         total_inference = 0
         try:

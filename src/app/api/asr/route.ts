@@ -11,9 +11,12 @@ export function GET() {
   return Response.json({ provider, sanSang: provider === "zipformer" && modelSanSang() } satisfies AsrTrangThai);
 }
 
-export function POST() {
+export function POST(request: Request) {
+  if (request.headers.get("X-Clinical-Consent") !== "true") {
+    return Response.json({ error: "Cần sự đồng ý xử lý âm thanh y tế nội bộ trước khi mở phiên." }, { status: 403 });
+  }
   if (getAsrProvider() !== "zipformer") {
-    return Response.json({ error: "Chưa bật nhận dạng trên máy (ASR_PROVIDER=zipformer)." }, { status: 400 });
+    return Response.json({ error: "Chính sách dữ liệu y tế chỉ cho phép nhận dạng trên máy (ASR_PROVIDER=zipformer)." }, { status: 403 });
   }
   try {
     return Response.json({ id: taoPhien() } satisfies AsrPhienMoi);

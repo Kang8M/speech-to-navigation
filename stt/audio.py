@@ -26,11 +26,11 @@ def decode_canonical_wav(
     payload: bytes,
     *,
     mime_type: str,
-    max_audio_bytes: int,
-    max_audio_seconds: int,
+    max_audio_bytes: int | None = None,
+    max_audio_seconds: int | None = None,
     allow_silence: bool = False,
 ) -> CanonicalAudio:
-    if len(payload) > max_audio_bytes:
+    if max_audio_bytes is not None and len(payload) > max_audio_bytes:
         raise VoicePayloadTooLargeError("AUDIO_TOO_LARGE")
     normalized_mime = mime_type.partition(";")[0].strip().lower()
     if normalized_mime not in WAV_MIME_TYPES:
@@ -48,7 +48,7 @@ def decode_canonical_wav(
                 raise VoiceAudioValidationError("AUDIO_SUBTYPE_UNSUPPORTED")
             if source.frames <= 0:
                 raise VoiceAudioValidationError("AUDIO_EMPTY")
-            if source.frames > max_audio_seconds * source.samplerate:
+            if max_audio_seconds is not None and source.frames > max_audio_seconds * source.samplerate:
                 raise VoiceAudioValidationError("AUDIO_TOO_LONG")
             waveform = source.read(dtype="float32", always_2d=False)
     except VoiceAudioValidationError:

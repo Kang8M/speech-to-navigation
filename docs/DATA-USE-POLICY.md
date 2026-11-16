@@ -6,9 +6,18 @@ Phiên bản medical-data-use-2 / local-review-2, 2026-11-13. Đây là quy tắ
 | --- | --- | --- |
 | 1: public | Tài liệu tham chiếu được xác nhận công khai; tên thuốc riêng lẻ kể cả thuốc đặc thù | Được dùng AI nội bộ hoặc bên ngoài |
 | 2: masked_internal | Audio, transcript, bệnh án kể cả đã che tên/CCCD | Chỉ nội bộ, cần sự đồng ý rõ ràng cho bản nội dung được kiểm tra |
+| 2b: deidentified | Bản transcript đã qua chốt chặn PII tự động `pii-auto-1` (14 rule R1–R14), chỉ ở luồng `/demo-luong` | Chạy local luôn được. Ra AI bên ngoài chỉ khi bệnh nhân đã đồng ý xử lý AI; chưa đồng ý thì ném "Bệnh nhân chưa đồng ý xử lý AI — chỉ được chạy bộ tách local." |
 | 3: restricted | Hợp đồng, system prompt/tài liệu chỉ dẫn mật do người dùng nhập | Không đưa vào bất kỳ AI nào |
 
 Tên thuốc công khai không biến thông tin một người bệnh dùng thuốc đó thành dữ liệu công khai. Masking không tự nâng bệnh án cấp 2 thành cấp 1. Đường clinical luôn mặc định cấp 2; không có tham số HTTP cho phép tự khai bệnh án là public. Prompt ứng dụng cố định dùng để định nghĩa hành vi không phải tài liệu prompt mật được nhập để phân tích.
+
+## Cấp deidentified (chỉ luồng /demo-luong)
+
+- Phạm vi: chỉ áp dụng cho luồng `/demo-luong`. eForm `/` và API `/api/clinical/*` hiện hành giữ nguyên: bản đã masking vẫn là cấp 2, vẫn cần bước duyệt riêng tư thủ công (ticket) và không ra AI bên ngoài.
+- Bản thô không ghi đĩa. Bộ che `pii-auto-1` (che định danh, chốt chặn R11 chặn nếu còn sót, đồng ý R14, nhật ký R13) chạy trước; chỉ khi chốt chặn qua mới có `DeidentificationProof { policy_version: "pii-auto-1", gate_passed: true, consent }` và `classifyData` trả `deidentified`. Nội dung cấp 3 vẫn là `restricted` dù có proof.
+- Đồng ý (`consent`) lấy từ hồ sơ bệnh nhân. R14: chưa đồng ý thì chỉ chạy bộ tách local; đường ra ngoài bị chặn ở `assertDataUseAllowed`.
+- Tùy chọn `noCache` của `extractClinical` bỏ đọc cache/run-index để mỗi lần demo chạy lại thật; vẫn ghi file lượt chạy.
+- Căn cứ tham chiếu (không phải kết luận pháp lý): Luật 91/2025 Điều 2.1, 14.6, 20, 26, 30; Nghị định 356/2025; HIPAA §164.514(b)(2). Chốt chặn tự động không chứng minh ẩn danh tuyệt đối: tuổi, giới, thời điểm và bệnh hiếm vẫn có thể tái định danh.
 
 ## Cơ chế thực thi
 

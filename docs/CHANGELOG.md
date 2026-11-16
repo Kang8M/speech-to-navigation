@@ -4,6 +4,13 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-16
 
+### Cấp deidentified và tùy chọn noCache cho chính sách dữ liệu
+- **Loại:** Tính năng
+- **Thay đổi:** `data-policy.ts` thêm cấp `deidentified`, kiểu `DeidentificationProof` và tham số `proof` cho `classifyData` (proof `pii-auto-1` hợp lệ, không restricted thì trả `deidentified`). `assertDataUseAllowed`: `deidentified` ra ngoài khi có đồng ý, chưa đồng ý thì ném "Bệnh nhân chưa đồng ý xử lý AI — chỉ được chạy bộ tách local."; `masked_internal` ra ngoài vẫn bị chặn. `extractClinical` nhận `deidentification` (truyền vào `classifyData`, lấy đồng ý từ proof) và `noCache` (bỏ đọc cache bộ nhớ và run-index, không gộp inflight, vẫn ghi run). Không truyền hai tùy chọn thì hành vi cũ. `docs/DATA-USE-POLICY.md` thêm mục cấp deidentified, nêu rõ chỉ áp dụng `/demo-luong`, eForm `/` giữ duyệt thủ công.
+- **Lý do:** Để luồng demo chạy không qua phiếu duyệt riêng tư thủ công mà vẫn giữ đường chặn cấp 2 và cấp 3.
+- **File:** `src/shared/clinical/data-policy.ts`, `src/server/clinical/extraction.ts`, hai file test tương ứng, `docs/DATA-USE-POLICY.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** data-policy.test.ts và extraction.test.ts 19/19; impact `assertDataUseAllowed`, `extractClinical`, `classifyData` đều LOW.
+
 ### Dữ liệu giả, kịch bản mẫu và giá trị đã biết cho demo luồng dữ liệu
 - **Loại:** Tính năng
 - **Thay đổi:** `data/clinic/patients.json` thêm trường giả tùy chọn cho mỗi bệnh nhân: `dong_y_xu_ly_ai {trang_thai, luc}`, `nguoi_nha[]`, `noi_lam_viec`, `dia_chi`, `dien_thoai` (schema `PatientProfileSchema` nhận các trường này, đều optional nên fixture cũ vẫn hợp lệ; file được định dạng lại nên diff dài). Thêm 3 kịch bản `data/demo-luong/kich-ban/{ca-chuan,ca-chua-dong-y,ca-bi-chan}.json`; `.gitignore` bỏ qua `data/demo-luong/*` trừ `kich-ban/`. Thêm `src/shared/demo-luong/types.ts` (kiểu dùng chung `KichBan`, `DemoEvent`, `DemoPhieu`...), `src/server/demo-luong/known-identifiers.ts` (`knownIdentifiersFor` gom tên, mã, điện thoại, địa chỉ, nơi làm việc, người nhà, nhân viên và cờ đồng ý AI) và `kich-ban.ts` (`listKichBan`, `loadKichBan` chỉ nhận id `[a-z0-9-]`, lỗi 404; `demoAllowlist` gồm thuật ngữ TMH, tên thuốc và dịch vụ trong danh mục, đã bỏ dấu). `pii/index.ts` export thêm `DEFAULT_CLINICAL_ALLOWLIST`.

@@ -172,3 +172,28 @@ test("persistence failure never reports a successful local run", async t => {
   const blocked = path.join(directory, "not-a-directory"); fs.writeFileSync(blocked, "test");
   await assert.rejects(extractClinical("x", { directory: blocked, provider: "mock", approvedTranscript: () => transcript }), /Không lưu/);
 });
+
+const deid = (consent: boolean) => ({ policy_version: "pii-auto-1", gate_passed: true, consent }) as const;
+
+test("noCache: hai lần cùng input cho hai run_id khác nhau; không noCache dùng lại run cũ", async t => {
+  const directory = temp(t);
+  const transcript = input();
+  const options = { directory, approvedTranscript: () => transcript, provider: "mock" };
+  const a = await extractClinical("t", options);
+  const b = await extractClinical("t", options);
+  assert.equal(a.run_id, b.run_id);
+  const c = await extractClinical("t", { ...options, noCache: true });
+  const d = await extractClinical("t", { ...options, noCache: true });
+  assert.notEqual(c.run_id, d.run_id);
+  assert.notEqual(c.run_id, a.run_id);
+  assert.ok(fs.existsSync(path.join(directory, "runs", `${d.run_id}.json`)));
+});
+
+test("deidentification: mock vẫn chạy local kể cả khi bệnh nhân chưa đồng ý (R14)", async t => {
+  const directory = temp(t);
+  const transcript = input();
+  for (const consent of [true, false]) {
+    const result = await extractClinical("t", { directory, approvedTranscript: () => transcript, provider: "mock", deidentification: deid(consent), noCache: true });
+    assert.equal(result.provider, "mock");
+  }
+});

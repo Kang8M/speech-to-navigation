@@ -11,7 +11,7 @@ import { getProviderName } from "@/server/du-lieu/config";
 import type { LlmCall } from "@/server/ai/llm/types";
 import { ClinicalError } from "./repository";
 import { privacyTickets } from "./privacy";
-import { assertDataUseAllowed, classifyData, DATA_POLICY_VERSION } from "@/shared/clinical/data-policy";
+import { assertDataUseAllowed, classifyData, DATA_POLICY_VERSION, type DeidentificationProof } from "@/shared/clinical/data-policy";
 
 export const CLINICAL_PROMPT_VERSION = "clinical-extractive-1";
 const schema = resolveClinicalSchema(aiSchema);
@@ -204,6 +204,10 @@ export interface ClinicalExtractionOptions {
   /** Server/test dependency injection only; never accepted by the HTTP route. */
   approvedTranscript?: (ticket: string) => Transcript;
   directory?: string;
+  /** Bản đã qua chốt chặn PII (luồng /demo-luong); đồng ý của bệnh nhân lấy từ proof. */
+  deidentification?: DeidentificationProof;
+  /** Bỏ đọc cache bộ nhớ và run-index; vẫn ghi file lượt chạy. */
+  noCache?: boolean;
 }
 
 function writeImmutable(file: string, value: unknown) {
@@ -252,19 +256,21 @@ export async function extractClinical(ticket: string, options: ClinicalExtractio
   // All inputs to this endpoint are patient records, even when names are masked.
   // Consent authorizes internal processing only. No arbitrary URL/provider/injected
   // function can declare itself internal; only the built-in local rules are enabled.
+  let level: ReturnType<typeof classifyData>;
   try {
-    const level = classifyData(transcript.segments.map(segment => segment.text).join("\n"), "clinical");
+    level = classifyData(transcript.segments.map(segment => segment.text).join("\n"), "clinical");
     assertDataUseAllowed(level, provider === "mock" && !options.call ? "internal" : "external", true);
   } catch (error) {
     throw new ClinicalError(error instanceof Error ? error.message : "Chính sách dữ liệu từ chối xử lý.", 403);
   }
   const model = "clinical-rules-2";
   if (!model) throw new ClinicalError("Chưa cấu hình model cho nhà cung cấp AI.", 503);
-  const inputDigest = createHash("sha256").update(JSON.stringify({ transcript, provider, model, prompt: CLINICAL_PROMPT_VERSION, policy: DATA_POLICY_VERSION, system: SYSTEM, schema })).digest("hex");
+  const inputDigest = createHash("sha256").update(JSON.stringify({ transcript, provider, model, prompt: CLINICAL_PROMPT_VERSION, policy: DATA_POLICY_VERSION, system: SYSTEM, schema, ...(options.deidentification ? { level } : {}) })).digest("hex");
   const directory = options.directory ?? directoryDefault();
-  const key = `${directory}:${inputDigest}`;
+  const noCache = options.noCache === true;
+  const key = noCache ? `${directory}:${inputDigest}:${randomUUID()}` : `${directory}:${inputDigest}`;
   const indexFile = path.join(directory, "run-index", `${inputDigest}.json`);
-  const cached = cache.get(key) ?? (fs.existsSync(indexFile) ? (JSON.parse(fs.readFileSync(indexFile, "utf8")) as { run_id: string }).run_id : undefined);
+  const cached = noCache ? undefined : cache.get(key) ?? (fs.existsSync(indexFile) ? (JSON.parse(fs.readFileSync(indexFile, "utf8")) as { run_id: string }).run_id : undefined);
   if (cached) return loadClinicalRun(cached, directory);
   const pending = inflight.get(key);
   if (pending) return structuredClone(await pending);
@@ -280,12 +286,14 @@ export async function extractClinical(ticket: string, options: ClinicalExtractio
       // Both artifacts contain the reviewed transcript only. They are never overwritten.
       writeImmutable(path.join(directory, "transcripts", `${result.run_id}.json`), transcript);
       writeImmutable(path.join(directory, "runs", `${result.run_id}.json`), result);
-      writeImmutable(indexFile, { run_id: result.run_id });
+      if (!noCache) writeImmutable(indexFile, { run_id: result.run_id });
     } catch {
       throw new ClinicalError("Không lưu được lượt AI. Hồ sơ chưa được thay đổi; hãy thử lại.", 503);
     }
-    cache.set(key, result.run_id);
-    if (cache.size > 128) cache.delete(cache.keys().next().value!);
+    if (!noCache) {
+      cache.set(key, result.run_id);
+      if (cache.size > 128) cache.delete(cache.keys().next().value!);
+    }
     return result;
   })();
   inflight.set(key, operation);

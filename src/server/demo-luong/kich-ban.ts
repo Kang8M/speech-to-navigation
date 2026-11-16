@@ -2,17 +2,20 @@ import "server-only";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { foldVietnamese } from "@/shared/clinical/pii";
-import type { KichBan } from "@/shared/demo-luong/types";
+import type { KichBan, KichBanTomTat } from "@/shared/demo-luong/types";
 import { ClinicalError } from "@/server/clinical/repository";
 
 const dir = () => path.join(process.cwd(), "data", "demo-luong", "kich-ban");
 const ID = /^[a-z0-9-]+$/;
 
-export function listKichBan(): Pick<KichBan, "id" | "ten" | "benh_nhan_id">[] {
+export function listKichBan(): KichBanTomTat[] {
   return readdirSync(dir())
     .filter((f) => f.endsWith(".json") && ID.test(f.slice(0, -5)))
     .map((f) => loadKichBan(f.slice(0, -5)))
-    .map(({ id, ten, benh_nhan_id }) => ({ id, ten, benh_nhan_id }))
+    .map(({ id, ten, benh_nhan_id, doan }) => ({
+      id, ten, benh_nhan_id,
+      phien: [...new Set(doan.map((d) => d.phien).filter((n): n is number => typeof n === "number"))].sort((a, b) => a - b),
+    }))
     .sort((a, b) => a.id.localeCompare(b.id));
 }
 

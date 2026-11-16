@@ -1,5 +1,5 @@
 // Gọi API /api/demo-luong từ trình duyệt. Kiểu dùng chung nằm ở src/shared/demo-luong/types.ts.
-import type { DemoEvent, DemoPhieu, KichBan } from "@/shared/demo-luong/types";
+import type { DemoEvent, DemoPhieu, KichBanTomTat } from "@/shared/demo-luong/types";
 
 async function parse<T>(response: Response, fallback: string): Promise<T> {
   if (response.status === 204) return undefined as T;
@@ -9,7 +9,7 @@ async function parse<T>(response: Response, fallback: string): Promise<T> {
 }
 const json = (method: string, body: unknown): RequestInit => ({ method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), cache: "no-store" });
 
-export async function listKichBan(signal?: AbortSignal): Promise<Pick<KichBan, "id" | "ten" | "benh_nhan_id">[]> {
+export async function listKichBan(signal?: AbortSignal): Promise<KichBanTomTat[]> {
   return parse(await fetch("/api/demo-luong/kich-ban", { cache: "no-store", signal }), "Không đọc được danh sách kịch bản.");
 }
 export async function taoPhieu(benhNhanId: string): Promise<DemoPhieu> {

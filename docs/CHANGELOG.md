@@ -4,6 +4,19 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-16
 
+### Màn demo /demo-luong hai chế độ xem
+- **Loại:** Giao diện
+- **Thay đổi:** Thêm trang `/demo-luong` (link "Demo luồng dữ liệu" trên thanh đầu).
+  - Thanh trên: công tắc chế độ Bác sĩ / Lãnh đạo | Kỹ thuật, chọn bệnh nhân giả, dòng "Đồng ý AI: ✓/✗ (lúc tiếp đón, <lúc>)" (đọc từ hồ sơ giả qua `/api/clinic/patients/[id]`, sau lượt chạy lấy theo sự kiện ③; chưa đồng ý thì thêm nhãn "Không được gửi AI ngoài — chạy bộ tách local"), "+ Phiếu khám mới", "Xóa dữ liệu demo".
+  - Chọn nguồn: Micro (thu thành WAV 16 kHz bằng đường ống `lib/stt/microphone.ts` + `encodePcm16WavFromChunks`; `MicButton`/`DenoisedMic` chỉ trả chữ nên không dùng trực tiếp được), File WAV (chuẩn hóa bằng `canonicalizeAudioBlob`), Kịch bản mẫu (chọn phần 1/2 hoặc cả kịch bản; tự gợi ý phần tiếp theo). Chọn kịch bản của bệnh nhân khác thì mở phiếu mới cho bệnh nhân đó thay vì lỗi 409.
+  - Sơ đồ 5 ô có trạng thái và ms; bị chặn thì ③ đỏ kèm mã lý do, ④⑤ "Không gửi AI". Thanh phiên `Phiên 1 ✓ · Phiên 2 ✓ · [▶ Ghi phiên mới]`, bấm phiên để xem lại; bản thô giữ trong state theo `sequence`, có ghi chú mất khi tải lại trang (mã phiếu đang mở giữ trong `sessionStorage` nên tải lại vẫn về đúng phiếu).
+  - Ba cột (xếp dọc dưới 768px): Bản thô (span đỏ, `title` = mã rule), Bản đã che (nhãn xanh có hiệu ứng đỏ → xanh, "Đã che N mục · Chặn: không/có"), Phiếu khám đọc lại từ kho (nhãn "AI · phiên N" / "Bác sĩ sửa", "Phiên N nói khác: …", câu nguồn, cờ cần kiểm tra, Sửa / Lưu bản sửa / Duyệt, rev, "Bác sĩ thao tác: N lần (duyệt phiếu)" đếm thật số lần Lưu bản sửa/Duyệt thành công).
+  - Chế độ Bác sĩ: chữ lớn, dòng "Thông tin định danh không rời máy chủ bệnh viện". Chế độ Kỹ thuật: mỗi ô mở `TechDetails` (bảng đếm theo rule, lý do chặn, `payload_preview` nguyên văn, provider/model/prompt/schema/policy version, kiểm cấu trúc, JSON `DemoPhieu`, dòng nhật ký R13, ghi chú rủi ro còn lại của R2, "Mock — chưa rời máy chủ").
+  - `GET /api/demo-luong/kich-ban` trả thêm `phien: number[]` (kiểu mới `KichBanTomTat` trong `types.ts`). `globals.css` thêm keyframes `demo-do-sang-xanh`.
+- **Lý do:** Task 7 của plan demo luồng dữ liệu: cho bác sĩ/lãnh đạo và hội đồng kỹ thuật xem trọn luồng trên một màn.
+- **File:** `src/app/demo-luong/page.tsx`, `src/client/demo-luong/{DemoLuongScreen,ThanhTren,NguonPicker,MicWav,StepRail,SessionBar,TranscriptPanels,DemoPhieuPanel,TechDetails}.tsx`, `src/client/demo-luong/{hien-thi,api}.ts`, `src/client/chung/Header.tsx`, `src/shared/demo-luong/types.ts`, `src/server/demo-luong/kich-ban.ts`, `src/app/globals.css`, `README.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** `npx tsc --noEmit` sạch; `npx eslint src lib` 0 lỗi; `npm run build` thành công (có route `/demo-luong`); `npm test` 344/345 (lỗi có sẵn ở `encounter-context.test.ts:28`). Impact `Header` LOW (1 nơi gọi: `RootLayout`); `listKichBan` UNKNOWN, tìm chữ thấy chỉ route `kich-ban` và test gọi, thay đổi chỉ thêm trường. Kiểm tra trình duyệt: controller kiểm sau. Chưa thử micro.
+
 ### Sửa rà soát vòng 1 cho API demo-luong
 - **Loại:** Sửa lỗi
 - **Thay đổi:** `types.ts`: thêm `DemoErrorEvent` (`{buoc, trang_thai:"loi", ms, du_lieu:{loi,...}}`, các trường ngữ cảnh của `ai`/`luu` là tùy chọn) và hàm `isDemoError`; bỏ các biến thể `loi` riêng lẻ, dòng lỗi giữa stream nay đúng kiểu. Test hủy request nay thật sự kiểm tra phiếu không đổi (đã xác nhận fail khi tắt xử lý abort). `DEMO_LUONG_DIR` chỉ có hiệu lực khi `NODE_ENV=test` hoặc nằm dưới thư mục tạm. Client báo lỗi tiếng Việt khi phản hồi không có body. Route đọc âm thanh theo từng đoạn và trả 413 ngay khi vượt 20 MB, kể cả không có Content-Length.

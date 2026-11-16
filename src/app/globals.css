@@ -45,6 +45,14 @@ body {
   font-size: 15px;
 }
 
+/* /demo-luong: nhãn che vừa xuất hiện chuyển từ đỏ (bản thô) sang xanh (đã che) */
+@keyframes demo-do-sang-xanh {
+  from {
+    background-color: color-mix(in srgb, var(--ef_do) 16%, white);
+    color: var(--ef_do);
+  }
+}
+
 /* "In ngay" trên eForm: chỉ in khối BanIn, khổ A4 */
 @media print {
   @page {

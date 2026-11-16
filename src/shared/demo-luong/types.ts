@@ -14,6 +14,9 @@ export interface KichBan {
   expected: { phai_che: string[]; phai_giu: string[]; bi_chan: boolean };
 }
 
+/** Dòng danh sách kịch bản cho màn hình: `phien` là các phần có trong kịch bản (rỗng = chỉ chạy cả kịch bản). */
+export type KichBanTomTat = Pick<KichBan, "id" | "ten" | "benh_nhan_id"> & { phien: number[] };
+
 export type DemoStep = "stt" | "ban_tho" | "che" | "ai" | "luu";
 
 export interface DemoFieldSource { nguon: "ai" | "bac_si"; phien: number | null; xung_dot?: { phien: number; gia_tri_ai: string } }

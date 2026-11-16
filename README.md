@@ -2,6 +2,10 @@
 
 **Luồng hiện tại (12/11/2026):** STT → lọc/kiểm tra riêng tư → AI tạo JSON phiếu khám và chỉ định → bác sĩ sửa, lưu, duyệt và in. **Kê đơn ngoài scope**, do bác sĩ làm riêng. Hướng dẫn đầy đủ: [docs/CLINICAL-WORKFLOW.md](docs/CLINICAL-WORKFLOW.md).
 
+## Demo luồng dữ liệu (`/demo-luong`)
+
+Mở **[http://localhost:3000/demo-luong](http://localhost:3000/demo-luong)** để trình diễn trọn luồng: ① ghi âm (micro, file WAV hoặc kịch bản mẫu trong `data/demo-luong/kich-ban/`) → ② bản thô (tô đỏ, rê chuột thấy mã rule) → ③ bản đã che tự động (nhãn xanh, chốt chặn R11) → ④ AI (mock) → ⑤ phiếu đọc lại từ kho để bác sĩ sửa và duyệt. Một phiếu có nhiều phiên ghi âm; "+ Phiếu khám mới" mở phiếu khác. Công tắc **Bác sĩ / Lãnh đạo | Kỹ thuật**: chế độ Kỹ thuật mở chi tiết từng bước (đếm theo rule, nguyên văn dữ liệu gửi AI, phiên bản rule/prompt/schema, JSON phiếu, dòng nhật ký). Bản thô chỉ nằm trong bộ nhớ trình duyệt; dữ liệu chạy lưu ở `data/demo-luong/` (gitignore), nút "Xóa dữ liệu demo" xóa sạch. Nguồn micro/WAV cần dịch vụ STT local (`npm run stt:start`).
+
 ## Thử nghiệm STT local từ P-018
 
 Mở **[http://localhost:3000/stt](http://localhost:3000/stt)** để thử model **Zipformer tiếng Việt INT8**, chạy CPU qua sherpa-onnx. Trang này có phiên micro liên tục, trả văn bản dần trong lúc nói, tải file âm thanh và thời gian suy luận. Phần STT được tách riêng từ P-018; không mang theo TTS, LLM, tin nhắn hay điều khiển xe.

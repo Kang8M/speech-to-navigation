@@ -4,7 +4,9 @@ import fs from "node:fs";
 import http from "node:http";
 import os from "node:os";
 import path from "node:path";
-import type { DemoEvent, DemoPhieu } from "@/shared/demo-luong/types";
+import { isDemoError, type DemoEvent, type DemoPhieu } from "@/shared/demo-luong/types";
+import { streamDemoFlow } from "@/client/demo-luong/api";
+import { getDemoStore } from "@/server/demo-luong/get-store";
 import { POST as runFlow } from "./route";
 import { GET as listScripts } from "./kich-ban/route";
 import { POST as createPhieu, DELETE as resetPhieu } from "./phieu/route";
@@ -120,18 +122,61 @@ test("audio: STT trả chữ thì chạy đủ luồng; STT lỗi thì một dò
   assert.equal(failed.length, 1);
   assert.equal(failed[0].buoc, "stt");
   assert.equal(failed[0].trang_thai, "loi");
+  assert.ok(isDemoError(failed[0]));
   assert.ok(!JSON.stringify(failed[0]).includes("STT_FAIL"));
 
   const big = await runFlow(audioReq(p2.encounter_id, new Uint8Array(20 * 1024 * 1024 + 1)));
   assert.equal(big.status, 413);
 });
 
-test("hủy request giữa chừng: stream đóng, không ném lỗi", async () => {
+test("hủy request giữa chừng: stream đóng, phiếu không đổi", async () => {
   const p = await create();
   const controller = new AbortController();
   const res = await runFlow(new Request(`${BASE}/api/demo-luong?phieu=${p.encounter_id}&kich_ban=ca-chuan&phien=1`, { method: "POST", signal: controller.signal }));
   const reader = res.body!.getReader();
   await reader.read();
   controller.abort();
-  await reader.cancel();
+  // Cố đọc tiếp: nếu abort không dừng bộ sinh sự kiện thì luồng sẽ chạy tới bước lưu.
+  for (let i = 0; i < 10; i++) { const r = await reader.read().catch(() => ({ done: true })); if (r.done) break; }
+  await reader.cancel().catch(() => undefined);
+  await new Promise(r => setTimeout(r, 200));
+  const now = (await (await readPhieu(json("GET", "/x"), ctx(p.encounter_id))).json()) as DemoPhieu;
+  assert.equal(now.sessions.length, 0);
+  assert.equal(now.revision, p.revision);
+});
+
+test("DEMO_LUONG_DIR chỉ có hiệu lực khi NODE_ENV=test hoặc nằm dưới thư mục tạm", () => {
+  const saved = { dir: process.env.DEMO_LUONG_DIR, env: process.env.NODE_ENV };
+  const env = process.env as Record<string, string | undefined>;
+  try {
+    env.NODE_ENV = "production";
+    const outside = path.join(process.cwd(), "khong-duoc-dung");
+    env.DEMO_LUONG_DIR = outside;
+    assert.notEqual(getDemoStore().root, path.resolve(outside));
+    assert.equal(getDemoStore().root, path.join(process.cwd(), "data", "demo-luong"));
+    env.DEMO_LUONG_DIR = root;
+    assert.equal(getDemoStore().root, path.resolve(root));
+    env.NODE_ENV = "test";
+    env.DEMO_LUONG_DIR = outside;
+    assert.equal(getDemoStore().root, path.resolve(outside));
+  } finally { env.DEMO_LUONG_DIR = saved.dir; env.NODE_ENV = saved.env; }
+});
+
+test("audio vượt 20 MB không có Content-Length: 413 khi đang đọc", async () => {
+  const p = await create();
+  const chunk = new Uint8Array(1024 * 1024);
+  let sent = 0;
+  const body = new ReadableStream<Uint8Array>({ pull(c) { if (sent++ >= 25) c.close(); else c.enqueue(chunk); } });
+  const req = new Request(`${BASE}/api/demo-luong?phieu=${p.encounter_id}`, { method: "POST", headers: { "content-type": "audio/wav" }, body, duplex: "half" } as RequestInit);
+  assert.equal(req.headers.get("content-length"), null);
+  assert.equal((await runFlow(req)).status, 413);
+  assert.ok(sent < 25, "phải dừng đọc sớm");
+});
+
+test("client: phản hồi ok không có body thì ném lỗi tiếng Việt", async () => {
+  const original = globalThis.fetch;
+  globalThis.fetch = (async () => new Response(null, { status: 200 })) as typeof fetch;
+  try {
+    await assert.rejects(streamDemoFlow("x", { kichBan: "ca-chuan" }, () => {}), /không trả luồng/);
+  } finally { globalThis.fetch = original; }
 });

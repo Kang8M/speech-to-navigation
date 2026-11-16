@@ -20,6 +20,24 @@ async function transcribe(wav: Uint8Array) {
   return { text: data.transcript ?? data.text ?? "", engine: data.engine ?? "stt", audio_ms: typeof data.audio_ms === "number" ? data.audio_ms : null };
 }
 
+/** Đọc body theo từng đoạn, dừng ngay khi vượt giới hạn (kể cả không có Content-Length). */
+async function readBounded(request: Request): Promise<Uint8Array> {
+  const reader = request.body?.getReader();
+  if (!reader) return new Uint8Array();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      total += value.length;
+      if (total > MAX_AUDIO) { await reader.cancel().catch(() => undefined); throw new ClinicalError("Âm thanh quá lớn (tối đa 20 MB).", 413); }
+      chunks.push(value);
+    }
+  } finally { reader.releaseLock(); }
+  return Buffer.concat(chunks);
+}
+
 export async function POST(request: Request) {
   try {
     assertLocalDemoRequest(request);
@@ -45,8 +63,7 @@ export async function POST(request: Request) {
     } else {
       if (!/^audio\/(x-)?wav(?:;|$)/i.test(request.headers.get("content-type") ?? "")) throw new ClinicalError("Cần chọn kịch bản hoặc gửi âm thanh WAV.", 400);
       if (Number(request.headers.get("content-length") ?? 0) > MAX_AUDIO) throw new ClinicalError("Âm thanh quá lớn (tối đa 20 MB).", 413);
-      audio = new Uint8Array(await request.arrayBuffer());
-      if (audio.length > MAX_AUDIO) throw new ClinicalError("Âm thanh quá lớn (tối đa 20 MB).", 413);
+      audio = await readBounded(request);
       if (!audio.length) throw new ClinicalError("Âm thanh trống.", 400);
       source = { kind: "audio" };
     }

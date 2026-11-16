@@ -44,8 +44,9 @@ export async function streamDemoFlow(
     init = { method: "POST", cache: "no-store", signal };
   }
   const response = await fetch(`/api/demo-luong?${params}`, init);
-  if (!response.ok || !response.body) await parse(response, "Không chạy được luồng demo.");
-  const reader = response.body!.getReader();
+  if (!response.ok) await parse(response, "Không chạy được luồng demo.");
+  if (!response.body) throw new Error("Máy chủ không trả luồng dữ liệu. Thử lại.");
+  const reader = response.body.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
   const flush = (line: string) => { if (line.trim()) onEvent(JSON.parse(line) as DemoEvent); };

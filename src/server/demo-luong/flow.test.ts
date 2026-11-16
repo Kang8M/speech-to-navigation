@@ -4,7 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { foldVietnamese } from "@/shared/clinical/pii";
-import type { DemoEvent, DemoSource } from "@/shared/demo-luong/types";
+import { isDemoError, type DemoEvent, type DemoSource } from "@/shared/demo-luong/types";
 import { ClinicalError } from "@/server/clinical/repository";
 import { loadKichBan } from "./kich-ban";
 import { approveDemoPhieu, createDemoPhieu, demoStore, readDemoPhieu, saveDoctorEdit, type DemoStore } from "./store";
@@ -22,7 +22,7 @@ async function run(store: DemoStore, input: DemoFlowInput): Promise<DemoEvent[]>
   return out;
 }
 const kb = (id: string, phien?: number): DemoSource => ({ kind: "kich_ban", id, ...(phien ? { phien } : {}) });
-const pick = <B extends DemoEvent["buoc"]>(events: DemoEvent[], buoc: B) => events.find((e) => e.buoc === buoc) as Exclude<Extract<DemoEvent, { buoc: B }>, { buoc: "stt"; trang_thai: "loi" }>;
+const pick = <B extends DemoEvent["buoc"]>(events: DemoEvent[], buoc: B) => events.find((e) => e.buoc === buoc) as Exclude<Extract<DemoEvent, { buoc: B }>, { trang_thai: "loi" }>;
 
 test("ca chuẩn phiên 1: đủ 5 bước, lưu một phiên, nhật ký một dòng", async () => {
   const store = newStore(); const root = store.root; const create = (id: string) => createDemoPhieu(store, id);
@@ -43,7 +43,7 @@ test("ca chuẩn phiên 1: đủ 5 bước, lưu một phiên, nhật ký một 
   const luu = pick(events, "luu");
   assert.equal(luu.du_lieu.phieu.sessions.length, 1);
   assert.equal(luu.du_lieu.phieu.sessions[0].sequence, 1);
-  assert.equal(luu.du_lieu.phieu.revision, p.revision + 1);
+  assert.equal(luu.du_lieu.phieu!.revision, p.revision + 1);
   assert.deepEqual(luu.du_lieu.phieu, readDemoPhieu(store, p.encounter_id));
   assert.match(luu.du_lieu.sha256, /^[a-f0-9]{64}$/);
   assert.equal(luu.du_lieu.phieu.sources.ly_do?.nguon, "ai");
@@ -173,11 +173,11 @@ test("phiếu đổi revision giữa bước AI và lưu: phát luu/loi, không 
     events.push(e);
     if (e.buoc === "ai") saveDoctorEdit(store, p.encounter_id, p.revision, { benh_su: "BS chen giữa" });
   }
-  const luu = pick(events, "luu");
-  assert.equal(luu.trang_thai, "loi");
+  const luu = events.find(isDemoError)!;
+  assert.equal(luu.buoc, "luu");
   assert.ok(luu.du_lieu.loi);
-  assert.equal(luu.du_lieu.phieu.sessions.length, 0);
-  assert.equal(luu.du_lieu.phieu.revision, p.revision + 1);
+  assert.equal(luu.du_lieu.phieu!.sessions.length, 0);
+  assert.equal(luu.du_lieu.phieu!.revision, p.revision + 1);
   assert.equal(fs.existsSync(path.join(store.root, "audit", `${p.encounter_id}.ndjson`)), false);
 });
 

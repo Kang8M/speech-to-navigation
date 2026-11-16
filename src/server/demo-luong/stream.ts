@@ -1,6 +1,6 @@
 import "server-only";
 import { ClinicalError } from "@/server/clinical/repository";
-import type { DemoEvent } from "@/shared/demo-luong/types";
+import type { DemoErrorEvent, DemoEvent } from "@/shared/demo-luong/types";
 
 export class SttFailure extends Error {}
 

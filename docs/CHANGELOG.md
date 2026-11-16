@@ -4,6 +4,12 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-16
 
+### Sửa rà soát vòng 1 cho API demo-luong
+- **Loại:** Sửa lỗi
+- **Thay đổi:** `types.ts`: thêm `DemoErrorEvent` (`{buoc, trang_thai:"loi", ms, du_lieu:{loi,...}}`, các trường ngữ cảnh của `ai`/`luu` là tùy chọn) và hàm `isDemoError`; bỏ các biến thể `loi` riêng lẻ, dòng lỗi giữa stream nay đúng kiểu. Test hủy request nay thật sự kiểm tra phiếu không đổi (đã xác nhận fail khi tắt xử lý abort). `DEMO_LUONG_DIR` chỉ có hiệu lực khi `NODE_ENV=test` hoặc nằm dưới thư mục tạm. Client báo lỗi tiếng Việt khi phản hồi không có body. Route đọc âm thanh theo từng đoạn và trả 413 ngay khi vượt 20 MB, kể cả không có Content-Length.
+- **File:** `src/shared/demo-luong/types.ts`, `src/server/demo-luong/{get-store,stream,flow.test}.ts`, `src/app/api/demo-luong/{route,routes.test}.ts`, `src/client/demo-luong/api.ts`, `docs/CHANGELOG.md`
+- **Kiểm tra:** routes + flow test 20/20, `tsc` sạch, `eslint` 0 lỗi, `npm test` 344/345 (lỗi có sẵn ở `encounter-context.test.ts`).
+
 ### API stream và phiếu demo cho /demo-luong
 - **Loại:** Tính năng
 - **Thay đổi:** Thêm API của `/demo-luong` và module gọi từ trình duyệt (chưa có giao diện).

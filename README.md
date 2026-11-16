@@ -141,11 +141,11 @@ Ca mới tự vào eval. Trang eForm chỉ dùng câu mẫu của `ca-11` (cùng
 
 Kịch bản cho buổi thử với bác sĩ (gọi phiếu mẫu theo bệnh, một ca đọc cả đoạn để so sánh, số đo mẫu đúng sẵn, bảng ghi chép, câu hỏi sau buổi thử) ở `docs/kich-ban-thu-bac-si.md`.
 
-Trên trang eForm, khi AI đã điền ít nhất một lần, lần bấm **Lưu** đầu tiên ghi một lượt thử thành file JSON trong `data/sessions/` (thông báo dưới đáy có câu "Đã ghi số đo lượt thử"). Bấm Lưu nữa thì không ghi thêm; muốn thử lượt mới thì tải lại trang. Chưa để AI điền thì Lưu không ghi gì. File chỉ chứa số đếm (thời gian, số trường AI điền, số trường sửa, số mục khớp danh mục, kiểu nhập), **không chứa nội dung phiếu hay thông tin bệnh nhân**.
+Trên trang eForm, khi AI đã điền ít nhất một lần hoặc bác sĩ đã gõ vào ô chữ của phiếu (kể cả nhận gợi ý Tab), lần bấm **Lưu** đầu tiên ghi một lượt thử thành file JSON trong `data/sessions/` (thông báo dưới đáy có câu "Đã ghi số đo lượt thử"). Bấm Lưu nữa thì không ghi thêm; muốn thử lượt mới thì tải lại trang. Chưa làm gì thì Lưu không ghi gì. File chỉ chứa số đếm (thời gian, số trường AI điền, số trường sửa, số mục khớp danh mục, kiểu nhập, số gợi ý Tab), **không chứa nội dung phiếu hay thông tin bệnh nhân**.
 
 Trang **Kết quả thử nghiệm** có bảng các lượt, số liệu trung bình và nút xuất CSV. Lượt dùng "Thử câu mẫu" không có thời gian nhập thật nên mặc định không tính vào số trung bình; có ô đánh dấu để tính cả.
 
-- Thời gian: từ lúc bắt đầu nhập (gõ ký tự đầu, bấm 🎤 hoặc bấm câu mẫu) đến lúc bấm Lưu.
+- Thời gian: từ lúc bắt đầu nhập (gõ ký tự đầu ở cột Trợ lý AI hay vào ô chữ của phiếu, bấm 🎤 hoặc bấm câu mẫu) đến lúc bấm Lưu.
 - Kiểu nhập: "Nói" nếu trong lượt có bấm 🎤 hoặc dùng câu mẫu kiểu nói, còn lại là "Gõ".
 - AI điền: số trường phiếu khám AI điền cộng số dòng chỉ định, thuốc AI thêm (mỗi dòng tính một mục), cộng dồn qua các lần "Điền thêm".
 - Đã sửa: trường AI điền mà bác sĩ đã sửa, cộng dòng AI thêm mà bác sĩ đã sửa hoặc xóa. Bấm "✓ Đúng" không tính là sửa.
@@ -153,6 +153,11 @@ Trang **Kết quả thử nghiệm** có bảng các lượt, số liệu trung 
 - Khớp danh mục: tính trên các dòng AI thêm, tại thời điểm AI điền, trước khi bác sĩ sửa.
 - Cảnh báo: số chỗ còn "cần xem lại" lúc Lưu, cộng số thuốc trùng nhóm dị ứng.
 - Hoàn tác lần AI điền thì số đếm của lần đó cũng bị trừ.
+- Gợi ý Tab (cột "Gợi ý Tab" ghi nhận/hiện, kèm số đã nhận rồi sửa; "–" là lượt tắt gợi ý hoặc ghi trước 2026-11-16):
+  - Hiện: số gợi ý khác nhau đã hiện ra (cùng ô, cùng câu chỉ tính một lần). Gõ dở một câu có thể làm hiện nhiều gợi ý khác nhau, nên số này lớn hơn số câu.
+  - Nhận: số lần bấm Tab. Nhận rồi sửa: câu đã nhận mà lúc Lưu không còn nguyên trong ô.
+  - Chữ đến từ gợi ý: số ký tự vào ô nhờ Tab, so với số ký tự bác sĩ tự gõ vào ô chữ của phiếu (đếm theo độ dài tăng thêm của ô, không phải số phím bấm). Chữ gõ ở cột Trợ lý AI không tính.
+  - Muốn so có và không có gợi ý: làm cùng một ca giả hai lượt, một lượt bỏ tích "Gợi ý chữ mờ, bấm Tab để nhận" (dòng Chú giải đầu tab Phiếu khám), rồi so cột Thời gian.
 - Lượt ghi trước ngày 2026-11-11 đến từ trang "Màn hình làm việc" cũ (đã bỏ), cách đếm trên từng ô của form JSON nên không so trực tiếp được với lượt mới.
 
 ## Chấm điểm (eval)
@@ -227,6 +232,20 @@ Chỗ khác với EMR là **cột "✨ Trợ lý AI điền phiếu" bên phải
 - **Chỉ điền ô còn trống**: ô đã có chữ (điều dưỡng nhập sẵn, AI điền lần trước, bác sĩ gõ) giữ nguyên. Riêng Hẹn tái khám "Không" mặc định vẫn được đổi theo mẫu, trừ khi bác sĩ đã tự chọn. Chỉ định, thuốc trùng thì bỏ. Ô Khám các bộ phận khác cũng lấy từ mẫu.
 - Chỗ riêng của bệnh nhân trong mẫu (`[phải|trái|2 bên]`, `[số] ngày`) hiện vàng để bác sĩ sửa. Mã ICD10 tra theo tên ICD của mẫu, luôn vàng như mọi mã ICD AI điền.
 - Thông báo: "Đã điền theo mẫu …: N ô, X chỉ định, Y thuốc. Bỏ qua K ô đã có chữ. Còn M chỗ cần điền (tô vàng)." Hoàn tác dùng chung nút "↶ Hoàn tác lần AI điền". Lưu thì số đo lượt thử ghi thêm `mau_id`, trang Kết quả hiện "Mẫu <id>".
+
+**Gợi ý chữ mờ, bấm Tab để nhận** (`src/shared/eform/goi-y-tab.ts`, ô nhập `TextBox` trong `src/client/eform/fields.tsx`):
+
+- Trong các ô chữ tự do của phiếu khám (lý do khám, bệnh sử, khám toàn thân, khám chuyên khoa, khám các bộ phận khác, hướng điều trị, lời dặn…), khi con trỏ ở cuối ô, câu gợi ý hiện mờ ngay sau con trỏ. **Tab** nhận, **Esc** bỏ qua (gõ tiếp thì gợi ý quay lại). Dưới ô có dòng nhắc phím.
+- Ba kiểu gợi ý:
+  1. Đang gõ dở một câu hoặc vế sau dấu phẩy (từ 2 ký tự): gợi ý câu bắt đầu như vậy. Khớp không dấu, nên gõ "giu kho" ra "Giữ khô tai…"; nhận thì sửa luôn dấu và chữ hoa (vế sau dấu phẩy giữ chữ thường).
+  2. Ô trống hoặc vừa hết câu: gợi ý câu tiếp theo chưa có trong ô (ô khám xuống dòng).
+  3. Chữ cuối là mã gõ tắt của ô đó (hoặc từ ngắn `tu`): gợi ý bung mã, hiện "→ câu".
+- Nguồn câu, xếp theo thứ tự: bộ gõ tắt của tài khoản đang đăng nhập và lời dặn đã kê cho đúng mã ICD đang chọn; câu trong phiếu mẫu của bệnh khớp ngữ cảnh (mã ICD, hoặc tên/bí danh mẫu có trong lý do khám, mô tả chẩn đoán); thư viện tham khảo (`data/eform/thu-vien.json`); cuối cùng là câu của bệnh khác. Câu gặp ở nhiều nguồn được cộng điểm.
+- Câu còn chỗ trống `[a|b]`, `[số]` bị bỏ vì đó là kết quả khám bác sĩ phải tự chọn. Câu đã có trong ô hoặc gần trùng (từ 70% số từ đã có) không gợi ý lại.
+- Không gọi LLM, chạy hết trên trình duyệt.
+- Chỉ hiện khi bác sĩ đã bấm chuột vào ô hoặc gõ: dùng phím Tab để đi qua các ô thì Tab vẫn chuyển ô như thường.
+- Ô chữ của phiếu giờ cao theo nội dung (không cuộn bên trong, không kéo đổi cỡ được) để chữ mờ luôn thấy hết.
+- Bỏ tích "Gợi ý chữ mờ, bấm Tab để nhận" ở dòng Chú giải (đầu tab Phiếu khám) để tắt, dùng khi đo lượt đối chứng.
 
 **Bộ gõ tắt riêng của bác sĩ** (như macro UniKey; `src/shared/eform/go-tat.ts`, `src/server/du-lieu/go-tat.ts`):
 
@@ -320,7 +339,7 @@ src/client/     giao diện chạy trên trình duyệt: chung/ (Header, MicButt
 src/server/ai/  AI thật: pipeline, prompt, schema, llm/ (mock, rules, anthropic, openai, gemini), asr.ts (Zipformer)
 src/server/du-lieu/ nạp config và data, lưu lượt thử và đơn đã kê, dữ liệu trang Trình diễn (trinh-dien.ts)
 src/shared/     dùng chung hai phía: kiểu, khớp danh mục, chuẩn hóa, tính tổng, đo lường, api.ts (hợp đồng FE–BE)
-src/shared/eform/ rule của trang eForm: tóm tắt, gợi ý ICD10, mẫu câu, gợi ý theo chẩn đoán và theo thói quen (thoi-quen.ts), cảnh báo dị ứng, đổ kết quả AI vào phiếu, đếm số đo lượt thử (do-luong.ts)
+src/shared/eform/ rule của trang eForm: tóm tắt, gợi ý ICD10, mẫu câu, gợi ý theo chẩn đoán và theo thói quen (thoi-quen.ts), gợi ý chữ mờ bấm Tab (goi-y-tab.ts), cảnh báo dị ứng, đổ kết quả AI vào phiếu, đếm số đo lượt thử (do-luong.ts)
 src/shared/giong-noi/ sửa chữ sau nhận dạng giọng nói (sua-chu.ts), đọc số thành chữ để chấm (so.ts)
 scripts/eval.ts chấm điểm
 scripts/eval-giong-noi.ts đo nhận dạng giọng nói trên data/giong-noi/

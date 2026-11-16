@@ -1,7 +1,8 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, useMemo, useState, type KeyboardEvent, type ReactNode } from "react";
 import { useEform } from "@/client/eform/EformContext";
+import { khoCau, maGoTatCuaO, nhanGoiY, O_XUONG_DONG, timGoiYTab, type NguCanh } from "@/shared/eform/goi-y-tab";
 import type { Nguon } from "@/shared/eform/types";
 
 // Kiểu nút và ô nhập dùng chung cho cả trang eForm
@@ -95,22 +96,96 @@ interface TextBoxProps {
   children?: ReactNode;
 }
 
+/** Ngữ cảnh xếp gợi ý: lý do khám, mô tả và mã chẩn đoán đang có trên phiếu */
+function useNguCanh(): NguCanh {
+  const { get } = useEform();
+  const text = ["ly_do", "mo_ta_ban_dau", "mo_ta_ra_vien"].map((id) => get(id).value).join(". ");
+  const icd = ["icd_ban_dau", "icd_ra_vien", "icd_kem_theo"].map((id) => get(id).value).join(",");
+  return useMemo(() => ({ text, icd: icd.split(/[,;\s]+/).filter(Boolean) }), [text, icd]);
+}
+
 export function TextBox({ id, label, rows = 2, bcyt, actions, children }: TextBoxProps) {
-  const { get, edit } = useEform();
+  const { data, get, edit, goiYTab } = useEform();
   const field = get(id);
+  const nguCanh = useNguCanh();
+  const kho = useMemo(() => khoCau(id, data, nguCanh), [id, data, nguCanh]);
+  const maGoTat = useMemo(() => maGoTatCuaO(id, data.goTat), [id, data.goTat]);
+  // Chỉ gợi ý khi con trỏ đứng ở cuối ô và bác sĩ đã bấm chuột vào ô hoặc gõ: đi qua ô bằng phím Tab thì Tab vẫn chuyển ô,
+  // không nhận nhầm gợi ý. Esc ẩn gợi ý cho tới lần gõ tiếp theo
+  const [oCuoi, setOCuoi] = useState(false);
+  const [dangViet, setDangViet] = useState(false);
+  const [boQua, setBoQua] = useState<string | null>(null);
+  const goiY =
+    goiYTab.bat && oCuoi && dangViet && boQua !== field.value
+      ? timGoiYTab(field.value, kho, maGoTat, O_XUONG_DONG.has(id))
+      : null;
+  const khoaGoiY = goiY ? `${id}|${goiY.chen}` : null;
+  useEffect(() => {
+    if (khoaGoiY) goiYTab.daHien(khoaGoiY);
+  }, [khoaGoiY, goiYTab]);
+
+  const xemConTro = (el: HTMLTextAreaElement) =>
+    setOCuoi(document.activeElement === el && el.selectionStart === el.value.length && el.selectionEnd === el.value.length);
+
+  const onKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (!goiY || e.nativeEvent.isComposing) return;
+    if (e.key === "Tab" && !e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
+      e.preventDefault();
+      const value = nhanGoiY(field.value, goiY);
+      goiYTab.daNhan(id, goiY.chen.trim(), value.length - field.value.length);
+      edit(id, value);
+    } else if (e.key === "Escape") {
+      setBoQua(field.value);
+    }
+  };
+
   return (
     <div id={anchorId(id)} className="scroll-mt-44">
       <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
         <FieldLabel id={id} label={label} nguon={field.nguon} bcyt={bcyt} />
         {actions && <div className="flex flex-wrap gap-1.5">{actions}</div>}
       </div>
-      <textarea
-        aria-label={label}
-        rows={rows}
-        value={field.value}
-        onChange={(e) => edit(id, e.target.value)}
-        className={inputClass(field.nguon)}
-      />
+      {/* Ô nhập và lớp chữ mờ chồng lên nhau trong cùng một ô lưới: lớp chữ mờ có cùng khung chữ nên dòng xuống y hệt,
+          và ô cao theo nội dung cộng gợi ý (không cuộn) để chữ mờ không bị khuất */}
+      <div className="grid">
+        <textarea
+          aria-label={label}
+          aria-describedby={goiY ? `${anchorId(id)}-goi-y` : undefined}
+          rows={rows}
+          value={field.value}
+          onChange={(e) => {
+            const them = e.target.value.length - field.value.length;
+            if (them > 0) goiYTab.daGo(them);
+            edit(id, e.target.value);
+            setDangViet(true);
+            xemConTro(e.target);
+          }}
+          onSelect={(e) => xemConTro(e.currentTarget)}
+          onFocus={(e) => xemConTro(e.currentTarget)}
+          onMouseDown={() => setDangViet(true)}
+          onBlur={() => {
+            setOCuoi(false);
+            setDangViet(false);
+          }}
+          onKeyDown={onKeyDown}
+          className={`${inputClass(field.nguon)} col-start-1 row-start-1 resize-none overflow-hidden`}
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none col-start-1 row-start-1 border border-transparent px-3 py-2 text-sm leading-6 whitespace-pre-wrap [overflow-wrap:break-word]"
+        >
+          <span className="invisible">{field.value}</span>
+          {goiY && <span className="text-ef-phu/60 print:hidden">{goiY.hien}</span>}
+          {/* Giữ chiều cao dòng cuối khi ô kết thúc bằng dấu xuống dòng */}
+          <span className="invisible">{"​"}</span>
+        </div>
+      </div>
+      {goiY && (
+        <p id={`${anchorId(id)}-goi-y`} className="mt-1 text-[11px] text-ef-phu">
+          <kbd className="rounded border border-ef-vien bg-ef-nen px-1 font-sans">Tab</kbd> để nhận gợi ý,{" "}
+          <kbd className="rounded border border-ef-vien bg-ef-nen px-1 font-sans">Esc</kbd> để bỏ qua
+        </p>
+      )}
       {children}
     </div>
   );

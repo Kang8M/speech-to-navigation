@@ -4,6 +4,23 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-16
 
+### Gợi ý chữ mờ trong ô phiếu khám, bấm Tab để nhận, kèm số đo tỷ lệ nhận
+- **Loại:** Tính năng
+- **Thay đổi:**
+  - `src/shared/eform/goi-y-tab.ts` (mới): `khoCau` gom câu cho từng ô từ bộ gõ tắt của tài khoản, lời dặn đã kê (`thoiQuen`), phiếu mẫu theo bệnh và thư viện tham khảo, xếp theo nguồn và ngữ cảnh (mã ICD, tên mẫu trong lý do khám/mô tả chẩn đoán), bỏ câu còn chỗ trống `[ ]`. `timGoiYTab` trả gợi ý cho ô: bung mã gõ tắt ở chữ cuối, câu tiếp theo khi ô trống hoặc vừa hết câu, hoặc câu bắt đầu bằng đoạn đang gõ (khớp không dấu, thử cả vế sau dấu phẩy). Bỏ câu đã có hoặc gần trùng trong ô. Không gọi LLM.
+  - `src/client/eform/fields.tsx › TextBox`: lớp chữ mờ chồng lên ô nhập (cùng ô lưới, cùng khung chữ nên xuống dòng khớp), Tab nhận, Esc bỏ qua, dòng nhắc phím dưới ô. Chỉ hiện khi con trỏ ở cuối ô và bác sĩ đã bấm chuột vào ô hoặc gõ. Ô chữ đổi sang cao theo nội dung, `resize-none`, không cuộn bên trong.
+  - `EformContext.tsx` thêm `goiYTab` (bật/tắt, đếm hiện/nhận/gõ). `EformScreen.tsx`: ô tích "Gợi ý chữ mờ, bấm Tab để nhận" ở dòng Chú giải; Lưu ghi lượt thử cả khi chưa gọi AI mà đã gõ vào phiếu; gõ vào ô phiếu cũng bắt đầu tính giờ lượt.
+  - Số đo: `src/shared/metrics.ts` và `/api/sessions` thêm `goi_y_tab`, `so_goi_y_hien`, `so_goi_y_nhan`, `so_goi_y_nhan_roi_sua`, `so_ky_tu_goi_y`, `so_ky_tu_go` (không bắt buộc, lượt cũ vẫn đọc được); `aggregate` thêm `ty_le_nhan_goi_y`, `ty_le_chu_goi_y`; CSV thêm 6 cột. Trang Kết quả thêm 2 thẻ số và cột "Gợi ý Tab".
+  - `README.md`: mục Đo lường, mục eForm (gợi ý chữ mờ), Cấu trúc thư mục.
+- **Lý do:** Người dùng đề xuất học theo gợi ý bấm Tab khi viết prompt của Claude. Bác sĩ đang ghép câu theo ô bằng macro UniKey; gợi ý chữ mờ làm được việc đó mà không phải nhớ mã, sai thì gõ tiếp là mất, và đo được tỷ lệ nhận, là số đo còn thiếu để chứng minh tác động.
+- **File:** `src/shared/eform/goi-y-tab.ts`, `src/shared/eform/goi-y-tab.test.ts`, `src/client/eform/fields.tsx`, `src/client/eform/EformContext.tsx`, `src/client/eform/EformScreen.tsx`, `src/shared/metrics.ts`, `src/app/api/sessions/route.ts`, `src/client/ket-qua/ResultsView.tsx`, `README.md`
+- **Kiểm tra:** 7 test mới trong `goi-y-tab.test.ts`; `npm test` 88/88 pass, `npm run lint`, `npx tsc --noEmit` sạch. Playwright trên `/`: bấm vào ô Khám toàn thân trống hiện "Tỉnh, tiếp xúc tốt.", Tab nhận rồi hiện câu tiếp; gõ "giu kho" ở Lời dặn ra "…tai, tránh để nước vào tai."; gõ dài ở Khám chuyên khoa thì chữ mờ xuống dòng đúng chỗ; đi qua các ô bằng phím Tab không điền gì; Lưu ghi lượt có đủ số gợi ý (lượt thử này đã xóa khỏi `data/sessions/`); trang Kết quả hiện đúng. Không đụng bộ tách hay khớp danh mục nên không chạy eval.
+- **Ảnh hưởng:**
+  - Bác sĩ thấy chữ mờ trong ô chữ tự do; muốn chuyển ô bằng Tab khi đang có chữ mờ thì bấm Esc trước.
+  - Lượt chỉ gõ vào phiếu (không gọi AI) giờ cũng được ghi, các cột AI bằng 0.
+  - Ô chữ không còn kéo đổi cỡ.
+  - Thử trên ca đau tai thấy gợi ý ở ô trống đôi khi lạc bệnh (ví dụ "Không sốt."), vì ngữ cảnh chỉ khớp khi lý do khám chứa tên mẫu hoặc đã có mã ICD. Chưa thử với bác sĩ.
+
 ### Liều gõ tắt "1 v" vẫn tự tính được Tổng SL
 - **Loại:** Sửa lỗi
 - **Thay đổi:** `config/canh-bao.json` thêm `tinh_tong.don_vi_viet_tat` (`"v": "viên"`). `src/shared/validate.ts` thêm `bungDonViLieu`: đơn vị gõ tắt ngay sau số liều được bung ra ("1 v", "1v" → "1 viên", "1/2v" → "1/2 viên"). `computeTotal` bung trước khi tính, nên bác sĩ gõ "1 v" thẳng vào ô Liều/lần cũng ra tổng; `applyTotals` (chạy sau AI và sau phiếu mẫu) ghi lại liều đã bung, nên phiếu hiện "1 viên". Kiểu `WarningRules` thêm khóa mới.

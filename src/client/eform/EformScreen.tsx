@@ -51,7 +51,7 @@ interface BanChup {
   dongAi: DongAi;
 }
 
-/** Một lượt thử: từ lúc bắt đầu nói, gõ hoặc nạp câu mẫu đến lần bấm Lưu đầu tiên sau khi AI điền */
+/** Một lượt thử: từ lúc bắt đầu nói, gõ (ở cột Trợ lý AI hay vào ô phiếu) hoặc nạp câu mẫu đến lần bấm Lưu đầu tiên sau khi AI điền hoặc đã gõ vào phiếu */
 interface Luot {
   batDau: number | null;
   kieuNhap: InputMode;
@@ -148,6 +148,9 @@ export function EformScreen({ data, kichBan }: { data: EformData; kichBan?: Kich
   const [showReport, setShowReport] = useState(false);
   const [toast, setToast] = useState("");
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  // Gợi ý chữ mờ (Tab): tắt đi để đo lượt đối chứng không có gợi ý. Bộ đếm để trong ref, không cần vẽ lại
+  const [tabBat, setTabBat] = useState(true);
+  const demTab = useRef({ hien: new Set<string>(), nhan: [] as { id: string; cau: string }[], kyTuGoiY: 0, kyTuGo: 0 });
 
   const notify = useCallback((message: string) => {
     setToast(message);
@@ -171,8 +174,21 @@ export function EformScreen({ data, kichBan }: { data: EformData; kichBan?: Kich
             [id]: { value: current ? `${current}\n${text}` : text, nguon: nguon ?? afterEdit(prev[id]?.nguon) },
           };
         }),
+      goiYTab: {
+        bat: tabBat,
+        daHien: (khoa) => demTab.current.hien.add(khoa),
+        daNhan: (id, cau, soKyTu) => {
+          demTab.current.nhan.push({ id, cau });
+          demTab.current.kyTuGoiY += Math.max(0, soKyTu);
+        },
+        daGo: (soKyTu) => {
+          demTab.current.kyTuGo += soKyTu;
+          // Gõ vào ô phiếu cũng là bắt đầu lượt, để đo được cả lượt không gọi AI
+          setLuot((prev) => (prev.daGhi || prev.batDau !== null ? prev : { ...prev, batDau: Date.now() }));
+        },
+      },
     }),
-    [data, fields, notify],
+    [data, fields, notify, tabBat],
   );
 
   /** "Kê như mọi khi": các dòng bác sĩ hay kê cho chẩn đoán chính (trên phiếu, chưa có thì mã AI vừa gán) */
@@ -296,7 +312,8 @@ export function EformScreen({ data, kichBan }: { data: EformData; kichBan?: Kich
 
   /** Ghi số đo lượt thử vào data/sessions/ (chỉ số đếm), hiện ở trang Kết quả thử nghiệm. Trả câu báo thêm */
   const ghiLuot = async (): Promise<string> => {
-    if (!ketQua) return "";
+    const dem = demTab.current;
+    if (!ketQua && dem.kyTuGo === 0 && dem.nhan.length === 0) return "";
     if (luot.daGhi) return "";
     try {
       await luuLuotThu({
@@ -306,10 +323,16 @@ export function EformScreen({ data, kichBan }: { data: EformData; kichBan?: Kich
         mau_id: luot.mauId,
         provider: luot.provider,
         thoi_gian_giay: luot.batDau === null ? 0 : Math.round((Date.now() - luot.batDau) / 100) / 10,
-        ...demLuot(fields, ketQua.daDien, dongAi.tong, chiDinh, donThuoc, data.danhMuc.thuoc, data.ca.canh_bao_di_ung),
+        ...demLuot(fields, ketQua?.daDien ?? [], dongAi.tong, chiDinh, donThuoc, data.danhMuc.thuoc, data.ca.canh_bao_di_ung),
         so_muc_danh_muc: dongAi.tong,
         so_muc_khop: dongAi.khop,
         so_muc_khong_khop: dongAi.tong - dongAi.khop,
+        goi_y_tab: tabBat,
+        so_goi_y_hien: dem.hien.size,
+        so_goi_y_nhan: dem.nhan.length,
+        so_goi_y_nhan_roi_sua: dem.nhan.filter(({ id, cau }) => !(fields[id]?.value ?? "").includes(cau)).length,
+        so_ky_tu_goi_y: dem.kyTuGoiY,
+        so_ky_tu_go: dem.kyTuGo,
       });
       setLuot((prev) => ({ ...prev, daGhi: true }));
       return "";
@@ -404,6 +427,10 @@ export function EformScreen({ data, kichBan }: { data: EformData; kichBan?: Kich
                   <SourceBadge nguon="xem" />
                   <SourceBadge nguon="sua" />
                   <BcytTag />
+                  <label className="ml-auto flex cursor-pointer items-center gap-1.5 text-ef-chu" title="Tắt để đo lượt đối chứng không có gợi ý">
+                    <input type="checkbox" checked={tabBat} onChange={(e) => setTabBat(e.target.checked)} className="accent-ef-xanh" />
+                    Gợi ý chữ mờ, bấm Tab để nhận
+                  </label>
                 </div>
               )}
             </div>

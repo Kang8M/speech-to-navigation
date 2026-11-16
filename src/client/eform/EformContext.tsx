@@ -15,6 +15,18 @@ export interface EformApi {
   /** Thêm vào cuối ô, không ghi đè nội dung đang có */
   append: (id: string, text: string, nguon?: Nguon) => void;
   notify: (message: string) => void;
+  goiYTab: GoiYTabApi;
+}
+
+/** Gợi ý chữ mờ trong ô chữ tự do (bấm Tab để nhận) và bộ đếm số đo của nó */
+export interface GoiYTabApi {
+  bat: boolean;
+  /** Một gợi ý vừa hiện; cùng ô cùng câu thì chỉ đếm một lần */
+  daHien: (khoa: string) => void;
+  /** Bác sĩ bấm Tab nhận gợi ý: `cau` là câu đã chèn vào ô `id`, ô dài thêm `soKyTu` ký tự */
+  daNhan: (id: string, cau: string, soKyTu: number) => void;
+  /** Bác sĩ tự gõ thêm `soKyTu` ký tự vào một ô */
+  daGo: (soKyTu: number) => void;
 }
 
 export const EformContext = createContext<EformApi | null>(null);

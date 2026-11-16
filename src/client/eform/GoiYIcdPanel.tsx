@@ -10,6 +10,30 @@ interface Props {
   onPick: (ma: string) => void;
 }
 
+/** Giao diện gọn: một dòng dưới ô ICD còn trống, tối đa 2 mã, bấm là chọn. Chưa đủ dữ kiện thì không hiện gì */
+export function GoiYIcdDong({ loaiTru = [], onPick }: Props) {
+  const { data, get } = useEform();
+  const text = NGUON_GOI_Y.map((id) => get(id).value).join("\n");
+  const goiY = goiYIcd(text, data.icd10, data.quyTac, loaiTru).slice(0, 2);
+  if (goiY.length === 0) return null;
+  return (
+    <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ef-phu">
+      <span>Gợi ý theo bệnh sử, khám:</span>
+      {goiY.map(({ item, khop }) => (
+        <button
+          key={item.ma}
+          type="button"
+          title={`Khớp: ${khop.join(", ")}`}
+          onClick={() => onPick(item.ma)}
+          className="rounded-full border border-tim-vien bg-white px-2.5 py-0.5 text-[13px] text-ef-chu hover:border-tim hover:bg-tim-nhat focus-visible:outline-2 focus-visible:outline-tim"
+        >
+          <strong className="font-semibold">{item.ma}</strong> {item.ten}
+        </button>
+      ))}
+    </p>
+  );
+}
+
 /** Tính lại ở mỗi lần vẽ nên gợi ý đổi ngay khi bác sĩ sửa bệnh sử hoặc khám lâm sàng */
 export function GoiYIcdPanel({ loaiTru = [], onPick }: Props) {
   const { data, get } = useEform();

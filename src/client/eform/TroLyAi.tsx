@@ -4,11 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { MicButton, type GiaoDienMic } from "@/client/chung/MicButton";
 import { useEform } from "@/client/eform/EformContext";
 import { BTN_OUTLINE } from "@/client/eform/fields";
+import { useDienAi, type OnDien } from "@/client/eform/useDienAi";
 import type { KetQuaDien } from "@/shared/eform/dien-phieu";
-import { goiAiDienNhap } from "@/client/api";
-import { chenGoTat, ketQuaGoTat, tachGoTat, type KetQuaGoTat } from "@/shared/eform/go-tat";
-import { goiYTenMau, ketQuaTheoQuyTac, timPhieuMau, type PhieuMau } from "@/shared/eform/phieu-mau";
-import type { PipelineResult } from "@/shared/api";
+import { goiYTenMau, timPhieuMau } from "@/shared/eform/phieu-mau";
 import { suaChu } from "@/shared/giong-noi/sua-chu";
 import type { InputMode } from "@/shared/metrics";
 
@@ -17,7 +15,7 @@ export type TabId = "phieu" | "chi_dinh" | "don_thuoc";
 interface Props {
   ketQua: KetQuaDien | null;
   /** Mỗi lần AI điền: trả kết quả và đoạn chữ đã gửi để màn hình áp vào phiếu; gọi phiếu mẫu thì kèm mẫu, có gõ tắt thì kèm các mã đã bung */
-  onDien: (result: PipelineResult, text: string, mau?: PhieuMau, goTat?: KetQuaGoTat) => void;
+  onDien: OnDien;
   /** Bác sĩ bắt đầu nói, gõ hoặc nạp câu mẫu: mốc tính thời gian lượt thử */
   onBatDau: (kieuNhap: InputMode, tuCaMau: boolean) => void;
   onHoanTac: (() => void) | null;
@@ -29,11 +27,6 @@ interface Props {
   vanBanDau?: string;
   /** Trang trình diễn kiểu 4: hội thoại giả, phát lại từng câu như máy đang nghe */
   hoiThoai?: { ai: "BS" | "BN"; cau: string }[];
-}
-
-/** Câu gõ tắt thay câu cùng ô trong kết quả mẫu hay AI */
-function chenVao(result: PipelineResult, goTat?: KetQuaGoTat): PipelineResult {
-  return goTat?.daDung.length ? { ...result, draft: chenGoTat(result.draft, goTat.cacO) } : result;
 }
 
 /** Khoảng cách giữa hai câu khi phát lại hội thoại mẫu */
@@ -74,7 +67,7 @@ function CacBuoc({ hienTai, xong }: { hienTai: number; xong: boolean }) {
 /** Cột phải: bác sĩ nói hoặc gõ tắt một lần, AI điền cả phiếu khám, chỉ định và đơn thuốc */
 export function TroLyAi({ ketQua, onDien, onBatDau, onHoanTac, onGoTo, onOpenTab, soChiDinh, soThuoc, vanBanDau, hoiThoai }: Props) {
   const { data, get, put } = useEform();
-  const [text, setText] = useState(vanBanDau ?? "");
+  const { text, setText, loading, error, setError, daGui, luaChon, setLuaChon, dien, dungMau } = useDienAi(onDien, vanBanDau);
   /** Số câu hội thoại mẫu đã phát; null là chưa bấm phát */
   const [daPhat, setDaPhat] = useState<number | null>(null);
   const hen = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -89,77 +82,7 @@ export function TroLyAi({ ketQua, onDien, onBatDau, onHoanTac, onGoTo, onOpenTab
       setDaPhat(daPhat + 1);
     }, daPhat === 0 ? 300 : NHIP_HOI_THOAI_MS);
     return () => clearTimeout(hen.current);
-  }, [hoiThoai, daPhat]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  /** Đoạn chữ của lần điền gần nhất, để biết bác sĩ đã nói hoặc gõ thêm chưa */
-  const [daGui, setDaGui] = useState("");
-
-  /** Mẫu bác sĩ gọi nhưng trùng tên nhiều mẫu: hiện nút để chọn, giữ lại chi tiết và gõ tắt đã tách */
-  const [luaChon, setLuaChon] = useState<{ cacMau: PhieuMau[]; chiTiet: string; goTat: KetQuaGoTat } | null>(null);
-  /** AI viết theo câu quen trong bộ gõ tắt của bác sĩ đang đăng nhập */
-  const taiKhoan = data.ca.dang_nhap;
-
-  /** Đổ phiếu mẫu vào phiếu: chỉ có tên mẫu thì không gọi API, có chi tiết thì gọi AI một lần để thay chỗ trống */
-  async function dungMau(mau: PhieuMau, chuDaGui: string, chiTiet = "", goTat?: KetQuaGoTat) {
-    setLuaChon(null);
-    setError(null);
-    if (!chiTiet) {
-      onDien(chenVao(mau.ketQua, goTat), chuDaGui, mau, goTat);
-      setDaGui(chuDaGui);
-      return;
-    }
-    setLoading(true);
-    try {
-      const result = await goiAiDienNhap(chiTiet, "AI không điền được phiếu.", { mauId: mau.id, taiKhoan });
-      onDien(chenVao(result, goTat), chuDaGui, mau, goTat);
-      setDaGui(chuDaGui);
-    } catch (err) {
-      // AI lỗi (quá tải, hết lượt) thì vẫn điền theo mẫu, chỗ trống thay bằng quy tắc
-      onDien(chenVao(ketQuaTheoQuyTac(mau, chiTiet, data.vietTat), goTat), chuDaGui, mau, goTat);
-      setDaGui(chuDaGui);
-      const lyDo = err instanceof Error ? err.message : "Không gọi được AI.";
-      setError(`${lyDo} Đã điền theo mẫu, chi tiết chỉ thay được bên, số ngày, nhiệt độ; hãy kiểm tra các chỗ vàng.`);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function dien() {
-    if (!text.trim() || loading) return;
-    // Mã gõ tắt của bác sĩ bung vào ô trước; phần còn lại gọi mẫu hoặc AI như cũ
-    const goTat = tachGoTat(text, data.goTat);
-    const chu = goTat.conLai;
-    const theoTen = chu ? timPhieuMau(chu, data.phieuMau) : null;
-    // Mã chẩn đoán trong bộ gõ tắt ("vmx" → viêm mũi xoang cấp) cũng gọi mẫu cùng tên, để có chỉ định và đơn
-    const theoChanDoan = !theoTen && goTat.cacO.chan_doan_chinh ? timPhieuMau(goTat.cacO.chan_doan_chinh, data.phieuMau) : null;
-    const goi = theoTen ?? theoChanDoan;
-    const chiTiet = theoTen ? theoTen.conLai : chu;
-    if (goi?.loai === "nhieu") {
-      setLuaChon({ cacMau: goi.cacMau, chiTiet, goTat });
-      return;
-    }
-    if (goi?.loai === "mot") {
-      await dungMau(goi.mau, text, chiTiet, goTat);
-      return;
-    }
-    if (!chu) {
-      onDien(ketQuaGoTat(goTat.cacO), text, undefined, goTat);
-      setDaGui(text);
-      setError(null);
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      onDien(chenVao(await goiAiDienNhap(chu, "AI không điền được phiếu.", { taiKhoan }), goTat), text, undefined, goTat);
-      setDaGui(text);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "AI không điền được phiếu.");
-    } finally {
-      setLoading(false);
-    }
-  }
+  }, [hoiThoai, daPhat, setText]);
 
   // Trường AI chưa chắc mà bác sĩ đã sửa thì không còn ở trạng thái "xem"
   const conXem = ketQua?.daDien.filter((item) => get(item.id).nguon === "xem") ?? [];

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useEform } from "@/client/eform/EformContext";
 import { BTN_AI, FieldLabel, anchorId, inputClass } from "@/client/eform/fields";
-import { GoiYIcdPanel } from "@/client/eform/GoiYIcdPanel";
+import { GoiYIcdDong, GoiYIcdPanel } from "@/client/eform/GoiYIcdPanel";
 import { TimDanhMuc } from "@/client/eform/TimDanhMuc";
 import type { Icd10 } from "@/shared/eform/types";
 
@@ -28,9 +28,9 @@ function GoiYButton({ open, onToggle }: { open: boolean; onToggle: () => void })
   );
 }
 
-/** Một mã ICD10 kèm ô mô tả */
+/** Một mã ICD10 kèm ô mô tả. Giao diện gọn: không có nút gợi ý, ô còn trống thì hiện một dòng mã gợi ý */
 export function IcdField({ id, moTaId, label }: { id: string; moTaId: string; label: string }) {
-  const { data, get, put, edit } = useEform();
+  const { data, get, put, edit, gon } = useEform();
   const [open, setOpen] = useState(false);
   const field = get(id);
   const moTa = get(moTaId);
@@ -39,7 +39,7 @@ export function IcdField({ id, moTaId, label }: { id: string; moTaId: string; la
       <div id={anchorId(id)} className="scroll-mt-44">
         <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
           <FieldLabel id={id} label={`${label} (ICD10)`} nguon={field.nguon} />
-          <GoiYButton open={open} onToggle={() => setOpen((value) => !value)} />
+          {!gon && <GoiYButton open={open} onToggle={() => setOpen((value) => !value)} />}
         </div>
         <div className="flex items-start gap-1.5">
           <div className="min-w-0 flex-1">
@@ -59,7 +59,7 @@ export function IcdField({ id, moTaId, label }: { id: string; moTaId: string; la
             </button>
           )}
         </div>
-        {open && (
+        {open && !gon && (
           <GoiYIcdPanel
             onPick={(ma) => {
               put(id, ma, "ai");
@@ -67,6 +67,7 @@ export function IcdField({ id, moTaId, label }: { id: string; moTaId: string; la
             }}
           />
         )}
+        {gon && !field.value && <GoiYIcdDong onPick={(ma) => put(id, ma, "ai")} />}
       </div>
       <div id={anchorId(moTaId)} className="scroll-mt-44">
         <div className="mb-1">
@@ -84,9 +85,9 @@ export function IcdField({ id, moTaId, label }: { id: string; moTaId: string; la
   );
 }
 
-/** Nhiều mã ICD10, hiển thị thành các thẻ có nút xóa */
+/** Nhiều mã ICD10, hiển thị thành các thẻ có nút xóa. Giao diện gọn không gợi ý mã kèm theo, bác sĩ gõ tìm */
 export function IcdMultiField({ id, label, loaiTru }: { id: string; label: string; loaiTru: string[] }) {
-  const { data, get, put } = useEform();
+  const { data, get, put, gon } = useEform();
   const [open, setOpen] = useState(false);
   const field = get(id);
   const codes = splitCodes(field.value);
@@ -103,7 +104,7 @@ export function IcdMultiField({ id, label, loaiTru }: { id: string; label: strin
     <div id={anchorId(id)} className="scroll-mt-44">
       <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
         <FieldLabel id={id} label={`${label} (ICD10)`} nguon={field.nguon} bcyt />
-        <GoiYButton open={open} onToggle={() => setOpen((value) => !value)} />
+        {!gon && <GoiYButton open={open} onToggle={() => setOpen((value) => !value)} />}
       </div>
       {codes.length > 0 && (
         <div className="mb-1.5 flex flex-wrap gap-1.5">
@@ -129,7 +130,7 @@ export function IcdMultiField({ id, label, loaiTru }: { id: string; label: strin
         loaiTru={codes}
         className={inputClass(null)}
       />
-      {open && (
+      {open && !gon && (
         <GoiYIcdPanel
           loaiTru={[...codes, ...loaiTru]}
           onPick={(ma) => {

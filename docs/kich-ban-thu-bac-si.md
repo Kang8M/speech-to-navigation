@@ -16,14 +16,14 @@ Tài liệu cho một buổi thử Trợ lý AI điền phiếu với bác sĩ T
 
 | Muốn | Làm |
 |---|---|
-| Gọi mẫu | Gõ vào ô ở **cột Trợ lý AI bên phải**, ví dụ `mẫu viêm tai giữa cấp` hoặc `vtg cấp`, rồi bấm **✨ Điền vào phiếu** (hoặc Ctrl+Enter). Tên mẫu phải đứng **đầu câu** hoặc **ngay sau chữ "mẫu"**. |
+| Gọi mẫu | Bấm nút **✨ Trợ lý** ở góc phải dưới (hoặc phím **F2**), gõ ví dụ `mẫu viêm tai giữa cấp` hoặc `vtg cấp`, rồi bấm **Enter**. Trợ lý điền xong tự thu lại. Tên mẫu phải đứng **đầu câu** hoặc **ngay sau chữ "mẫu"**. |
 | Gọi mẫu kèm chi tiết riêng | Viết chi tiết ngay sau tên mẫu, cách nhau bằng dấu phẩy: `vtg cấp, tai P, 3n, sốt 38,5`. |
 | Không nhớ tên mẫu | Gõ 2–3 chữ đầu tên bệnh, ví dụ `viêm m`. Bên dưới hiện **Mẫu theo bệnh:** kèm vài tên, bấm một tên là điền ngay. |
-| Nói thay vì gõ | Bấm **🎤 Bắt đầu nói**, nói, bấm **⏹ Dừng nghe**. Chữ hiện trong ô; nghe sai thì sửa ngay trong ô rồi mới bấm Điền. |
-| Xem phiếu | Có 3 tab: **Phiếu khám**, **Chỉ định dịch vụ**, **Đơn thuốc**. Chỗ **viền tím** là điền theo mẫu. Chỗ **viền vàng** là phải xem lại. |
+| Nói thay vì gõ | Mở Trợ lý, bấm **🎤 Nói**, nói, bấm **⏹ Dừng nghe**. Chữ hiện trong ô; nghe sai thì sửa ngay trong ô rồi mới Enter. |
+| Xem phiếu | Có 3 tab: **Phiếu khám**, **Chỉ định dịch vụ**, **Đơn thuốc**. Chỗ có **vạch tím** ở lề là điền theo mẫu. Chỗ **tô vàng** là phải xem lại. Khi đang gõ trong ô, chữ mờ hiện sau con trỏ là câu gợi ý: **Tab** để nhận, gõ tiếp hoặc **Esc** để bỏ qua. |
 | Chỗ vàng có `[phải\|trái\|2 bên]` hoặc `[số]` | Đó là chỗ mẫu chờ anh/chị điền. Sửa thẳng trong ô, ví dụ đổi `[phải|trái|2 bên]` thành `phải`, `[số]` thành `38`. |
-| Chỗ vàng đã đúng | Bấm **✓ Đúng** cạnh tên ô, hoặc trong danh sách "chỗ cần xem lại" ở cột phải. Mã ICD10 luôn vàng, xem đúng thì bấm ✓ Đúng. |
-| Bỏ lần vừa điền | Bấm **↶ Hoàn tác lần AI điền** ở cột phải. |
+| Chỗ vàng đã đúng | Bấm **✓ Đúng** cạnh tên ô. Muốn đi lần lượt qua các chỗ vàng, bấm **Xem N ô vàng** ở thanh dưới đáy. Mã ICD10 luôn vàng, xem đúng thì bấm ✓ Đúng. |
+| Bỏ lần vừa điền | Bấm **↶ Hoàn tác** ở thanh dưới đáy. |
 | Xong | Bấm **Lưu** ở thanh dưới đáy. Sau đó **tải lại trang (F5)** trước khi sang bài sau. |
 
 Mẫu **chỉ điền vào ô còn trống**. Ô đã có chữ (điều dưỡng nhập, anh/chị đã gõ) được giữ nguyên, và thông báo sẽ ghi "Bỏ qua N ô đã có chữ". Mẫu không điền **Tiền sử**: ô này anh/chị bấm **Copy** ở bảng lịch sử như vẫn làm.
@@ -33,51 +33,51 @@ Mẫu **chỉ điền vào ô còn trống**. Ô đã có chữ (điều dưỡn
 Làm lần lượt. Mỗi bài xong thì Lưu rồi F5.
 
 **Bài 1. Gọi mẫu đúng bệnh của bệnh nhân, chỉ gõ tên.**
-1. Gõ `vtg mạn`, bấm ✨ Điền vào phiếu.
-2. Xem thông báo phía dưới màn hình: "Đã điền theo mẫu Viêm tai giữa mạn đợt cấp … Bỏ qua 2 ô đã có chữ. Còn 3 chỗ cần điền (tô vàng)."
+1. Mở Trợ lý (F2), gõ `vtg mạn`, Enter.
+2. Xem dòng báo ở thanh dưới đáy: "Đã điền theo mẫu Viêm tai giữa mạn đợt cấp … Bỏ qua 2 ô đã có chữ.", kèm nút "Xem N ô vàng".
 3. Tab Phiếu khám: sửa 3 chỗ vàng `[phải|trái|2 bên]` (khám chuyên khoa, mô tả chẩn đoán ban đầu, mô tả chẩn đoán ra viện) thành `phải`. Bấm ✓ Đúng ở mã ICD10 nếu đúng. Tiền sử thì bấm Copy từ lần khám trước.
 4. Tab Chỉ định dịch vụ và tab Đơn thuốc: xem các dòng mẫu đã thêm, bỏ hoặc sửa theo ý anh/chị.
 5. Lưu.
 
 **Bài 2. Gọi mẫu kèm chi tiết.**
-1. F5. Gõ `vtg mạn, tai P, 4n`, bấm Điền.
-2. Lần này các chỗ `[phải|trái|2 bên]` đã thành "phải", thông báo không còn "chỗ cần điền".
+1. F5. Gõ `vtg mạn, tai P, 4n`, Enter.
+2. Lần này các chỗ `[phải|trái|2 bên]` đã thành "phải", phiếu không còn chỗ `[ ]` nào; chỉ mã ICD10 còn vàng.
 3. Kiểm tra 3 tab như bài 1, Lưu. So xem bài này nhanh hơn bài 1 bao nhiêu.
 
 **Bài 3. Không nhớ tên mẫu.**
-1. F5. Gõ `viêm m` (chưa bấm Điền).
+1. F5. Gõ `viêm m` (chưa Enter).
 2. Bên dưới ô hiện **Mẫu theo bệnh:** Viêm mũi xoang cấp, Viêm mũi dị ứng, Viêm mũi họng cấp, Viêm mũi xoang mạn. Bấm **Viêm mũi dị ứng**.
 3. Sửa chỗ vàng "cuốn dưới to `[phải|trái|2 bên]`" ở khám chuyên khoa. Xem đơn có 3 thuốc (Fexofenadin, Mometason xịt mũi, Natri clorid 0,9%). Lưu.
 
 **Bài 4. Thuốc trùng dị ứng.**
-1. F5. Gõ `mẫu viêm tai giữa cấp`, bấm Điền.
+1. F5. Gõ `mẫu viêm tai giữa cấp`, Enter.
 2. Tab Đơn thuốc: dòng **Augmentin** có cảnh báo đỏ, vì bệnh nhân dị ứng Penicillin. Bấm **Bỏ** ở dòng đó. Nếu muốn kê thuốc khác thì dùng ô **Tìm thuốc**.
 3. Tab Phiếu khám: sửa 4 chỗ vàng (sốt `[số]` độ, màng nhĩ, hai ô mô tả chẩn đoán). Lưu.
 
 **Bài 5. Ô anh/chị đã gõ thì mẫu không ghi đè.**
 1. F5. Ở tab Phiếu khám, gõ vào ô **Hướng điều trị**: `Theo dõi, hẹn nội soi lại`.
-2. Gõ `mẫu viêm tai ngoài` vào cột phải, bấm Điền.
-3. Thông báo ghi "Bỏ qua 3 ô đã có chữ" (lý do, bệnh sử, hướng điều trị). Ô Hướng điều trị vẫn là chữ anh/chị gõ. Lưu.
+2. Mở Trợ lý, gõ `mẫu viêm tai ngoài`, Enter.
+3. Dòng báo ghi "Bỏ qua 3 ô đã có chữ" (lý do, bệnh sử, hướng điều trị). Ô Hướng điều trị vẫn là chữ anh/chị gõ. Lưu.
 
 **Bài 6. Gọi nhầm mẫu rồi đổi.**
-1. F5. Gõ `mẫu viêm họng cấp`, bấm Điền.
-2. Bấm **↶ Hoàn tác lần AI điền**: phiếu trở về như trước khi điền.
-3. Xóa chữ trong ô, gõ `mẫu viêm amidan cấp`, bấm Điền. Sửa chỗ vàng "Sốt `[số]` độ. Hạch dưới hàm `[phải|trái|2 bên]`". Lưu.
+1. F5. Gõ `mẫu viêm họng cấp`, Enter.
+2. Bấm **↶ Hoàn tác** ở thanh dưới đáy: phiếu trở về như trước khi điền.
+3. Mở lại Trợ lý, gõ `mẫu viêm amidan cấp`, Enter. Sửa chỗ vàng "Sốt `[số]` độ. Hạch dưới hàm `[phải|trái|2 bên]`". Lưu.
 
 **Bài 7. Nói thay vì gõ.**
-1. F5. Bấm 🎤 Bắt đầu nói, nói rõ: "mẫu viêm họng cấp". Bấm ⏹ Dừng nghe.
+1. F5. Mở Trợ lý, bấm 🎤 Nói, nói rõ: "mẫu viêm họng cấp". Bấm ⏹ Dừng nghe.
 2. Xem chữ trong ô. Nếu máy nghe sai (ví dụ thành "mẫu viêm hồng cấp") thì sửa lại cho đúng.
-3. Bấm Điền, sửa chỗ vàng "Sốt `[số]` độ", Lưu.
+3. Enter, sửa chỗ vàng "Sốt `[số]` độ", Lưu.
 
 **Bài 8. Bệnh chưa có mẫu.**
-1. F5. Gõ hoặc dán đoạn sau, rồi bấm Điền:
+1. F5. Gõ hoặc dán đoạn sau, rồi Enter:
 
    > Khối u sau tai phải 6 tháng, mềm, di động, không đau. Chẩn đoán u bã đậu sau tai phải. Chỉ định cắt u bã đậu vùng đầu mặt cổ. Kê Cefixim 200 mg uống 1 viên một lần, ngày 2 lần, sau ăn, 5 ngày. Hẹn cắt chỉ sau 7 ngày.
 
-2. Không có mẫu nên Trợ lý tách cả đoạn. Thông báo ghi "AI đã điền N trường…". Kiểm tra 3 tab, Lưu.
+2. Không có mẫu nên Trợ lý tách cả đoạn. Dòng báo ghi "AI đã điền N trường…". Kiểm tra 3 tab, Lưu.
 
 **Bài 9. Để so sánh: đọc cả ca.**
-1. F5. Bấm 🎤, đọc to đoạn dưới (đúng bệnh nhân trên phiếu), bấm ⏹ Dừng nghe, rồi Điền:
+1. F5. Mở Trợ lý, bấm 🎤 Nói, đọc to đoạn dưới (đúng bệnh nhân trên phiếu), bấm ⏹ Dừng nghe, rồi Enter:
 
    > Chị đến khám vì đau tai phải, chảy mủ tai phải 4 ngày. Bệnh sử 4 ngày nay đau tai phải, 2 ngày nay chảy mủ vàng tai phải, nghe kém tai phải, sốt nhẹ. Tiền sử viêm tai giữa mạn tính tai phải, dị ứng penicillin. Khám thấy ống tai phải có mủ vàng, màng nhĩ phải thủng trung tâm. Chẩn đoán đợt cấp viêm tai giữa mạn tính có mủ tai phải. Chỉ định nội soi tai, đo thính lực đơn âm, làm sạch ống tai hút dịch tai. Kê Ciprofloxacin nhỏ tai phải 5 giọt một lần, ngày 2 lần, 7 ngày. Paracetamol 500 mg uống 1 viên một lần, ngày 3 lần, sau ăn, 5 ngày. Dặn giữ khô tai, không bơi. Hẹn tái khám sau 7 ngày.
 
@@ -88,12 +88,12 @@ Làm lần lượt. Mỗi bài xong thì Lưu rồi F5.
 2. Sửa phiếu cho đúng ca đó, Lưu.
 
 **Bài 11. Gõ tắt của anh/chị.** (Chỉ làm khi người điều phối đã nạp bộ gõ tắt UniKey của anh/chị.)
-1. F5. Gõ các mã gõ tắt anh/chị vẫn dùng, cách nhau bằng dấu cách hoặc dấu phẩy, ví dụ khám bình thường, khám bất thường, chẩn đoán, lời dặn. Bấm Điền.
+1. F5. Gõ các mã gõ tắt anh/chị vẫn dùng, cách nhau bằng dấu cách hoặc dấu phẩy, ví dụ khám bình thường, khám bất thường, chẩn đoán, lời dặn. Enter.
 2. Xem mỗi câu có vào đúng ô không (khám toàn thân, khám chuyên khoa, khám các bộ phận khác, chẩn đoán, lời dặn). Mã chẩn đoán có mẫu theo bệnh cùng tên thì chỉ định và đơn thuốc cũng được thêm.
 3. F5. Lần này **nói** (hoặc gõ câu thường, không dùng mã), ví dụ "tai bình thường, mũi cuốn nề có dịch, dặn rửa mũi". Xem AI có viết đúng câu quen của anh/chị không. Lưu.
 
 **Bài 12. Thuốc giảm đau dùng khi cần.**
-1. F5. Gõ hoặc nói, rồi bấm Điền:
+1. F5. Gõ hoặc nói, rồi Enter:
 
    > Kê Augmentin 625 mg uống 1 viên một lần, ngày 2 lần, sau ăn, 7 ngày. Paracetamol 500 mg uống 1 viên khi đau, cách nhau 4 đến 6 giờ, tối đa 4 viên một ngày, kê 10 viên.
 
@@ -112,6 +112,7 @@ Làm lần lượt. Mỗi bài xong thì Lưu rồi F5.
   - Bài 2 và bài 10 (tên mẫu kèm chi tiết) gọi LLM 1 lượt. Ở `mock` chỉ thay được bên (P/T, phải/trái, hai bên), số ngày/tuần/tháng/giờ, nhiệt độ và cân nặng bằng quy tắc.
   - Bài 8, 9 (tách cả đoạn) cần LLM thật mới tách tốt.
 - Nếu dùng `gemini` bằng key miễn phí: đặt `GEMINI_MODEL=gemini-3.5-flash-lite` (**15 lượt gọi mỗi phút, 500 lượt mỗi ngày**, mỗi lượt khoảng 2–3 giây). Model mạnh hơn hết hạn mức rất nhanh. Thỉnh thoảng Google trả lỗi 503 khi quá tải, phiếu hiện chữ đỏ "AI đang quá tải, bấm Điền lại sau vài giây" (hết lượt thì "chờ khoảng 1 phút"); chi tiết lỗi in ở terminal chạy `npm run dev`. Khi gọi mẫu kèm chi tiết mà AI lỗi, phiếu vẫn được điền theo mẫu bằng quy tắc, kèm thông báo đỏ. Với bài 8, 9 thì bấm lại.
+- Trang mặc định là **giao diện gọn** (bong bóng Trợ lý, F2). Muốn đo so sánh thì cho bác sĩ làm cùng một bài hai lượt: một lượt ở `/`, một lượt ở `/?giao-dien=cu` (cột Trợ lý AI bên phải như các buổi trước), rồi so cột Thời gian và Bấm chuột ở `/ket-qua`. Lượt đối chứng không có chữ mờ Tab: `/?goi-y=tat`. Ghép được: `/?giao-dien=cu&goi-y=tat&bs=user_bs02`.
 - Mở `/ket-qua` trước buổi thử để biết đã có bao nhiêu lượt cũ. Lượt có dùng mẫu hiện "· Mẫu <id>".
 - Danh sách mẫu nằm trong Phụ lục, dữ liệu gốc ở `data/eform/phieu-mau.json`.
 - Bài 11: chép bộ gõ tắt UniKey của bác sĩ thành `data/go-tat/<tài khoản>.json` (định dạng ở `data/go-tat/README.md`; tài khoản mặc định của ca giả là `user_bs01`). Thư mục này không lên git. Chưa có file thì trang dùng bộ giả `data/eform/go-tat-mau.json`, bác sĩ sẽ không nhận ra mã nào. Bước 1 không gọi LLM; bước 3 gọi LLM 1 lượt.

@@ -72,8 +72,9 @@ function DateField({ id, label, type }: { id: string; label: string; type: "date
   );
 }
 
+/** Giao diện gọn bỏ nút Gợi ý mẫu câu: câu khám quen đến từ chữ mờ Tab và gõ tắt */
 function KhamChuyenKhoa() {
-  const { get } = useEform();
+  const { get, gon } = useEform();
   const [open, setOpen] = useState(false);
   const choTrong = demChoTrong(get("kham_chuyen_khoa").value);
   return (
@@ -82,13 +83,15 @@ function KhamChuyenKhoa() {
       label="Khám chuyên khoa TMH (Tai/Mũi/Vòm/Họng)"
       rows={4}
       actions={
-        <button type="button" className={BTN_AI} aria-expanded={open} onClick={() => setOpen((value) => !value)}>
-          ✨ Gợi ý mẫu câu
-        </button>
+        !gon && (
+          <button type="button" className={BTN_AI} aria-expanded={open} onClick={() => setOpen((value) => !value)}>
+            ✨ Gợi ý mẫu câu
+          </button>
+        )
       }
     >
       {choTrong > 0 && <p className="mt-1 text-xs text-xem">⚠ Còn {choTrong} chỗ [ ] chưa chọn, cần điền kết quả khám thực tế.</p>}
-      {open && <MauCauPanel />}
+      {open && !gon && <MauCauPanel />}
     </TextBox>
   );
 }

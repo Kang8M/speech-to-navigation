@@ -114,7 +114,7 @@ export function DonThuocTab({ rows, onChange }: { rows: DongThuoc[]; onChange: (
 
         <div>
           <h3 className="mb-2 text-sm font-semibold text-ef-dam">Đơn thuốc – {rows.length} thuốc</h3>
-          {rows.length === 0 && <p className="px-2 py-3 text-ef-phu">Chưa có thuốc. Bác sĩ nói đơn thuốc trong cột Trợ lý AI hoặc tìm ở trên.</p>}
+          {rows.length === 0 && <p className="px-2 py-3 text-ef-phu">Chưa có thuốc. Tìm ở trên, hoặc nói đơn thuốc để Trợ lý AI điền.</p>}
           {rows.length > 0 && (
             <div className="overflow-x-auto rounded-md border border-ef-vien">
               <table className="w-full min-w-[56rem] border-collapse">
@@ -159,7 +159,7 @@ export function DonThuocTab({ rows, onChange }: { rows: DongThuoc[]; onChange: (
                     );
                     const diUngTrung = trungDiUng(row.ten, item, diUng);
                     return (
-                      <tr key={`${row.ma}-${index}`} className={`align-top ${row.nguon === "xem" ? "bg-xem-nhat [&>td:first-child]:shadow-[inset_3px_0_0_var(--xem)]" : row.nguon === "ai" ? "bg-tim-nhat [&>td:first-child]:shadow-[inset_3px_0_0_var(--ai_tim)]" : ""}`}>
+                      <tr key={`${row.ma}-${index}`} className={`align-top ${row.nguon === "xem" ? "bg-xem-nhat [&>td:first-child]:shadow-[inset_3px_0_0_var(--xem)]" : row.nguon === "ai" ? "bg-tim-nhat [.gon_&]:bg-transparent [&>td:first-child]:shadow-[inset_3px_0_0_var(--ai_tim)]" : ""}`}>
                         <td className="border-b border-ef-vien px-2.5 py-2">
                           <div className="flex flex-wrap items-center gap-1.5">
                             <span className="font-semibold">{row.ten}</span>

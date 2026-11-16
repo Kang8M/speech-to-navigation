@@ -172,6 +172,9 @@ export interface KieuTuongTac {
 
 export type KichBan = 1 | 2 | 3 | 4;
 
+/** Giao diện eForm: "gon" là bong bóng trợ lý và phiếu gọn (mặc định), "cu" là cột Trợ lý AI như trước 16/11 */
+export type GiaoDien = "gon" | "cu";
+
 export interface TrinhDienData {
   kieu: KieuTuongTac[];
   /** Câu lệnh ngắn cho kiểu 3 */

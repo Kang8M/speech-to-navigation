@@ -27,6 +27,10 @@ export interface SessionInput {
   /** Số ký tự vào ô nhờ bấm Tab, và số ký tự bác sĩ tự gõ vào ô phiếu khám */
   so_ky_tu_goi_y?: number;
   so_ky_tu_go?: number;
+  /** Giao diện lúc thử: "gon" (bong bóng) hay "cu" (cột Trợ lý AI); lượt ghi trước 2026-11-16 tối không có, coi là "cu" */
+  giao_dien?: "gon" | "cu";
+  /** Số lần bấm chuột trên màn hình eForm từ lúc mở phiếu đến lúc Lưu */
+  so_lan_bam_chuot?: number;
 }
 
 export interface SessionRecord extends SessionInput {
@@ -84,6 +88,8 @@ const CSV_COLUMNS: (keyof SessionRecord)[] = [
   "so_goi_y_nhan_roi_sua",
   "so_ky_tu_goi_y",
   "so_ky_tu_go",
+  "giao_dien",
+  "so_lan_bam_chuot",
 ];
 
 function csvCell(value: unknown): string {

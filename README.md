@@ -145,7 +145,7 @@ Trên trang eForm, khi AI đã điền ít nhất một lần hoặc bác sĩ đ
 
 Trang **Kết quả thử nghiệm** có bảng các lượt, số liệu trung bình và nút xuất CSV. Lượt dùng "Thử câu mẫu" không có thời gian nhập thật nên mặc định không tính vào số trung bình; có ô đánh dấu để tính cả.
 
-- Thời gian: từ lúc bắt đầu nhập (gõ ký tự đầu ở cột Trợ lý AI hay vào ô chữ của phiếu, bấm 🎤 hoặc bấm câu mẫu) đến lúc bấm Lưu.
+- Thời gian: từ lúc bắt đầu nhập (gõ ký tự đầu ở bong bóng hay cột Trợ lý AI hoặc vào ô chữ của phiếu, bấm 🎤 hoặc bấm câu mẫu) đến lúc bấm Lưu.
 - Kiểu nhập: "Nói" nếu trong lượt có bấm 🎤 hoặc dùng câu mẫu kiểu nói, còn lại là "Gõ".
 - AI điền: số trường phiếu khám AI điền cộng số dòng chỉ định, thuốc AI thêm (mỗi dòng tính một mục), cộng dồn qua các lần "Điền thêm".
 - Đã sửa: trường AI điền mà bác sĩ đã sửa, cộng dòng AI thêm mà bác sĩ đã sửa hoặc xóa. Bấm "✓ Đúng" không tính là sửa.
@@ -156,8 +156,10 @@ Trang **Kết quả thử nghiệm** có bảng các lượt, số liệu trung 
 - Gợi ý Tab (cột "Gợi ý Tab" ghi nhận/hiện, kèm số đã nhận rồi sửa; "–" là lượt tắt gợi ý hoặc ghi trước 2026-11-16):
   - Hiện: số gợi ý khác nhau đã hiện ra (cùng ô, cùng câu chỉ tính một lần). Gõ dở một câu có thể làm hiện nhiều gợi ý khác nhau, nên số này lớn hơn số câu.
   - Nhận: số lần bấm Tab. Nhận rồi sửa: câu đã nhận mà lúc Lưu không còn nguyên trong ô.
-  - Chữ đến từ gợi ý: số ký tự vào ô nhờ Tab, so với số ký tự bác sĩ tự gõ vào ô chữ của phiếu (đếm theo độ dài tăng thêm của ô, không phải số phím bấm). Chữ gõ ở cột Trợ lý AI không tính.
-  - Muốn so có và không có gợi ý: làm cùng một ca giả hai lượt, một lượt bỏ tích "Gợi ý chữ mờ, bấm Tab để nhận" (dòng Chú giải đầu tab Phiếu khám), rồi so cột Thời gian.
+  - Chữ đến từ gợi ý: số ký tự vào ô nhờ Tab, so với số ký tự bác sĩ tự gõ vào ô chữ của phiếu (đếm theo độ dài tăng thêm của ô, không phải số phím bấm). Chữ gõ ở bong bóng hay cột Trợ lý AI không tính.
+  - Muốn so có và không có gợi ý: làm cùng một ca giả hai lượt, một lượt mở `/?goi-y=tat` (giao diện cũ thì bỏ tích "Gợi ý chữ mờ, bấm Tab để nhận" ở dòng Chú giải), rồi so cột Thời gian.
+- Giao diện (cột "Giao diện"): "Gọn" là bong bóng trợ lý (mặc định), "Cũ" là cột Trợ lý AI (`/?giao-dien=cu`). Lượt ghi trước 2026-11-16 tối không có trường này, hiện "Cũ".
+- Bấm chuột (cột "Bấm chuột"): số lần bấm chuột trên màn eForm từ lúc mở phiếu đến lúc Lưu, kể cả bấm vào ô để gõ. Dùng để so giao diện gọn với giao diện cũ trên cùng một ca; lượt cũ hiện "–".
 - Lượt ghi trước ngày 2026-11-11 đến từ trang "Màn hình làm việc" cũ (đã bỏ), cách đếm trên từng ô của form JSON nên không so trực tiếp được với lượt mới.
 
 ## Chấm điểm (eval)
@@ -205,22 +207,24 @@ Trang chủ `/` mô phỏng màn **Phiếu khám ngoại trú của EMR** với 
 - Mỗi mục là một thẻ trắng trên nền xám nhạt; lựa chọn Có/Không dạng thẻ bấm; bảng chỉ kẻ ngang, có nút Copy.
 - **Thanh dưới đáy 2 tầng như EMR**, ghim ở mọi khổ màn: tầng trên là dải 7 trạng thái lượt khám (khổ điện thoại thì vuốt ngang); tầng dưới là Quay lại, Báo cáo y tế, In ngay, nút **Lưu** dài kèm số chỗ còn cần xem lại, nút lên đầu trang.
   - **In ngay** mở hộp thoại in của trình duyệt với bản in A4 (`src/client/eform/BanIn.tsx`): hành chính, sinh hiệu, các trường phiếu khám đã có chữ, chẩn đoán (mã và mô tả), bảng chỉ định, bảng đơn thuốc, chỗ ký bác sĩ, có dấu "DỮ LIỆU GIẢ – BẢN MÔ PHỎNG". Bản in giữ nguyên như đang hiện, kể cả chỗ AI chưa chắc.
-  - **Trạng thái lượt khám**: "Chờ KQ CLS" mở ô Chuyển nội soi. "Hoàn thành khám" khóa phiếu, chỉ định, đơn thuốc và cột Trợ lý AI (chỉ đọc), chọn lại "Đang khám" để sửa; còn thay đổi chưa Lưu thì không cho chọn. Các trạng thái khác chỉ đổi lựa chọn, chưa có tác dụng gì.
+  - **Trạng thái lượt khám**: "Chờ KQ CLS" mở ô Chuyển nội soi. "Hoàn thành khám" khóa phiếu, chỉ định, đơn thuốc và trợ lý (chỉ đọc), chọn lại "Đang khám" để sửa; còn thay đổi chưa Lưu thì không cho chọn. Các trạng thái khác chỉ đổi lựa chọn, chưa có tác dụng gì.
 - Chữ Be Vietnam Pro 14px. Thanh header của prototype (link sang Kết quả thử nghiệm, chế độ AI) nằm trên cùng và cuộn đi khi kéo xuống; header bệnh nhân vẫn ghim. Nút "Quay lại" chỉ hiện thông báo "Chưa kết nối hệ thống thật".
 - **Giao diện tối giản, không hiện chú thích của prototype**: không có dải cảnh báo dữ liệu giả, không có nhãn "Dữ liệu cũ", "(tự động)", "(mô phỏng …)", không có các dòng giải thích cách AI hoạt động dưới từng điểm AI. Các giới hạn đó ghi trong README này. Dấu "DỮ LIỆU GIẢ" chỉ còn trên bản in, để tờ giấy in ra không bị nhầm là phiếu thật.
 
-Chỗ khác với EMR là **cột "✨ Trợ lý AI điền phiếu" bên phải**:
+Chỗ khác với EMR là **bong bóng "✨ Trợ lý"** ở góc phải dưới (`src/client/eform/BongBongAi.tsx`). Mục tiêu: AI không thêm bước, không chiếm chỗ trên màn hình, bỏ qua thì không tốn gì.
 
-Đầu cột có thanh **3 bước: Nói hoặc gõ → AI điền → Duyệt, Lưu**. Mỗi lúc chỉ một nút tô đậm: chưa có chữ thì nút 🎤 Bắt đầu nói, có chữ mới thì nút ✨ Điền vào phiếu, đã điền thì phần duyệt.
+1. Bấm bong bóng hoặc phím **F2** (F2 lần nữa hoặc Esc để đóng, con trỏ trở về ô đang gõ). Bong bóng mở thành một ô lệnh nhỏ có nút 🎤 Nói.
+2. Nói hoặc gõ **một lệnh**: tên mẫu ("mẫu viêm tai giữa cấp, tai P, 3 ngày"), mã gõ tắt (`ttbt tbt mv`), hay cả ca. **Enter** là điền (Shift+Enter xuống dòng). Logic giống cột cũ, dùng chung `src/client/eform/useDienAi.ts`: mã gõ tắt bung trước, tên mẫu gọi phiếu mẫu, phần còn lại gửi `/api/extract` (theo `LLM_PROVIDER`). AI điền cùng lúc phiếu khám, **chỉ định dịch vụ** và **đơn thuốc**.
+3. Điền xong bong bóng tự thu lại. Không trả lời bằng chữ, không giữ lịch sử. Thanh đáy (giữa In ngay và Lưu, từ khổ màn vừa trở lên) chỉ còn một dòng báo đã điền gì, kèm **Xem N ô vàng** (mỗi lần bấm nhảy sang ô vàng tiếp theo), **↶ Hoàn tác** và nút ẩn. Đặt ở thanh đáy để không che ô phiếu.
 
-1. Bác sĩ bấm 🎤 Bắt đầu nói trong lúc khám, hoặc gõ tắt một đoạn (có "Thử câu mẫu: kiểu nói / kiểu gõ tắt" để demo), rồi bấm **✨ Điền vào phiếu** (hoặc Ctrl+Enter).
-2. AI gọi pipeline `/api/extract` (theo `LLM_PROVIDER`) và điền cùng lúc: lý do khám, bệnh sử, tiền sử, khám toàn thân, khám chuyên khoa, chẩn đoán, hướng điều trị, lời dặn, hẹn tái khám (tự tính ngày), **chỉ định dịch vụ** và **đơn thuốc** (hai tab cạnh tab Phiếu khám).
-3. Cột AI hiện "Đã điền N trường", thanh tiến độ (tím là chắc chắn, vàng là còn cần xem lại) và danh sách **chỗ cần xem lại** có nút Xem (cuộn tới ô) và ✓ Đúng. Các trường còn lại nằm trong danh sách thu gọn. Bác sĩ duyệt, sửa rồi bấm Lưu. Có nút hoàn tác lần AI điền. Nói hoặc gõ thêm thì nút đổi thành "Điền thêm vào phiếu".
+Giao diện gọn còn bỏ các thứ gây nhiễu trên phiếu: dòng Chú giải, nút "Mở thư viện tham khảo", "✨ Gợi ý mẫu câu", "✨ Gợi ý ICD10", dấu ✨ trên tên tab. Ô và dòng AI điền giữ nền trắng, chỉ còn vạch tím ở lề; nhãn "AI điền" và "Đã sửa" ẩn đi; chỉ màu vàng ("⚠ Cần xem lại") là chỗ bác sĩ phải nhìn. Câu thư viện vẫn có trong chữ mờ Tab.
+
+**Giao diện cũ** (`/?giao-dien=cu`), giữ để đo so sánh: **cột "✨ Trợ lý AI điền phiếu" bên phải**, đầu cột có thanh 3 bước Nói hoặc gõ → AI điền → Duyệt, Lưu. Bác sĩ bấm 🎤 hoặc gõ (có "Thử câu mẫu" để demo), bấm **✨ Điền vào phiếu** (hoặc Ctrl+Enter). Cột hiện "Đã điền N trường", thanh tiến độ, danh sách chỗ cần xem lại có nút Xem và ✓ Đúng, nút hoàn tác. Trang Trình diễn luôn dùng giao diện này.
 
 **Gọi phiếu mẫu theo bệnh** (`data/eform/phieu-mau.json`, `src/shared/eform/phieu-mau.ts`):
 
-- Gõ hoặc nói tên mẫu vào ô nhập rồi bấm Điền, ví dụ "mẫu viêm tai giữa cấp", "vtg cấp" hoặc "viem tai giua cap". Tên mẫu phải đứng đầu câu (có thể có "mẫu", "điền mẫu", "theo mẫu" phía trước) hoặc đứng ngay sau chữ "mẫu". Tên bệnh nằm giữa một câu kể cả ca thì vẫn chạy luồng AI tách như cũ.
-- Đang gõ dở (2–40 ký tự) mà chưa khớp mẫu nào thì dưới ô nhập hiện "Mẫu theo bệnh:" với tối đa 5 tên, bấm là điền luôn. Tên khớp nhiều mẫu (bí danh trùng) thì hiện nút "Dùng mẫu: …" để chọn.
+- Gõ hoặc nói tên mẫu vào bong bóng (hoặc ô nhập của cột cũ) rồi bấm Điền, ví dụ "mẫu viêm tai giữa cấp", "vtg cấp" hoặc "viem tai giua cap". Tên mẫu phải đứng đầu câu (có thể có "mẫu", "điền mẫu", "theo mẫu" phía trước) hoặc đứng ngay sau chữ "mẫu". Tên bệnh nằm giữa một câu kể cả ca thì vẫn chạy luồng AI tách như cũ.
+- Đang gõ dở (2–40 ký tự) mà chưa khớp mẫu nào thì dưới ô nhập hiện "Mẫu theo bệnh:" với tối đa 5 tên, bấm là điền luôn. Tên khớp nhiều mẫu (bí danh trùng) thì hiện các tên mẫu để chọn.
 - Chỉ có tên mẫu thì **không gọi API**: mẫu đã gán mã sẵn ở server lúc nạp trang và đổ thẳng vào phiếu.
 - Có chi tiết sau tên ("vtg cấp, tai T, 3n, sốt 38,5") thì gọi `/api/extract` **một lần** với `mau_id`, phần chi tiết gửi làm `text`. Server lấy mẫu theo id. LLM nhận mẫu trong thẻ `<phieu_mau>`, được dặn giữ nguyên câu chữ, chỉ thay chỗ trống và sửa đúng chỗ bác sĩ nói. Sau đó code chạy thêm quy tắc `dienChoTrongNhap` cho chỗ trống LLM còn bỏ sót. Quy tắc:
   - `T`→trái, `3n`→3 ngày, "hai bên"→2 bên.
@@ -231,34 +235,34 @@ Chỗ khác với EMR là **cột "✨ Trợ lý AI điền phiếu" bên phải
   Ở chế độ `mock` chỉ chạy quy tắc. Chỗ không hiểu thì giữ nguyên ngoặc và tô vàng. Gọi AI lỗi (quá tải, hết lượt) thì vẫn điền theo mẫu bằng quy tắc, kèm thông báo đỏ. Bác sĩ gõ vào ô nào trong lúc chờ AI thì ô đó được giữ. Mã ICD của mẫu chỉ dùng khi chẩn đoán LLM trả về vẫn là bệnh của mẫu; khác thì gợi ý mã theo từ khóa như luồng thường. Mã dịch vụ, thuốc vẫn qua bước khớp danh mục như mọi nháp.
 - **Chỉ điền ô còn trống**: ô đã có chữ (điều dưỡng nhập sẵn, AI điền lần trước, bác sĩ gõ) giữ nguyên. Riêng Hẹn tái khám "Không" mặc định vẫn được đổi theo mẫu, trừ khi bác sĩ đã tự chọn. Chỉ định, thuốc trùng thì bỏ. Ô Khám các bộ phận khác cũng lấy từ mẫu.
 - Chỗ riêng của bệnh nhân trong mẫu (`[phải|trái|2 bên]`, `[số] ngày`) hiện vàng để bác sĩ sửa. Mã ICD10 tra theo tên ICD của mẫu, luôn vàng như mọi mã ICD AI điền.
-- Thông báo: "Đã điền theo mẫu …: N ô, X chỉ định, Y thuốc. Bỏ qua K ô đã có chữ. Còn M chỗ cần điền (tô vàng)." Hoàn tác dùng chung nút "↶ Hoàn tác lần AI điền". Lưu thì số đo lượt thử ghi thêm `mau_id`, trang Kết quả hiện "Mẫu <id>".
+- Thông báo: "Đã điền theo mẫu …: N ô, X chỉ định, Y thuốc. Bỏ qua K ô đã có chữ." Giao diện cũ thêm "Còn M chỗ cần điền (tô vàng)"; giao diện gọn bỏ câu này vì nút "Xem N ô vàng" đã đếm (hai số đếm hai thứ khác nhau, để cả hai dễ rối). Hoàn tác dùng chung nút hoàn tác. Lưu thì số đo lượt thử ghi thêm `mau_id`, trang Kết quả hiện "Mẫu <id>".
 
 **Gợi ý chữ mờ, bấm Tab để nhận** (`src/shared/eform/goi-y-tab.ts`, ô nhập `TextBox` trong `src/client/eform/fields.tsx`):
 
-- Trong các ô chữ tự do của phiếu khám (lý do khám, bệnh sử, khám toàn thân, khám chuyên khoa, khám các bộ phận khác, hướng điều trị, lời dặn…), khi con trỏ ở cuối ô, câu gợi ý hiện mờ ngay sau con trỏ. **Tab** nhận, **Esc** bỏ qua (gõ tiếp thì gợi ý quay lại). Dưới ô có dòng nhắc phím.
+- Trong các ô chữ tự do của phiếu khám (lý do khám, bệnh sử, khám toàn thân, khám chuyên khoa, khám các bộ phận khác, hướng điều trị, lời dặn…), khi con trỏ ở cuối ô, câu gợi ý hiện mờ ngay sau con trỏ. **Tab** nhận, **Esc** bỏ qua (gõ tiếp thì gợi ý quay lại). Dưới ô có dòng nhắc phím; bác sĩ đã nhận 2 lần thì dòng nhắc thôi hiện.
 - Ba kiểu gợi ý:
   1. Đang gõ dở một câu hoặc vế sau dấu phẩy (từ 2 ký tự): gợi ý câu bắt đầu như vậy. Khớp không dấu, nên gõ "giu kho" ra "Giữ khô tai…"; nhận thì sửa luôn dấu và chữ hoa (vế sau dấu phẩy giữ chữ thường).
-  2. Ô trống hoặc vừa hết câu: gợi ý câu tiếp theo chưa có trong ô (ô khám xuống dòng).
+  2. Ô trống hoặc vừa hết câu: gợi ý câu tiếp theo chưa có trong ô (ô khám xuống dòng). Chỉ lấy câu **đủ chắc**, tức không phải câu chỉ có ở bệnh khác: ca đau tai chưa có mã ICD thì ô trống không hiện "Súc họng nước muối ấm.", gõ "suc h" thì vẫn gợi ý.
   3. Chữ cuối là mã gõ tắt của ô đó (hoặc từ ngắn `tu`): gợi ý bung mã, hiện "→ câu".
 - Nguồn câu, xếp theo thứ tự: bộ gõ tắt của tài khoản đang đăng nhập và lời dặn đã kê cho đúng mã ICD đang chọn; câu trong phiếu mẫu của bệnh khớp ngữ cảnh (mã ICD, hoặc tên/bí danh mẫu có trong lý do khám, mô tả chẩn đoán); thư viện tham khảo (`data/eform/thu-vien.json`); cuối cùng là câu của bệnh khác. Câu gặp ở nhiều nguồn được cộng điểm.
 - Câu còn chỗ trống `[a|b]`, `[số]` bị bỏ vì đó là kết quả khám bác sĩ phải tự chọn. Câu đã có trong ô hoặc gần trùng (từ 70% số từ đã có) không gợi ý lại.
 - Không gọi LLM, chạy hết trên trình duyệt.
 - Chỉ hiện khi bác sĩ đã bấm chuột vào ô hoặc gõ: dùng phím Tab để đi qua các ô thì Tab vẫn chuyển ô như thường.
 - Ô chữ của phiếu giờ cao theo nội dung (không cuộn bên trong, không kéo đổi cỡ được) để chữ mờ luôn thấy hết.
-- Bỏ tích "Gợi ý chữ mờ, bấm Tab để nhận" ở dòng Chú giải (đầu tab Phiếu khám) để tắt, dùng khi đo lượt đối chứng.
+- Tắt để đo lượt đối chứng: mở `/?goi-y=tat` (giao diện cũ thì bỏ tích "Gợi ý chữ mờ, bấm Tab để nhận" ở dòng Chú giải).
 
 **Bộ gõ tắt riêng của bác sĩ** (như macro UniKey; `src/shared/eform/go-tat.ts`, `src/server/du-lieu/go-tat.ts`):
 
 - Mỗi tài khoản một file `data/go-tat/<tài khoản>.json` (không đưa lên git vì có thể là câu chữ thật của bác sĩ, định dạng xem `data/go-tat/README.md`). Chưa có file thì dùng bộ giả `data/eform/go-tat-mau.json`. Mỗi mã gắn với một ô: `kham_toan_than`, `kham_chuyen_khoa`, `kham_khac`, `chan_doan_chinh`, `loi_dan`… hoặc `tu` (từ ngắn bung tại chỗ, ví dụ `k` → không).
-- Gõ các mã vào ô Trợ lý AI, ví dụ `ttbt tbt mv hv, vmx, ldmh rm`, rồi bấm Điền. Mỗi mã bung **đúng câu của bác sĩ** vào đúng ô, không gọi AI. Nhiều mã cùng ô thì nối theo thứ tự gõ (ô khám xuống dòng, ô khác thêm dấu chấm nếu câu trước chưa có). Mã phân biệt hoa thường và phải đứng riêng (`tbt:` hay `ktbt` không tính). Chỉ điền ô còn trống, như phiếu mẫu.
+- Gõ các mã vào bong bóng Trợ lý (hoặc cột cũ), ví dụ `ttbt tbt mv hv, vmx, ldmh rm`, rồi bấm Điền. Mỗi mã bung **đúng câu của bác sĩ** vào đúng ô, không gọi AI. Nhiều mã cùng ô thì nối theo thứ tự gõ (ô khám xuống dòng, ô khác thêm dấu chấm nếu câu trước chưa có). Mã phân biệt hoa thường và phải đứng riêng (`tbt:` hay `ktbt` không tính). Chỉ điền ô còn trống, như phiếu mẫu.
 - Mã chẩn đoán (`vmx` → viêm mũi xoang cấp) còn gọi mẫu theo bệnh cùng tên, để có chỉ định và đơn thuốc; câu gõ tắt thay câu mẫu ở cùng ô. Phần không phải mã đi tiếp vào luồng mẫu hoặc AI như cũ, với từ ngắn đã bung.
 - **AI viết theo câu quen của bác sĩ**: `/api/extract` nhận thêm `tai_khoan`; server đưa các câu trong bộ gõ tắt vào system prompt (thẻ `<cau_quen>`, theo từng trường). Bác sĩ nói "tai bình thường" thì AI ghi nguyên văn câu tả tai bình thường của bác sĩ đó. Ô Khám các bộ phận khác và từ ngắn không đưa vào prompt.
 - Thông báo: "Đã điền gõ tắt tbt, mv…: N ô." hoặc thêm "Gõ tắt: …" vào thông báo mẫu/AI.
 
 | Quy tắc | Chi tiết |
 |---|---|
-| Màu | Tím = AI điền (ô có vạch tím bên trái). Vàng = AI chưa chắc, cần xem lại (vạch vàng; bấm "✓ Đúng" ngay cạnh nhãn trường hoặc trong cột AI, hoặc sửa để bỏ đánh dấu). |
-| Không ghi đè | Ô bác sĩ đã gõ hoặc đã sửa thì AI không ghi đè (cột AI không báo riêng). |
+| Màu | Tím = AI điền (vạch tím bên trái ô; giao diện cũ tô thêm nền tím). Vàng = AI chưa chắc, cần xem lại (vạch và nền vàng; bấm "✓ Đúng" ngay cạnh nhãn trường hoặc trong cột AI cũ, hoặc sửa để bỏ đánh dấu). |
+| Không ghi đè | Ô bác sĩ đã gõ hoặc đã sửa thì AI không ghi đè (thông báo ghi "Bỏ qua K ô đã có chữ"). |
 | Mã ICD10 | Không lấy từ LLM. Code chấm điểm từ khóa trên câu chẩn đoán để gán mã, luôn đánh dấu vàng. |
 | Mã dịch vụ, thuốc | Do `src/shared/match.ts` khớp danh mục. Khớp chưa chắc thì dòng vàng, có ô chọn lại: bấm vào hiện ứng viên AI tìm được, gõ để tìm trong cả danh mục. |
 | Ô tìm danh mục | Tìm dịch vụ, tìm thuốc, ICD10 đều là ô gõ để tìm (`TimDanhMuc.tsx`, tìm mờ theo tên, tên khác, hoạt chất, mã; hiểu từ viết tắt), hiện tối đa 30 kết quả. Mục có nhãn **DM BV** là danh mục bệnh viện. |
@@ -267,7 +271,8 @@ Chỗ khác với EMR là **cột "✨ Trợ lý AI điền phiếu" bên phải
 
 **✨ Gợi ý theo chẩn đoán** nằm đầu tab Chỉ định dịch vụ và tab Đơn thuốc:
 
-- Lấy mã ICD10 đang chọn trên phiếu khám (ra viện, ban đầu, kèm theo; do bác sĩ chọn hoặc Trợ lý AI điền), tìm bộ mẫu khớp trong `data/eform/goi-y-theo-chan-doan.json` và liệt kê dịch vụ, thuốc kèm liều, lời dặn theo từng chẩn đoán. Tab nào có gợi ý thì hiện ✨ trên tên tab.
+- Lấy mã ICD10 đang chọn trên phiếu khám (ra viện, ban đầu, kèm theo; do bác sĩ chọn hoặc Trợ lý AI điền), tìm bộ mẫu khớp trong `data/eform/goi-y-theo-chan-doan.json` và liệt kê dịch vụ, thuốc kèm liều, lời dặn theo từng chẩn đoán. Giao diện cũ: tab nào có gợi ý thì hiện ✨ trên tên tab.
+- **Giao diện gọn:** chưa có mã hay không còn gì để thêm thì không hiện gì. Có thì chỉ một dòng: "Anh/chị hay kê cho H66.0: …" (hoặc "Bộ mẫu cho …") với tên các mục tích sẵn, nút **Thêm N**, và "Chọn từng mục" để mở danh sách đủ như dưới. Thuốc bị bỏ tích vì trùng dị ứng vẫn hiện tên và lý do bằng chữ đỏ ngay trong dòng đó.
 - **Không tự thêm gì.** Bác sĩ tích chọn rồi bấm "Thêm N mục đã chọn". Mục đã có trong danh sách hoặc trùng gợi ý phía trên thì làm mờ. Thuốc cùng nhóm dị ứng trên header (ví dụ Augmentin khi dị ứng Penicillin) không được tích sẵn và có cảnh báo đỏ.
 - Lời dặn mẫu có nút "Chèn vào Lời dặn" (thêm vào cuối ô Lời dặn & theo dõi, đánh dấu AI điền).
 - Bộ mẫu chỉ ghi tên dịch vụ và thuốc. Mã do `src/shared/match.ts` gán khi nạp trang; khớp chưa chắc thì dòng hiện vàng "cần xem lại".
@@ -282,10 +287,10 @@ Các điểm AI cũ vẫn nằm ngay tại ô, **đều là mock bằng rule, kh
 | Điểm AI | Cách hoạt động | Giới hạn |
 |---|---|---|
 | ✨ AI tóm tắt (Tiền sử bản thân, Tiền sử gia đình, Bệnh sử) | Trích câu có sẵn, gộp câu trùng qua các lần khám. Câu khác bên phải/trái hoặc khác số liệu không bị gộp. Bác sĩ sửa rồi mới chèn. **Đang ẩn** cùng các bảng "Thông tin khai thác" (lịch sử tiền sử, bệnh sử, dị ứng kèm nút Copy); đổi `HIEN_THONG_TIN_KHAI_THAC` ở đầu `src/client/eform/EformForm.tsx` thành `true` để hiện lại. | Không diễn đạt lại, nên rút gọn ít hơn LLM thật |
-| ✨ Gợi ý ICD10 (top 3) | Chấm điểm từ khóa trong Bệnh sử và Khám lâm sàng, có xét phủ định ("không sốt"). Đoạn tóm tắt lịch sử cũ và chỗ `[ ]` chưa chọn không được tính. | **Độ tin cậy chỉ là điểm khớp từ khóa, không phải xác suất bệnh** |
-| ✨ Gợi ý mẫu câu | Chọn mẫu Tai/Mũi/Vòm/Họng theo Lý do đến khám. Kết quả khám để trống cho bác sĩ chọn, AI không tự điền. | Chỉ có 7 nhóm lý do khám mẫu |
+| ✨ Gợi ý ICD10 (top 3) | Chấm điểm từ khóa trong Bệnh sử và Khám lâm sàng, có xét phủ định ("không sốt"). Đoạn tóm tắt lịch sử cũ và chỗ `[ ]` chưa chọn không được tính. Giao diện gọn không có nút: ô chẩn đoán ban đầu, ra viện còn trống thì dưới ô hiện một dòng tối đa 2 mã (`GoiYIcdDong`), bấm là chọn; chẩn đoán kèm theo không gợi ý. | **Độ tin cậy chỉ là điểm khớp từ khóa, không phải xác suất bệnh** |
+| ✨ Gợi ý mẫu câu | Chọn mẫu Tai/Mũi/Vòm/Họng theo Lý do đến khám. Kết quả khám để trống cho bác sĩ chọn, AI không tự điền. **Chỉ có ở giao diện cũ.** | Chỉ có 7 nhóm lý do khám mẫu |
 
-Nhãn trên giao diện: **✨ AI điền**, **⚠ AI chưa chắc, cần xem lại**, **Đã sửa**, **(Hiển thị trên báo cáo y tế)**. Nút "Báo cáo y tế" cho xem trước báo cáo: khối hành chính (họ tên, giới, PID, thời gian khám, bác sĩ, dị ứng), các trường có nhãn BCYT, chẩn đoán chính (chẩn đoán ra viện, chưa có thì chẩn đoán ban đầu) và chẩn đoán kèm theo. Ảnh chụp EMR chỉ thấy nhãn BCYT ở chẩn đoán kèm theo; việc đưa chẩn đoán chính và hành chính vào là giả định, cần xác nhận với bác sĩ.
+Nhãn trên giao diện: **✨ AI điền**, **⚠ AI chưa chắc, cần xem lại**, **Đã sửa**, **(Hiển thị trên báo cáo y tế)**; giao diện gọn chỉ còn **⚠ Cần xem lại** và nhãn báo cáo y tế. Nút "Báo cáo y tế" cho xem trước báo cáo: khối hành chính (họ tên, giới, PID, thời gian khám, bác sĩ, dị ứng), các trường có nhãn BCYT, chẩn đoán chính (chẩn đoán ra viện, chưa có thì chẩn đoán ban đầu) và chẩn đoán kèm theo. Ảnh chụp EMR chỉ thấy nhãn BCYT ở chẩn đoán kèm theo; việc đưa chẩn đoán chính và hành chính vào là giả định, cần xác nhận với bác sĩ.
 
 Các nút lấy dữ liệu từ hệ thống khác, Menu, Xem LSKB và Quay lại chỉ hiện thông báo mô phỏng. Nút Lưu không ghi nội dung phiếu xuống đĩa. Nó chỉ ghi số đo lượt thử (xem mục Đo lường) và các dòng chỉ định, thuốc cho gợi ý theo thói quen. Tải lại trang là phiếu về dữ liệu ban đầu.
 
@@ -335,7 +340,7 @@ data/giong-noi/ file âm thanh để đo nhận dạng giọng nói (tự sinh h
 data/eform/     ca giả, danh mục và quy tắc của trang eForm
 data/tham-khao/ danh mục thật cào từ nguồn công khai, ứng dụng nạp kèm data/catalog/
 src/app/        trang và API (định tuyến Next, mỏng)
-src/client/     giao diện chạy trên trình duyệt: chung/ (Header, MicButton), eform/ (trang chủ), trinh-dien/ (trang Trình diễn), ket-qua/, api.ts (gọi API)
+src/client/     giao diện chạy trên trình duyệt: chung/ (Header, MicButton), eform/ (trang chủ; BongBongAi.tsx bong bóng trợ lý, TroLyAi.tsx cột cũ, useDienAi.ts logic điền dùng chung), trinh-dien/ (trang Trình diễn), ket-qua/, api.ts (gọi API)
 src/server/ai/  AI thật: pipeline, prompt, schema, llm/ (mock, rules, anthropic, openai, gemini), asr.ts (Zipformer)
 src/server/du-lieu/ nạp config và data, lưu lượt thử và đơn đã kê, dữ liệu trang Trình diễn (trinh-dien.ts)
 src/shared/     dùng chung hai phía: kiểu, khớp danh mục, chuẩn hóa, tính tổng, đo lường, api.ts (hợp đồng FE–BE)

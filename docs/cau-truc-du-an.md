@@ -82,13 +82,13 @@ Muốn thay một tính năng rule bằng LLM thật (ví dụ tóm tắt lịch
 ## Luồng chính
 
 **Điền nháp (cột Trợ lý AI của trang eForm):**
-`TroLyAi.tsx` → `client/api.ts › goiAiDienNhap` → `POST /api/extract` → `server/ai/pipeline.ts › runPipeline` → `llm/index.ts` (chọn theo `LLM_PROVIDER`, kiểm tra zod, thử lại 1 lần) → bỏ trường không `ai_fill` → `shared/match.ts` gán mã → `shared/validate.ts` tính tổng → trả `PipelineResult`.
+`BongBongAi.tsx` (giao diện gọn) hoặc `TroLyAi.tsx` (giao diện cũ) → `client/eform/useDienAi.ts › dien` → `client/api.ts › goiAiDienNhap` → `POST /api/extract` → `server/ai/pipeline.ts › runPipeline` → `llm/index.ts` (chọn theo `LLM_PROVIDER`, kiểm tra zod, thử lại 1 lần) → bỏ trường không `ai_fill` → `shared/match.ts` gán mã → `shared/validate.ts` tính tổng → trả `PipelineResult`.
 
-**Giọng nói Zipformer:** `MicButton.tsx` → `GET /api/asr` (chế độ) → `POST /api/asr` (mở phiên) → `POST /api/asr/[id]` mỗi 0,4 giây (PCM 16 kHz, nhận `{ chot, tam }`) → `DELETE /api/asr/[id]`. Mỗi câu chốt (cả Web Speech) đi qua `shared/giong-noi/sua-chu.ts › suaChu` trong `TroLyAi.tsx` với bảng `data.suaChu` (`config/sua-chu-giong-noi.json`) rồi mới vào ô nhập.
+**Giọng nói Zipformer:** `MicButton.tsx` → `GET /api/asr` (chế độ) → `POST /api/asr` (mở phiên) → `POST /api/asr/[id]` mỗi 0,4 giây (PCM 16 kHz, nhận `{ chot, tam }`) → `DELETE /api/asr/[id]`. Mỗi câu chốt (cả Web Speech) đi qua `shared/giong-noi/sua-chu.ts › suaChu` trong `BongBongAi.tsx` / `TroLyAi.tsx` với bảng `data.suaChu` (`config/sua-chu-giong-noi.json`) rồi mới vào ô nhập.
 
 **Nạp trang eForm (`/`):** `src/app/page.tsx` (server) đọc `?bs=` rồi gọi `server/du-lieu/eform.ts › loadEformData` (đọc `data/eform/`, gán mã cho bộ mẫu gợi ý, đọc `data/thoi-quen/<tài khoản>.json` và bộ gõ tắt `server/du-lieu/go-tat.ts › docGoTat`) → truyền xuống `EformScreen` (client). Các gợi ý rule chạy trên trình duyệt với dữ liệu đó, không gọi API.
 
-**Đo lượt thử:** `TroLyAi.tsx` báo `onBatDau` (gõ, bấm 🎤, bấm câu mẫu) → `EformScreen` ghi mốc giờ → bấm Lưu lần đầu sau khi AI điền → `shared/eform/do-luong.ts › demLuot` đếm → `client/api.ts › luuLuotThu` → `POST /api/sessions` → `server/du-lieu/sessions.ts` ghi `data/sessions/` → trang `/ket-qua` đọc lại.
+**Đo lượt thử:** `BongBongAi.tsx` / `TroLyAi.tsx` báo `onBatDau` (gõ, bấm 🎤, bấm câu mẫu) → `EformScreen` ghi mốc giờ → bấm Lưu lần đầu sau khi AI điền → `shared/eform/do-luong.ts › demLuot` đếm → `client/api.ts › luuLuotThu` → `POST /api/sessions` → `server/du-lieu/sessions.ts` ghi `data/sessions/` → trang `/ket-qua` đọc lại.
 
 **Trang Trình diễn (`/trinh-dien`, tạm ẩn từ 2026-11-12, `page.tsx` gọi `notFound()`):** `src/app/trinh-dien/page.tsx` gọi `server/du-lieu/trinh-dien.ts › loadTrinhDienData` (gồm `loadEformData`, đơn đã kê giả trong `data/eform/trinh-dien.json` được gán mã bằng `shared/match.ts`, nháp của câu mẫu chạy pipeline `mock` rồi đổ vào phiếu bằng `dienPhieu` ngay ở server) → `client/trinh-dien/TrinhDienScreen.tsx` (thanh chọn kiểu) → `EformScreen` với `kichBan` 1–4 (`trangThaiDau` dựng trạng thái mở phiếu; có `data.trinhDien` thì Lưu không ghi gì). Nháp kiểu 1 tính ở server chứ không ở trình duyệt, vì khi để component client tự tính lúc SSR, mã ICD ra khác trình duyệt và React báo lỗi hydration.
 
@@ -109,9 +109,9 @@ Muốn thay một tính năng rule bằng LLM thật (ví dụ tóm tắt lịch
 | Hợp đồng API | `shared/api.ts` | route + `client/api.ts` + `MicButton` | Đổi kiểu một chỗ, cả route và nơi gọi cùng báo lỗi nếu lệch |
 | Nạp cấu hình | `server/du-lieu/config.ts` | các trang, route, eval | Đọc lại file mỗi lần gọi, sửa JSON rồi tải lại trang là thấy |
 | Kiểm tra dị ứng | `shared/eform/di-ung.ts` | `DonThuocTab`, `GoiYTheoChanDoan` | Mọi chỗ thêm thuốc nên gọi `trungDiUng` |
-| Sửa chữ giọng nói | `shared/giong-noi/sua-chu.ts` + `config/sua-chu-giong-noi.json` | `TroLyAi`, `scripts/eval-giong-noi.ts` | Màn mới có nút micro thì gọi `suaChu(cau, data.suaChu)` trên từng câu `onText` |
+| Sửa chữ giọng nói | `shared/giong-noi/sua-chu.ts` + `config/sua-chu-giong-noi.json` | `BongBongAi`, `TroLyAi`, `scripts/eval-giong-noi.ts` | Màn mới có nút micro thì gọi `suaChu(cau, data.suaChu)` trên từng câu `onText` |
 | Gợi ý theo thói quen | `shared/eform/thoi-quen.ts`, `/api/thoi-quen` | `GoiYTheoChanDoan`, `EformScreen` | `ghepGoiY` trả nhóm thói quen trước, bộ mẫu sau, dùng chung cho tab Chỉ định và Đơn thuốc |
-| Bộ gõ tắt riêng | `shared/eform/go-tat.ts`, `server/du-lieu/go-tat.ts` | `TroLyAi`, `EformScreen`, `/api/extract` (câu quen vào prompt), `scripts/eval-go-tat.ts` | `tachGoTat` bung mã thành câu theo ô, `chenGoTat` đặt câu đó lên kết quả mẫu hay AI |
+| Bộ gõ tắt riêng | `shared/eform/go-tat.ts`, `server/du-lieu/go-tat.ts` | `useDienAi` (bong bóng và cột cũ), `EformScreen`, `/api/extract` (câu quen vào prompt), `scripts/eval-go-tat.ts` | `tachGoTat` bung mã thành câu theo ô, `chenGoTat` đặt câu đó lên kết quả mẫu hay AI |
 
 ## Thêm mới thì đặt ở đâu
 

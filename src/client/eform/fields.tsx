@@ -17,9 +17,11 @@ export const TD = "border-b border-ef-vien/70 px-3 py-2 align-top";
 const INPUT_BASE =
   "w-full rounded-md border px-3 py-2 text-sm leading-6 text-ef-chu outline-none transition-[border-color,box-shadow] focus:border-ef-xanh focus:ring-2 focus:ring-ef-xanh/20 disabled:cursor-not-allowed disabled:opacity-70";
 
-// Vạch màu bên trái ô cho biết nguồn: tím là AI điền, vàng là AI chưa chắc
+// Vạch màu bên trái ô cho biết nguồn: tím là AI điền, vàng là AI chưa chắc.
+// Giao diện gọn (lớp .gon ở gốc màn hình): ô AI điền giữ nền trắng, chỉ còn vạch tím; chỉ màu vàng là cần bác sĩ xem
 export function inputClass(nguon: Nguon | null) {
-  if (nguon === "ai") return `${INPUT_BASE} border-tim-vien bg-tim-nhat shadow-[inset_3px_0_0_var(--ai_tim)]`;
+  if (nguon === "ai")
+    return `${INPUT_BASE} border-tim-vien bg-tim-nhat shadow-[inset_3px_0_0_var(--ai_tim)] [.gon_&]:border-ef-vien [.gon_&]:bg-white`;
   if (nguon === "xem") return `${INPUT_BASE} border-xem/50 bg-xem-nhat shadow-[inset_3px_0_0_var(--xem)]`;
   if (nguon === "cu") return `${INPUT_BASE} border-ef-vien bg-ef-nen/60`;
   return `${INPUT_BASE} border-ef-vien bg-white`;
@@ -32,10 +34,17 @@ export function anchorId(id: string) {
 
 const BADGE = "inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-px text-[11px] font-semibold";
 
+/** Giao diện gọn ẩn nhãn "AI điền" và "Đã sửa" (vạch tím ở lề ô đã đủ), nhãn vàng rút ngắn */
 export function SourceBadge({ nguon }: { nguon: Nguon | null }) {
-  if (nguon === "ai") return <span className={`${BADGE} bg-tim-nhat text-tim ring-1 ring-tim-vien`}>✨ AI điền</span>;
-  if (nguon === "xem") return <span className={`${BADGE} bg-xem-nhat text-xem ring-1 ring-xem/40`}>⚠ AI chưa chắc, cần xem lại</span>;
-  if (nguon === "sua") return <span className={`${BADGE} bg-ef-dam/10 text-ef-dam`}>Đã sửa</span>;
+  if (nguon === "ai") return <span className={`${BADGE} bg-tim-nhat text-tim ring-1 ring-tim-vien [.gon_&]:hidden`}>✨ AI điền</span>;
+  if (nguon === "xem")
+    return (
+      <span className={`${BADGE} bg-xem-nhat text-xem ring-1 ring-xem/40`}>
+        ⚠ <span className="[.gon_&]:hidden">AI chưa chắc, cần xem lại</span>
+        <span className="hidden [.gon_&]:inline">Cần xem lại</span>
+      </span>
+    );
+  if (nguon === "sua") return <span className={`${BADGE} bg-ef-dam/10 text-ef-dam [.gon_&]:hidden`}>Đã sửa</span>;
   return null;
 }
 
@@ -150,7 +159,7 @@ export function TextBox({ id, label, rows = 2, bcyt, actions, children }: TextBo
       <div className="grid">
         <textarea
           aria-label={label}
-          aria-describedby={goiY ? `${anchorId(id)}-goi-y` : undefined}
+          aria-describedby={goiY && !goiYTab.daQuen ? `${anchorId(id)}-goi-y` : undefined}
           rows={rows}
           value={field.value}
           onChange={(e) => {
@@ -180,7 +189,7 @@ export function TextBox({ id, label, rows = 2, bcyt, actions, children }: TextBo
           <span className="invisible">{"​"}</span>
         </div>
       </div>
-      {goiY && (
+      {goiY && !goiYTab.daQuen && (
         <p id={`${anchorId(id)}-goi-y`} className="mt-1 text-[11px] text-ef-phu">
           <kbd className="rounded border border-ef-vien bg-ef-nen px-1 font-sans">Tab</kbd> để nhận gợi ý,{" "}
           <kbd className="rounded border border-ef-vien bg-ef-nen px-1 font-sans">Esc</kbd> để bỏ qua
@@ -230,10 +239,11 @@ export function ReadonlyItem({ label, value }: { label: string; value: string })
   );
 }
 
-/** Nút thư viện mẫu câu tĩnh: bấm một mẫu để thêm vào cuối ô */
+/** Nút thư viện mẫu câu tĩnh: bấm một mẫu để thêm vào cuối ô. Giao diện gọn bỏ nút, câu thư viện đã nằm trong chữ mờ Tab */
 export function ThuVienButton({ id }: { id: string }) {
-  const { data, append } = useEform();
+  const { data, append, gon } = useEform();
   const items = data.thuVien[id] ?? [];
+  if (gon) return null;
   return (
     <details className="relative">
       <summary className={`${BTN_OUTLINE} cursor-pointer list-none`}>Mở thư viện tham khảo</summary>

@@ -36,11 +36,14 @@ const khoa = (row: Dong) => row.ma || row.ten.toLowerCase();
  * Gợi ý theo mã ICD10 đang chọn trên phiếu khám. Không tự thêm gì: bác sĩ tích chọn rồi bấm Thêm.
  * Bác sĩ đã từng Lưu đơn cho cùng chẩn đoán chính thì nhóm "Đơn anh/chị đã kê" đứng đầu, chỉ tích sẵn dòng
  * hay kê; khi đó bộ mẫu chung không tích sẵn dòng nào.
+ * Giao diện gọn: chưa có mã hay chưa có gợi ý thì không hiện gì; có thì một dòng tên các mục tích sẵn và nút Thêm,
+ * muốn bỏ bớt thì bấm "Chọn từng mục" để mở danh sách đủ.
  */
 export function GoiYTheoChanDoan<T extends Dong>({ rows, lay, moTa, canhBao, onAdd, phuTro }: Props<T>) {
-  const { data, get, notify } = useEform();
+  const { data, get, notify, gon } = useEform();
   const [tich, setTich] = useState<Record<string, boolean>>({});
   const [an, setAn] = useState(false);
+  const [moRong, setMoRong] = useState(false);
 
   const maIcd = [...new Set(TRUONG_ICD.flatMap((id) => splitCodes(get(id).value)))];
   const nhom = ghepGoiY(maIcd, data);
@@ -72,13 +75,47 @@ export function GoiYTheoChanDoan<T extends Dong>({ rows, lay, moTa, canhBao, onA
 
   const tenIcd = (ma: string) => data.icd10.find((item) => item.ma === ma)?.ten ?? "";
 
+  if (gon && !moRong) {
+    // Dòng bị bỏ tích vì cảnh báo (trùng dị ứng) vẫn phải hiện tên và lý do, không được lặng lẽ biến mất
+    const biBo = danhSach.flatMap((g) => g.dong.filter((d) => d.loi && !d.trung));
+    if (daChon.length === 0 && biBo.length === 0) return null;
+    const maGoiY = [...new Set(nhom.map((g) => g.ma))].join(", ");
+    return (
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-lg border border-tim-vien bg-tim-nhat/60 px-3 py-2">
+        <span className="min-w-0 flex-1">
+          <span className="font-semibold text-tim">{coThoiQuen ? `Anh/chị hay kê cho ${maGoiY}:` : `Bộ mẫu cho ${maGoiY}:`}</span>{" "}
+          {daChon.length > 0 ? daChon.map((row) => row.ten).join(", ") : "không còn mục nào để thêm."}
+          {biBo.map(({ id, row, loi }) => (
+            <span key={id} role="alert" className="block text-xs font-semibold text-ef-do">
+              ⚠ Không lấy {row.ten}: {loi}
+            </span>
+          ))}
+        </span>
+        {daChon.length > 0 && (
+          <button type="button" className={BTN_AI} onClick={them}>
+            Thêm {daChon.length}
+          </button>
+        )}
+        <button type="button" className="text-xs font-medium text-tim underline-offset-2 hover:underline" onClick={() => setMoRong(true)}>
+          Chọn từng mục
+        </button>
+      </div>
+    );
+  }
+  if (gon && (maIcd.length === 0 || nhom.length === 0)) return null;
+
   return (
     <div className="rounded-lg border border-tim-vien bg-tim-nhat p-3">
       <div className="flex flex-wrap items-center gap-2">
         <span className="font-bold text-tim">✨ Gợi ý theo chẩn đoán</span>
-        {nhom.length > 0 && (
+        {nhom.length > 0 && !gon && (
           <button type="button" className={`${BTN_OUTLINE} ml-auto`} onClick={() => setAn((v) => !v)}>
             {an ? "Hiện" : "Ẩn"}
+          </button>
+        )}
+        {gon && (
+          <button type="button" className={`${BTN_OUTLINE} ml-auto`} onClick={() => setMoRong(false)}>
+            Thu gọn
           </button>
         )}
       </div>

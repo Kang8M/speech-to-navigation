@@ -16,11 +16,18 @@ export interface EformApi {
   append: (id: string, text: string, nguon?: Nguon) => void;
   notify: (message: string) => void;
   goiYTab: GoiYTabApi;
+  /**
+   * Giao diện gọn (mặc định): bong bóng thay cột Trợ lý AI, không có nút gợi ý rải trên phiếu, phần AI điền chỉ có vạch tím ở lề ô.
+   * false là giao diện cũ (`?giao-dien=cu`), giữ để đo so sánh.
+   */
+  gon: boolean;
 }
 
 /** Gợi ý chữ mờ trong ô chữ tự do (bấm Tab để nhận) và bộ đếm số đo của nó */
 export interface GoiYTabApi {
   bat: boolean;
+  /** Bác sĩ đã nhận gợi ý vài lần: thôi hiện dòng nhắc phím Tab, Esc dưới ô */
+  daQuen: boolean;
   /** Một gợi ý vừa hiện; cùng ô cùng câu thì chỉ đếm một lần */
   daHien: (khoa: string) => void;
   /** Bác sĩ bấm Tab nhận gợi ý: `cau` là câu đã chèn vào ô `id`, ô dài thêm `soKyTu` ký tự */

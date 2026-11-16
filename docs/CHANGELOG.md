@@ -4,6 +4,37 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-16
 
+### Giao diện gọn: bong bóng Trợ lý thay cột AI, bỏ nút gợi ý rải trên phiếu, chữ mờ ô trống chỉ gợi ý câu đủ chắc
+- **Loại:** Giao diện
+- **Thay đổi:**
+  - **Bong bóng Trợ lý** (`src/client/eform/BongBongAi.tsx`, mới) thay cột "Trợ lý AI điền phiếu" bên phải. Bấm hoặc F2 thì mở một ô lệnh nhỏ có nút 🎤. Enter là điền thẳng vào phiếu rồi thu lại; Esc hoặc F2 thì đóng, con trỏ trở về ô đang gõ. Không trả lời bằng chữ, không giữ lịch sử. Dòng báo đã điền gì nằm trên thanh đáy, giữa In ngay và Lưu, để không che ô phiếu. Kèm "Xem N ô vàng" (mỗi lần bấm nhảy sang ô vàng tiếp theo), "↶ Hoàn tác" và nút ẩn.
+  - Logic điền (gõ tắt → phiếu mẫu → AI) tách sang `src/client/eform/useDienAi.ts`, dùng chung cho bong bóng và cột cũ. `onDien` trả câu báo; giao diện gọn không bật thông báo nổi nữa. Câu báo bỏ "Còn M chỗ cần điền" vì nút "Xem N ô vàng" đã đếm, và hai số đếm hai thứ khác nhau.
+  - Phiếu gọn hơn (`EformContext.gon`, lớp `.gon` ở gốc màn hình dùng với biến thể Tailwind `[.gon_&]`):
+    - Bỏ dòng Chú giải, nút "Mở thư viện tham khảo", "✨ Gợi ý mẫu câu", "✨ Gợi ý ICD10", dấu ✨ trên tên tab.
+    - Ô và dòng chỉ định, thuốc AI điền giữ nền trắng, chỉ còn vạch tím ở lề. Ẩn nhãn "AI điền", "Đã sửa"; nhãn vàng rút thành "⚠ Cần xem lại".
+    - Ô chẩn đoán ban đầu, ra viện còn trống thì dưới ô hiện một dòng tối đa 2 mã gợi ý (`GoiYIcdDong`), bấm là chọn.
+    - Gợi ý theo chẩn đoán ở tab Chỉ định, Đơn thuốc: chưa có mã hoặc không còn gì để thêm thì không hiện. Có thì một dòng tên các mục tích sẵn, nút "Thêm N" và "Chọn từng mục" (mở danh sách đủ). Thuốc bị bỏ vì trùng dị ứng vẫn hiện tên và lý do bằng chữ đỏ.
+    - Câu "chưa có dịch vụ/thuốc" không còn nhắc "cột Trợ lý AI".
+  - Chữ mờ Tab (`src/shared/eform/goi-y-tab.ts`): `khoCau` trả `{ cau, chac }`. Ô trống hoặc vừa hết câu chỉ gợi ý câu `chac`, tức không phải câu chỉ có ở bệnh khác. Đang gõ dở thì vẫn dùng mọi câu. Dòng nhắc phím Tab/Esc thôi hiện sau khi bác sĩ đã nhận 2 lần.
+  - Giao diện cũ giữ để đo so sánh: `/?giao-dien=cu` (`src/app/page.tsx`, kiểu `GiaoDien`). Trang Trình diễn luôn dùng giao diện cũ. Tắt chữ mờ bằng `/?goi-y=tat` thay cho ô tích ở dòng Chú giải (ô tích vẫn còn ở giao diện cũ).
+  - Số đo: lượt thử ghi thêm `giao_dien` ("gon"/"cu") và `so_lan_bam_chuot` (số lần bấm chuột trên màn eForm từ lúc mở phiếu đến lúc Lưu). Hai trường này không bắt buộc, lượt cũ coi là "cu". CSV thêm 2 cột, trang Kết quả thêm cột "Giao diện" và "Bấm chuột".
+  - Tài liệu: README (Đo lường, mục eForm, gợi ý Tab, gợi ý theo chẩn đoán, bảng điểm AI, cấu trúc thư mục), `docs/cau-truc-du-an.md` (luồng gọi AI, giọng nói, đo lượt thử), `docs/kich-ban-thu-bac-si.md` (thao tác qua bong bóng, Enter thay nút Điền, cách đo so sánh hai giao diện).
+- **Lý do:** Người dùng đặt mục tiêu: giảm thời gian thao tác phần mềm, không đụng chuyên môn, không thêm bước AI vào quy trình vốn đã nhiều bước, và màn hình không nhiễu. Cột AI cố định chiếm khoảng 1/4 màn hình, có hẳn thanh 3 bước (soạn, điền, duyệt), lại thêm khoảng 8 nút gợi ý rải trên phiếu. Người dùng đề xuất kiểu bong bóng chatbot cho thân thiện; chốt giữ hình bong bóng nhưng bỏ phần trò chuyện qua lại (thêm bước, kéo mắt khỏi phiếu, dễ thành hỏi AI chẩn đoán). Gợi ý ô trống lạc bệnh ("Không sốt." ở ca đau tai) là lỗi ghi ở mục gợi ý Tab cùng ngày.
+- **File:** `src/client/eform/BongBongAi.tsx`, `src/client/eform/useDienAi.ts`, `src/client/eform/TroLyAi.tsx`, `src/client/eform/EformScreen.tsx`, `src/client/eform/EformContext.tsx`, `src/client/eform/fields.tsx`, `src/client/eform/EformForm.tsx`, `src/client/eform/IcdField.tsx`, `src/client/eform/GoiYIcdPanel.tsx`, `src/client/eform/GoiYTheoChanDoan.tsx`, `src/client/eform/ChiDinhTab.tsx`, `src/client/eform/DonThuocTab.tsx`, `src/client/ket-qua/ResultsView.tsx`, `src/app/page.tsx`, `src/app/api/sessions/route.ts`, `src/shared/metrics.ts`, `src/shared/eform/types.ts`, `src/shared/eform/goi-y-tab.ts`, `src/shared/eform/goi-y-tab.test.ts`, `README.md`, `docs/cau-truc-du-an.md`, `docs/kich-ban-thu-bac-si.md`
+- **Kiểm tra:**
+  - 1 test mới cho chữ mờ ô trống (fail trước khi sửa); 7 test cũ đổi sang kiểu `CauGoiY`. `npm test` 89/89 pass, `npm run lint`, `npx tsc --noEmit` sạch.
+  - Playwright trên `/` (1440×900):
+    - F2 mở bong bóng; gõ "mẫu viêm tai giữa cấp", Enter thì điền 11 ô, 2 chỉ định, 2 thuốc, không gọi LLM, rồi bong bóng thu lại. Dòng báo nằm trên thanh đáy; "Xem 6 ô vàng" cuộn tới ô vàng đầu, không bị che.
+    - Ô ICD trống hiện "H66.3 / H66.0", bấm chọn H66.0 thì tab Đơn thuốc hiện một dòng "Bộ mẫu cho H66.0: Paracetamol · Thêm 1", kèm chữ đỏ "Không lấy Augmentin: … dị ứng Penicillin".
+    - Lưu ghi lượt có `giao_dien: "gon"`, `so_lan_bam_chuot: 2` (lượt thử này đã xóa khỏi `data/sessions/`).
+    - `/?giao-dien=cu` vẫn ra cột Trợ lý AI và dòng Chú giải như trước.
+  - Không đụng bộ tách hay khớp danh mục nên không chạy eval. Chưa thử nút 🎤 trong bong bóng bằng giọng thật (Playwright không có micro). Chưa thử khổ điện thoại.
+- **Ảnh hưởng:**
+  - Bác sĩ mở trang sẽ thấy giao diện gọn. Kịch bản thử đã đổi theo: Enter thay nút Điền, Hoàn tác và Xem ô vàng ở thanh đáy.
+  - Dưới khổ màn vừa (`md`), thanh đáy không có chỗ cho dòng báo nên dòng báo ẩn, mất luôn nút Hoàn tác ở khổ đó.
+  - Giao diện gọn không còn "Gợi ý mẫu câu" (mẫu Tai/Mũi/Vòm/Họng có chỗ chọn `[ ]`), vì câu có `[ ]` không vào được chữ mờ. Chẩn đoán kèm theo không có gợi ý mã.
+  - Lượt ghi trước hôm nay hiện "Cũ" ở cột Giao diện, "–" ở cột Bấm chuột.
+
 ### Gợi ý chữ mờ trong ô phiếu khám, bấm Tab để nhận, kèm số đo tỷ lệ nhận
 - **Loại:** Tính năng
 - **Thay đổi:**

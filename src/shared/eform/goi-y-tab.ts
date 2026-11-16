@@ -14,6 +14,12 @@ export interface NguonCau {
   thuVien: Record<string, string[]>;
 }
 
+/** Một câu trong kho gợi ý. `chac`: đủ chắc để gợi ý cả khi ô còn trống (không phải câu của bệnh khác) */
+export interface CauGoiY {
+  cau: string;
+  chac: boolean;
+}
+
 export interface NguCanh {
   /** Lý do khám và mô tả chẩn đoán đang có trên phiếu */
   text: string;
@@ -57,8 +63,10 @@ function mauDungBenh(mau: PhieuMau, nguCanh: NguCanh, ngucanhChuan: string): boo
 /**
  * Các câu có thể gợi ý cho một ô, đã xếp từ nên gợi ý nhất.
  * Bỏ câu còn chỗ trống [a|b] hay [số]: chỗ đó là kết quả khám, bác sĩ phải tự chọn, không để máy chọn hộ.
+ * Câu chỉ gặp ở bệnh khác (phiếu mẫu, lời dặn đã kê cho chẩn đoán khác) không `chac`: ô trống không gợi ý câu đó,
+ * để ca đau tai chưa có mã không hiện "Súc họng nước muối ấm."; bác sĩ gõ đầu câu thì vẫn gợi ý tiếp được.
  */
-export function khoCau(id: string, nguon: NguonCau, nguCanh: NguCanh): string[] {
+export function khoCau(id: string, nguon: NguonCau, nguCanh: NguCanh): CauGoiY[] {
   const diem = new Map<string, { cau: string; diem: number; lan: number; thuTu: number }>();
   const them = (cau: string, d: number) => {
     if (!cau || cau.includes("[")) return;
@@ -95,7 +103,7 @@ export function khoCau(id: string, nguon: NguonCau, nguCanh: NguCanh): string[] 
 
   return [...diem.values()]
     .sort((a, b) => b.diem + DIEM_LAP * (b.lan - 1) - (a.diem + DIEM_LAP * (a.lan - 1)) || a.thuTu - b.thuTu)
-    .map((item) => item.cau);
+    .map((item) => ({ cau: item.cau, chac: item.diem > DIEM.benhKhac }));
 }
 
 /** Mã gõ tắt dùng được trong ô: mã của chính ô đó và từ ngắn (o = tu). Mã trùng thì dòng đầu thắng, như khi bung cả câu */
@@ -126,11 +134,11 @@ function daCo(value: string, cau: string): boolean {
 }
 
 /** `giuChuThuong`: vế sau dấu phẩy gõ chữ thường thì giữ chữ thường, đầu câu thì theo câu mẫu (viết hoa) */
-function tiepCau(value: string, start: number, kho: string[], giuChuThuong: boolean): GoiYTab | null {
+function tiepCau(value: string, start: number, kho: CauGoiY[], giuChuThuong: boolean): GoiYTab | null {
   const doan = value.slice(start);
   if (doan.replace(/\s/g, "").length < TOI_THIEU) return null;
   const gap = foldKeepLength(doan);
-  const cau = kho.find((item) => item.length > doan.length && foldKeepLength(item).startsWith(gap) && !daCo(value, item));
+  const cau = kho.find(({ cau }) => cau.length > doan.length && foldKeepLength(cau).startsWith(gap) && !daCo(value, cau))?.cau;
   if (!cau) return null;
   const chen = giuChuThuong && doan[0] !== doan[0].toUpperCase() ? cau[0].toLowerCase() + cau.slice(1) : cau;
   return { tu: start, chen, hien: chen.slice(doan.length) };
@@ -139,10 +147,10 @@ function tiepCau(value: string, start: number, kho: string[], giuChuThuong: bool
 /**
  * Gợi ý cho ô đang có giá trị `value`, con trỏ ở cuối ô.
  * 1. Chữ cuối là mã gõ tắt: gợi ý bung mã.
- * 2. Ô trống hoặc vừa hết câu: gợi ý câu tiếp theo chưa có trong ô.
+ * 2. Ô trống hoặc vừa hết câu: gợi ý câu đủ chắc tiếp theo chưa có trong ô.
  * 3. Đang gõ dở một câu (hoặc vế sau dấu phẩy): gợi ý câu bắt đầu như vậy, so khớp không dấu nên gõ "ong tai" vẫn ra "Ống tai".
  */
-export function timGoiYTab(value: string, kho: string[], maGoTat: Map<string, GoTat>, xuongDong: boolean): GoiYTab | null {
+export function timGoiYTab(value: string, kho: CauGoiY[], maGoTat: Map<string, GoTat>, xuongDong: boolean): GoiYTab | null {
   const ma = value.match(/(?:^|[\s,;])(\S+)$/)?.[1];
   const goTat = ma ? maGoTat.get(ma) : undefined;
   if (ma && goTat) return { tu: value.length - ma.length, chen: goTat.noi_dung, hien: ` → ${goTat.noi_dung}` };
@@ -153,7 +161,7 @@ export function timGoiYTab(value: string, kho: string[], maGoTat: Map<string, Go
   while (start < value.length && /\s/.test(value[start])) start++;
 
   if (start === value.length) {
-    const cau = kho.find((item) => !daCo(value, item));
+    const cau = kho.find((item) => item.chac && !daCo(value, item.cau))?.cau;
     if (!cau) return null;
     const noi = value.trim() === "" || /\s$/.test(value) ? "" : xuongDong ? "\n" : " ";
     const tu = value.trim() === "" ? 0 : value.length;

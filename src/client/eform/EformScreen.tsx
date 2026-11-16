@@ -4,6 +4,7 @@ import { useCallback, useMemo, useRef, useState, type CSSProperties } from "reac
 import { luuLuotThu, luuThoiQuen } from "@/client/api";
 import { BanIn } from "@/client/eform/BanIn";
 import { BaoCaoDialog } from "@/client/eform/BaoCaoDialog";
+import { BongBongAi } from "@/client/eform/BongBongAi";
 import { ChiDinhTab } from "@/client/eform/ChiDinhTab";
 import { DonThuocTab } from "@/client/eform/DonThuocTab";
 import { EformContext, MO_PHONG, type EformApi } from "@/client/eform/EformContext";
@@ -18,7 +19,7 @@ import { demChoTrong } from "@/shared/eform/mau-cau";
 import type { KetQuaGoTat } from "@/shared/eform/go-tat";
 import { icdTheoMau, type PhieuMau } from "@/shared/eform/phieu-mau";
 import { chiGiuCot, COT_CHI_DINH, COT_THUOC, ghepGoiY, goiYThoiQuen, hayKe, nhuMoiKhi } from "@/shared/eform/thoi-quen";
-import type { EformData, KichBan, Nguon, Truong } from "@/shared/eform/types";
+import type { EformData, GiaoDien, KichBan, Nguon, Truong } from "@/shared/eform/types";
 import type { PipelineResult } from "@/shared/api";
 import type { InputMode } from "@/shared/metrics";
 
@@ -121,7 +122,20 @@ function trangThaiDau(data: EformData, kichBan?: KichBan) {
   return { fields, chiDinh: KHONG_CHI_DINH, donThuoc: KHONG_THUOC, ketQua: null, dongAi: { tong: 0, khop: 0 }, tab: (kichBan === 2 ? "don_thuoc" : "phieu") as TabId };
 }
 
-export function EformScreen({ data, kichBan }: { data: EformData; kichBan?: KichBan }) {
+/** Nhận gợi ý Tab chừng này lần thì thôi hiện dòng nhắc phím dưới ô */
+const NHAN_DE_QUEN = 2;
+
+interface Props {
+  data: EformData;
+  kichBan?: KichBan;
+  /** "cu": cột Trợ lý AI và các nút gợi ý như trước 16/11, để đo so sánh với giao diện gọn. Trang trình diễn luôn dùng giao diện cũ */
+  giaoDien?: GiaoDien;
+  /** false: tắt gợi ý chữ mờ (lượt đối chứng) */
+  goiYTab?: boolean;
+}
+
+export function EformScreen({ data, kichBan, giaoDien = "gon", goiYTab = true }: Props) {
+  const gon = giaoDien === "gon" && kichBan === undefined;
   const [dau] = useState(() => trangThaiDau(data, kichBan));
   const [fields, setFields] = useState(dau.fields);
   const [chiDinh, setChiDinh] = useState(dau.chiDinh);
@@ -149,8 +163,13 @@ export function EformScreen({ data, kichBan }: { data: EformData; kichBan?: Kich
   const [toast, setToast] = useState("");
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   // Gợi ý chữ mờ (Tab): tắt đi để đo lượt đối chứng không có gợi ý. Bộ đếm để trong ref, không cần vẽ lại
-  const [tabBat, setTabBat] = useState(true);
+  const [tabBat, setTabBat] = useState(goiYTab);
   const demTab = useRef({ hien: new Set<string>(), nhan: [] as { id: string; cau: string }[], kyTuGoiY: 0, kyTuGo: 0 });
+  const [daQuenTab, setDaQuenTab] = useState(false);
+  /** Số lần bấm chuột trên màn hình từ lúc mở phiếu, để so giao diện gọn với giao diện cũ */
+  const soLanBam = useRef(0);
+  /** Chỗ trên thanh đáy để bong bóng đặt dòng báo đã điền */
+  const [kheBao, setKheBao] = useState<HTMLDivElement | null>(null);
 
   const notify = useCallback((message: string) => {
     setToast(message);
@@ -174,12 +193,15 @@ export function EformScreen({ data, kichBan }: { data: EformData; kichBan?: Kich
             [id]: { value: current ? `${current}\n${text}` : text, nguon: nguon ?? afterEdit(prev[id]?.nguon) },
           };
         }),
+      gon,
       goiYTab: {
         bat: tabBat,
+        daQuen: daQuenTab,
         daHien: (khoa) => demTab.current.hien.add(khoa),
         daNhan: (id, cau, soKyTu) => {
           demTab.current.nhan.push({ id, cau });
           demTab.current.kyTuGoiY += Math.max(0, soKyTu);
+          if (demTab.current.nhan.length >= NHAN_DE_QUEN) setDaQuenTab(true);
         },
         daGo: (soKyTu) => {
           demTab.current.kyTuGo += soKyTu;
@@ -188,7 +210,7 @@ export function EformScreen({ data, kichBan }: { data: EformData; kichBan?: Kich
         },
       },
     }),
-    [data, fields, notify, tabBat],
+    [data, fields, notify, tabBat, gon, daQuenTab],
   );
 
   /** "Kê như mọi khi": các dòng bác sĩ hay kê cho chẩn đoán chính (trên phiếu, chưa có thì mã AI vừa gán) */
@@ -203,7 +225,8 @@ export function EformScreen({ data, kichBan }: { data: EformData; kichBan?: Kich
     return { icd, chiDinh: lay(quen.chiDinh), donThuoc: lay(quen.donThuoc) };
   };
 
-  const aiDien = (result: PipelineResult, text: string, mau?: PhieuMau, goTat?: KetQuaGoTat) => {
+  /** Áp kết quả vào phiếu, trả câu báo: giao diện cũ hiện ở thông báo nổi, giao diện gọn hiện trong bong bóng */
+  const aiDien = (result: PipelineResult, text: string, mau?: PhieuMau, goTat?: KetQuaGoTat): string => {
     const maGoTat = goTat?.daDung ?? [];
     // Mẫu và gõ tắt chỉ điền ô còn trống, giống bác sĩ tự gõ tắt vào ô
     const kq = mau || maGoTat.length > 0
@@ -243,22 +266,20 @@ export function EformScreen({ data, kichBan }: { data: EformData; kichBan?: Kich
         : ` Chưa có đơn anh/chị đã kê cho ${quen.icd ?? "chẩn đoán này"} nên chưa lấy được bộ quen.`;
     const ghiChuGoTat = maGoTat.length > 0 ? ` Gõ tắt: ${maGoTat.join(", ")}.` : "";
     const boQua = kq.boQua.length > 0 ? ` Bỏ qua ${kq.boQua.length} ô đã có chữ.` : "";
-    if (!mau && result.provider === "go-tat") {
-      notify(`Đã điền gõ tắt ${maGoTat.join(", ")}: ${kq.daDien.length} ô.${boQua}`);
-      return;
-    }
-    if (mau) {
-      const choTrong = Object.values(kq.truong).reduce((tong, o) => tong + demChoTrong(o.value), 0);
-      notify(
-        `Đã điền theo mẫu ${mau.ten}: ${kq.daDien.length} ô, ${themChiDinh.length} chỉ định, ${themThuoc.length} thuốc.` +
-          boQua +
-          (choTrong > 0 ? ` Còn ${choTrong} chỗ cần điền (tô vàng).` : "") +
-          ghiChuGoTat +
-          ghiChuQuen,
-      );
-      return;
-    }
-    notify(`AI đã điền ${kq.daDien.length} trường, ${themChiDinh.length} chỉ định, ${themThuoc.length} thuốc.${maGoTat.length > 0 ? boQua : ""}${ghiChuGoTat}${ghiChuQuen}`);
+    const choTrong = Object.values(kq.truong).reduce((tong, o) => tong + demChoTrong(o.value), 0);
+    const thongBao =
+      !mau && result.provider === "go-tat"
+        ? `Đã điền gõ tắt ${maGoTat.join(", ")}: ${kq.daDien.length} ô.${boQua}`
+        : mau
+          ? `Đã điền theo mẫu ${mau.ten}: ${kq.daDien.length} ô, ${themChiDinh.length} chỉ định, ${themThuoc.length} thuốc.` +
+            boQua +
+            // Giao diện gọn: bong bóng đã có nút "Xem N ô vàng", không đếm thêm chỗ [ ] để khỏi hai con số khác nhau
+            (choTrong > 0 && !gon ? ` Còn ${choTrong} chỗ cần điền (tô vàng).` : "") +
+            ghiChuGoTat +
+            ghiChuQuen
+          : `AI đã điền ${kq.daDien.length} trường, ${themChiDinh.length} chỉ định, ${themThuoc.length} thuốc.${maGoTat.length > 0 ? boQua : ""}${ghiChuGoTat}${ghiChuQuen}`;
+    if (!gon) notify(thongBao);
+    return thongBao;
   };
 
   const hoanTac = () => {
@@ -333,6 +354,8 @@ export function EformScreen({ data, kichBan }: { data: EformData; kichBan?: Kich
         so_goi_y_nhan_roi_sua: dem.nhan.filter(({ id, cau }) => !(fields[id]?.value ?? "").includes(cau)).length,
         so_ky_tu_goi_y: dem.kyTuGoiY,
         so_ky_tu_go: dem.kyTuGo,
+        giao_dien: gon ? "gon" : "cu",
+        so_lan_bam_chuot: soLanBam.current,
       });
       setLuot((prev) => ({ ...prev, daGhi: true }));
       return "";
@@ -387,10 +410,18 @@ export function EformScreen({ data, kichBan }: { data: EformData; kichBan?: Kich
 
   return (
     <EformContext.Provider value={api}>
-      <div className="flex flex-1 flex-col bg-ef-nen text-sm text-ef-chu print:hidden" style={KHUNG}>
+      <div
+        className={`flex flex-1 flex-col bg-ef-nen text-sm text-ef-chu print:hidden ${gon ? "gon" : ""}`}
+        style={KHUNG}
+        onPointerDownCapture={() => {
+          soLanBam.current += 1;
+        }}
+      >
         <EformHeader lastEdit={lastEdit} expanded={expanded} onToggleExpand={() => setExpanded((open) => !open)} />
 
-        <div className={`mx-auto grid w-full flex-1 items-start gap-5 px-4 pb-8 pt-5 sm:px-6 lg:grid-cols-[minmax(0,1fr)_23rem] ${expanded ? "" : "max-w-[90rem]"}`}>
+        <div
+          className={`mx-auto grid w-full flex-1 items-start gap-5 px-4 pt-5 sm:px-6 ${gon ? "pb-24" : "pb-8 lg:grid-cols-[minmax(0,1fr)_23rem]"} ${expanded ? "" : gon ? "max-w-[72rem]" : "max-w-[90rem]"}`}
+        >
           <main className="min-w-0 space-y-4">
             <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-b border-ef-vien">
               <div>
@@ -408,7 +439,7 @@ export function EformScreen({ data, kichBan }: { data: EformData; kichBan?: Kich
                       }`}
                     >
                       {item.nhan}
-                      {coGoiY[item.id] && (
+                      {coGoiY[item.id] && !gon && (
                         <span className="text-tim" title="Có gợi ý theo chẩn đoán">
                           ✨
                         </span>
@@ -420,7 +451,7 @@ export function EformScreen({ data, kichBan }: { data: EformData; kichBan?: Kich
                   ))}
                 </div>
               </div>
-              {tab === "phieu" && (
+              {tab === "phieu" && !gon && (
                 <div className="flex flex-wrap items-center gap-1.5 pb-2.5 text-xs text-ef-phu">
                   <span>Chú giải:</span>
                   <SourceBadge nguon="ai" />
@@ -449,7 +480,7 @@ export function EformScreen({ data, kichBan }: { data: EformData; kichBan?: Kich
             </fieldset>
           </main>
 
-          <fieldset disabled={khoa} className="contents">
+          {!gon && <fieldset disabled={khoa} className="contents">
             <TroLyAi
               ketQua={ketQua}
               onDien={aiDien}
@@ -462,8 +493,20 @@ export function EformScreen({ data, kichBan }: { data: EformData; kichBan?: Kich
               vanBanDau={kichBan === 3 ? data.trinhDien?.lenh : undefined}
               hoiThoai={kichBan === 4 ? data.trinhDien?.hoiThoai : undefined}
             />
-          </fieldset>
+          </fieldset>}
         </div>
+
+        {gon && (
+          <BongBongAi
+            ketQua={ketQua}
+            onDien={aiDien}
+            onBatDau={batDauNhap}
+            onHoanTac={banChup ? hoanTac : null}
+            onGoTo={goTo}
+            khoa={khoa}
+            khe={kheBao}
+          />
+        )}
 
         {toast && (
           <div role="status" className="fixed bottom-20 left-1/2 z-40 max-w-[90vw] -translate-x-1/2 rounded-lg bg-ef-dam px-4 py-2.5 text-sm text-white shadow-lg">
@@ -513,6 +556,7 @@ export function EformScreen({ data, kichBan }: { data: EformData; kichBan?: Kich
             <button type="button" className={`${BTN_OUTLINE} whitespace-nowrap`} onClick={() => window.print()} title="In phiếu khám, chỉ định và đơn thuốc">
               In ngay
             </button>
+            {gon && <div ref={setKheBao} className="hidden min-w-0 flex-1 px-2 md:flex" />}
             <button type="button" className={`${BTN_CHINH} ml-auto inline-flex flex-1 items-center justify-center gap-2 whitespace-nowrap sm:max-w-sm`} onClick={save}>
               Lưu
               {conXem > 0 && (

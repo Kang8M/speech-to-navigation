@@ -23,7 +23,7 @@ function Stat({ label, value, note }: { label: string; value: string; note: stri
   );
 }
 
-const HEADERS = ["Thời điểm", "Kiểu nhập", "Nguồn", "AI", "Thời gian", "AI điền", "Đã sửa", "Bổ sung", "Khớp danh mục", "Cảnh báo", "Gợi ý Tab"];
+const HEADERS = ["Thời điểm", "Kiểu nhập", "Nguồn", "AI", "Thời gian", "AI điền", "Đã sửa", "Bổ sung", "Khớp danh mục", "Cảnh báo", "Gợi ý Tab", "Giao diện", "Bấm chuột"];
 
 /** Cột Gợi ý Tab: nhận/hiện, kèm số đã nhận rồi sửa; lượt tắt gợi ý hoặc ghi trước khi có gợi ý thì để gạch */
 function goiYTab(session: SessionRecord): string {
@@ -168,6 +168,8 @@ export function ResultsView({ sessions }: { sessions: SessionRecord[] }) {
                 </td>
                 <td className="px-3 py-2">{session.so_canh_bao}</td>
                 <td className="px-3 py-2 whitespace-nowrap">{goiYTab(session)}</td>
+                <td className="px-3 py-2 whitespace-nowrap">{session.giao_dien === "gon" ? "Gọn" : "Cũ"}</td>
+                <td className="px-3 py-2">{session.so_lan_bam_chuot ?? "–"}</td>
               </tr>
             ))}
           </tbody>

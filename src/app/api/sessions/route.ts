@@ -23,6 +23,8 @@ const sessionSchema = z.object({
   so_goi_y_nhan_roi_sua: count.default(0),
   so_ky_tu_goi_y: count.default(0),
   so_ky_tu_go: count.default(0),
+  giao_dien: z.enum(["gon", "cu"]).default("cu"),
+  so_lan_bam_chuot: count.default(0),
 });
 
 export async function GET() {

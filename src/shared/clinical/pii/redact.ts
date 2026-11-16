@@ -89,7 +89,8 @@ const PERSON_TRIGGERS = new Set(["anh", "chị", "ông", "bà", "cô", "chú", "
 const TRIGGER_FILLERS = new Set(["sĩ", "là", "nội", "ngoại", "tôi", "của"]);
 const STOP_SET = new Set(STOP_WORDS);
 
-function isHo(d: string): boolean {
+/** Dùng chung với chốt chặn R11c: token (chữ thường, giữ dấu) có phải họ người Việt không. */
+export function isHo(d: string): boolean {
   if (HO_D.has(d)) return true;
   return /^[a-z]+$/.test(d) && HO_ASCII.has(d);
 }
@@ -219,6 +220,18 @@ export function redactPii(raw: string, known: KnownIdentifier[]): RedactionResul
   return { raw, clean, spans, counts };
 }
 
+/** Cặp họ + từ thường ("bình thường", "phù nề") không phải tên người. */
+export function isCommonHoPair(toks: { w: string }[], j: number): boolean {
+  return j + 1 < toks.length && COMMON_AFTER_HO.has(`${toks[j].w} ${toks[j + 1].w}`);
+}
+
+/** Chỉ số token ngay sau đuôi tên bắt đầu sau họ ở `j` (tối đa 3 âm tiết, dừng ở từ dừng/dấu ngắt). Dùng chung với R11c. */
+export function nameTailEnd(toks: { w: string }[], j: number, joined: (a: number, b: number) => boolean): number {
+  let k = j + 1;
+  while (k <= j + 3 && k < toks.length && joined(k - 1, k) && /^\p{L}+$/u.test(toks[k].w) && !STOP_SET.has(toks[k].w) && !(/^[a-z]+$/.test(toks[k].w) && STOP_FOLD.has(toks[k].w))) k++;
+  return k;
+}
+
 function nameScan(d: string, f: string, add: Add): void {
   const toks = [...d.matchAll(/[\p{L}\p{N}]+/gu)].map(m => ({ w: m[0], s: m.index!, e: m.index! + m[0].length }));
   const joined = (a: number, b: number) => !/[,;.!?\n:]/.test(d.slice(toks[a].e, toks[b].s));
@@ -236,10 +249,9 @@ function nameScan(d: string, f: string, add: Add): void {
       needFollow = 2;
     }
     if (j < 0 || j >= toks.length || !isHo(toks[j].w)) continue;
-    if (j + 1 < toks.length && COMMON_AFTER_HO.has(`${toks[j].w} ${toks[j + 1].w}`)) continue;
+    if (isCommonHoPair(toks, j)) continue;
     if (j === i && !COMMON_HO_FOLD.has(foldVietnamese(toks[j].w)) && !(j + 1 < toks.length && (toks[j + 1].w === "văn" || toks[j + 1].w === "thị"))) continue;
-    let k = j + 1;
-    while (k <= j + 3 && k < toks.length && joined(k - 1, k) && /^\p{L}+$/u.test(toks[k].w) && !STOP_SET.has(toks[k].w) && !(/^[a-z]+$/.test(toks[k].w) && STOP_FOLD.has(toks[k].w))) k++;
+    const k = nameTailEnd(toks, j, joined);
     if (k - j - 1 < needFollow) continue;
     const s = toks[j].s, e = toks[k - 1].e;
     add("R2", "NGƯỜI", s, e, f.slice(s, e).replace(/\s/g, ""));

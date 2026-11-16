@@ -40,10 +40,12 @@ test("R11c: câu lâm sàng thường qua; nhãn không bị coi là tên", () =
 });
 
 test("R11c: allowlist (fold) cho cụm bắt đầu bằng họ đi qua", () => {
-  assert.equal(checkResidualPii("bị cao huyết áp", none, noAllow).passed, false);
-  assert.equal(checkResidualPii("bị cao huyết áp", none, new Set(["cao huyết áp"])).passed, true);
-  assert.equal(checkResidualPii("bị Cao Huyết Áp", none, new Set(["cao huyet ap"])).passed, true);
-  assert.equal(checkResidualPii("hẹn mai tái khám", none, new Set(["mai"])).passed, true);
+  const custom = (t: string) => checkResidualPii(t, none, new Set(["lý hoài", "Lý Hoài An"]));
+  assert.equal(checkResidualPii("gặp lý hoài an ở chợ", none, noAllow).passed, false);
+  assert.equal(custom("gặp lý hoài an ở chợ").passed, true);
+  // cụm allowlist che họ dù họ không đứng đầu cụm
+  assert.equal(checkResidualPii("nhớ lý do viêm", none, new Set(["lý do viêm"])).passed, true);
+  assert.equal(checkResidualPii("trong tiền sử hoa mắt", none, new Set(["tiền sử hoa"])).passed, true);
 });
 
 test("R11d: email hoặc URL", () => {
@@ -54,7 +56,7 @@ test("R11d: email hoặc URL", () => {
 test("bản sạch từ bộ che qua chốt chặn", () => {
   const known: KnownIdentifier[] = [{ value: "Nguyễn Thị Giả", kind: "BỆNH_NHÂN" }];
   const r = redactPii("chị nguyen thi gia đau tai phải ba ngày dùng amoxicillin 500 mg", known);
-  const g = checkResidualPii(r.clean, known, new Set(["ba ngày"])); // "ba" (số 3) trùng họ Bá sau khi bỏ dấu
+  const g = checkResidualPii(r.clean, known, noAllow);
   assert.equal(g.passed, true);
   assert.equal(g.reasons.length, 0);
 });
@@ -81,4 +83,40 @@ test("R13: nhật ký không mang bản thô", () => {
   assert.equal(json.includes("nguyen"), false);
   assert.equal(json.includes("đau tai"), false);
   assert.equal("now" in e, false);
+});
+
+const CAU_SACH = [
+  "ho khan về đêm", "đau cổ họng tăng khi nuốt", "niêm mạc mũi phù nề chảy dịch", "màng nhĩ đục lõm không thủng",
+  "đau đầu do viêm xoang", "khám lại sau một tuần", "chẩn đoán viêm tai giữa", "xét nghiệm dương tính", "vì ù tai",
+  "nói là nghẹt mũi", "amidan sưng to có mủ", "sốt 38 độ", "không có tiền sử dị ứng", "tiền sử cao huyết áp",
+  "đau tai ba ngày nay", "uống amoxicillin 500 mg", "tái khám ngày mai", "thủng màng nhĩ, viêm tai giữa",
+  "nghẹt mũi hai bên chảy dịch mủ", "soi họng thấy phù nề niêm mạc", "bị cao huyết áp đang uống thuốc",
+  "tai phải đau ba ngày kèm sốt nhẹ", "chóng mặt khi đứng dậy", "hẹn tái khám sau hai tuần",
+];
+
+test("hồi quy: 20+ câu ENT sạch viết thường đều qua, không cần allowlist của người gọi", () => {
+  assert.ok(CAU_SACH.length >= 20);
+  for (const c of CAU_SACH) assert.equal(checkResidualPii(c, none, noAllow).passed, true, c);
+});
+
+test("vẫn chặn tên người thật sự", () => {
+  for (const c of ["đi cùng ngô thị lan", "chi le thi hoa tho kho", "gặp lý hoài an ở chợ"]) {
+    assert.equal(reasons(c).includes("R11c_ten_rieng_con_sot"), true, c);
+  }
+});
+
+test("allowlist: họ nằm giữa cụm allowlist vẫn được bỏ qua", () => {
+  assert.equal(checkResidualPii("tiền sử cao huyết áp", none, new Set(["tiền sử"])).passed, true);
+  assert.equal(checkResidualPii("tiền sử dương văn bình", none, noAllow).passed, false);
+});
+
+test("R13: trường lạ như raw không lọt vào nhật ký", () => {
+  const input = {
+    now: "2026-11-16T00:00:00.000Z", encounter_id: "LK-GIA-0001", session_sequence: 1, policy_version: PII_POLICY_VERSION as typeof PII_POLICY_VERSION,
+    counts: { R1: 0, R2: 0, R3: 0, R4: 0, R5: 0, R6: 0, R7: 0, R8: 0 }, gate: true, gate_reasons: [], ai_route: "local_only" as const,
+    provider: "mock", model: "mock-1", clean_sha256: "b".repeat(64), raw: "nguyen thi gia",
+  };
+  const e = buildAuditEntry(input) as unknown as Record<string, unknown>;
+  assert.equal("raw" in e, false);
+  assert.equal(JSON.stringify(e).includes("nguyen"), false);
 });

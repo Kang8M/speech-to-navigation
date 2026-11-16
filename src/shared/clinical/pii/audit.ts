@@ -18,6 +18,18 @@ export interface PiiAuditEntry {
 }
 
 export function buildAuditEntry(input: Omit<PiiAuditEntry, "at"> & { now: string }): PiiAuditEntry {
-  const { now, ...rest } = input;
-  return { at: now, ...rest, counts: { ...rest.counts }, gate_reasons: [...rest.gate_reasons] };
+  // Sao chép từng trường, không spread: trường lạ (ví dụ `raw`) không bao giờ lọt vào nhật ký.
+  return {
+    at: input.now,
+    encounter_id: input.encounter_id,
+    session_sequence: input.session_sequence,
+    policy_version: input.policy_version,
+    counts: { ...input.counts },
+    gate: input.gate,
+    gate_reasons: [...input.gate_reasons],
+    ai_route: input.ai_route,
+    provider: input.provider,
+    model: input.model,
+    clean_sha256: input.clean_sha256,
+  };
 }

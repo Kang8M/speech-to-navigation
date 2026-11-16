@@ -12,10 +12,18 @@ src/
     api/extract/          POST: văn bản → nháp đã khớp danh mục (gọi server/ai/pipeline)
     api/asr/, api/asr/[id]/  nhận dạng giọng nói Zipformer (gọi server/ai/asr)
     api/sessions/         lưu, liệt kê số đo lượt thử (gọi server/du-lieu/sessions)
+    benh-nhan/[patientId]/  /benh-nhan/:pid  hồ sơ bệnh nhân (server gọi clinic/service, giao diện ở client/patient)
+    dashboard/            /dashboard   lịch khám theo ngày (?date=, ?view=list|calendar); page server gọi thẳng loadDashboard
+    api/clinic/           GET dashboard, appointments/[id], patients/[id] (đọc lịch khám, gọi server/clinic/service)
     layout.tsx, globals.css
 
   client/                 FE: chạy trên trình duyệt (component có "use client")
     api.ts                gọi /api/extract, /api/sessions (dùng kiểu trong shared/api.ts)
+    dashboard/            trang /dashboard: DashboardScreen, EncounterGroup, AppointmentList, DayCalendar, StatusLegend
+    clinic/status.tsx, AppointmentRow.tsx   nhãn/màu trạng thái và dòng ca khám dùng chung dashboard, bệnh nhân
+    clinic/ClinicDialog, AppointmentDialog, AppointmentActions   popup lịch hẹn (dialog gốc) và link/nút thao tác
+    clinic/api.ts         gọi /api/clinic/* (no-store, AbortSignal, kiểu trong shared/clinic/types.ts)
+    patient/              trang /benh-nhan/[patientId]: PatientScreen, InsuranceSummary, EncounterHistory, history-controller.ts (hủy request cũ khi tải phiếu)
     chung/                component dùng được ở mọi trang
       MicButton.tsx       nút 🎤: Web Speech hoặc Zipformer (gọi /api/asr)
       Header.tsx          thanh trên cùng (link eForm, Kết quả, chế độ AI)
@@ -28,6 +36,12 @@ src/
       prompt.ts, schema.ts  sinh prompt và JSON schema từ config/forms/*.json
       llm/                mỗi nhà cung cấp một file: mock, rules, anthropic, openai, gemini
       asr.ts              phiên nhận dạng Zipformer + Silero VAD (gói native sherpa-onnx-node)
+    clinic/               đọc lịch khám và hồ sơ bệnh nhân (chỉ đọc), sau cổng để cắm clinical của ưu tiên 1
+      ports.ts            ClinicActor, EncounterRef, EncounterSource (cổng)
+      fixture-source.ts, demo-actor.ts, guard.ts   adapter DEMO tạm: nguồn Encounter giả, actor cố định, guard localhost
+      repository.ts, service.ts   đọc + validate data/clinic/, dựng DTO theo bác sĩ và cơ sở
+      page-guard.ts       guard localhost cho page server (dùng lại assertLocalDemoRequest); áp cho /dashboard và /benh-nhan/[patientId], có page-guard.test.ts
+      errors.ts, http.ts  lỗi có mã HTTP, bọc GET (no-store)
     du-lieu/              đọc/ghi đĩa
       config.ts           nạp config/ và data/cases
       danh-muc.ts         ghép danh mục bệnh viện (data/catalog/) với danh mục thật (data/tham-khao/), ICD10; nhớ theo giờ sửa file
@@ -41,6 +55,7 @@ src/
     match.ts              khớp danh mục (Fuse.js): nơi DUY NHẤT gán mã dịch vụ/thuốc
     validate.ts           tính tổng số lượng thuốc
     metrics.ts            kiểu số đo lượt thử, tính trung bình, xuất CSV
+    clinic/               DTO, schema, phép tính lịch (schedule.ts), thứ tự lịch sử khám (history.ts), giờ/ngày VN và nhãn thiếu dữ liệu, định dạng hồ sơ bệnh nhân (format.ts), chia nhóm và bố cục calendar (layout.ts), đường dẫn nội bộ an toàn (links.ts)
     eform/                logic trang eForm, gồm cả "AI" bằng rule (xem dưới) và đếm số đo lượt thử (do-luong.ts)
 
 config/  data/  scripts/  models/  docs/   giữ nguyên ở gốc (dữ liệu, script, tài liệu)

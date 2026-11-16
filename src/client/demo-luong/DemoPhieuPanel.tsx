@@ -38,7 +38,7 @@ function XungDot({ nguon }: { nguon: DemoFieldSource | undefined }) {
   );
 }
 
-export function DemoPhieuPanel({ phieu, cheDo, thaoTac, banChay, onLuu, onDuyet, dangGhi }: {
+export function DemoPhieuPanel({ phieu, cheDo, thaoTac, banChay, onLuu, onDuyet, dangGhi, onDangSua }: {
   phieu: DemoPhieu | null;
   cheDo: CheDo;
   thaoTac: number;
@@ -47,8 +47,13 @@ export function DemoPhieuPanel({ phieu, cheDo, thaoTac, banChay, onLuu, onDuyet,
   onLuu: (fields: Record<string, string>) => Promise<boolean>;
   onDuyet: () => Promise<boolean>;
   dangGhi: boolean;
+  /** Báo màn hình đang mở bản sửa: khi đó không cho ghi phiên mới (phiên mới đổi giá trị dưới tay bác sĩ). */
+  onDangSua: (dangSua: boolean) => void;
 }) {
-  const [nhap, setNhap] = useState<Record<string, string> | null>(null);
+  // `goc`: giá trị lúc bấm Sửa. Chỉ gửi ô bác sĩ thật sự đổi so với lúc đó, không so với phiếu hiện tại.
+  const [ban, setBan] = useState<{ goc: Record<string, string>; nhap: Record<string, string> } | null>(null);
+  const nhap = ban?.nhap ?? null;
+  const datBan = (v: typeof ban) => { setBan(v); onDangSua(v !== null); };
   const [dangLuu, setDangLuu] = useState(false);
   const [bao, setBao] = useState<string | null>(null);
   const chu = cheDo === "bac_si" ? "text-[16px] leading-7" : "text-sm leading-6";
@@ -72,13 +77,13 @@ export function DemoPhieuPanel({ phieu, cheDo, thaoTac, banChay, onLuu, onDuyet,
   const canKiemTra = Object.entries(banChay).flatMap(([seq, run]) => run.draft.can_xem_lai.map(issue => ({ seq: Number(seq), ...issue })));
 
   async function luu() {
-    if (!nhap || !phieu) return;
-    const doi = Object.fromEntries(Object.entries(nhap).filter(([id, v]) => v !== val(id)));
+    if (!ban || !phieu) return;
+    const doi = Object.fromEntries(Object.entries(ban.nhap).filter(([id, v]) => v !== ban.goc[id]));
     if (!Object.keys(doi).length) { setBao("Chưa có ô nào được sửa."); return; }
     setDangLuu(true); setBao(null);
     const ok = await onLuu(doi);
     setDangLuu(false);
-    if (ok) setNhap(null);
+    if (ok) datBan(null);
   }
   async function duyet() {
     setDangLuu(true); setBao(null);
@@ -112,7 +117,7 @@ export function DemoPhieuPanel({ phieu, cheDo, thaoTac, banChay, onLuu, onDuyet,
                 <textarea
                   aria-label={o.nhan}
                   value={nhap[o.id] ?? ""}
-                  onChange={e => setNhap({ ...nhap, [o.id]: e.target.value })}
+                  onChange={e => ban && datBan({ goc: ban.goc, nhap: { ...ban.nhap, [o.id]: e.target.value } })}
                   rows={o.id === "kham_chuyen_khoa" || o.id === "benh_su" ? 3 : 2}
                   className="mt-1 w-full rounded-md border border-ef-vien bg-white px-3 py-2 text-sm leading-6 text-ef-chu outline-none focus:border-ef-xanh focus:ring-2 focus:ring-ef-xanh/20"
                 />
@@ -165,12 +170,12 @@ export function DemoPhieuPanel({ phieu, cheDo, thaoTac, banChay, onLuu, onDuyet,
         <div className="flex flex-wrap items-center gap-2">
           {nhap ? (
             <>
-              <button type="button" className={BTN_OUTLINE} onClick={() => { setNhap(null); setBao(null); }} disabled={khoa}>Hủy</button>
+              <button type="button" className={BTN_OUTLINE} onClick={() => { datBan(null); setBao(null); }} disabled={khoa}>Hủy</button>
               <button type="button" className={BTN_OUTLINE} onClick={() => void luu()} disabled={khoa}>{dangLuu ? "Đang lưu…" : "Lưu bản sửa"}</button>
             </>
           ) : (
             <button type="button" className={BTN_OUTLINE} disabled={khoa}
-              onClick={() => { setBao(null); setNhap(Object.fromEntries(O_VAN_BAN.map(o => [o.id, val(o.id)]))); }}>
+              onClick={() => { setBao(null); const goc = Object.fromEntries(O_VAN_BAN.map(o => [o.id, val(o.id)])); datBan({ goc, nhap: { ...goc } }); }}>
               Sửa
             </button>
           )}

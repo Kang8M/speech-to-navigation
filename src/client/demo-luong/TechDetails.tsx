@@ -109,7 +109,11 @@ export function TechDetails({ step, events, phieu }: { step: DemoStep; events: S
       <>
         <dl>
           <Dong nhan="Provider / model">{d.provider} / {d.model}</Dong>
-          {d.provider === "mock" && <Dong nhan="Phạm vi">Mock — chưa rời máy chủ</Dong>}
+          <Dong nhan="Phạm vi">
+            {events.che && !isDemoError(events.che) && events.che.du_lieu.ai_route === "local_only"
+              ? "Không được gửi AI ngoài — chạy bộ tách local"
+              : d.provider === "mock" ? "Mock — chưa rời máy chủ" : "Đã gửi AI ngoài (chỉ bản đã che)"}
+          </Dong>
           <Dong nhan="Prompt version">{d.prompt_version}</Dong>
           <Dong nhan="Schema">{d.extraction.draft.schema_version}</Dong>
           <Dong nhan="Policy version">{d.extraction.transcript.privacy.policy_version} · privacy {d.extraction.transcript.privacy.trang_thai}</Dong>

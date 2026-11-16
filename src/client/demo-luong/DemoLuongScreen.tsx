@@ -60,6 +60,7 @@ export function DemoLuongScreen() {
   const [banTho, setBanTho] = useState<Record<number, BanThoView>>({});
   const [banChay, setBanChay] = useState<Record<number, ClinicalExtraction>>({});
   const [thaoTac, setThaoTac] = useState(0);
+  const [dangSua, setDangSua] = useState(false);
   const [luot, setLuot] = useState(0);
   const khoiTao = useRef(false);
   const dieuKhien = useRef<AbortController | null>(null);
@@ -67,7 +68,7 @@ export function DemoLuongScreen() {
   useEffect(() => () => dieuKhien.current?.abort(), []);
 
   function datLaiLuot() {
-    setSteps(BUOC_TRONG); setEvents({}); setDangXem(null); setBanTho({}); setBanChay({}); setThaoTac(0); setMo(null); setWav(null);
+    setDangSua(false); setSteps(BUOC_TRONG); setEvents({}); setDangXem(null); setBanTho({}); setBanChay({}); setThaoTac(0); setMo(null); setWav(null);
   }
 
   async function moPhieuMoi(pid: string) {
@@ -193,12 +194,16 @@ export function DemoLuongScreen() {
   async function luuSua(fields: Record<string, string>): Promise<boolean> {
     if (!phieu) return false;
     try { setPhieu(await luuBanSua(phieu.encounter_id, phieu.revision, fields)); setThaoTac(n => n + 1); setLoi(null); return true; }
-    catch (e) { setLoi(loiCua(e, "Không lưu được bản sửa.")); return false; }
+    catch (e) { setLoi(loiCua(e, "Không lưu được bản sửa.")); await docLai(phieu.encounter_id); return false; }
   }
   async function duyet(): Promise<boolean> {
     if (!phieu) return false;
     try { setPhieu(await duyetPhieu(phieu.encounter_id, phieu.revision)); setThaoTac(n => n + 1); setLoi(null); return true; }
-    catch (e) { setLoi(loiCua(e, "Không duyệt được phiếu demo.")); return false; }
+    catch (e) { setLoi(loiCua(e, "Không duyệt được phiếu demo.")); await docLai(phieu.encounter_id); return false; }
+  }
+  /** Lưu/duyệt lỗi (thường là 409 vì revision đã đổi): đọc lại phiếu để lần bấm sau dùng đúng revision, giữ thông báo lỗi. */
+  async function docLai(id: string) {
+    try { setPhieu(await docPhieu(id)); } catch { /* giữ bản đang có */ }
   }
 
   // Hai cột giữa: phiên đang chọn trên thanh phiên, hoặc lượt vừa chạy.
@@ -213,8 +218,10 @@ export function DemoLuongScreen() {
     ? `Bản thô của phiên ${xemPhien.sequence} không còn: chỉ giữ trong bộ nhớ trình duyệt và đã mất khi tải lại trang. Bản đã che bên cạnh đọc lại từ kho.`
     : undefined;
   const dongY = evChe?.du_lieu.dong_y ?? (benhNhanId ? benhNhan[benhNhanId]?.dong_y ?? null : null);
-  const khoaGhi = !phieu || dangMo || (nguon === "kich_ban" ? !kb : !wav);
-  const lyDoKhoa = nguon !== "kich_ban" && !wav ? (nguon === "micro" ? "Thu âm xong rồi bấm “▶ Ghi phiên mới”." : "Chọn một file WAV trước.") : null;
+  const khoaGhi = !phieu || dangMo || dangSua || (nguon === "kich_ban" ? !kb : !wav);
+  const lyDoKhoa = dangSua
+    ? "Đang sửa phiếu: bấm “Lưu bản sửa” hoặc “Hủy” trước khi ghi phiên mới."
+    : nguon !== "kich_ban" && !wav ? (nguon === "micro" ? "Thu âm xong rồi bấm “▶ Ghi phiên mới”." : "Chọn một file WAV trước.") : null;
   const benhNhanDs = [...new Set(kichBan.map(k => k.benh_nhan_id))].map(id => benhNhan[id] ?? { id, ten: id, dong_y: null });
 
   return (
@@ -250,7 +257,7 @@ export function DemoLuongScreen() {
           <BanSachPanel data={sach} animKey={`${luot}-${dangXem ?? "luot"}`} cheDo={cheDo} />
           <DemoPhieuPanel
             key={phieu?.encounter_id ?? "trong"} phieu={phieu} cheDo={cheDo} thaoTac={thaoTac} banChay={banChay}
-            onLuu={luuSua} onDuyet={duyet} dangGhi={dangChay}
+            onLuu={luuSua} onDuyet={duyet} dangGhi={dangChay} onDangSua={setDangSua}
           />
         </div>
       </div>

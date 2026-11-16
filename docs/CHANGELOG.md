@@ -4,6 +4,20 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-16
 
+### Sửa rà soát vòng 1 cho màn /demo-luong
+- **Loại:** Sửa lỗi
+- **Thay đổi:**
+  - Bản sửa của bác sĩ chụp giá trị gốc lúc bấm "Sửa" và chỉ gửi ô khác giá trị gốc đó (trước đây so với phiếu hiện tại nên phiên mới chạy giữa chừng có thể bị ghi đè và đánh dấu "Bác sĩ sửa"). Đang mở bản sửa thì khóa "▶ Ghi phiên mới", kèm lý do.
+  - Lưu bản sửa/Duyệt lỗi (ví dụ 409 revision cũ) thì đọc lại phiếu, giữ thông báo lỗi tiếng Việt, lần bấm sau dùng đúng revision.
+  - Micro: gỡ component lúc đang "Đang mở micro…" thì micro mở xong được đóng ngay, không setState sau khi gỡ; khóa chọn nguồn khi đang mở hoặc đang thu.
+  - Ô ④ / chi tiết AI khi `local_only` chỉ hiện "Không được gửi AI ngoài — chạy bộ tách local", không kèm dòng "Mock — chưa rời máy chủ".
+  - Ghi chú rủi ro R2 nói rõ chữ STT là chữ thường nên rule không dựa vào chữ hoa.
+  - Nút chọn nguồn có tên truy cập ("Micro", "File WAV", "Kịch bản mẫu"); đoạn tô đỏ có mã rule dạng chữ ẩn cho trình đọc màn hình.
+  - Test `listKichBan` kiểm `phien`: ca chuẩn `[1, 2]`, hai ca còn lại `[]`.
+- **Lý do:** Rà soát task 7 và kiểm tra trình duyệt của controller.
+- **File:** `src/client/demo-luong/{DemoLuongScreen,DemoPhieuPanel,MicWav,NguonPicker,StepRail,TechDetails,TranscriptPanels}.tsx`, `src/client/demo-luong/hien-thi.ts`, `src/server/demo-luong/kich-ban.test.ts`, `docs/CHANGELOG.md`
+- **Kiểm tra:** `tsc` sạch; `eslint` 0 lỗi; `kich-ban.test.ts` 11/11; `npm run build` thành công; `npm test` 345/346 (lỗi có sẵn ở `encounter-context.test.ts:28`). Kiểm tra trình duyệt: controller kiểm sau.
+
 ### Màn demo /demo-luong hai chế độ xem
 - **Loại:** Giao diện
 - **Thay đổi:** Thêm trang `/demo-luong` (link "Demo luồng dữ liệu" trên thanh đầu).

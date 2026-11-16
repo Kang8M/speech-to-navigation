@@ -9,6 +9,11 @@ test("danh sách có đủ 3 kịch bản", () => {
   assert.deepEqual(listKichBan().map((k) => k.id), ["ca-bi-chan", "ca-chua-dong-y", "ca-chuan"]);
 });
 
+test("danh sách trả các phần của từng kịch bản: ca chuẩn có phần 1, 2; ca không chia phần trả rỗng", () => {
+  const phien = Object.fromEntries(listKichBan().map((k) => [k.id, k.phien]));
+  assert.deepEqual(phien, { "ca-bi-chan": [], "ca-chua-dong-y": [], "ca-chuan": [1, 2] });
+});
+
 for (const { id } of listKichBan()) {
   test(`kịch bản ${id}: che đúng, giữ đúng, chốt chặn đúng`, () => {
     const kb = loadKichBan(id);

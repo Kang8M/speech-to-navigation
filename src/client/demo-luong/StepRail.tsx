@@ -30,6 +30,7 @@ function ghiChu(id: DemoStep, v: BuocView, ev: SuKienLuot, cheDo: CheDo): string
   if (id === "ai") {
     if (v.trang_thai === "bo_qua") return "Chưa có gì được gửi";
     const route = ev.che?.trang_thai === "xong" ? ev.che.du_lieu.ai_route : null;
+    // local_only: nhãn local là đủ (mock hay không thì kết quả chưa rời máy chủ), không ghép thêm dòng Mock.
     if (route === "local_only") return "Không được gửi AI ngoài — chạy bộ tách local";
     if (cheDo === "ky_thuat" && ev.ai?.trang_thai === "xong" && ev.ai.du_lieu.provider === "mock") return "Mock — chưa rời máy chủ";
     if (ev.ai?.trang_thai === "xong") return "Chỉ nhận bản đã che";

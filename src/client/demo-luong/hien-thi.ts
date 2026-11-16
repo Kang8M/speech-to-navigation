@@ -44,6 +44,7 @@ export const TEN_LY_DO_CHAN: Record<string, string> = {
 };
 
 export const RUI_RO_R2 =
+  "Chữ từ STT là chữ thường, không dấu câu, nên R2 không dựa vào chữ hoa: R2 dò theo từ điển họ người Việt và từ chỉ người. " +
   "Rủi ro còn lại: tên đứng một mình, không có họ hoặc từ chỉ người phía trước, có thể lọt — chốt chặn R11 là lớp bảo vệ sau.";
 
 export function tongDaChe(counts: Partial<Record<PiiRule, number>> | undefined): number {

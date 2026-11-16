@@ -13,7 +13,12 @@ const TOI_DA_GIAY = 300;
  * `MicButton`/`DenoisedMic` chỉ trả chữ theo từng câu, còn luồng demo cần cả file WAV để máy chủ chạy bước ① STT.
  * Âm thanh chỉ nằm trong bộ nhớ trình duyệt đến khi gửi; máy chủ không lưu (R9).
  */
-export function MicWav({ onWav, disabled }: { onWav: (wav: Blob | null, giay: number) => void; disabled?: boolean }) {
+export function MicWav({ onWav, onBan, disabled }: {
+  onWav: (wav: Blob | null, giay: number) => void;
+  /** true khi đang mở hoặc đang thu micro (bên ngoài khóa chọn nguồn). */
+  onBan?: (ban: boolean) => void;
+  disabled?: boolean;
+}) {
   const [trangThai, setTrangThai] = useState<"cho" | "mo" | "thu">("cho");
   const [giay, setGiay] = useState(0);
   const [loi, setLoi] = useState<string | null>(null);
@@ -21,12 +26,26 @@ export function MicWav({ onWav, disabled }: { onWav: (wav: Blob | null, giay: nu
   const chunks = useRef<Int16Array[]>([]);
   const timer = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
 
-  useEffect(() => () => { clearInterval(timer.current); pipe.current?.close(); }, []);
+  /** Đã gỡ component: micro mở xong muộn thì đóng ngay, không setState. */
+  const daGo = useRef(false);
+  const onBanRef = useRef(onBan);
+  useEffect(() => { onBanRef.current = onBan; }, [onBan]);
+  useEffect(() => {
+    daGo.current = false;
+    return () => {
+      daGo.current = true;
+      clearInterval(timer.current);
+      pipe.current?.close();
+      pipe.current = null;
+      onBanRef.current?.(false);
+    };
+  }, []);
 
   async function batDau() {
-    setLoi(null); setTrangThai("mo"); onWav(null, 0);
+    setLoi(null); setTrangThai("mo"); onWav(null, 0); onBan?.(true);
     try {
       const p = await openBrowserMicPipeline();
+      if (daGo.current) { p.close(); return; }
       chunks.current = [];
       p.onChunk = c => chunks.current.push(c);
       p.onError = () => { setLoi("Micro bị ngắt. Thu lại."); void dung(); };
@@ -40,6 +59,8 @@ export function MicWav({ onWav, disabled }: { onWav: (wav: Blob | null, giay: nu
       }, 250);
       setTrangThai("thu");
     } catch (e) {
+      if (daGo.current) return;
+      onBan?.(false);
       setTrangThai("cho");
       setLoi(e instanceof DOMException && e.name === "NotAllowedError" ? "Trình duyệt chưa được cấp quyền dùng micro." : "Không mở được micro.");
     }
@@ -52,6 +73,8 @@ export function MicWav({ onWav, disabled }: { onWav: (wav: Blob | null, giay: nu
     clearInterval(timer.current);
     await p.flush();
     p.close();
+    if (daGo.current) return;
+    onBan?.(false);
     setTrangThai("cho");
     const total = chunks.current.reduce((n, c) => n + c.length, 0);
     if (total === 0) { setLoi("Chưa thu được âm thanh."); return; }

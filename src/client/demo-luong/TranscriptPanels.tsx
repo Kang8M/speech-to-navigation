@@ -17,6 +17,7 @@ function ToDo({ raw, spans }: Pick<BanThoView, "raw" | "spans">) {
     parts.push(
       <mark key={i} title={`${s.rule} → ${s.label}`} className="cursor-help rounded bg-ef-do-nhat px-0.5 font-medium text-ef-do ring-1 ring-ef-do/30">
         {raw.slice(s.start, s.end)}
+        <span className="sr-only"> ({s.rule}, thay bằng {s.label})</span>
       </mark>,
     );
     at = s.end;

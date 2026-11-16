@@ -25,6 +25,7 @@ export function NguonPicker({ nguon, onNguon, kichBan, kbId, onKichBan, benhNhan
   wav: WavSan | null; onWav: (w: WavSan | null) => void; khoa: boolean;
 }) {
   const [loiFile, setLoiFile] = useState<string | null>(null);
+  const [micBan, setMicBan] = useState(false);
   const kb = kichBan.find(k => k.id === kbId);
 
   async function chonFile(file: File | undefined) {
@@ -42,8 +43,9 @@ export function NguonPicker({ nguon, onNguon, kichBan, kbId, onKichBan, benhNhan
       <span className="text-[13px] font-semibold text-ef-phu">Nguồn:</span>
       <div role="radiogroup" aria-label="Nguồn phiên ghi âm" className="inline-flex flex-wrap gap-3">
         {NGUON.map(n => (
-          <label key={n.id} className="inline-flex items-center gap-1.5 text-[13px] font-medium text-ef-chu">
-            <input type="radio" name="nguon-demo" checked={nguon === n.id} disabled={khoa} onChange={() => onNguon(n.id)} className="accent-ef-xanh" />
+          <label key={n.id} htmlFor={`nguon-demo-${n.id}`} className="inline-flex items-center gap-1.5 text-[13px] font-medium text-ef-chu">
+            <input id={`nguon-demo-${n.id}`} type="radio" name="nguon-demo" value={n.id} aria-label={n.nhan}
+              checked={nguon === n.id} disabled={khoa || micBan} onChange={() => onNguon(n.id)} className="accent-ef-xanh" />
             {n.nhan}
           </label>
         ))}
@@ -65,7 +67,7 @@ export function NguonPicker({ nguon, onNguon, kichBan, kbId, onKichBan, benhNhan
       )}
       {nguon === "micro" && (
         <span className="inline-flex flex-wrap items-center gap-2">
-          <MicWav disabled={khoa} onWav={(blob, giay) => onWav(blob ? { blob, giay, ten: "micro" } : null)} />
+          <MicWav disabled={khoa} onBan={setMicBan} onWav={(blob, giay) => onWav(blob ? { blob, giay, ten: "micro" } : null)} />
           <span className="text-xs text-ef-phu">Chế độ bác sĩ đọc (dictation) · STT chạy trên máy chủ, không lưu âm thanh</span>
         </span>
       )}

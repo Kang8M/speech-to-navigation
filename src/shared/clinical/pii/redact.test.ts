@@ -74,6 +74,13 @@ test("R6: mã định danh", () => {
   }
 });
 
+test("R7: quốc tịch nhiều từ che trọn giá trị", () => {
+  for (const c of ["việt nam", "hàn quốc", "trung quốc", "hoa kỳ"]) {
+    const r = redactPii(`quốc tịch ${c} đau tai`, []);
+    assert.equal(r.clean.includes(c.split(" ")[1]), false, r.clean);
+  }
+});
+
 test("R7: thông tin nhạy cảm", () => {
   for (const text of ["quốc tịch nhật", "theo đạo thiên chúa", "đã ly hôn"]) {
     assert.ok(redactPii(text, none).clean.includes("[THÔNG_TIN_NHẠY_CẢM_1]"), text);

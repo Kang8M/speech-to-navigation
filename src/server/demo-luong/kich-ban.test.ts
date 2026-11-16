@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { checkResidualPii, foldVietnamese, redactPii } from "@/shared/clinical/pii";
 import { ClinicalError } from "@/server/clinical/repository";
-import { demoAllowlist, listKichBan, loadKichBan } from "./kich-ban";
+import { demoAllowlist, doanForPhien, listKichBan, loadKichBan } from "./kich-ban";
 import { knownIdentifiersFor } from "./known-identifiers";
 
 test("danh sách có đủ 3 kịch bản", () => {
@@ -20,6 +20,7 @@ for (const { id } of listKichBan()) {
     for (const s of kb.expected.phai_giu) assert.equal(clean.includes(foldVietnamese(s)), true, `mất: ${s}`);
     const gate = checkResidualPii(r.clean, known, demoAllowlist());
     assert.equal(gate.passed, !kb.expected.bi_chan, JSON.stringify(gate.reasons));
+    if (id === "ca-bi-chan") assert.ok(gate.reasons.some((x) => x.reason === "R11c_ten_rieng_con_sot"), JSON.stringify(gate.reasons));
   });
 }
 
@@ -44,7 +45,7 @@ test("loadKichBan chặn id lạ bằng 404", () => {
 
 test("allowlist chứa cụm lâm sàng bắt buộc, và câu sạch chứa chúng qua chốt chặn", () => {
   const allow = demoAllowlist();
-  for (const p of ["dịch nhầy", "phù thanh quản", "sốt cao", "cao liên tục", "co giật", "cổ chướng", "mạc treo", "tôn thất", "ung thư"]) {
+  for (const p of ["dịch nhầy", "phù thanh quản", "sốt cao", "cao liên tục", "co giật", "cổ chướng", "mạc treo", "ung thư"]) {
     assert.ok(allow.has(foldVietnamese(p)), p);
     const sentence = `bệnh nhân ghi nhận ${p} từ hai ngày nay`;
     const g = checkResidualPii(sentence, [], allow);
@@ -52,4 +53,23 @@ test("allowlist chứa cụm lâm sàng bắt buộc, và câu sạch chứa ch�
   }
   const catalog = ["Augmentin", "Amoxicillin", "Nội soi tai mũi họng", "Khám Tai Mũi Họng"];
   for (const n of catalog) assert.ok(allow.has(foldVietnamese(n)), n);
+});
+
+test("tôn thất + tên riêng không lọt qua allowlist", () => {
+  for (const s of ["gặp tôn thất minh hôm qua", "tôn thất minh đưa tôi đi khám"]) {
+    const r = redactPii(s, []);
+    assert.equal(checkResidualPii(r.clean, [], demoAllowlist()).passed, false, s);
+  }
+});
+
+test("ca chuẩn có phiên 1 và 2, mỗi phần riêng đều qua chốt chặn", () => {
+  const kb = loadKichBan("ca-chuan");
+  const { known } = knownIdentifiersFor(kb.benh_nhan_id);
+  assert.equal(doanForPhien(kb).length, kb.doan.length);
+  for (const phien of [1, 2]) {
+    const part = doanForPhien(kb, phien);
+    assert.ok(part.length > 0, `phiên ${phien}`);
+    const r = redactPii(part.map((d) => d.text).join(" "), known);
+    assert.equal(checkResidualPii(r.clean, known, demoAllowlist()).passed, true, `phiên ${phien}`);
+  }
 });

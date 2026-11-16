@@ -181,7 +181,7 @@ export function redactPii(raw: string, known: KnownIdentifier[]): RedactionResul
 
   // R7: thông tin nhạy cảm
   const religions = "thiên chúa(?: giáo)?|công giáo|phật(?: giáo)?|tin lành|hồi(?: giáo)?|cao đài|hòa hảo";
-  scan("R7", "THÔNG_TIN_NHẠY_CẢM", /(?<![\p{L}])quốc tịch\s+\p{L}+(?:\s+(?:quốc|lan|bản))?(?![\p{L}])/gu);
+  scan("R7", "THÔNG_TIN_NHẠY_CẢM", /(?<![\p{L}])quốc tịch\s+(?:việt\s+nam|hàn\s+quốc|trung\s+quốc|hoa\s+kỳ|\p{L}+(?:\s+(?:quốc|lan|bản))?)(?![\p{L}])/gu);
   scan("R7", "THÔNG_TIN_NHẠY_CẢM", new RegExp(`(?<![\\p{L}])(?:theo\\s+)?(?:(?<!âm\\s)đạo|tôn giáo)\\s+(?:${religions})(?![\\p{L}])`, "gu"));
   scan("R7", "THÔNG_TIN_NHẠY_CẢM", new RegExp(`(?<![\\p{L}])theo\\s+(?:${religions})(?![\\p{L}])`, "gu"));
   scan("R7", "THÔNG_TIN_NHẠY_CẢM", /(?<![\p{L}])(?:(?:đã|đang)\s+)?(?:ly hôn|li hôn|ly dị|ly thân|góa(?:\s+(?:chồng|vợ))?)(?![\p{L}])/gu);

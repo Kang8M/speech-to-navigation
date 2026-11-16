@@ -2,7 +2,7 @@ import type { ClinicalExtraction } from "../clinical/api";
 import type { EformSnapshot } from "../clinical/eform";
 import type { AiRoute, GateResult, PiiAuditEntry, PiiRule, PiiSpan } from "../clinical/pii";
 
-export type DemoSource = { kind: "kich_ban"; id: string } | { kind: "audio" };
+export type DemoSource = { kind: "kich_ban"; id: string; phien?: number } | { kind: "audio" };
 
 export interface KichBan {
   id: string;
@@ -10,7 +10,7 @@ export interface KichBan {
   benh_nhan_id: string;
   mode: "conversation" | "dictation";
   dong_y_override?: boolean;
-  doan: { vai_tro: "bac_si" | "benh_nhan" | "nguoi_nha"; text: string }[];
+  doan: { phien?: number; vai_tro: "bac_si" | "benh_nhan" | "nguoi_nha"; text: string }[];
   expected: { phai_che: string[]; phai_giu: string[]; bi_chan: boolean };
 }
 

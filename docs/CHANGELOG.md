@@ -4,6 +4,17 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-16
 
+### API stream và phiếu demo cho /demo-luong
+- **Loại:** Tính năng
+- **Thay đổi:** Thêm API của `/demo-luong` và module gọi từ trình duyệt (chưa có giao diện).
+  - `POST /api/demo-luong?phieu=<uuid>&kich_ban=<id>[&phien=1|2]` hoặc `?phieu=<uuid>` với body `audio/wav`: trả `application/x-ndjson`, mỗi dòng một `DemoEvent`. Kiểm tra mã phiếu, kịch bản, phiên, bệnh nhân khớp, kích thước âm thanh (> 20 MB: 413) trước khi mở stream nên lỗi trả JSON 400/404/409/413. Hủy request thì dừng bộ sinh sự kiện. Lỗi giữa chừng chỉ phát một dòng `{buoc, trang_thai:"loi", du_lieu:{loi}}` chung, không lộ stack. STT gọi qua `proxyStt` với `Request` nội bộ; lỗi STT phát một dòng `stt/loi` rồi đóng. Âm thanh không ghi đĩa.
+  - `POST /api/demo-luong/phieu` (tạo), `DELETE` (204, xóa dữ liệu demo), `GET`/`PATCH /phieu/[id]` (đọc, lưu bản sửa, revision cũ 409), `POST /phieu/[id]/duyet`, `GET /kich-ban`. Mọi route: `runtime = "nodejs"`, `assertLocalDemoRequest`, lỗi qua `clinicalResponse`, `Cache-Control: no-store`.
+  - `src/server/demo-luong/get-store.ts`: `getDemoStore()` là nơi duy nhất chọn kho; biến môi trường `DEMO_LUONG_DIR` (chỉ để test) trỏ sang thư mục tạm. `stream.ts`: `ndjsonStream`. `src/client/demo-luong/api.ts`: `streamDemoFlow` và các hàm gọi CRUD.
+  - `types.ts`: thêm biến thể `stt` với `trang_thai: "loi"` cho `DemoEvent`.
+- **Lý do:** Task 6 của plan demo luồng dữ liệu: giao diện (Task 7) cần một cổng HTTP cho bộ điều phối và kho phiếu.
+- **File:** `src/app/api/demo-luong/**`, `src/server/demo-luong/{get-store,stream}.ts`, `src/client/demo-luong/api.ts`, `src/shared/demo-luong/types.ts`, `src/server/demo-luong/flow.test.ts` (kiểu), `docs/CHANGELOG.md`
+- **Kiểm tra:** `npx tsx --conditions=react-server --test src/app/api/demo-luong/routes.test.ts` 7/7; `npx tsc --noEmit` sạch; `npx eslint src lib` 0 lỗi; `npm test` 341/342 (một lỗi có sẵn ở `encounter-context.test.ts`).
+
 ### Bộ điều phối 5 bước và kho phiếu nhiều phiên cho demo luồng dữ liệu
 - **Loại:** Tính năng
 - **Thay đổi:** Thêm phần lõi máy chủ của `/demo-luong` (chưa có API và giao diện).

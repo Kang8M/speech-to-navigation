@@ -31,6 +31,7 @@ export interface DemoPhieu {
 
 export type DemoEvent =
   | { buoc: "stt"; trang_thai: "xong"; ms: number; du_lieu: { engine: string; text: string; audio_ms: number | null } }
+  | { buoc: "stt"; trang_thai: "loi"; ms: number; du_lieu: { loi: string } }
   | { buoc: "ban_tho"; trang_thai: "xong"; ms: number; du_lieu: { raw: string; spans: PiiSpan[]; mode: "conversation" | "dictation" } }
   | { buoc: "che"; trang_thai: "xong" | "bi_chan"; ms: number; du_lieu: { clean: string; counts: Record<PiiRule, number>; gate: GateResult; ai_route: AiRoute; dong_y: { trang_thai: boolean; luc: string | null } } }
   | { buoc: "ai"; trang_thai: "xong" | "loi"; ms: number; du_lieu: { provider: string; model: string; prompt_version: string; payload_preview: string; extraction?: ClinicalExtraction; loi?: string } }

@@ -22,7 +22,7 @@ async function run(store: DemoStore, input: DemoFlowInput): Promise<DemoEvent[]>
   return out;
 }
 const kb = (id: string, phien?: number): DemoSource => ({ kind: "kich_ban", id, ...(phien ? { phien } : {}) });
-const pick = <B extends DemoEvent["buoc"]>(events: DemoEvent[], buoc: B) => events.find((e) => e.buoc === buoc) as Extract<DemoEvent, { buoc: B }>;
+const pick = <B extends DemoEvent["buoc"]>(events: DemoEvent[], buoc: B) => events.find((e) => e.buoc === buoc) as Exclude<Extract<DemoEvent, { buoc: B }>, { buoc: "stt"; trang_thai: "loi" }>;
 
 test("ca chuẩn phiên 1: đủ 5 bước, lưu một phiên, nhật ký một dòng", async () => {
   const store = newStore(); const root = store.root; const create = (id: string) => createDemoPhieu(store, id);

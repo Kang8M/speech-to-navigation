@@ -141,3 +141,8 @@ test("vòng 1: tên người thân không cần từ 'tên', giữ tiền sử",
   assert.equal(r.clean, "mẹ là [NGƯỜI_1] bị viêm xoang");
   assert.equal(redactPii("mẹ tôi bị ung thư vòm họng", none).clean, "mẹ tôi bị ung thư vòm họng");
 });
+
+test("vòng 2: đuôi tên không dừng ở tên riêng trùng từ dừng không dấu", () => {
+  assert.equal(redactPii("bé lê thị hoa đau tai", none).clean, "bé [NGƯỜI_1] đau tai");
+  assert.equal(redactPii("bé hoàng văn nam sốt cao", none).clean, "bé [NGƯỜI_1] sốt cao");
+});

@@ -60,7 +60,9 @@ const STOP_WORDS = [
   "nhiễm", "đồng", "ý", "hóa", "nội", "ngoại", "soi", "phẫu", "mổ", "điếc",
 ];
 /** Dạng không dấu chỉ áp cho từ viết không dấu ("thị" khác "thì"). */
-const STOP_FOLD = new Set(STOP_WORDS.map(w => foldVietnamese(w)).filter(w => w.length > 1));
+/** Tên riêng thường gặp trùng dạng không dấu với từ dừng ("hoa"/"hóa", "nam"/"năm"): đuôi tên không bao giờ dừng ở đây. */
+const GIVEN_NAMES_FOLD = new Set(["nam", "hoa", "mai", "lan", "an", "binh", "tho", "het", "mat", "lanh", "hung", "huong", "thao", "linh", "minh", "my", "nga", "ngoc", "phuong", "thu", "trang", "hanh", "hien", "hieu", "hai", "ha", "hang", "yen", "tam", "tuan", "dung", "duc", "giang", "khanh", "long", "loan", "oanh", "quynh", "son", "tai", "thanh", "thuy", "trung", "vinh", "xuan"]);
+const STOP_FOLD = new Set(STOP_WORDS.map(w => foldVietnamese(w)).filter(w => w.length > 1 && !GIVEN_NAMES_FOLD.has(w)));
 /** Cặp họ + từ thường gặp không phải tên người ("em bình thường", "bé đồng ý"). */
 const COMMON_AFTER_HO = new Set([
   "bình thường", "đồng ý", "tiêu hóa", "tiêu chảy", "bình phục", "đào thải", "tăng huyết", "lâm sàng", "phù nề",

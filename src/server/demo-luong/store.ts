@@ -9,17 +9,12 @@ import type { ClinicalActor, EncounterContext } from "@/shared/clinical/api";
 import type { CatalogItem } from "@/shared/types";
 import type { DemoPhieu } from "@/shared/demo-luong/types";
 import { ClinicalError, ClinicalRepository } from "@/server/clinical/repository";
-import { createWalkInContext, getDemoClinicalActor } from "@/server/clinical/encounter-context";
-import { openEncounter } from "@/server/clinical/service";
+import { getDemoClinicalActor, resolveEncounterContext, validateEncounterContexts } from "@/server/clinical/encounter-context";
+import { seedNewEncounter } from "@/server/clinical/service";
 import { loadEformData } from "@/server/du-lieu/eform";
 
 /** Kho riêng của màn /demo-luong: hồ sơ, sidecar nguồn ô/phiên/duyệt, lượt AI, nhật ký R13. Chỉ bản đã che. */
-export interface DemoStore {
-  root: string;
-  repo: ClinicalRepository;
-  /** Ngữ cảnh khám cho phiếu mới; mặc định `createWalkInContext` (ghi vào `data/clinical/walk-in-contexts/`). Test thay bằng ngữ cảnh fixture. */
-  openContext?: (actor: ClinicalActor, patientId: string) => EncounterContext;
-}
+export interface DemoStore { root: string; repo: ClinicalRepository }
 
 /** Sidecar `meta/<encounterId>.json`: không bao giờ chứa bản thô. */
 export type DemoSidecar = Pick<DemoPhieu, "sources" | "sessions" | "duyet">;
@@ -28,8 +23,8 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{1
 /** Thư mục dữ liệu chạy; `kich-ban/` (kịch bản mẫu được commit) không bao giờ bị xóa. */
 const RUNTIME_DIRS = ["encounters", "meta", "runs", "transcripts", "run-index", "audit"];
 
-export function demoStore(root = path.join(/*turbopackIgnore: true*/ process.cwd(), "data", "demo-luong"), openContext?: DemoStore["openContext"]): DemoStore {
-  return { root, repo: new ClinicalRepository(path.join(root, "encounters")), ...(openContext ? { openContext } : {}) };
+export function demoStore(root = path.join(/*turbopackIgnore: true*/ process.cwd(), "data", "demo-luong")): DemoStore {
+  return { root, repo: new ClinicalRepository(path.join(root, "encounters")) };
 }
 
 function checkId(id: string) {
@@ -86,11 +81,22 @@ export function readDemoPhieu(store: DemoStore, encounterId: string): DemoPhieu 
   };
 }
 
-/** Phiếu khám mới (không theo lịch hẹn) cho bệnh nhân giả, theo kiểu `createPatientEncounter`. */
+/** Ngữ cảnh fixture gần nhất của bệnh nhân (cùng cơ sở, cùng bác sĩ), chỉ đọc `data/eform/encounter-contexts.json`. */
+function baseContextFor(actor: ClinicalActor, patientId: string): EncounterContext {
+  const fixture = validateEncounterContexts(JSON.parse(fs.readFileSync(path.join(/*turbopackIgnore: true*/ process.cwd(), "data", "eform", "encounter-contexts.json"), "utf8")));
+  const row = [...fixture.contexts].reverse().find(item => item.patient_id === patientId && item.facility_id === actor.facilityId && item.doctor_id === actor.doctorId);
+  if (!row) throw new ClinicalError("Chưa có hồ sơ mẫu của bệnh nhân này để tạo phiếu mới.", 409);
+  return resolveEncounterContext(actor, row.appointment_id);
+}
+
+/**
+ * Phiếu khám mới (không theo lịch hẹn) cho bệnh nhân giả, mã lượt `LK-DEMO-xxxxxxxx`.
+ * Không ghi ngữ cảnh walk-in vào `data/clinical/`: mọi thứ nằm trong kho demo, "Xóa dữ liệu demo" xóa sạch.
+ */
 export function createDemoPhieu(store: DemoStore, patientId: string): DemoPhieu {
   const actor = getDemoClinicalActor();
-  const context = (store.openContext ?? createWalkInContext)(actor, patientId);
-  const { record } = openEncounter(context, store.repo);
+  const seed = seedNewEncounter(baseContextFor(actor, patientId), `LK-DEMO-${randomUUID().slice(0, 8).toUpperCase()}`);
+  const record = store.repo.openByAppointment(seed);
   writeSidecar(store, record.id, { sources: {}, sessions: [], duyet: null });
   return readDemoPhieu(store, record.id);
 }

@@ -76,6 +76,24 @@ export function openEncounter(context: EncounterContext, store = repository): Cl
   return readClinicalForActor({ doctorId: trusted.doctorId, facilityId: trusted.facilityId }, record.id, store);
 }
 
+/**
+ * Hồ sơ mới (không theo lịch hẹn) cho kho riêng như /demo-luong: dựng như `openEncounter` từ ngữ cảnh fixture đã kiểm,
+ * gắn mã lượt mới `appointmentId`, không ghi ngữ cảnh walk-in ra đĩa. Người gọi tự lưu bằng `repo.openByAppointment`.
+ */
+export function seedNewEncounter(context: EncounterContext, appointmentId: string): Encounter {
+  const trusted = resolveEncounterContext({ doctorId: context.doctorId, facilityId: context.facilityId }, context.appointmentId);
+  if (trusted.patientId !== context.patientId) throw new ClinicalError("Ngữ cảnh không khớp bệnh nhân của mã khám.", 409);
+  const now = new Date().toISOString();
+  const base = seed(trusted, now);
+  // Mọi chỗ seed ghi mã lượt nguồn đều trỏ sang mã lượt mới, như phiếu "Tạo mới phiếu khám".
+  base.appointment_id = appointmentId;
+  base.sinh_hieu.source_record_id = appointmentId;
+  base.danh_gia_ban_dau = base.danh_gia_ban_dau.map(item => ({ ...item, source_record_id: appointmentId }));
+  for (const row of [...base.lich_su, ...base.ket_qua]) row.source_record_id = appointmentId;
+  const snapshot = parseEformSnapshot({ fields: {}, chiDinh: [], trangThai: "Đang khám" });
+  return applyEformSnapshot(base, snapshot, { now, newId: randomUUID, services: trusted.data.danhMuc.dichVu, icd: trusted.data.icd10 });
+}
+
 export function listOpenEncounters(actor: ClinicalActor, store = repository): EncounterSummary[] {
   const rows: EncounterSummary[] = [];
   for (const record of store.list()) {

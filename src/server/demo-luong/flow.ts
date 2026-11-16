@@ -110,8 +110,9 @@ export async function* runDemoFlow(store: DemoStore, input: DemoFlowInput, now: 
   });
   if (!gate.passed) {
     // `excerpt` có thể chứa PII còn sót: chỉ gửi về màn hình, nhật ký chỉ giữ mã lý do.
-    yield { buoc: "che", trang_thai: "bi_chan", ms: now() - t, du_lieu: { clean, counts: red.counts, gate, ai_route, dong_y } };
+    // Ghi nhật ký trước khi phát: người đọc stream dừng sớm cũng không làm mất dòng nhật ký.
     appendAudit(store, record.id, audit(NOT_CALLED, NOT_CALLED));
+    yield { buoc: "che", trang_thai: "bi_chan", ms: now() - t, du_lieu: { clean, counts: red.counts, gate, ai_route, dong_y } };
     return;
   }
   yield { buoc: "che", trang_thai: "xong", ms: now() - t, du_lieu: { clean, counts: red.counts, gate, ai_route, dong_y } };
@@ -148,10 +149,11 @@ export async function* runDemoFlow(store: DemoStore, input: DemoFlowInput, now: 
   const entry = audit(run.provider, run.model);
   const file = encounterFile(store, record.id);
   const relative = path.relative(process.cwd(), file).split(path.sep).join("/");
+  const fallback: DemoPhieu = readDemoPhieu(store, record.id);
   try {
     const actor = getDemoClinicalActor();
     const savedAt = iso();
-    const before: DemoPhieu = readDemoPhieu(store, record.id);
+    const before = fallback;
     let merged: Pick<DemoPhieu, "snapshot" | "sources"> | undefined;
     store.repo.update(record.id, record.revision, current => {
       const session: RecordingSession = {
@@ -179,6 +181,10 @@ export async function* runDemoFlow(store: DemoStore, input: DemoFlowInput, now: 
     appendAudit(store, record.id, entry);
     yield { buoc: "luu", trang_thai: "xong", ms: now() - t, du_lieu: { phieu: readDemoPhieu(store, record.id), file: relative, sha256: fileSha256(file), audit: entry } };
   } catch (error) {
-    yield { buoc: "luu", trang_thai: "loi", ms: now() - t, du_lieu: { phieu: readDemoPhieu(store, record.id), file: relative, sha256: fileSha256(file), audit: entry, loi: error instanceof Error ? error.message : "Không lưu được phiếu." } };
+    // Nhánh lỗi không được ném tiếp: đọc lại phiếu/băm file có thể lỗi theo, khi đó trả bản đọc trước đó.
+    let phieu = fallback, sha = "";
+    try { phieu = readDemoPhieu(store, record.id); } catch { /* giữ bản đọc trước khi lưu */ }
+    try { sha = fileSha256(file); } catch { /* file hồ sơ không đọc được */ }
+    yield { buoc: "luu", trang_thai: "loi", ms: now() - t, du_lieu: { phieu, file: relative, sha256: sha, audit: entry, loi: error instanceof Error ? error.message : "Không lưu được phiếu." } };
   }
 }

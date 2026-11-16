@@ -6,7 +6,17 @@
   "doan": [
     {
       "vai_tro": "bac_si",
-      "text": "chào chị cho tôi hỏi tên đầy đủ và số điện thoại ạ",
+      "text": "chào chị hôm nay chị khám vì sao",
+      "phien": 1
+    },
+    {
+      "vai_tro": "benh_nhan",
+      "text": "tôi bị chảy dịch tai phải đau 3 ngày nay",
+      "phien": 1
+    },
+    {
+      "vai_tro": "bac_si",
+      "text": "cho tôi hỏi tên đầy đủ và số điện thoại ạ",
       "phien": 1
     },
     {
@@ -21,7 +31,12 @@
     },
     {
       "vai_tro": "benh_nhan",
-      "text": "ngày sinh 10/03/1978 căn cước 000000123456 quốc tịch việt nam tôi bị chảy dịch tai phải đau 3 ngày nay mẹ tôi có tiền sử viêm mũi dị ứng",
+      "text": "ngày sinh 10/03/1978 căn cước 000000123456 quốc tịch việt nam",
+      "phien": 1
+    },
+    {
+      "vai_tro": "benh_nhan",
+      "text": "mẹ tôi có tiền sử viêm mũi dị ứng",
       "phien": 1
     },
     {
@@ -36,7 +51,17 @@
     },
     {
       "vai_tro": "bac_si",
-      "text": "khám thấy màng nhĩ phải thủng nhỏ tai trái bình thường chỉ định nội soi tai mũi họng và nhỏ ofloxacin tai phải ngày 2 lần",
+      "text": "khám thấy tai trái bình thường màng nhĩ phải có lỗ thủng",
+      "phien": 2
+    },
+    {
+      "vai_tro": "bac_si",
+      "text": "chỉ định nội soi tai mũi họng",
+      "phien": 2
+    },
+    {
+      "vai_tro": "bac_si",
+      "text": "thuốc nhỏ ofloxacin tai phải ngày 2 lần",
       "phien": 2
     }
   ],

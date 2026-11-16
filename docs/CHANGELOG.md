@@ -13,7 +13,14 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 - **Lý do:** Task 5 của plan demo luồng dữ liệu: một phiếu nhiều phiên ghi âm, bác sĩ sửa ô không bị phiên sau ghi đè, bản thô chỉ đi trong stream.
 - **File:** `src/server/demo-luong/{store,merge,flow}.ts`, `src/server/demo-luong/{store,flow}.test.ts`, `docs/CHANGELOG.md`
 - **Kiểm tra:** `npx tsx --conditions=react-server --test src/server/demo-luong/store.test.ts src/server/demo-luong/flow.test.ts` 14/14 (trước khi viết code: không tìm thấy module `./store`), gồm test không rò bản thô quét đệ quy mọi file trong kho tạm (trừ `kich-ban/`); `npm test` 331/332 (một lỗi có sẵn ở `encounter-context.test.ts`); `npx eslint src lib` 0 lỗi. Đường mặc định `createWalkInContext` chạy thử một lần bằng script tạm (tạo 2 phiếu khác nhau, chạy trọn 5 bước) rồi xóa file ngữ cảnh đã tạo.
-- **Ảnh hưởng:** Mỗi phiếu demo tạo bằng đường mặc định để lại một file `data/clinical/walk-in-contexts/LK-NEW-*.json` (đã gitignore), giống nút "Tạo mới phiếu khám". Test không ghi vào thư mục này vì xóa file ở đó khi test khác đang chạy song song làm `recording-service.test.ts` lỗi 404.
+- **Ảnh hưởng:** (bản đầu) mỗi phiếu demo để lại một file `data/clinical/walk-in-contexts/LK-NEW-*.json`; đã sửa sau rà soát, xem dưới.
+- **Sửa sau rà soát vòng 1:**
+  - Phiếu demo không còn ghi gì ngoài `data/demo-luong/`: `service.ts` thêm export mới `seedNewEncounter(context, appointmentId)` (dựng hồ sơ như `openEncounter` từ ngữ cảnh fixture của bệnh nhân, gắn mã lượt mới, không sửa `seed`/`createWalkInContext`); `createDemoPhieu` dùng nó với mã `LK-DEMO-xxxxxxxx` rồi `repo.openByAppointment`. Phiếu demo không hiện trong danh sách phiếu eForm, "Xóa dữ liệu demo" xóa sạch. Bỏ tùy chọn `openContext` của `DemoStore`. Test đường mặc định: không file mới nào dưới `data/clinical/`, `resetDemoData` không để lại gì.
+  - Kịch bản `ca-chuan`: tách đoạn (danh tính, triệu chứng, tiền sử riêng; phiên 2 tách khám / chỉ định / thuốc), bệnh nhân nói lý do khám trước khi bị hỏi danh tính, câu khám bỏ chữ "nhỏ" (bộ lọc kê đơn coi "nhỏ + chữ" là thuốc nhỏ). Nay phiên 1 điền lý do khám "tôi bị chảy dịch tai phải đau 3 ngày nay" (không còn nhãn che), phiên 2 điền khám chuyên khoa và một chỉ định. Danh sách `phai_che`/`phai_giu` không đổi, mỗi phiên vẫn qua chốt chặn.
+  - `flow.ts`: dòng nhật ký `gate:false` ghi trước khi phát sự kiện `bi_chan`; nhánh `luu/loi` không ném lỗi (đọc lại phiếu và băm file đều được bọc).
+  - Không sửa `mockClinicalExtraction` (`/ho\b/` vẫn khớp "thoại"): impact HIGH nên dừng, chờ chủ dự án quyết.
+  - Kiểm tra: store/flow/kich-ban/extraction 42/42; `npm test` 334/335 (lỗi có sẵn ở `encounter-context.test.ts`); `npx eslint src lib` 0 lỗi.
+  - File thêm: `src/server/clinical/service.ts`, `data/demo-luong/kich-ban/ca-chuan.json`.
 
 ### Cấp deidentified và tùy chọn noCache cho chính sách dữ liệu
 - **Loại:** Tính năng

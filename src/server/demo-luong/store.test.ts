@@ -4,26 +4,15 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { ClinicalError } from "@/server/clinical/repository";
-import { getDemoClinicalActor, resolveEncounterContext } from "@/server/clinical/encounter-context";
-import { approveDemoPhieu, createDemoPhieu, demoStore, readDemoPhieu, resetDemoData, saveDoctorEdit, type DemoStore } from "./store";
+import { getDemoClinicalActor } from "@/server/clinical/encounter-context";
+import { approveDemoPhieu, createDemoPhieu, demoStore, readDemoPhieu, resetDemoData, saveDoctorEdit } from "./store";
 import { mergeSession } from "./merge";
 import type { DemoPhieu } from "@/shared/demo-luong/types";
 import type { EformSnapshot } from "@/shared/clinical/eform";
 
 const parent = fs.mkdtempSync(path.join(os.tmpdir(), "demo-luong-store-"));
 let storeCount = 0;
-/** Mở phiếu theo ngữ cảnh fixture có sẵn (không ghi data/clinical/walk-in-contexts/, tránh đụng test khác chạy song song). */
-function fixtureOpener(): DemoStore["openContext"] {
-  const rows = (JSON.parse(fs.readFileSync(path.join(process.cwd(), "data", "eform", "encounter-contexts.json"), "utf8")) as { contexts: { appointment_id: string; patient_id: string }[] }).contexts;
-  const used = new Set<string>();
-  return (actor, patientId) => {
-    const row = rows.find((r) => r.patient_id === patientId && !used.has(r.appointment_id));
-    if (!row) throw new Error(`Hết ngữ cảnh fixture cho ${patientId}`);
-    used.add(row.appointment_id);
-    return resolveEncounterContext(actor, row.appointment_id);
-  };
-}
-const newStore = () => demoStore(path.join(parent, `s${++storeCount}`), fixtureOpener());
+const newStore = () => demoStore(path.join(parent, `s${++storeCount}`));
 
 after(() => fs.rmSync(parent, { recursive: true, force: true }));
 
@@ -102,4 +91,27 @@ test("mergeSession: AI không nói (rỗng) hoặc nói giống thì không cờ
   assert.deepEqual(r.sources.benh_su, { nguon: "ai", phien: 1 });
   const same = mergeSession(phieuWith(src), snap({ ly_do: "BS sửa" }), snap({ ly_do: "BS sửa" }), 3);
   assert.equal(same.sources.ly_do.xung_dot, undefined);
+});
+
+function listTree(dir: string): string[] {
+  if (!fs.existsSync(dir)) return [];
+  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => e.isDirectory() ? listTree(path.join(dir, e.name)) : [path.join(dir, e.name)]).sort();
+}
+
+test("đường mặc định không ghi gì ngoài kho demo; xóa dữ liệu demo không còn dấu vết", () => {
+  const clinical = path.join(process.cwd(), "data", "clinical");
+  const before = listTree(clinical);
+  const store = newStore();
+  const p = createDemoPhieu(store, "GIA-000123");
+  const q = createDemoPhieu(store, "GIA-000123");
+  assert.notEqual(p.encounter_id, q.encounter_id);
+  assert.notEqual(p.appointment_id, q.appointment_id);
+  assert.match(p.appointment_id, /^LK-DEMO-/);
+  assert.deepEqual(readDemoPhieu(store, p.encounter_id), p);
+  assert.equal(store.repo.read(p.encounter_id).patient_id, "GIA-000123");
+  assert.throws(() => createDemoPhieu(store, "khong-co"), status(409));
+  assert.deepEqual(listTree(clinical).filter((f) => !before.includes(f)), []);
+  resetDemoData(store);
+  assert.deepEqual(listTree(store.root), []);
+  assert.throws(() => readDemoPhieu(store, p.encounter_id), status(404));
 });

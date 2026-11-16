@@ -6,25 +6,13 @@ import path from "node:path";
 import { foldVietnamese } from "@/shared/clinical/pii";
 import type { DemoEvent, DemoSource } from "@/shared/demo-luong/types";
 import { ClinicalError } from "@/server/clinical/repository";
-import { resolveEncounterContext } from "@/server/clinical/encounter-context";
 import { loadKichBan } from "./kich-ban";
 import { approveDemoPhieu, createDemoPhieu, demoStore, readDemoPhieu, saveDoctorEdit, type DemoStore } from "./store";
 import { runDemoFlow, type DemoFlowInput } from "./flow";
 
 const parent = fs.mkdtempSync(path.join(os.tmpdir(), "demo-luong-flow-"));
 let storeCount = 0;
-/** Mở phiếu theo ngữ cảnh fixture có sẵn (không ghi data/clinical/walk-in-contexts/, tránh đụng test khác chạy song song). */
-function fixtureOpener(): DemoStore["openContext"] {
-  const rows = (JSON.parse(fs.readFileSync(path.join(process.cwd(), "data", "eform", "encounter-contexts.json"), "utf8")) as { contexts: { appointment_id: string; patient_id: string }[] }).contexts;
-  const used = new Set<string>();
-  return (actor, patientId) => {
-    const row = rows.find((r) => r.patient_id === patientId && !used.has(r.appointment_id));
-    if (!row) throw new Error(`Hết ngữ cảnh fixture cho ${patientId}`);
-    used.add(row.appointment_id);
-    return resolveEncounterContext(actor, row.appointment_id);
-  };
-}
-const newStore = () => demoStore(path.join(parent, `s${++storeCount}`), fixtureOpener());
+const newStore = () => demoStore(path.join(parent, `s${++storeCount}`));
 
 after(() => fs.rmSync(parent, { recursive: true, force: true }));
 
@@ -60,6 +48,9 @@ test("ca chuẩn phiên 1: đủ 5 bước, lưu một phiên, nhật ký một 
   assert.match(luu.du_lieu.sha256, /^[a-f0-9]{64}$/);
   assert.equal(luu.du_lieu.phieu.sources.ly_do?.nguon, "ai");
   assert.equal(luu.du_lieu.phieu.sources.ly_do?.phien, 1);
+  const lyDo = luu.du_lieu.phieu.snapshot.fields.ly_do.value;
+  assert.match(lyDo, /đau|chảy dịch/);
+  assert.equal(lyDo.includes("["), false, lyDo);
   const record = store.repo.read(p.encounter_id);
   assert.equal(record.recording_sessions.length, 1);
   assert.equal(record.recording_sessions[0].content_state, "reviewed");
@@ -87,6 +78,10 @@ test("phiên 2 sau khi bác sĩ sửa và duyệt: ô bác sĩ giữ nguyên, ph
   assert.deepEqual(phieu.sessions.map((s) => s.sequence), [1, 2]);
   assert.equal(phieu.duyet, null);
   assert.equal(store.repo.read(p.encounter_id).audit.approved_at, null);
+  // Phiên 2 (khám, chỉ định) phải thêm được dữ liệu vào phiếu.
+  assert.ok(Object.values(phieu.sources).some((s) => s.phien === 2), JSON.stringify(phieu.sources));
+  assert.equal(phieu.sources.kham_chuyen_khoa?.phien, 2);
+  assert.ok(phieu.snapshot.chiDinh.length >= 1);
   // Phiên 2 của ca chuẩn không nói lý do khám: không có cờ xung đột.
   if (phieu.sources.ly_do.xung_dot) assert.equal(phieu.sources.ly_do.xung_dot.phien, 2);
 });
@@ -161,6 +156,29 @@ test("audio: chế độ dictation, gọi transcribe, bản sạch che tên bệ
   assert.equal(pick(events, "ban_tho").du_lieu.mode, "dictation");
   assert.match(pick(events, "che").du_lieu.clean, /\[BỆNH_NHÂN\]/);
   await assert.rejects(run(store, { encounterId: p.encounter_id, source: { kind: "audio" } }), (e: unknown) => e instanceof ClinicalError && e.status === 400);
+});
+
+test("người đọc dừng ngay ở sự kiện bị chặn: dòng nhật ký đã được ghi", async () => {
+  const store = newStore(); const p = createDemoPhieu(store, "GIA-000789");
+  for await (const e of runDemoFlow(store, { encounterId: p.encounter_id, source: kb("ca-bi-chan") })) if (e.buoc === "che") break;
+  const lines = fs.readFileSync(path.join(store.root, "audit", `${p.encounter_id}.ndjson`), "utf8").trim().split(/\r?\n/);
+  assert.equal(lines.length, 1);
+  assert.equal(JSON.parse(lines[0]).gate, false);
+});
+
+test("phiếu đổi revision giữa bước AI và lưu: phát luu/loi, không ném lỗi, không ghi phiên", async () => {
+  const store = newStore(); const p = createDemoPhieu(store, "GIA-000123");
+  const events: DemoEvent[] = [];
+  for await (const e of runDemoFlow(store, { encounterId: p.encounter_id, source: kb("ca-chuan", 1) })) {
+    events.push(e);
+    if (e.buoc === "ai") saveDoctorEdit(store, p.encounter_id, p.revision, { benh_su: "BS chen giữa" });
+  }
+  const luu = pick(events, "luu");
+  assert.equal(luu.trang_thai, "loi");
+  assert.ok(luu.du_lieu.loi);
+  assert.equal(luu.du_lieu.phieu.sessions.length, 0);
+  assert.equal(luu.du_lieu.phieu.revision, p.revision + 1);
+  assert.equal(fs.existsSync(path.join(store.root, "audit", `${p.encounter_id}.ndjson`)), false);
 });
 
 function walk(dir: string): string[] {

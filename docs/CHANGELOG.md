@@ -4,6 +4,15 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-16
 
+### Thiết kế màn demo luồng dữ liệu và bộ rule PII tự động (chờ duyệt)
+- **Loại:** Tài liệu
+- **Thay đổi:** Thêm bản thiết kế màn `/demo-luong`: STT → bản thô → che PII tự động trên máy chủ → AI → lưu → phiếu khám để bác sĩ duyệt lần cuối, có hai chế độ xem (Bác sĩ/Lãnh đạo và Kỹ thuật). Đề xuất 14 rule PII (R1–R14), có chốt chặn không gọi AI khi nghi ngờ còn sót, và cờ đồng ý xử lý AI lấy lúc tiếp đón. Sau bước rà soát: STT trả chữ thường nên dò tên bằng từ điển họ; một phiếu khám có nhiều phiên ghi âm, kèm nút "+ Phiếu khám mới"; ô bác sĩ đã sửa không bị phiên sau ghi đè. AI đợt này chỉ là mock; nối model thật để đợt sau.
+- **Lý do:** Chủ dự án cần demo trọn luồng cho cả bác sĩ/lãnh đạo bệnh viện và hội đồng kỹ thuật, không thêm thao tác duyệt bản lọc cho bác sĩ. Rule dựa trên Luật BVDLCN 91/2025/QH15, Nghị định 356/2025/NĐ-CP và HIPAA Safe Harbor.
+Thiết kế đã được duyệt và có plan triển khai 8 task, mỗi task có test (bộ che PII, chốt chặn, dữ liệu giả, nới chính sách, bộ điều phối, API stream, giao diện, tài liệu).
+- **File:** `docs/superpowers/plans/pending/2026-11-16-demo-luong-du-lieu-design.md`, `docs/superpowers/plans/pending/2026-11-16-demo-luong-du-lieu.md`, `docs/superpowers/plans/pending/README.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** Chưa kiểm tra. Mới là tài liệu, chưa sửa code.
+- **Ảnh hưởng:** Khi triển khai sẽ phải sửa `docs/DATA-USE-POLICY.md`: dữ liệu đã qua chốt chặn được coi là đã khử nhận dạng.
+
 ### Chỉnh giao diện dashboard/bệnh nhân theo góp ý; "Tạo mới phiếu khám" tạo phiếu ngoại trú mới
 - **Loại:** Tính năng, Giao diện, Sửa lỗi
 - **Thay đổi:**

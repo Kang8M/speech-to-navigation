@@ -1,8 +1,9 @@
-// Đổ kết quả AI của trang chính (/api/extract) vào phiếu eForm, chỉ định và đơn thuốc.
+// Đổ kết quả AI (/api/extract) vào phiếu eForm, chỉ định và đơn thuốc.
 // Mã ICD10 không lấy từ LLM: code chấm điểm từ khóa gán mã và luôn đánh dấu "cần xem lại".
 import type { MatchResult, RowMatches } from "../match";
 import type { CatalogItem, Draft, FieldValue, Values } from "../types";
 import { goiYIcd } from "./icd";
+import { demChoTrong } from "./mau-cau";
 import type { EformData, Nguon, Truong } from "./types";
 
 export interface DongChiDinh {
@@ -13,6 +14,8 @@ export interface DongChiDinh {
   nguon: Nguon;
   /** Danh mục gần đúng khi AI khớp chưa chắc */
   ung_vien: CatalogItem[];
+  /** Dòng do AI điền (giữ cả khi bác sĩ sửa), để đếm số đo lượt thử */
+  tu_ai?: boolean;
 }
 
 export interface DongThuoc {
@@ -27,6 +30,7 @@ export interface DongThuoc {
   ghi_chu: string;
   nguon: Nguon;
   ung_vien: CatalogItem[];
+  tu_ai?: boolean;
 }
 
 export interface MucDaDien {
@@ -44,7 +48,7 @@ export interface KetQuaDien {
   donThuoc: DongThuoc[];
 }
 
-/** Trường văn bản của trang chính → trường eForm */
+/** Trường văn bản của config/forms/phieu-kham.json → trường eForm */
 const ANH_XA: { tu: string; den: string; nhan: string }[] = [
   { tu: "ly_do_kham", den: "ly_do", nhan: "Lý do đến khám" },
   { tu: "benh_su", den: "benh_su", nhan: "Bệnh sử" },
@@ -75,11 +79,22 @@ function nguonDong(match: MatchResult | undefined): Nguon {
   return !match || match.status === "khop" ? "ai" : "xem";
 }
 
+/** Ô chọn Có/Không mặc định "Không" chưa phải chữ ai gõ: phiếu mẫu vẫn được điền, trừ khi bác sĩ đã chọn */
+const O_CHON_MAC_DINH = new Set(["hen_tai_kham"]);
+
+export interface TuyChonDien {
+  /** Phiếu mẫu: chỉ điền ô còn trống, ô đã có chữ (kể cả dữ liệu cũ, AI điền trước) giữ nguyên */
+  chiOTrong?: boolean;
+  /** Mã ICD10 đã tra sẵn (phiếu mẫu), dùng thay cho gợi ý theo từ khóa */
+  icd?: string;
+}
+
 export function dienPhieu(
   draft: Draft,
   matches: RowMatches,
   data: EformData,
   get: (id: string) => Truong,
+  tuyChon: TuyChonDien = {},
 ): KetQuaDien {
   const truong: Record<string, Truong> = {};
   const daDien: MucDaDien[] = [];
@@ -88,12 +103,16 @@ export function dienPhieu(
   const dat = (id: string, nhan: string, value: string, nguon: Nguon) => {
     if (!value) return;
     const hienTai = get(id);
-    if (hienTai.value.trim() && (hienTai.nguon === "bs" || hienTai.nguon === "sua")) {
+    // Gọi lại mẫu: ô đã đúng giá trị này thì không tính là vừa điền
+    if (tuyChon.chiOTrong && hienTai.value === value) return;
+    const nguoiNhap = hienTai.nguon === "bs" || hienTai.nguon === "sua";
+    const giu = tuyChon.chiOTrong && !O_CHON_MAC_DINH.has(id) ? true : nguoiNhap;
+    if (hienTai.value.trim() && giu) {
       boQua.push(nhan);
       return;
     }
-    truong[id] = { value, nguon };
-    daDien.push({ id, nhan, nguon });
+    truong[id] = { value, nguon: nguon === "ai" && demChoTrong(value) > 0 ? "xem" : nguon };
+    daDien.push({ id, nhan, nguon: truong[id].nguon as Nguon });
   };
 
   const pk = (draft.phieu_kham ?? {}) as Values;
@@ -101,7 +120,7 @@ export function dienPhieu(
 
   const chanDoan = chu(pk.chan_doan_chinh);
   if (chanDoan) {
-    const ma = goiYIcd(chanDoan, data.icd10, data.quyTac)[0]?.item.ma ?? "";
+    const ma = tuyChon.icd || (goiYIcd(chanDoan, data.icd10, data.quyTac)[0]?.item.ma ?? "");
     dat("mo_ta_ban_dau", "Mô tả chẩn đoán ban đầu", chanDoan, "ai");
     dat("icd_ban_dau", "Chẩn đoán ban đầu (ICD10)", ma, "xem");
     dat("mo_ta_ra_vien", "Mô tả chẩn đoán ra viện", chanDoan, "ai");
@@ -132,6 +151,7 @@ export function dienPhieu(
     ghi_chu: chu(row.ghi_chu),
     nguon: nguonDong(matches.chi_dinh?.[i]),
     ung_vien: matches.chi_dinh?.[i]?.candidates ?? [],
+    tu_ai: true,
   }));
 
   const donThuoc = ((draft.ke_don ?? []) as Values[]).map((row, i) => ({
@@ -146,7 +166,21 @@ export function dienPhieu(
     ghi_chu: chu(row.ghi_chu),
     nguon: nguonDong(matches.ke_don?.[i]),
     ung_vien: matches.ke_don?.[i]?.candidates ?? [],
+    tu_ai: true,
   }));
 
   return { truong, daDien, boQua, chiDinh, donThuoc };
+}
+
+/**
+ * Gộp các ô AI vừa điền vào phiếu hiện tại, bỏ ô đã bị sửa trong lúc chờ AI trả lời
+ * (so với phiếu lúc gửi), để chữ bác sĩ gõ trong mấy giây đó không bị ghi đè.
+ */
+export function gopTruongMoi(
+  hienTai: Record<string, Truong>,
+  lucGui: Record<string, Truong>,
+  moi: Record<string, Truong>,
+): Record<string, Truong> {
+  const giu = Object.entries(moi).filter(([id]) => hienTai[id] === lucGui[id]);
+  return { ...hienTai, ...Object.fromEntries(giu) };
 }

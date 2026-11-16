@@ -1,4 +1,5 @@
 // Mock gợi ý ICD10: chấm điểm theo từ khóa trong bệnh sử và khám lâm sàng.
+import { normalizeVi } from "../normalize";
 import { chiaVe, timTuKhoa } from "./khop";
 import { TIEN_TO_TOM_TAT } from "./tom-tat";
 import type { Icd10, QuyTacAi } from "./types";
@@ -33,4 +34,10 @@ export function goiYIcd(text: string, icd10: Icd10[], quyTac: QuyTacAi, loaiTru:
     .filter((goiY) => goiY.khop.length > 0 && goiY.tinCay >= icd.nguong_tin_cay)
     .sort((a, b) => b.tinCay - a.tinCay)
     .slice(0, icd.so_goi_y);
+}
+
+/** Mã ICD10 có tên trùng khít (bỏ dấu, không phân biệt hoa thường); dùng cho phiếu mẫu, không có thì trả "" */
+export function maIcdTheoTen(ten: string, icd10: Icd10[]): string {
+  const can = normalizeVi(ten);
+  return icd10.find((item) => normalizeVi(item.ten) === can)?.ma ?? "";
 }

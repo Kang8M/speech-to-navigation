@@ -7,9 +7,13 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "tsx --conditions=react-server --test \"src/**/*.test.ts\"",
     "eval": "tsx --conditions=react-server scripts/eval.ts",
+    "eval-mau": "tsx --conditions=react-server scripts/eval-mau.ts",
     "cao-du-lieu": "tsx scripts/cao-du-lieu.ts",
-    "tai-model-giong-noi": "tsx scripts/tai-model-giong-noi.ts"
+    "tai-model-giong-noi": "tsx scripts/tai-model-giong-noi.ts",
+    "tao-am-thanh-mau": "tsx --conditions=react-server scripts/tao-am-thanh-mau.ts",
+    "eval-giong-noi": "tsx --conditions=react-server scripts/eval-giong-noi.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.6.0",

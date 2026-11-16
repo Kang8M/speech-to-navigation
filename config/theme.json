@@ -8,13 +8,13 @@
   "ink": "#2B2B2B",
   "muted": "#6B7280",
   "warn": "#E67E22",
-  "emr_blue": "#2B78B8",
-  "emr_navy": "#2B5F8A",
-  "emr_orange": "#F28C38",
-  "emr_menu": "#F0A868",
-  "emr_save": "#F0B545",
-  "emr_cyan": "#3CC0D8",
-  "emr_pill_on": "#F5C26B",
+  "ef_nen": "#F2F4F7",
+  "ef_vien": "#D7DDE5",
+  "ef_chu": "#1A2533",
+  "ef_phu": "#5D6878",
+  "ef_xanh": "#1F6FB2",
+  "ef_dam": "#16365A",
+  "ef_do": "#C2362F",
   "ai_tim": "#5B3FB8",
-  "xem": "#D97706"
+  "xem": "#B45309"
 }

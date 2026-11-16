@@ -1,6 +1,6 @@
 # Danh mục tham khảo cào từ nguồn công khai
 
-Dữ liệu thật của Bộ Y tế và Cục Quản lý Dược, lọc phần liên quan Tai Mũi Họng. **Ứng dụng chưa dùng các file này**: ứng dụng chỉ nạp `data/catalog/` (mã giả `DV-TMH-*`, `TH-*`). Muốn dùng thì phải chủ động chép hoặc chuyển đổi sang `data/catalog/`, và khi đó điểm eval sẽ đổi vì `expected` trong `data/cases/` đang ghi mã giả.
+Dữ liệu thật của Bộ Y tế và Cục Quản lý Dược, lọc phần liên quan Tai Mũi Họng. **Ứng dụng đã nạp** `icd10-tmh.json`, `dich-vu-ky-thuat-tmh.json`, `thuoc-luu-hanh-tmh.json` (từ 2026-11-11), ghép với danh mục bệnh viện soạn tay ở `data/catalog/` trong `src/server/du-lieu/danh-muc.ts`. `thuoc-hoat-chat.json` chưa dùng. Cào lại xong thì tải lại trang là thấy, không cần chuyển đổi.
 
 Cào lại bằng `npm run cao-du-lieu` (khoảng 5 phút, phần thuốc chiếm gần hết) hoặc `npm run cao-du-lieu -- --bo-thuoc` (vài giây). Ngày cào và số mục ghi trong `nguon.json`. Bộ lọc nằm ở đầu `scripts/cao-du-lieu.ts`.
 

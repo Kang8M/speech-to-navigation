@@ -1,5 +1,6 @@
 // Hợp đồng giữa giao diện (src/client) và API (src/app/api): kiểu dữ liệu gửi đi, nhận về và các hằng hai bên phải khớp.
 // Đổi gì ở đây thì cả route lẫn nơi gọi đều báo lỗi kiểu, không bị lệch âm thầm.
+import type { DonDaKe } from "./eform/thoi-quen";
 import type { RowMatches } from "./match";
 import type { SessionInput, SessionRecord } from "./metrics";
 import type { Draft } from "./types";
@@ -12,6 +13,8 @@ export interface ApiLoi {
 /** POST /api/extract */
 export interface ExtractRequest {
   text: string;
+  /** Có khi bác sĩ gọi phiếu mẫu kèm chi tiết: text là phần chi tiết, server lấy mẫu theo id */
+  mau_id?: string;
 }
 
 /** POST /api/extract trả về: nháp đã khớp danh mục và tính tổng số lượng */
@@ -48,4 +51,10 @@ export interface AsrKetQua {
   chot: string[];
   /** Phần câu đang nói dở, rỗng khi đang im lặng */
   tam: string;
+}
+
+/** POST /api/thoi-quen: một lần kê của bác sĩ (thời điểm do server ghi), trả 204 */
+export interface LuuThoiQuenRequest {
+  tai_khoan: string;
+  don: Omit<DonDaKe, "thoi_diem">;
 }

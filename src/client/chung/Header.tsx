@@ -5,16 +5,13 @@ import { usePathname } from "next/navigation";
 
 // `cungNhom`: các đường dẫn con coi như đang ở mục này (hồ sơ bệnh nhân luôn đi từ lịch khám).
 const LINKS: { href: string; label: string; cungNhom?: string[] }[] = [
-  { href: "/", label: "Màn hình làm việc" },
+  { href: "/", label: "eForm ngoại trú" },
   { href: "/dashboard", label: "Lịch khám", cungNhom: ["/benh-nhan"] },
-  { href: "/ket-qua", label: "Kết quả thử nghiệm" },
-  { href: "/eform", label: "Mô phỏng eForm ngoại trú" },
+  { href: "/ket-qua", label: "Kết quả thử nghiệm" }  
 ];
 
 export function Header({ provider }: { provider: string }) {
   const pathname = usePathname();
-  // Trang eForm mô phỏng màn EMR nên không hiện thanh của prototype; nút "Quay lại" dẫn về trang chính
-  if (pathname === "/eform") return null;
   return (
     <header className="flex flex-wrap items-center gap-x-6 gap-y-1 bg-primary px-4 py-2.5 text-white">
       <h1 className="text-lg font-semibold">Trợ lý điền bệnh án TMH – Prototype</h1>

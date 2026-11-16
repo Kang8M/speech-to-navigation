@@ -31,5 +31,7 @@
   { "ma": "TH-030", "ten": "Acetylcystein", "hoat_chat": "Acetylcystein", "ham_luong": "200 mg", "dang_bao_che": "Gói bột", "ten_khac": ["acetylcysteine", "acemuc"] },
   { "ma": "TH-031", "ten": "Betahistin", "hoat_chat": "Betahistin", "ham_luong": "16 mg", "dang_bao_che": "Viên nén", "ten_khac": ["betahistine", "betaserc"] },
   { "ma": "TH-032", "ten": "Ginkgo biloba", "hoat_chat": "Cao Ginkgo biloba", "ham_luong": "40 mg", "dang_bao_che": "Viên nén", "ten_khac": ["ginkgo", "tanakan"] },
-  { "ma": "TH-033", "ten": "Esomeprazol", "hoat_chat": "Esomeprazol", "ham_luong": "40 mg", "dang_bao_che": "Viên nén", "ten_khac": ["esomeprazole", "nexium"] }
+  { "ma": "TH-033", "ten": "Esomeprazol", "hoat_chat": "Esomeprazol", "ham_luong": "40 mg", "dang_bao_che": "Viên nén", "ten_khac": ["esomeprazole", "nexium"] },
+  { "ma": "TH-034", "ten": "Clotrimazol nhỏ tai", "hoat_chat": "Clotrimazol", "ham_luong": "1%", "dang_bao_che": "Dung dịch nhỏ tai", "ten_khac": ["clotrimazole nhỏ tai", "clotrimazol"] },
+  { "ma": "TH-035", "ten": "Acid tranexamic", "hoat_chat": "Acid tranexamic", "ham_luong": "500 mg", "dang_bao_che": "Viên nén", "ten_khac": ["tranexamic", "transamin"] }
 ]

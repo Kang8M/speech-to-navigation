@@ -54,9 +54,22 @@ const STOP_WORDS = [
   "bảo", "đang", "sẽ", "muốn", "cần", "xin", "ơi", "nhờ", "hỏi", "thấy", "nghe", "ngứa", "chảy", "nhức", "ù", "tai", "mũi",
   "họng", "ngày", "tuần", "tháng", "năm", "nay", "qua", "từ", "trong", "khi", "lúc", "sau", "trước", "này", "đó", "kia",
   "ấy", "nhé", "nha", "vậy", "thế", "nữa", "rất", "hơi", "khá", "quá", "lắm", "đây", "nhà", "xa", "gần", "sĩ",
+  // triệu chứng, từ lâm sàng thường đứng sau từ chỉ người
+  "viêm", "nghẹt", "khàn", "chóng", "mặt", "tiếng", "khó", "thở", "mệt", "mỏi", "nhẹ", "nặng", "tăng", "giảm", "đỡ",
+  "hết", "lành", "tốt", "khô", "ướt", "mủ", "máu", "sưng", "kém", "thường", "nôn", "buồn", "mất", "ngạt", "hắt",
+  "nhiễm", "đồng", "ý", "hóa", "nội", "ngoại", "soi", "phẫu", "mổ", "điếc",
 ];
+/** Dạng không dấu chỉ áp cho từ viết không dấu ("thị" khác "thì"). */
+const STOP_FOLD = new Set(STOP_WORDS.map(w => foldVietnamese(w)).filter(w => w.length > 1));
+/** Cặp họ + từ thường gặp không phải tên người ("em bình thường", "bé đồng ý"). */
+const COMMON_AFTER_HO = new Set([
+  "bình thường", "đồng ý", "tiêu hóa", "tiêu chảy", "bình phục", "đào thải", "tăng huyết", "lâm sàng", "phù nề",
+  "phù hợp", "sử dụng", "thân nhiệt", "tiết dịch", "tiết niệu", "cao huyết", "lý do", "ung thư", "mã bệnh",
+]);
+/** Họ phổ biến: đầu câu không có từ chỉ người thì chỉ nhận các họ này hoặc khi có đệm văn/thị. */
+const COMMON_HO_FOLD = new Set(["nguyen", "tran", "le", "pham", "hoang", "huynh", "vo", "vu", "dang", "bui", "ngo", "do", "dinh", "trinh"]);
 const ADMIN_WORDS = [
-  "đường(?!\\s+(?:huyết|ruột|thở|mật|tiêu hóa|hô hấp|niệu|tiết niệu|dẫn|truyền|uống|tiêm|máu|kính|vào|ra))",
+  "đường(?!\\s+(?:huyết|ruột|thở|mật|tiêu hóa|hô hấp|niệu|tiết niệu|dẫn|truyền|uống|tiêm|máu|kính|vào|ra|giữa|rạch|mổ|cong|dò|rò|ống|xương|khâu|lệch|sau|trước|bên|tiết|thông|vết|cắt|mê|khí|dài|ngang|dọc))",
   "phố", "ngõ", "ngách", "hẻm", "phường", "xã(?!\\s+hội)", "thị trấn", "quận", "huyện", "thành phố",
   "tỉnh(?!\\s+(?:táo|dậy|lại|giấc|ngủ))", "thôn", "ấp", "khu phố", "tổ dân phố",
 ];
@@ -70,8 +83,8 @@ const AMBIGUOUS_ASCII_HO = new Set(["ho", "do", "la", "mai", "cao", "ta", "chu",
 const HO_ASCII = new Set(HO_VIET.map(h => foldVietnamese(h)).filter(h => !AMBIGUOUS_ASCII_HO.has(h)));
 /** Họ trùng chữ thường khác: đầu câu không có từ chỉ người thì không coi là họ. */
 const SENTENCE_START_EXCLUDE = new Set(["cao", "dương", "lâm", "triệu", "trương", "mai", "la", "lã", "hà", "đỗ", "tiêu", "sơn", "đồng", "đào", "chu", "ca", "bình", "hầu", "lại", "ân", "viên", "vi", "sử", "hồ", "thân", "tôn", "tử"]);
-const PERSON_TRIGGERS = new Set(["anh", "chị", "ông", "bà", "cô", "chú", "bác", "bé", "em", "con", "cháu", "tên", "bs", "thầy"]);
-const TRIGGER_FILLERS = new Set(["sĩ", "là"]);
+const PERSON_TRIGGERS = new Set(["anh", "chị", "ông", "bà", "cô", "chú", "bác", "bé", "em", "con", "cháu", "tên", "bs", "thầy", "mẹ", "bố", "ba", "má", "vợ", "chồng", "là"]);
+const TRIGGER_FILLERS = new Set(["sĩ", "là", "nội", "ngoại", "tôi", "của"]);
 const STOP_SET = new Set(STOP_WORDS);
 
 function isHo(d: string): boolean {
@@ -101,9 +114,27 @@ export function redactPii(raw: string, known: KnownIdentifier[]): RedactionResul
   const t = buildText(raw);
   const { f, d } = t;
   const accepted: Cand[] = [];
+  // Phần chồng lên span đã nhận bị cắt bỏ, phần còn lại vẫn được che (không để lọt mảnh nào).
   const add: Add = (rule, kind, s, e, key) => {
-    if (e <= s || accepted.some(c => s < c.end && e > c.start)) return;
-    accepted.push({ rule, kind, start: s, end: e, key: key ?? f.slice(s, e).replace(/[\s.,-]/g, "") });
+    // Tên đoán (R2) chồng lên span khác thì bỏ hẳn: mảnh còn lại chỉ là từ thường.
+    if (rule === "R2" && accepted.some(c => s < c.end && e > c.start)) return;
+    let segs: [number, number][] = [[s, e]];
+    for (const c of accepted) {
+      segs = segs.flatMap(([a, b]): [number, number][] => {
+        if (a >= c.end || b <= c.start) return [[a, b]];
+        const out: [number, number][] = [];
+        if (a < c.start) out.push([a, c.start]);
+        if (b > c.end) out.push([c.end, b]);
+        return out;
+      });
+    }
+    const whole = segs.length === 1 && segs[0][0] === s && segs[0][1] === e;
+    for (let [a, b] of segs) {
+      while (a < b && f[a] === " ") a++;
+      while (b > a && f[b - 1] === " ") b--;
+      if (b <= a) continue;
+      accepted.push({ rule, kind, start: a, end: b, key: whole && key ? key : f.slice(a, b).replace(/[\s.,-]/g, "") });
+    }
   };
   const scan = (rule: PiiRule, kind: PiiLabelKind, re: RegExp) => {
     for (const m of d.matchAll(re)) if (m[0].length > 0) add(rule, kind, m.index!, m.index! + m[0].length);
@@ -195,15 +226,18 @@ function nameScan(d: string, f: string, add: Add): void {
     let needFollow = 1;
     if (PERSON_TRIGGERS.has(toks[i].w)) {
       j = i + 1;
-      for (let n = 0; n < 2 && j < toks.length && TRIGGER_FILLERS.has(toks[j].w) && joined(j - 1, j); n++) j++;
+      needFollow = toks[i].w === "là" ? 2 : 1;
+      for (let n = 0; n < 3 && j < toks.length && TRIGGER_FILLERS.has(toks[j].w) && joined(j - 1, j); n++) j++;
       if (j < toks.length && !joined(j - 1, j)) continue;
     } else if (startOfSentence(i) && !SENTENCE_START_EXCLUDE.has(toks[i].w)) {
       j = i;
       needFollow = 2;
     }
     if (j < 0 || j >= toks.length || !isHo(toks[j].w)) continue;
+    if (j + 1 < toks.length && COMMON_AFTER_HO.has(`${toks[j].w} ${toks[j + 1].w}`)) continue;
+    if (j === i && !COMMON_HO_FOLD.has(foldVietnamese(toks[j].w)) && !(j + 1 < toks.length && (toks[j + 1].w === "văn" || toks[j + 1].w === "thị"))) continue;
     let k = j + 1;
-    while (k <= j + 3 && k < toks.length && joined(k - 1, k) && /^\p{L}+$/u.test(toks[k].w) && !STOP_SET.has(toks[k].w)) k++;
+    while (k <= j + 3 && k < toks.length && joined(k - 1, k) && /^\p{L}+$/u.test(toks[k].w) && !STOP_SET.has(toks[k].w) && !(/^[a-z]+$/.test(toks[k].w) && STOP_FOLD.has(toks[k].w))) k++;
     if (k - j - 1 < needFollow) continue;
     const s = toks[j].s, e = toks[k - 1].e;
     add("R2", "NGƯỜI", s, e, f.slice(s, e).replace(/\s/g, ""));

@@ -113,3 +113,31 @@ test("span hợp lệ, không chồng nhau, vị trí đúng cả khi bản thô
   assert.equal(raw.slice(r.spans[0].start, r.spans[0].end).normalize("NFC"), "Nguyễn Thị Giả");
   assert.ok(!/Nguy|0912|1978|nhật/.test(r.clean.normalize("NFC")), r.clean);
 });
+
+test("vòng 1: R2 không nuốt từ lâm sàng sau từ chỉ người", () => {
+  for (const text of ["em bình thường không sốt", "bé đồng ý nội soi", "em tiêu hóa kém"]) assert.equal(redactPii(text, none).clean, text, text);
+  assert.equal(redactPii("anh trần văn an nghẹt mũi khàn tiếng", none).clean, "anh [NGƯỜI_1] nghẹt mũi khàn tiếng");
+  assert.equal(redactPii("anh nguyen van a dau tai", none).clean, "anh [NGƯỜI_1] dau tai");
+});
+
+test("vòng 1: đầu văn bản không che chẩn đoán", () => {
+  for (const text of ["lý do vào viện đau tai phải", "ung thư vòm họng giai đoạn hai"]) assert.equal(redactPii(text, none).clean, text, text);
+  assert.equal(redactPii("mã bệnh nhân 2026001234", none).clean, "mã bệnh nhân [MÃ_ĐỊNH_DANH_1]");
+  assert.equal(redactPii("nguyễn thị giả đau tai", none).clean, "[NGƯỜI_1] đau tai");
+});
+
+test("vòng 1: R3 không che giải phẫu, phẫu thuật", () => {
+  for (const text of ["vách ngăn lệch khỏi đường giữa", "đường rạch sau tai lành tốt", "đường mổ khô"]) assert.equal(redactPii(text, none).clean, text, text);
+});
+
+test("vòng 1: span chồng nhau không để lọt mảnh", () => {
+  const r = redactPii("sống ở mỹ đức hà nội", none);
+  assert.ok(!r.clean.includes("mỹ đức"), r.clean);
+  assert.ok(!r.clean.includes("hà nội"), r.clean);
+});
+
+test("vòng 1: tên người thân không cần từ 'tên', giữ tiền sử", () => {
+  const r = redactPii("mẹ là phạm thị mai bị viêm xoang", none);
+  assert.equal(r.clean, "mẹ là [NGƯỜI_1] bị viêm xoang");
+  assert.equal(redactPii("mẹ tôi bị ung thư vòm họng", none).clean, "mẹ tôi bị ung thư vòm họng");
+});

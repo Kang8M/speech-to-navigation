@@ -7,9 +7,10 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 ### Bộ che PII tự động pii-auto-1 (R1–R8, nhãn R10)
 - **Loại:** Tính năng
 - **Thay đổi:** Thêm module thuần TS `src/shared/clinical/pii/`: `redactPii(raw, known)` che tên đã biết (so khớp không dấu, tách khoảng trắng), tên người dò bằng từ điển họ (`HO_VIET`) nên không cần chữ hoa, địa chỉ/địa danh, ngày tháng, liên hệ (điện thoại, email, URL, IP), mã định danh (CCCD, biển số, PID, tài khoản), thông tin nhạy cảm (quốc tịch, tôn giáo, hôn nhân), nội dung ngoài khám, cùng tuổi/giới tính. Trả về bản sạch, danh sách span trên bản thô và số lần mỗi rule. Nhãn dạng `[KIND_n]` đếm theo thứ tự xuất hiện, cùng giá trị cùng nhãn; bệnh nhân/bác sĩ không số. Không sửa `privacy.ts` (`redactTranscript` cũ giữ nguyên). Chưa nối vào luồng nào.
+  - Sửa sau rà soát vòng 1: R2 không nuốt từ lâm sàng sau từ chỉ người (thêm từ dừng triệu chứng, cặp họ + từ thường như "bình thường", từ dừng không dấu); R2 đầu văn bản chỉ nhận họ phổ biến hoặc có đệm văn/thị; "đường" không che giải phẫu/phẫu thuật; span chồng nhau được cắt phần chồng và vẫn che phần còn lại (trừ R2); thêm từ chỉ người thân (mẹ, bố, vợ, chồng, "là") để che tên người nhà không cần chữ "tên".
 - **Lý do:** Bước đầu của màn demo luồng dữ liệu: bản thô từ STT (chữ thường, không dấu câu) phải được che PII trước khi đến AI.
 - **File:** `src/shared/clinical/pii/{types,ho-viet,redact,index}.ts`, `src/shared/clinical/pii/redact.test.ts`, `docs/CHANGELOG.md`
-- **Kiểm tra:** `npx tsx --conditions=react-server --test src/shared/clinical/pii/redact.test.ts` đạt 14/14; eslint sạch trên thư mục mới. `npm test` toàn bộ: 281/282, một lỗi có sẵn ở `encounter-context.test.ts` (đếm phiếu lịch sử 5 thay vì 4), không liên quan thay đổi này.
+- **Kiểm tra:** `npx tsx --conditions=react-server --test src/shared/clinical/pii/redact.test.ts` đạt 19/19; eslint sạch trên thư mục mới. `npm test` toàn bộ: 281/282, một lỗi có sẵn ở `encounter-context.test.ts` (đếm phiếu lịch sử 5 thay vì 4), không liên quan thay đổi này.
 
 ### Thiết kế màn demo luồng dữ liệu và bộ rule PII tự động (chờ duyệt)
 - **Loại:** Tài liệu

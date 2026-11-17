@@ -30,11 +30,17 @@ if (!$health.ready -or !$health.vad_ready -or $health.backend -ne 'sherpa-onnx')
 if (!$BackendOnly) {
     if (!(Test-Path -LiteralPath 'node_modules/next/dist/bin/next')) { throw 'Run npm ci first.' }
     $webReady = $false
+    # Cổng đã có server (thường là next dev đang chạy): Next dev biên dịch trang /stt lần đầu rất lâu,
+    # nên chờ lâu hơn thay vì coi là chưa sẵn sàng rồi mở thêm một server nữa (Next không cho hai server trong cùng thư mục).
+    $portBusy = $null -ne (Get-NetTCPConnection -State Listen -LocalPort $WebPort -ErrorAction SilentlyContinue)
     try {
-        $web = Invoke-WebRequest -Uri "http://127.0.0.1:$WebPort/stt" -UseBasicParsing -TimeoutSec 4
+        $web = Invoke-WebRequest -Uri "http://127.0.0.1:$WebPort/stt" -UseBasicParsing -TimeoutSec $(if ($portBusy) { 120 } else { 4 })
         $proxy = Get-JsonStatus "http://127.0.0.1:$WebPort/api/stt"
         $webReady = $web.StatusCode -eq 200 -and $proxy.ready -and $proxy.model_id -eq $health.model_id
     } catch {}
+    if (!$webReady -and $portBusy) {
+        throw "Cổng $WebPort đã có server nhưng chưa nối được STT (server cũ có thể được mở khi chưa đặt STT_BACKEND_URL=$env:STT_BACKEND_URL). Tắt server đó (Get-NetTCPConnection -LocalPort $WebPort) rồi chạy lại, hoặc dùng -WebPort khác."
+    }
     if (!$webReady) {
         $node = (Get-Command node).Source
         $webProcess = Start-Process -FilePath $node -ArgumentList @('node_modules/next/dist/bin/next', 'dev', '--hostname', '127.0.0.1', '--port', "$WebPort") -WorkingDirectory $projectRoot -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $projectRoot 'logs/stt-web.log') -RedirectStandardError (Join-Path $projectRoot 'logs/stt-web.err.log')

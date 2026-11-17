@@ -4,6 +4,12 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-17
 
+### Sửa `npm run stt:start` báo "Next server exited" khi cổng 3000 đã có server
+- **Loại:** Sửa lỗi
+- **Thay đổi:** Khi cổng web đã có `next dev` chạy (PID 17204, mở từ 14:38), script kiểm tra trang `/stt` chỉ chờ 4 giây; Next dev biên dịch `/stt` lần đầu lâu hơn nên kiểm tra hết hạn, script coi là chưa sẵn sàng và mở thêm một Next nữa. Next không cho hai server trong cùng thư mục (`logs/stt-web.err.log`: "Another next dev server is already running") nên báo lỗi. `scripts/start-stt.ps1` giờ phát hiện cổng đang có server (`Get-NetTCPConnection`), chờ tối đa 120 giây, và nếu vẫn chưa nối được STT thì báo rõ nguyên nhân (server cũ mở khi chưa đặt `STT_BACKEND_URL`) thay vì mở server thứ hai.
+- **File:** `scripts/start-stt.ps1`, `docs/CHANGELOG.md`
+- **Kiểm tra:** chạy lại `npm run stt:start` với server đang chạy: in đường dẫn `/stt` và backend `/health` (ready, vad_ready). Chưa tái hiện lại tình huống server cũ chưa nối STT; chưa thử micro.
+
 ### eForm R1–R14 · Task 6: chính sách dữ liệu, luồng khám và sơ đồ theo R1–R14
 - **Loại:** Tài liệu
 - **Thay đổi:**

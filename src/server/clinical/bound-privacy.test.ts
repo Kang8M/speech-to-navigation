@@ -10,7 +10,9 @@ import { getDemoClinicalActor, resolveEncounterContext } from "./encounter-conte
 import { openEncounter } from "./service";
 import { ClinicalError, ClinicalRepository } from "./repository";
 import { PrivacyTickets } from "./privacy";
-import { prepareRecordingPrivacy, approveRecordingPrivacy, requireRecordingContext } from "./bound-privacy";
+import { checkRecordingPrivacy, requireRecordingContext } from "./bound-privacy";
+import { readFileSync } from "node:fs";
+import { PatientsFixtureSchema } from "@/shared/clinic/schema";
 
 function setup() {
   const store = new ClinicalRepository(fs.mkdtempSync(path.join(os.tmpdir(), "bound-privacy-")));
@@ -20,27 +22,42 @@ function setup() {
   Object.assign(session, { id: randomUUID(), encounter_id: opened.record.id, device_id: "test-device", generation: 1, sequence: 1,
     started_at: "2026-11-14T01:00:00Z", ended_at: "2026-11-14T01:00:01Z", state: "stopped", content_state: "awaiting_review", content_revision: 1 });
   store.update(opened.record.id, opened.record.revision, record => { record.recording_sessions.push(session); return record; }, actor.doctorId, "2026-11-14T01:00:01Z");
-  return { store, actor, binding: { encounter_id: opened.record.id, recording_session_id: session.id, generation: 1, content_revision: 1 }, tickets: new PrivacyTickets() };
+  return { store, actor, binding: { encounter_id: opened.record.id, recording_session_id: session.id, generation: 1, content_revision: 1 }, tickets: new PrivacyTickets(), audit: fs.mkdtempSync(path.join(os.tmpdir(), "bound-audit-")) };
 }
 
-test("privacy uses the selected patient's server identifiers and rejects fake ownership", () => {
-  const { store, actor, binding, tickets } = setup();
-  const preview = prepareRecordingPrivacy(actor, { binding, text: "BN: Trần Văn Mô Phỏng đau họng.", mode: "conversation" }, { store, tickets });
-  assert.ok(!preview.preview.includes("Trần Văn Mô Phỏng"));
-  assert.deepEqual(preview.binding, binding);
-  assert.throws(() => requireRecordingContext({ ...actor, doctorId: "other" }, binding, store), (e: unknown) => e instanceof ClinicalError && e.status === 403);
-  assert.throws(() => prepareRecordingPrivacy(actor, { binding: { ...binding, recording_session_id: randomUUID() }, text: "Đau tai", mode: "conversation" }, { store, tickets }));
+const readPatients = () => PatientsFixtureSchema.parse(JSON.parse(readFileSync(path.join(process.cwd(), "data/clinic/patients.json"), "utf8")));
+
+test("check uses the patient's family names from the fixture and the record's consent", () => {
+  const { store, actor, binding, tickets, audit } = setup(); // mã khám 000123 → GIA-000456, chưa đồng ý
+  const relative = readPatients().find(p => p.id === "GIA-000456")!.nguoi_nha![0].ho_ten;
+  const r = checkRecordingPrivacy(actor, { binding, text: `BN: Con là ${relative} đưa tôi đi khám, đau họng.`, mode: "conversation" }, { store, tickets, auditDirectory: audit });
+  assert.equal(r.status, "passed"); assert.ok(r.ticket);
+  assert.ok(!r.preview.includes(relative));
+  assert.equal(r.dong_y.trang_thai, false); assert.equal(r.ai_route, "local_only");
+  assert.match(r.digest!, /^[a-f0-9]{64}$/);
+  assert.deepEqual(r.binding, binding);
+  assert.equal(fs.existsSync(path.join(audit, `${binding.encounter_id}.ndjson`)), false);
 });
 
-test("server content invalidation rejects an old ticket even though its bearer has not expired", () => {
-  const { store, actor, binding, tickets } = setup();
-  const request = { binding, text: "BS: Họng đỏ.", mode: "dictation" as const };
-  const preview = prepareRecordingPrivacy(actor, request, { store, tickets });
-  const accepted = approveRecordingPrivacy(actor, { binding, ticket: preview.ticket, text: preview.preview, consent: true }, { store, tickets });
-  assert.equal(accepted.status, "passed");
+test("blocked check writes one audit line without raw text and returns no ticket", () => {
+  const { store, actor, binding, tickets, audit } = setup();
+  const r = checkRecordingPrivacy(actor, { binding, text: "hôm qua đỗ quốc việt mua thuốc giúp", mode: "conversation" }, { store, tickets, auditDirectory: audit });
+  assert.equal(r.status, "blocked"); assert.equal(r.ticket, null); assert.equal(r.digest, undefined);
+  const line = fs.readFileSync(path.join(audit, `${binding.encounter_id}.ndjson`), "utf8").trim();
+  assert.equal(line.split("\n").length, 1);
+  const entry = JSON.parse(line);
+  assert.equal(entry.gate, false); assert.equal(entry.provider, "khong_goi"); assert.equal(entry.session_sequence, 1);
+  assert.deepEqual(entry.gate_reasons, ["R11c_ten_rieng_con_sot"]);
+  assert.ok(!line.includes("quốc việt"));
+});
+
+test("check rejects fake ownership, a missing session and a stale content revision", () => {
+  const { store, actor, binding, tickets, audit } = setup();
+  const options = { store, tickets, auditDirectory: audit };
+  assert.throws(() => requireRecordingContext({ ...actor, doctorId: "other" }, binding, store), (e: unknown) => e instanceof ClinicalError && e.status === 403);
+  assert.throws(() => checkRecordingPrivacy(actor, { binding: { ...binding, recording_session_id: randomUUID() }, text: "Đau tai", mode: "conversation" }, options));
   const record = store.read(binding.encounter_id);
   store.update(record.id, record.revision, draft => { draft.recording_sessions[0].content_revision++; return draft; }, actor.doctorId, "2026-11-14T01:00:02Z");
-  assert.throws(() => approveRecordingPrivacy(actor, { binding, ticket: preview.ticket, text: preview.preview, consent: true }, { store, tickets }),
-    (e: unknown) => e instanceof ClinicalError && e.status === 409);
-  assert.throws(() => approveRecordingPrivacy(actor, { binding: { ...binding, content_revision: 2 }, ticket: preview.ticket, text: preview.preview, consent: true }, { store, tickets }));
+  assert.throws(() => checkRecordingPrivacy(actor, { binding, text: "BS: Họng đỏ.", mode: "dictation" }, options), (e: unknown) => e instanceof ClinicalError && e.status === 409);
+  assert.throws(() => checkRecordingPrivacy(actor, { binding, text: "BS: Họng đỏ.", mode: "dictation", consent: true }, options));
 });

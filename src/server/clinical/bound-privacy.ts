@@ -1,17 +1,21 @@
 import "server-only";
+import { createHash } from "node:crypto";
 import { z } from "zod";
-import type { ClinicalActor, PrivacyPreview, TranscriptBinding } from "@/shared/clinical/api";
+import type { ClinicalActor, PrivacyCheckResult, TranscriptBinding } from "@/shared/clinical/api";
+import { buildAuditEntry, PII_POLICY_VERSION } from "@/shared/clinical/pii";
 import { ClinicalError, ClinicalRepository } from "./repository";
 import { resolveEncounterContextForRecord } from "./encounter-context";
 import { PrivacyTickets, privacyTickets } from "./privacy";
+import { knownIdentifiersForContext } from "./known-identifiers";
+import { clinicalAllowlist } from "./pii-allowlist";
+import { AUDIT_NOT_CALLED, appendPiiAudit } from "./pii-audit";
 
 export const recordingBindingSchema = z.object({ encounter_id: z.uuid(), recording_session_id: z.uuid(),
   generation: z.number().int().positive(), content_revision: z.number().int().positive() }).strict();
 const textSchema = z.string().trim().min(1).max(50_000);
-const prepareSchema = z.object({ binding: recordingBindingSchema, text: textSchema, mode: z.enum(["conversation", "dictation"]) }).strict();
-const approveSchema = z.object({ binding: recordingBindingSchema, ticket: z.string().min(1).max(128), text: textSchema, consent: z.literal(true) }).strict();
+const checkSchema = z.object({ binding: recordingBindingSchema, text: textSchema, mode: z.enum(["conversation", "dictation"]) }).strict();
 const repository = new ClinicalRepository();
-interface Options { store?: ClinicalRepository; tickets?: PrivacyTickets }
+interface Options { store?: ClinicalRepository; tickets?: PrivacyTickets; auditDirectory?: string; now?: () => string }
 
 /** Recheck server-owned identity and current text revision before every ticket operation. */
 export function requireRecordingContext(actor: ClinicalActor, value: TranscriptBinding, store = repository) {
@@ -24,23 +28,25 @@ export function requireRecordingContext(actor: ClinicalActor, value: TranscriptB
   }
   if (!["dang_kham", "cho_kq_cls"].includes(record.status)) throw new ClinicalError("Lượt khám đã kết thúc, không nhận nội dung mới.", 409);
   if (session.content_state === "discarded") throw new ClinicalError("Nội dung đã được bỏ. Hãy mở phiên bản nội dung mới trước khi kiểm tra.", 409);
-  const ca = context.data.ca;
-  const identifiers = [ca.ho_ten, ca.pid, ca.ma_luot_kham, ca.dang_nhap, ca.bac_si_kham, ca.bac_si_chinh,
-    ...ca.lich_su.tien_su_ban_than.map(item => item.bac_si), ...ca.lich_su.di_ung.map(item => item.nguoi)];
-  return { binding, record, session, context, identifiers };
+  const { known, consent } = knownIdentifiersForContext(context);
+  return { binding, record, session, context, known, consent };
 }
 
-export function prepareRecordingPrivacy(actor: ClinicalActor, value: unknown, options: Options = {}): PrivacyPreview {
-  const request = prepareSchema.parse(value);
-  const source = requireRecordingContext(actor, request.binding, options.store);
-  const result = (options.tickets ?? privacyTickets).prepare(request.text, request.mode, source.identifiers, source.binding);
-  return { ...result, binding: source.binding };
-}
-
-export function approveRecordingPrivacy(actor: ClinicalActor, value: unknown, options: Options = {}): PrivacyPreview {
-  const request = approveSchema.parse(value);
+/** Che + chốt chặn R11 + đồng ý R14 cho nội dung của một phiên. Bị chặn thì ghi một dòng nhật ký R13 (không gọi AI) và không cấp ticket. */
+export function checkRecordingPrivacy(actor: ClinicalActor, value: unknown, options: Options = {}): PrivacyCheckResult {
+  const request = checkSchema.parse(value);
   const source = requireRecordingContext(actor, request.binding, options.store);
   const tickets = options.tickets ?? privacyTickets;
-  const result = tickets.approve(request.ticket, request.text, source.identifiers, request.consent, source.binding);
-  return { ...result, binding: source.binding, ...(result.status === "passed" ? { digest: tickets.reviewed(result.ticket, source.binding).digest } : {}) };
+  const result = tickets.check(request.text, request.mode, { known: source.known, allowlist: clinicalAllowlist(), consent: source.consent.trang_thai, binding: source.binding });
+  const base = { ...result, gate: { passed: result.gate.passed, reasons: result.gate.reasons.map(item => ({ ...item })) }, dong_y: { ...source.consent }, binding: source.binding };
+  if (result.status === "blocked") {
+    appendPiiAudit(source.record.id, buildAuditEntry({
+      now: options.now?.() ?? new Date().toISOString(), encounter_id: source.record.id, session_sequence: source.session.sequence,
+      policy_version: PII_POLICY_VERSION, counts: result.counts, gate: false, gate_reasons: result.gate.reasons.map(item => item.reason),
+      ai_route: result.ai_route, provider: AUDIT_NOT_CALLED, model: AUDIT_NOT_CALLED,
+      clean_sha256: createHash("sha256").update(result.preview).digest("hex"),
+    }), options.auditDirectory);
+    return base;
+  }
+  return { ...base, digest: tickets.reviewed(result.ticket!, source.binding).digest };
 }

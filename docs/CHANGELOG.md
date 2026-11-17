@@ -4,6 +4,21 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-17
 
+### eForm R1–R14 · Task 3: API `check` thay `prepare`/`approve`, nhật ký R13 khi bị chặn
+- **Loại:** Tính năng
+- **Thay đổi:**
+  - `POST /api/clinical/privacy` chỉ còn nhận `{ action: "check", text, mode, binding }`. Hai action `prepare`/`approve` cũ trả 400.
+  - `checkRecordingPrivacy` lấy danh sách định danh R1 và cờ đồng ý R14 của lượt khám từ máy chủ, che và chặn bằng `pii-auto-1`. Qua chốt chặn thì trả thêm digest. Bị chặn thì ghi một dòng R13 (`gate:false`, `provider:"khong_goi"`, chỉ có mã lý do và mã băm) và không cấp ticket.
+  - `requireRecordingContext` trả `known` và `consent` thay cho mảng `identifiers` cũ.
+  - Kiểu `PrivacyPreview` đổi thành `PrivacyCheckResult` (`src/shared/clinical/api.ts`).
+  - Bốn file test trích xuất, phiên ghi âm và bản chép lời được đổi sang dùng `check`.
+- **Lý do:** Plan `2026-11-17-eform-pii-r1-r14.md`, Task 3.
+- **File:** `src/shared/clinical/api.ts`, `src/server/clinical/bound-privacy.ts`, `src/server/clinical/bound-privacy.test.ts`, `src/app/api/clinical/privacy/route.ts`, `src/server/clinical/privacy.test.ts`, `src/server/clinical/extraction.test.ts`, `src/server/clinical/extraction-binding.test.ts`, `src/server/clinical/recording-service.test.ts`, `src/server/clinical/reviewed-transcripts.test.ts`, `docs/CHANGELOG.md`
+- **Kiểm tra:**
+  - Test `bound-privacy` lỗi trước (thiếu export), sau đó qua 3/3.
+  - `npm test`: 350/351 qua. Test lỗi duy nhất là lỗi có sẵn ở `encounter-context.test.ts:28` (5 !== 4), không liên quan.
+  - `tsc --noEmit` còn lỗi ở `src/client/clinical-api.ts` vì `PrivacyPreview` đã bị xóa. Lỗi này sửa ở Task 5.
+
 ### eForm R1–R14 · Task 2: ticket riêng tư che bằng pii-auto-1 và chốt chặn R11
 - **Loại:** Tính năng
 - **Thay đổi:** `PrivacyTickets` bỏ hai bước `prepare`/`approve` (bộ lọc `local-review-2` + bác sĩ duyệt tay), thay bằng hàm `check(text, mode, { known, allowlist, consent, binding })`:

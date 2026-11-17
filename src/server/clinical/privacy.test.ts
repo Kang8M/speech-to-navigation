@@ -78,6 +78,8 @@ test("privacy route guards origin, validates strict actions, and exposes only sa
     { action: "prepare", text: "Đau tai", mode: "doctor" },
     { action: "prepare", text: "a".repeat(50_001), mode: "conversation" },
     { action: "approve", ticket: "missing", text: "PRIVATE-VALUE" },
+    { action: "approve", ticket: "missing", text: "PRIVATE-VALUE", consent: true, binding: { encounter_id: "00000000-0000-4000-8000-000000000000", recording_session_id: "00000000-0000-4000-8000-000000000001", generation: 1, content_revision: 1 } },
+    { action: "check", text: "PRIVATE-VALUE", mode: "conversation" },
   ]) {
     const response = await POST(request(body));
     assert.equal(response.status, 400);

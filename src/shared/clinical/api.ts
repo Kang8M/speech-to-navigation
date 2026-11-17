@@ -3,6 +3,7 @@ import type { EformData } from "../eform/types";
 import type { ClinicalChangeSet } from "./changes";
 import type { TranscriptBinding } from "./recording";
 import type { EformSnapshot } from "./eform";
+import type { AiRoute, GateReason, PiiRule } from "./pii";
 
 export type { TranscriptBinding } from "./recording";
 export type { StartRecordingRequest, HeartbeatRecordingRequest, FinalizeRecordingRequest, UpdateRecordingContentRequest } from "./recording";
@@ -18,13 +19,19 @@ export interface OpenEncounterRequest { appointment_id: string }
 export interface PrivacyReviewRequest { text: string; mode: SpeakerMode; binding: TranscriptBinding }
 
 export type SpeakerMode = "conversation" | "dictation";
-export interface PrivacyPreview {
-  ticket: string;
+/** Kết quả che PII (pii-auto-1): R1–R8 che, R10 nhãn, R11 chốt chặn, R14 đồng ý. Bị chặn thì `ticket` là null và không gửi AI. */
+export interface PrivacyCheckResult {
+  status: "passed" | "blocked";
+  ticket: string | null;
+  /** Bản đã che (bản sạch). */
   preview: string;
-  status: "pending" | "passed";
-  expires_at: string;
-  changes: number;
-  binding?: TranscriptBinding;
+  counts: Record<PiiRule, number>;
+  /** `excerpt` có thể chứa phần còn sót: chỉ để hiện cho bác sĩ, không ghi đĩa hay log. */
+  gate: { passed: boolean; reasons: { reason: GateReason; excerpt: string }[] };
+  ai_route: AiRoute;
+  dong_y: { trang_thai: boolean; luc: string | null };
+  expires_at: string | null;
+  binding: TranscriptBinding;
   digest?: string;
 }
 

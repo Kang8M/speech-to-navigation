@@ -154,13 +154,12 @@ test("restricted contracts and prompts cannot use even local clinical rules", as
 
 test("only approved tickets run, including cache retries and final transcript requirement", async t => {
   const directory = temp(t); let time = Date.now(); const tickets = new PrivacyTickets(() => time);
-  const pending = tickets.prepare("BS: Khám thấy họng đỏ.", "conversation");
   const options = { directory, provider: "mock", approvedTranscript: (ticket: string) => tickets.approved(ticket) };
-  await assert.rejects(extractClinical(pending.ticket, options));
-  const approved = tickets.approve(pending.ticket, pending.preview, undefined, true);
-  await extractClinical(approved.ticket, options);
+  await assert.rejects(extractClinical("missing-ticket", options));
+  const approved = tickets.check("BS: Khám thấy họng đỏ.", "conversation", { known: [], allowlist: new Set(), consent: true });
+  await extractClinical(approved.ticket!, options);
   time += 11 * 60_000;
-  await assert.rejects(extractClinical(approved.ticket, options));
+  await assert.rejects(extractClinical(approved.ticket!, options));
   const transcript = input(); transcript.privacy.trang_thai = "pending";
   await assert.rejects(extractClinical("x", { ...options, approvedTranscript: () => transcript }));
   transcript.privacy.trang_thai = "passed"; transcript.segments[0].is_final = false;

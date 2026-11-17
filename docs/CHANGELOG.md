@@ -4,6 +4,19 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-17
 
+### eForm R1–R14 · Task 4: trích xuất kèm bằng chứng R11/R14 và nhật ký R13
+- **Loại:** Tính năng
+- **Thay đổi:** Thêm `src/server/clinical/extract-recording.ts › extractForRecording`. Hàm này làm lần lượt:
+  1. Kiểm tra ngữ cảnh và việc bản chép lời đã được gắn vào phiên (chuyển nguyên từ route).
+  2. Dựng bằng chứng khử định danh `{ policy_version: "pii-auto-1", gate_passed: true, consent }` từ ticket phía máy chủ.
+  3. Gọi `extractClinical` với provider `"mock"`. Đặt `CLINICAL_LLM_PROVIDER` cũng không đổi được provider, vì chưa có adapter AI ngoài.
+  4. Tạo xong bản nháp thì ghi một dòng R13 (`gate:true`, tuyến AI, provider/model, mã băm bản sạch). Lỗi xảy ra trước bước này thì không ghi gì.
+
+  `POST /api/clinical/extract` chỉ còn đọc body rồi gọi hàm này.
+- **Lý do:** Plan `2026-11-17-eform-pii-r1-r14.md`, Task 4.
+- **File:** `src/server/clinical/extract-recording.ts`, `src/server/clinical/extract-recording.test.ts`, `src/app/api/clinical/extract/route.ts`, `docs/CHANGELOG.md`
+- **Kiểm tra:** Test mới lỗi trước (không có module), sau đó qua 4/4. Bốn ca: provider `mock` dù đặt biến môi trường `gemini`; bệnh nhân chưa đồng ý thì nhật ký ghi `local_only`; ticket hết hạn thì không ghi nhật ký và không tạo lượt AI; bản chép lời chưa gắn vào phiên thì trả 409. `npm test`: 354/355 qua, chỉ còn lỗi có sẵn ở `encounter-context.test.ts:28`.
+
 ### eForm R1–R14 · Task 3: API `check` thay `prepare`/`approve`, nhật ký R13 khi bị chặn
 - **Loại:** Tính năng
 - **Thay đổi:**

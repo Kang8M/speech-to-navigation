@@ -4,6 +4,40 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-17
 
+### Plan chuyển eForm sang bộ che PII R1–R14
+- **Loại:** Tài liệu
+- **Thay đổi:** Thêm thiết kế và plan 6 task trong `docs/superpowers/plans/pending/`, để eForm `/` dùng bộ `pii-auto-1` như trang "Phần chung" của sơ đồ. Nội dung chính:
+  - Máy chủ che bằng R1–R8 (nhãn theo R10), chặn ở R11, lấy cờ đồng ý từ hồ sơ (R14), ghi nhật ký R13 vào `data/clinical/audit/`.
+  - Gộp hai bước `prepare` và `approve` thành một hành động `check`, bỏ ô tích đồng ý và bước duyệt tay. Trợ lý lâm sàng hiện bản đã che dạng chỉ đọc, số mục che theo rule và lý do chặn.
+  - Dùng chung định danh đã biết và danh mục cho phép với `/demo-luong`. Xóa `redactTranscript` (`local-review-2`).
+- **Lý do:** Người dùng yêu cầu viết plan sau khi chọn vẽ sơ đồ theo bộ R1–R14.
+- **File:** `docs/superpowers/plans/pending/2026-11-17-eform-pii-r1-r14-design.md`, `docs/superpowers/plans/pending/2026-11-17-eform-pii-r1-r14.md`, `docs/superpowers/plans/pending/README.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** Đã đối chiếu tên hàm, kiểu và fixture trong plan với code hiện tại:
+  - `PrivacyTickets`, `bound-privacy`, `extractClinical`, các module `pii/`;
+  - mã khám `000123` ứng với `GIA-000456` (chưa đồng ý), `LK-GIA-0456` ứng với `GIA-000123` (đã đồng ý).
+
+  Đã chạy thử `redactPii` trên câu giả: nhãn `BN:`/`BS:`, "3 ngày", "Paracetamol 500mg" vẫn còn, tên bị thay bằng `[BỆNH_NHÂN]`. Chưa triển khai code.
+- **Ảnh hưởng:** Quyết định D2 (bỏ duyệt tay trước AI) là thay đổi chính sách dữ liệu, cần người dùng xác nhận trước khi làm.
+
+### Sơ đồ draw.io hai luồng chính và bước lọc dữ liệu nhạy cảm R1–R14
+- **Loại:** Tài liệu
+- **Thay đổi:** Thêm `docs/so-do/luong-chinh.drawio`, gồm 3 trang, chia làn Bác sĩ / Trình duyệt / Máy chủ trong viện, mô tả từng bước bằng lời thường thay vì tên API:
+  1. Nói → điền phiếu khám (ghi âm, nhận dạng tại chỗ R9, bản thô chỉ nằm trong bộ nhớ).
+  2. Gõ tắt: 2A gõ vào ô Trợ lý rồi đi qua bước lọc; 2B gõ tắt trên phiếu (mở viết tắt khi tìm danh mục, mẫu câu, gợi ý ICD và chỉ định), không gửi nội dung đi.
+  3. Phần chung: khung đỏ "Lọc dữ liệu nhạy cảm" theo bộ `pii-auto-1`. Khung này gồm định danh đã biết, R1–R8 che cùng lúc, R10 nhãn, chốt chặn R11 (còn sót thì dừng, không gửi AI), R12 tối thiểu dữ liệu, R14 đồng ý. Sau đó AI tách, kiểm tra bằng chứng, khớp danh mục, lưu kèm nhật ký R13, rồi bác sĩ nhận/bỏ đề xuất, lưu, duyệt và in. Mỗi rule ghi căn cứ (Luật 91/2025, NĐ 356/2025, HIPAA, ISO/IEC).
+
+  Ô offpage bấm được để chuyển trang.
+- **Lý do:** Người dùng cần sơ đồ dễ hiểu cho hai tính năng chính và muốn làm nổi bật các rule lọc đã nạp. Người dùng chọn vẽ theo bộ R1–R14.
+- **Lưu ý trên sơ đồ:**
+  - Bộ R1–R14 hiện chỉ chạy ở `/demo-luong`. eForm `/` vẫn dùng bộ lọc `local-review-2` và bác sĩ tự kiểm tra trước khi tạo nháp.
+  - Bước tách nội dung của eForm chưa mở viết tắt; bảng `viet-tat.json` chỉ dùng khi tìm danh mục.
+  - Ngoài sơ đồ còn thấy `config/sua-chu-giong-noi.json` vẫn được nạp nhưng không còn áp vào câu chốt trong luồng clinical mới (README mục "Sửa chữ sau nhận dạng" chưa phản ánh điều này). Chưa sửa.
+- **File:** `docs/so-do/luong-chinh.drawio`, `README.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:**
+  - Đã parse XML. Mã phần tử không trùng, mọi mũi tên trỏ tới phần tử có thật (trang 1: 14, trang 2: 17, trang 3: 25 mũi tên).
+  - Đã xem cả 3 trang bằng trình xem draw.io (viewer-static) trên trình duyệt, chỉnh lại các đường chồng chữ.
+  - Chưa mở bằng ứng dụng draw.io desktop.
+
 ### Nghiệm thu màn /demo-luong, sửa tràn ngang 375px, tài liệu và số đo PII
 - **Loại:** Sửa lỗi, Tài liệu
 - **Thay đổi:** Kiểm trong trình duyệt (dữ liệu giả, AI mock) Task 7 bước 3 của plan demo luồng dữ liệu: ca chuẩn phần 1 (rev 2, 9 mục che) → sửa ô "Lý do đến khám" thành "BS sửa" (rev 3, nguồn "Bác sĩ sửa") → phần 2 (rev 4, ô giữ giá trị bác sĩ, thêm "Khám chuyên khoa TMH" và chỉ định từ AI · phiên 2) → Duyệt (rev 5, "Đã duyệt") → phiên 3 (rev 6, phiếu về nháp). Ca bị chặn: ③ "Bị chặn · R11c", ④⑤ "Không gửi AI", phiếu giữ rev 1. Ca chưa đồng ý: dòng "Đồng ý AI: ✗", ④ "Không được gửi AI ngoài — chạy bộ tách local". Chế độ Kỹ thuật mở được chi tiết từng bước; "+ Phiếu khám mới" ra phiếu rev 1, chưa có phiên. Không có lỗi console. Lỗi tìm thấy: ở khung 375px trang tràn ngang (cuộn ngang 514px) vì ô chọn kịch bản mẫu không co lại; thêm `max-w-full min-w-0` cho ô chọn và khối chứa trong `NguonPicker.tsx`, đo lại `scrollWidth` = `clientWidth` = 375.

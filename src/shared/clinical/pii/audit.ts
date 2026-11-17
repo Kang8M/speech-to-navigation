@@ -10,6 +10,8 @@ export interface PiiAuditEntry {
   counts: Record<PiiRule, number>;
   gate: GateResult["passed"];
   gate_reasons: GateReason[];
+  /** Mã lý do R11 của phần còn sót đã được tự che trước khi qua chốt chặn (eForm). Không có trường này nghĩa là không phải tự che gì. */
+  auto_masked?: GateReason[];
   ai_route: AiRoute;
   provider: string;
   model: string;
@@ -27,6 +29,7 @@ export function buildAuditEntry(input: Omit<PiiAuditEntry, "at"> & { now: string
     counts: { ...input.counts },
     gate: input.gate,
     gate_reasons: [...input.gate_reasons],
+    ...(input.auto_masked ? { auto_masked: [...input.auto_masked] } : {}),
     ai_route: input.ai_route,
     provider: input.provider,
     model: input.model,

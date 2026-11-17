@@ -4,6 +4,52 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-17
 
+### /demo-luong cũng tự che phần còn sót sau chốt chặn R11; kịch bản `ca-bi-chan` thành `ca-tu-che`
+- **Loại:** Tính năng
+- **Thay đổi:**
+  - `runDemoFlow`: chốt chặn R11 không qua thì tự che từng đoạn bằng `maskResidualPii` (giống eForm) rồi chạy lại R11. Chỉ dừng ở bước ③ khi tự che xong vẫn còn sót.
+  - Sự kiện `che` thêm `auto_masked` (mã lý do kèm đoạn chữ, chỉ đi trong stream). Phiên lưu trong `meta/` và dòng nhật ký R13 chỉ giữ mã lý do (`auto_masked`).
+  - `DemoFlowInput.extraKnown` (chỉ dùng trong test) để dựng ca vẫn bị chặn. Route không truyền trường này.
+  - Giao diện:
+    - ô ③ ghi "Tự che thêm N mục còn sót, rồi qua chốt chặn R11";
+    - cột "Bản đã che" ghi "Tự che thêm N" và liệt kê từng mục ("→ đã tự che");
+    - chế độ Kỹ thuật có dòng "Tự che phần còn sót" và "Qua (sau khi tự che)".
+  - Đổi tên kịch bản `ca-bi-chan.json` thành `ca-tu-che.json`, tên hiển thị "Ca tự che thêm…". `expected` thêm `tu_che`, `phai_che` thêm "đỗ quốc việt", `bi_chan` thành `false`.
+  - Sơ đồ `luong-chinh.drawio`: ghi chú R11 thêm bước tự che. Ô dừng đổi thành "Tự che xong vẫn sót: dừng".
+- **Lý do:** Người dùng muốn `/demo-luong` thống nhất với eForm (mục ngay dưới).
+- **File:** `src/server/demo-luong/flow.ts`, `src/server/demo-luong/flow.test.ts`, `src/server/demo-luong/kich-ban.test.ts`, `src/app/api/demo-luong/routes.test.ts`, `src/shared/demo-luong/types.ts`, `src/client/demo-luong/StepRail.tsx`, `src/client/demo-luong/TranscriptPanels.tsx`, `src/client/demo-luong/TechDetails.tsx`, `src/client/demo-luong/DemoLuongScreen.tsx`, `data/demo-luong/kich-ban/ca-tu-che.json` (đổi tên từ `ca-bi-chan.json`), `docs/so-do/luong-chinh.drawio`, `docs/DATA-USE-POLICY.md`, `docs/CLINICAL-WORKFLOW.md`, `README.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:**
+  - Sửa test trước: ca tự che đủ 5 bước, nhật ký có `auto_masked`. Ca bị chặn dựng bằng âm thanh giả và `extraKnown`.
+  - Test demo-luong 39/39. `npm test` 355/356; lỗi duy nhất là `encounter-context.test.ts:28`, có từ trước.
+  - `tsc` sạch. `eslint src lib`: 0 lỗi.
+  - Trình duyệt `/demo-luong`, kịch bản `ca-tu-che`:
+    - 5 bước xong, ô ③ hiện "Tự che thêm 1 mục còn sót";
+    - bản đã che là "hôm qua [NGƯỜI_KHÁC] thuốc giúp…";
+    - chế độ Kỹ thuật hiện "Qua (sau khi tự che)";
+    - ở 375px không tràn ngang (scrollWidth 375);
+    - không file nào trong `data/demo-luong/` (trừ kịch bản) chứa "quốc việt".
+- **Ảnh hưởng:** Màn demo không còn kịch bản dừng ở chốt chặn. Nhánh bị chặn vẫn còn trong code và có test, nhưng chỉ xảy ra khi tự che không xử lý được.
+
+### eForm tự che phần còn sót sau chốt chặn R11 thay vì bắt bác sĩ sửa tay
+- **Loại:** Tính năng
+- **Thay đổi:**
+  - Thêm `maskResidualPii` (`src/shared/clinical/pii/gate.ts`): che tất cả những gì R11 còn thấy trong bản sạch. Tên người lạ (R11c) thành `[NGƯỜI_KHÁC]`, dãy số dài (R11b) thành `[MÃ_ĐỊNH_DANH]`, email/URL (R11d) thành `[LIÊN_HỆ]`, giá trị đã biết viết không dấu (R11a) thành nhãn theo loại (vd. `[BỆNH_NHÂN]`). Phần dò tên của R11 tách thành `residualNames` để dò và che dùng chung, kết quả của `checkResidualPii` không đổi.
+  - `PrivacyTickets.check`: chốt chặn không qua thì tự che, rồi chạy lại R11 trên bản đã che. Qua thì cấp ticket như thường. Chỉ chặn khi tự che xong vẫn còn sót, ví dụ giá trị đã biết dính liền trong một từ.
+  - Kết quả `check` có thêm `auto_masked` (mã lý do + đoạn đã che, chỉ gửi về màn hình). Ticket nhớ các mã lý do. Nhật ký R13 (`PiiAuditEntry.auto_masked`, trường tùy chọn) chỉ ghi mã lý do, không ghi chữ gốc.
+  - Trợ lý lâm sàng hiện "Tự che thêm N mục còn sót (không cần sửa tay)" kèm từng mục. Khung đỏ chỉ còn hiện khi hệ thống không tự che được.
+  - Áp dụng cho cả gõ tay và giọng nói trên eForm, vì cả hai đi qua cùng ô nội dung và nút "Che thông tin và tạo bản nháp". `/demo-luong` đổi theo ở mục ngay trên.
+- **Lý do:** Người dùng thử ca (c) "hôm qua đỗ quốc việt mua thuốc giúp". Hệ thống chỉ báo lỗi và không gửi AI, nên bác sĩ mất thời gian tự tìm và sửa. Yêu cầu: tự chuyển phần nhạy cảm sang dạng đã che rồi gửi tiếp.
+- **File:** `src/shared/clinical/pii/gate.ts`, `src/shared/clinical/pii/index.ts`, `src/shared/clinical/pii/audit.ts`, `src/shared/clinical/pii/gate.test.ts`, `src/shared/clinical/api.ts`, `src/server/clinical/privacy.ts`, `src/server/clinical/privacy.test.ts`, `src/server/clinical/bound-privacy.ts`, `src/server/clinical/bound-privacy.test.ts`, `src/server/clinical/extract-recording.ts`, `src/server/clinical/extract-recording.test.ts`, `src/client/eform/TroLyAi.tsx`, `docs/DATA-USE-POLICY.md`, `docs/CLINICAL-WORKFLOW.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:**
+  - Viết test trước. Test mới lỗi ("maskResidualPii is not a function"), sau khi viết code thì qua.
+  - `npm test`: 354/355. Test hỏng duy nhất là lỗi có sẵn ở `encounter-context.test.ts:28`.
+  - `tsc --noEmit` sạch. `npx eslint src lib`: 0 lỗi, 6 cảnh báo cũ.
+  - GitNexus impact: `checkResidualPii` LOW. `PrivacyTickets.check` UNKNOWN; tìm theo chữ thấy chỉ `bound-privacy.ts` và test gọi.
+  - Trình duyệt (server dev cổng 3000, mock), lượt LK-GIA-0456: hội thoại tổng hợp cộng câu "hôm qua đỗ quốc việt mua thuốc giúp". Bản đã che là "hôm qua [NGƯỜI_KHÁC] thuốc giúp", hiện "Tự che thêm 1 mục còn sót", có bản nháp. Nhật ký có dòng `gate:true`, `auto_masked:["R11c_ten_rieng_con_sot"]`, không có chữ "quốc việt".
+- **Ảnh hưởng:**
+  - Đuôi tên R11c lấy tối đa 3 âm tiết sau họ nên có thể nuốt cả động từ: "đỗ quốc việt mua" che thành một nhãn, mất chữ "mua". Đây là giới hạn của bộ dò tên có sẵn, chưa sửa.
+  - Server dev đã chạy từ trước khi sửa giữ bộ ticket cũ trong bộ nhớ (`globalThis`), nên trả 500 ở `/api/clinical/privacy` cho tới khi nạp lại module. Lúc kiểm thì nó tự hết sau một lần sửa `privacy.ts`. Nếu vẫn gặp thì khởi động lại `npm run dev`.
+
 ### Sửa `npm run stt:start` báo "Next server exited" khi cổng 3000 đã có server
 - **Loại:** Sửa lỗi
 - **Thay đổi:** Khi cổng web đã có `next dev` chạy (PID 17204, mở từ 14:38), script kiểm tra trang `/stt` chỉ chờ 4 giây; Next dev biên dịch `/stt` lần đầu lâu hơn nên kiểm tra hết hạn, script coi là chưa sẵn sàng và mở thêm một Next nữa. Next không cho hai server trong cùng thư mục (`logs/stt-web.err.log`: "Another next dev server is already running") nên báo lỗi. `scripts/start-stt.ps1` giờ phát hiện cổng đang có server (`Get-NetTCPConnection`), chờ tối đa 120 giây, và nếu vẫn chưa nối được STT thì báo rõ nguyên nhân (server cũ mở khi chưa đặt `STT_BACKEND_URL`) thay vì mở server thứ hai.

@@ -19,14 +19,19 @@ export interface OpenEncounterRequest { appointment_id: string }
 export interface PrivacyReviewRequest { text: string; mode: SpeakerMode; binding: TranscriptBinding }
 
 export type SpeakerMode = "conversation" | "dictation";
-/** Kết quả che PII (pii-auto-1): R1–R8 che, R10 nhãn, R11 chốt chặn, R14 đồng ý. Bị chặn thì `ticket` là null và không gửi AI. */
+/**
+ * Kết quả che PII (pii-auto-1): R1–R8 che, R10 nhãn, R11 chốt chặn, R14 đồng ý. Chốt chặn thấy còn sót thì máy chủ tự che phần đó
+ * (`auto_masked`) rồi kiểm lại. Chỉ khi tự che xong vẫn còn sót mới bị chặn: `ticket` là null và không gửi AI.
+ */
 export interface PrivacyCheckResult {
   status: "passed" | "blocked";
   ticket: string | null;
-  /** Bản đã che (bản sạch). */
+  /** Bản đã che (bản sạch), gồm cả phần tự che thêm. */
   preview: string;
   counts: Record<PiiRule, number>;
-  /** `excerpt` có thể chứa phần còn sót: chỉ để hiện cho bác sĩ, không ghi đĩa hay log. */
+  /** Phần còn sót đã được tự che. `excerpt` là chính phần đó: chỉ để hiện cho bác sĩ, không ghi đĩa hay log. */
+  auto_masked: { reason: GateReason; excerpt: string }[];
+  /** Chốt chặn chạy lại trên bản đã tự che. `excerpt` có thể chứa phần còn sót: chỉ để hiện cho bác sĩ, không ghi đĩa hay log. */
   gate: { passed: boolean; reasons: { reason: GateReason; excerpt: string }[] };
   ai_route: AiRoute;
   dong_y: { trang_thai: boolean; luc: string | null };

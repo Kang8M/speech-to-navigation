@@ -14,7 +14,7 @@ import { checkRecordingPrivacy } from "./bound-privacy";
 import { extractForRecording } from "./extract-recording";
 import { createRecordingTicketValidator } from "./reviewed-transcripts";
 
-function setup(appointment = "LK-GIA-0456", attach = true) {
+function setup(appointment = "LK-GIA-0456", attach = true, text = "BN: Đau họng 3 ngày.\nBS: Khám thấy họng đỏ. Chỉ định nội soi họng, số lượng 1.") {
   const tmp = (name: string) => fs.mkdtempSync(path.join(os.tmpdir(), `${name}-`));
   const store = new ClinicalRepository(tmp("extract-recording"));
   const actor = getDemoClinicalActor();
@@ -28,7 +28,7 @@ function setup(appointment = "LK-GIA-0456", attach = true) {
   const tickets = new PrivacyTickets(() => time);
   const auditDirectory = tmp("extract-audit");
   const runDirectory = tmp("extract-runs");
-  const checked = checkRecordingPrivacy(actor, { binding, text: "BN: Đau họng 3 ngày.\nBS: Khám thấy họng đỏ. Chỉ định nội soi họng, số lượng 1.", mode: "conversation" }, { store, tickets, auditDirectory });
+  const checked = checkRecordingPrivacy(actor, { binding, text, mode: "conversation" }, { store, tickets, auditDirectory });
   assert.equal(checked.status, "passed");
   // Gắn bản chép lời đã kiểm tra vào phiên, giống bước attach_reviewed của recording-service.
   const receipt = createRecordingTicketValidator(tickets, tmp("extract-reviewed")).validate(checked.ticket!, binding);
@@ -46,6 +46,18 @@ function setup(appointment = "LK-GIA-0456", attach = true) {
   };
   return { actor, store, tickets, binding, ticket: checked.ticket!, auditDirectory, runDirectory, readAudit, advance: (ms: number) => { time += ms; } };
 }
+
+test("auto-masked residue reaches the extractor already masked and the audit line lists only reason codes", async () => {
+  const f = setup("LK-GIA-0456", true, "BN: Đau họng 3 ngày.\nBN: hôm qua đỗ quốc việt mua thuốc giúp.\nBS: Khám thấy họng đỏ.");
+  const run = await extractForRecording(f.actor, f.ticket, f.binding, { store: f.store, tickets: f.tickets, runDirectory: f.runDirectory, auditDirectory: f.auditDirectory });
+  assert.ok(!JSON.stringify(run.transcript).includes("quốc việt"));
+  assert.ok(run.transcript.segments.some(s => s.text.includes("[NGƯỜI_KHÁC]")));
+  const lines = f.readAudit();
+  assert.equal(lines.length, 1);
+  assert.equal(lines[0].gate, true);
+  assert.deepEqual(lines[0].auto_masked, ["R11c_ten_rieng_con_sot"]);
+  assert.ok(!JSON.stringify(lines[0]).includes("quốc việt"));
+});
 
 test("extraction records provider mock and one passed audit line; env provider cannot change it", async () => {
   const f = setup();

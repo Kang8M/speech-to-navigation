@@ -25,7 +25,8 @@ function ghiChu(id: DemoStep, v: BuocView, ev: SuKienLuot, cheDo: CheDo): string
   if (id === "ban_tho" && ev.ban_tho?.trang_thai === "xong") return `${ev.ban_tho.du_lieu.spans.length} đoạn nhạy cảm`;
   if (id === "che" && ev.che && ev.che.trang_thai !== "loi") {
     if (ev.che.trang_thai === "bi_chan") return ev.che.du_lieu.gate.reasons.map(r => TEN_LY_DO_CHAN[r.reason]?.split(" · ")[0] ?? r.reason).join(", ");
-    return "Qua chốt chặn R11";
+    const tuChe = ev.che.du_lieu.auto_masked?.length ?? 0;
+    return tuChe ? `Tự che thêm ${tuChe} mục còn sót, rồi qua chốt chặn R11` : "Qua chốt chặn R11";
   }
   if (id === "ai") {
     if (v.trang_thai === "bo_qua") return "Chưa có gì được gửi";

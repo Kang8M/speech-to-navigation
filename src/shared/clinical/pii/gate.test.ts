@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { PII_POLICY_VERSION, redactPii, type KnownIdentifier } from "./index";
-import { aiRouteFor, checkResidualPii } from "./gate";
+import { aiRouteFor, checkResidualPii, maskResidualPii } from "./gate";
 import { buildAuditEntry } from "./audit";
 
 const none: KnownIdentifier[] = [];
@@ -108,6 +108,41 @@ test("vẫn chặn tên người thật sự", () => {
 test("allowlist: họ nằm giữa cụm allowlist vẫn được bỏ qua", () => {
   assert.equal(checkResidualPii("tiền sử cao huyết áp", none, new Set(["tiền sử"])).passed, true);
   assert.equal(checkResidualPii("tiền sử dương văn bình", none, noAllow).passed, false);
+});
+
+test("tự che phần sót R11c: tên người lạ thay bằng nhãn, nội dung lâm sàng giữ nguyên, che xong qua chốt chặn", () => {
+  const m = maskResidualPii("hôm qua đỗ quốc việt mua thuốc giúp\nđau họng uống paracetamol 500 mg", none, noAllow);
+  assert.equal(m.clean.includes("quốc việt"), false);
+  assert.ok(m.clean.includes("[NGƯỜI_KHÁC]"));
+  for (const keep of ["hôm qua", "thuốc giúp", "đau họng", "paracetamol 500 mg", "\n"]) assert.ok(m.clean.includes(keep), keep);
+  assert.ok(m.masked.some((x) => x.reason === "R11c_ten_rieng_con_sot"));
+  assert.equal(checkResidualPii(m.clean, none, noAllow).passed, true);
+});
+
+test("tự che phần sót: nhiều tên, dãy số, email, URL và giá trị đã biết viết không dấu", () => {
+  const known: KnownIdentifier[] = [{ value: "Nguyễn Thị Giả", kind: "BỆNH_NHÂN" }];
+  const text = "[BỆNH_NHÂN] đi cùng ngô thị lan và gặp lý hoài an, gọi 0912 345 678, gửi abc@example.test hoặc https://example.test/x, chị nguyen thi gia đau tai";
+  const m = maskResidualPii(text, known, noAllow);
+  for (const gone of ["ngô thị lan", "lý hoài an", "0912 345 678", "abc@example.test", "https://example.test/x", "nguyen thi gia"]) {
+    assert.equal(m.clean.includes(gone), false, gone);
+  }
+  for (const label of ["[BỆNH_NHÂN]", "[NGƯỜI_KHÁC]", "[MÃ_ĐỊNH_DANH]", "[LIÊN_HỆ]"]) assert.ok(m.clean.includes(label), label);
+  assert.ok(m.clean.endsWith("đau tai"));
+  const kinds = new Set(m.masked.map((x) => x.reason));
+  for (const r of ["R11a_gia_tri_da_biet", "R11b_day_so_dai", "R11c_ten_rieng_con_sot", "R11d_email_url"]) assert.ok(kinds.has(r as never), r);
+  assert.equal(checkResidualPii(m.clean, known, noAllow).passed, true, m.clean);
+});
+
+test("tự che phần sót: bản sạch không đổi khi không còn gì sót", () => {
+  const m = maskResidualPii("[NGƯỜI_1] đưa đến, đau tai ba ngày", none, noAllow);
+  assert.equal(m.clean, "[NGƯỜI_1] đưa đến, đau tai ba ngày");
+  assert.deepEqual(m.masked, []);
+});
+
+test("tự che phần sót: giá trị đã biết dính trong một từ không che được thì vẫn để chốt chặn chặn", () => {
+  const known: KnownIdentifier[] = [{ value: "Quyx", kind: "BỆNH_NHÂN" }];
+  const m = maskResidualPii("đau quyxa tai", known, noAllow);
+  assert.equal(checkResidualPii(m.clean, known, noAllow).passed, false);
 });
 
 test("R13: trường lạ như raw không lọt vào nhật ký", () => {

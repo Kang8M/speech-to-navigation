@@ -3,8 +3,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { createHash, randomUUID } from "node:crypto";
 import {
-  aiRouteFor, buildAuditEntry, checkResidualPii, PII_POLICY_VERSION, redactPii,
-  type PiiAuditEntry, type PiiRule, type PiiSpan,
+  aiRouteFor, buildAuditEntry, checkResidualPii, maskResidualPii, PII_POLICY_VERSION, redactPii,
+  type GateResult, type KnownIdentifier, type PiiAuditEntry, type PiiRule, type PiiSpan,
 } from "@/shared/clinical/pii";
 import { applyAiDraft } from "@/shared/clinical/apply-ai";
 import { projectEform } from "@/shared/clinical/eform";
@@ -28,6 +28,8 @@ export interface DemoFlowInput {
   source: DemoSource;
   audio?: Uint8Array;
   transcribe?: (wav: Uint8Array) => Promise<{ text: string; engine: string; audio_ms: number | null }>;
+  /** Chỉ dùng trong test: thêm giá trị định danh đã biết để dựng ca không tự che được. Route không truyền trường này. */
+  extraKnown?: KnownIdentifier[];
 }
 
 type Doan = Pick<KichBan["doan"][number], "vai_tro" | "text">;
@@ -92,30 +94,44 @@ export async function* runDemoFlow(store: DemoStore, input: DemoFlowInput, now: 
 
   // 2. Bản thô + vị trí đoạn nhạy cảm (chỉ trong stream).
   t = now();
-  const { known, consent } = knownIdentifiersFor(record.patient_id);
+  const ids = knownIdentifiersFor(record.patient_id);
+  const known = [...ids.known, ...(input.extraKnown ?? [])];
+  const consent = ids.consent;
   const red = redactParts(parts, known);
   yield { buoc: "ban_tho", trang_thai: "xong", ms: now() - t, du_lieu: { raw: red.raw, spans: red.spans, mode } };
 
-  // 3. Che + chốt chặn R11 + đồng ý R14.
+  // 3. Che + chốt chặn R11 (còn sót thì tự che từng đoạn rồi kiểm lại, giống eForm) + đồng ý R14.
   t = now();
+  const allow = demoAllowlist();
+  let gate = checkResidualPii(red.clean.join("\n"), known, allow);
+  const auto_masked: GateResult["reasons"] = [];
+  if (!gate.passed) {
+    red.clean = red.clean.map(part => {
+      const m = maskResidualPii(part, known, allow);
+      auto_masked.push(...m.masked);
+      return m.clean;
+    });
+    gate = checkResidualPii(red.clean.join("\n"), known, allow);
+  }
   const clean = red.clean.join("\n");
-  const gate = checkResidualPii(clean, known, demoAllowlist());
+  const autoReasons = [...new Set(auto_masked.map(r => r.reason))];
   const dong_y = { trang_thai: consentOverride ?? consent.trang_thai, luc: consent.luc };
   const ai_route = aiRouteFor(dong_y.trang_thai);
   const sequence = Math.max(0, ...record.recording_sessions.map(s => s.sequence)) + 1;
   const cleanDigest = sha256(clean);
   const audit = (provider: string, model: string) => buildAuditEntry({
     now: iso(), encounter_id: record.id, session_sequence: sequence, policy_version: PII_POLICY_VERSION, counts: red.counts,
-    gate: gate.passed, gate_reasons: gate.reasons.map(r => r.reason), ai_route, provider, model, clean_sha256: cleanDigest,
+    gate: gate.passed, gate_reasons: gate.reasons.map(r => r.reason), ...(autoReasons.length ? { auto_masked: autoReasons } : {}),
+    ai_route, provider, model, clean_sha256: cleanDigest,
   });
   if (!gate.passed) {
     // `excerpt` có thể chứa PII còn sót: chỉ gửi về màn hình, nhật ký chỉ giữ mã lý do.
     // Ghi nhật ký trước khi phát: người đọc stream dừng sớm cũng không làm mất dòng nhật ký.
     appendAudit(store, record.id, audit(NOT_CALLED, NOT_CALLED));
-    yield { buoc: "che", trang_thai: "bi_chan", ms: now() - t, du_lieu: { clean, counts: red.counts, gate, ai_route, dong_y } };
+    yield { buoc: "che", trang_thai: "bi_chan", ms: now() - t, du_lieu: { clean, counts: red.counts, auto_masked, gate, ai_route, dong_y } };
     return;
   }
-  yield { buoc: "che", trang_thai: "xong", ms: now() - t, du_lieu: { clean, counts: red.counts, gate, ai_route, dong_y } };
+  yield { buoc: "che", trang_thai: "xong", ms: now() - t, du_lieu: { clean, counts: red.counts, auto_masked, gate, ai_route, dong_y } };
 
   // 4. AI (mock) trên bản sạch.
   t = now();
@@ -175,7 +191,7 @@ export async function* runDemoFlow(store: DemoStore, input: DemoFlowInput, now: 
     const meta = readSidecar(store, record.id);
     writeSidecar(store, record.id, {
       sources: merged!.sources,
-      sessions: [...meta.sessions, { sequence, at: savedAt, counts: red.counts, clean }],
+      sessions: [...meta.sessions, { sequence, at: savedAt, counts: red.counts, clean, ...(autoReasons.length ? { auto_masked: autoReasons } : {}) }],
       duyet: null,
     });
     appendAudit(store, record.id, entry);

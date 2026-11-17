@@ -4,8 +4,8 @@ import type { SpeakerMode } from "@/shared/clinical/api";
 import type { Transcript } from "@/shared/clinical/types";
 import { parseTranscript } from "@/shared/clinical/schema";
 import {
-  aiRouteFor, checkResidualPii, PII_POLICY_VERSION, redactPii,
-  type AiRoute, type GateResult, type KnownIdentifier, type PiiRule,
+  aiRouteFor, checkResidualPii, maskResidualPii, PII_POLICY_VERSION, redactPii,
+  type AiRoute, type GateReason, type GateResult, type KnownIdentifier, type PiiRule,
 } from "@/shared/clinical/pii";
 import { ClinicalError } from "./repository";
 
@@ -39,16 +39,23 @@ type Entry = {
   processedAt: string;
   consent: boolean;
   counts: Record<PiiRule, number>;
+  autoMasked: GateReason[];
   aiRoute: AiRoute;
   binding?: PrivacyBinding;
 };
 
-/** Kết quả che + chốt chặn R11 + đồng ý R14. Bị chặn thì không có ticket. `gate.reasons[].excerpt` chỉ gửi về màn hình, không ghi đĩa hay log. */
+/**
+ * Kết quả che + tự che phần còn sót + chốt chặn R11 + đồng ý R14. Chỉ bị chặn khi tự che xong vẫn còn sót; khi đó không có ticket.
+ * `gate.reasons[].excerpt` và `auto_masked[].excerpt` chỉ gửi về màn hình, không ghi đĩa hay log.
+ */
 export interface PrivacyCheck {
   status: "passed" | "blocked";
   ticket: string | null;
   preview: string;
   counts: Record<PiiRule, number>;
+  /** Phần chốt chặn R11 thấy còn sót ở lượt đầu và đã được tự che (rỗng nếu không có). */
+  auto_masked: GateResult["reasons"];
+  /** Kết quả chốt chặn chạy lại trên bản đã tự che. */
   gate: GateResult;
   ai_route: AiRoute;
   expires_at: string | null;
@@ -90,30 +97,41 @@ export class PrivacyTickets {
     return ticket;
   }
 
-  /** Bộ pii-auto-1: che R1–R8 (nhãn R10) → chốt chặn R11 → tuyến AI theo R14. Chỉ bản sạch được giữ lại, và chỉ khi qua chốt chặn. */
+  /**
+   * Bộ pii-auto-1: che R1–R8 (nhãn R10) → chốt chặn R11; còn sót thì tự che phần sót rồi chạy lại R11 → tuyến AI theo R14.
+   * Chỉ bản sạch được giữ lại, và chỉ khi lượt chốt chặn cuối cùng qua.
+   */
   check(text: string, mode: SpeakerMode, input: PrivacyCheckInput): PrivacyCheck {
     this.checkText(text);
     if (mode !== "conversation" && mode !== "dictation") throw new ClinicalError("Chế độ người nói không hợp lệ.", 400);
     if (hasRestrictedContent(text)) throw new ClinicalError("Dữ liệu cấp 3 không được đưa vào AI.", 403);
     const redacted = redactPii(text.normalize("NFC"), input.known);
-    const clean = redacted.clean.trim();
+    let clean = redacted.clean.trim();
     this.checkText(clean);
-    const gate = checkResidualPii(clean, input.known, input.allowlist);
+    let gate = checkResidualPii(clean, input.known, input.allowlist);
+    let autoMasked: GateResult["reasons"] = [];
+    if (!gate.passed) {
+      const masked = maskResidualPii(clean, input.known, input.allowlist);
+      clean = masked.clean.trim();
+      autoMasked = masked.masked;
+      gate = checkResidualPii(clean, input.known, input.allowlist);
+    }
     const aiRoute = aiRouteFor(input.consent);
-    const result = { preview: clean, counts: { ...redacted.counts }, gate, ai_route: aiRoute };
+    const result = { preview: clean, counts: { ...redacted.counts }, auto_masked: autoMasked, gate, ai_route: aiRoute };
     if (!gate.passed) return { ...result, status: "blocked", ticket: null, expires_at: null };
     const expires = this.now() + TTL_MS;
     const ticket = this.add({ preview: clean, mode, expires, transcriptId: randomUUID(), requestId: randomUUID(),
-      processedAt: new Date(this.now()).toISOString(), consent: input.consent, counts: { ...redacted.counts }, aiRoute,
+      processedAt: new Date(this.now()).toISOString(), consent: input.consent, counts: { ...redacted.counts },
+      autoMasked: autoMasked.map(item => item.reason), aiRoute,
       ...(input.binding ? { binding: structuredClone(input.binding) } : {}) });
     return { ...result, status: "passed", ticket, expires_at: new Date(expires).toISOString() };
   }
 
   /** Dữ liệu cho bằng chứng khử định danh và nhật ký R13 của một ticket đã qua chốt chặn. */
-  pii(ticket: string, binding?: PrivacyBinding): { counts: Record<PiiRule, number>; ai_route: AiRoute; consent: boolean; clean_sha256: string } {
+  pii(ticket: string, binding?: PrivacyBinding): { counts: Record<PiiRule, number>; auto_masked: GateReason[]; ai_route: AiRoute; consent: boolean; clean_sha256: string } {
     const entry = this.read(ticket);
     checkBinding(entry, binding);
-    return { counts: { ...entry.counts }, ai_route: entry.aiRoute, consent: entry.consent,
+    return { counts: { ...entry.counts }, auto_masked: [...entry.autoMasked], ai_route: entry.aiRoute, consent: entry.consent,
       clean_sha256: createHash("sha256").update(entry.preview).digest("hex") };
   }
 

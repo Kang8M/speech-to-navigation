@@ -1,11 +1,12 @@
 "use client";
 
 import type { ReactNode } from "react";
-import type { GateResult, PiiRule, PiiSpan } from "@/shared/clinical/pii";
+import type { GateReason, GateResult, PiiRule, PiiSpan } from "@/shared/clinical/pii";
 import { NHAN_CHE, TEN_LY_DO_CHAN, tongDaChe, type CheDo } from "./hien-thi";
 
 export interface BanThoView { raw: string; spans: PiiSpan[]; mode: "conversation" | "dictation" }
-export interface BanSachView { clean: string; counts: Partial<Record<PiiRule, number>>; gate: GateResult | null }
+/** `tuChe`: phần còn sót đã tự che; lượt vừa chạy có cả đoạn chữ, phiên đọc lại từ kho chỉ có mã lý do. */
+export interface BanSachView { clean: string; counts: Partial<Record<PiiRule, number>>; gate: GateResult | null; tuChe: { reason: GateReason; excerpt?: string }[] }
 
 /** Bản thô: tô đỏ các đoạn nhạy cảm, rê chuột thấy mã rule. */
 function ToDo({ raw, spans }: Pick<BanThoView, "raw" | "spans">) {
@@ -85,8 +86,13 @@ export function BanSachPanel({ data, animKey, cheDo }: { data: BanSachView | nul
       chan={data && (
         <div className="space-y-1">
           <p className={chan ? "font-semibold text-ef-do" : "font-semibold text-ef-dam"}>
-            Đã che {tongDaChe(data.counts)} mục · Chặn: {chan ? "có" : "không"}
+            Đã che {tongDaChe(data.counts)} mục{data.tuChe.length > 0 && ` · Tự che thêm ${data.tuChe.length}`} · Chặn: {chan ? "có" : "không"}
           </p>
+          {data.tuChe.length > 0 && (
+            <ul className="list-inside list-disc text-ef-phu">
+              {data.tuChe.map((r, i) => <li key={i}>{TEN_LY_DO_CHAN[r.reason] ?? r.reason}{r.excerpt ? <>: <code className="break-all rounded bg-ef-nen px-1">{r.excerpt}</code></> : null} → đã tự che</li>)}
+            </ul>
+          )}
           {chan && (
             <ul className="list-inside list-disc text-ef-do">
               {data.gate!.reasons.map((r, i) => <li key={i}>{TEN_LY_DO_CHAN[r.reason] ?? r.reason}</li>)}

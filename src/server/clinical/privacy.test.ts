@@ -25,12 +25,22 @@ test("check masks known names, keeps clinical content and speaker labels, issues
   assert.equal(transcript.privacy.trang_thai, "passed");
 });
 
-test("residual name blocks: no ticket, reason code returned", () => {
+test("residual name is masked automatically: ticket issued, reason listed, clean text has no residue", () => {
   const store = new PrivacyTickets();
   const r = ok(store, "tôi tên lê văn mới bị đau họng hai ngày nay\nhôm qua đỗ quốc việt mua thuốc giúp nhưng tôi vẫn đau họng uống paracetamol 500 mg");
+  assert.equal(r.status, "passed"); assert.ok(r.ticket); assert.ok(r.expires_at);
+  assert.equal(r.gate.passed, true); assert.deepEqual(r.gate.reasons, []);
+  assert.ok(r.auto_masked.some(x => x.reason === "R11c_ten_rieng_con_sot"));
+  assert.ok(!r.preview.includes("lê văn mới")); assert.ok(!r.preview.includes("quốc việt"));
+  assert.ok(r.preview.includes("[NGƯỜI_KHÁC]")); assert.ok(r.preview.includes("paracetamol 500 mg"));
+  assert.deepEqual(store.pii(r.ticket!).auto_masked, ["R11c_ten_rieng_con_sot"]);
+  assert.ok(!store.approved(r.ticket!).segments.some(s => s.text.includes("quốc việt")));
+});
+
+test("text that cannot be masked automatically is still blocked", () => {
+  const r = ok(new PrivacyTickets(), "đau quyxa tai", "conversation", [{ value: "Quyx", kind: "BỆNH_NHÂN" }]);
   assert.equal(r.status, "blocked"); assert.equal(r.ticket, null); assert.equal(r.expires_at, null);
-  assert.ok(r.gate.reasons.some(x => x.reason === "R11c_ten_rieng_con_sot"));
-  assert.ok(!r.preview.includes("lê văn mới"));
+  assert.ok(r.gate.reasons.some(x => x.reason === "R11a_gia_tri_da_biet"));
 });
 
 test("no consent routes local only; ticket expires after 10 minutes; restricted content is refused", () => {

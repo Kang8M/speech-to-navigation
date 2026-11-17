@@ -89,7 +89,12 @@ export function TechDetails({ step, events, phieu }: { step: DemoStep; events: S
       <>
         <dl>
           <Dong nhan="Phiên bản rule">{PII_POLICY_VERSION}</Dong>
-          <Dong nhan="Chốt chặn R11">{d.gate.passed ? "Qua" : "Chặn — dừng ở bước ③, không gửi AI"}</Dong>
+          {d.auto_masked.length > 0 && (
+            <Dong nhan="Tự che phần còn sót">
+              <ul className="list-inside list-disc">{d.auto_masked.map((r, i) => <li key={i}>{TEN_LY_DO_CHAN[r.reason] ?? r.reason}: <code className="rounded bg-ef-nen px-1">{r.excerpt}</code></li>)}</ul>
+            </Dong>
+          )}
+          <Dong nhan="Chốt chặn R11">{d.gate.passed ? (d.auto_masked.length ? "Qua (sau khi tự che)" : "Qua") : "Chặn — tự che vẫn còn sót, dừng ở bước ③, không gửi AI"}</Dong>
           {!d.gate.passed && (
             <Dong nhan="Lý do">
               <ul className="list-inside list-disc">{d.gate.reasons.map((r, i) => <li key={i}>{TEN_LY_DO_CHAN[r.reason] ?? r.reason}: <code className="rounded bg-ef-do-nhat px-1 text-ef-do">{r.excerpt}</code></li>)}</ul>

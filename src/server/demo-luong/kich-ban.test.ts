@@ -1,31 +1,33 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { checkResidualPii, foldVietnamese, redactPii } from "@/shared/clinical/pii";
+import { checkResidualPii, foldVietnamese, maskResidualPii, redactPii } from "@/shared/clinical/pii";
 import { ClinicalError } from "@/server/clinical/repository";
 import { demoAllowlist, doanForPhien, listKichBan, loadKichBan } from "./kich-ban";
 import { knownIdentifiersFor } from "./known-identifiers";
 
 test("danh sách có đủ 3 kịch bản", () => {
-  assert.deepEqual(listKichBan().map((k) => k.id), ["ca-bi-chan", "ca-chua-dong-y", "ca-chuan"]);
+  assert.deepEqual(listKichBan().map((k) => k.id), ["ca-chua-dong-y", "ca-chuan", "ca-tu-che"]);
 });
 
 test("danh sách trả các phần của từng kịch bản: ca chuẩn có phần 1, 2; ca không chia phần trả rỗng", () => {
   const phien = Object.fromEntries(listKichBan().map((k) => [k.id, k.phien]));
-  assert.deepEqual(phien, { "ca-bi-chan": [], "ca-chua-dong-y": [], "ca-chuan": [1, 2] });
+  assert.deepEqual(phien, { "ca-chua-dong-y": [], "ca-chuan": [1, 2], "ca-tu-che": [] });
 });
 
 for (const { id } of listKichBan()) {
-  test(`kịch bản ${id}: che đúng, giữ đúng, chốt chặn đúng`, () => {
+  test(`kịch bản ${id}: che đúng, giữ đúng, tự che phần sót đúng, chốt chặn đúng`, () => {
     const kb = loadKichBan(id);
     const { known } = knownIdentifiersFor(kb.benh_nhan_id);
     const raw = kb.doan.map((d) => d.text).join("\n");
     const r = redactPii(raw, known);
-    const clean = foldVietnamese(r.clean);
+    const first = checkResidualPii(r.clean, known, demoAllowlist());
+    const masked = first.passed ? { clean: r.clean, masked: [] } : maskResidualPii(r.clean, known, demoAllowlist());
+    assert.deepEqual([...new Set(masked.masked.map((x) => x.reason))], kb.expected.tu_che ?? [], JSON.stringify(first.reasons));
+    const clean = foldVietnamese(masked.clean);
     for (const s of kb.expected.phai_che) assert.equal(clean.includes(foldVietnamese(s)), false, `còn sót: ${s}`);
     for (const s of kb.expected.phai_giu) assert.equal(clean.includes(foldVietnamese(s)), true, `mất: ${s}`);
-    const gate = checkResidualPii(r.clean, known, demoAllowlist());
+    const gate = checkResidualPii(masked.clean, known, demoAllowlist());
     assert.equal(gate.passed, !kb.expected.bi_chan, JSON.stringify(gate.reasons));
-    if (id === "ca-bi-chan") assert.ok(gate.reasons.some((x) => x.reason === "R11c_ten_rieng_con_sot"), JSON.stringify(gate.reasons));
   });
 }
 

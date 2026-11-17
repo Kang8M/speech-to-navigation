@@ -4,7 +4,7 @@
 
 ## Demo luồng dữ liệu (`/demo-luong`)
 
-Mở **[http://localhost:3000/demo-luong](http://localhost:3000/demo-luong)** để trình diễn trọn luồng: ① ghi âm (micro, file WAV hoặc kịch bản mẫu trong `data/demo-luong/kich-ban/`) → ② bản thô (tô đỏ, rê chuột thấy mã rule) → ③ bản đã che tự động (nhãn xanh, chốt chặn R11) → ④ AI (mock) → ⑤ phiếu đọc lại từ kho để bác sĩ sửa và duyệt. Một phiếu có nhiều phiên ghi âm; "+ Phiếu khám mới" mở phiếu khác. Công tắc **Bác sĩ / Lãnh đạo | Kỹ thuật**: chế độ Kỹ thuật mở chi tiết từng bước (đếm theo rule, nguyên văn dữ liệu gửi AI, phiên bản rule/prompt/schema, JSON phiếu, dòng nhật ký). Bản thô chỉ nằm trong bộ nhớ trình duyệt; dữ liệu chạy lưu ở `data/demo-luong/` (gitignore), nút "Xóa dữ liệu demo" xóa sạch. Nguồn micro/WAV cần dịch vụ STT local (`npm run stt:start`).
+Mở **[http://localhost:3000/demo-luong](http://localhost:3000/demo-luong)** để trình diễn trọn luồng: ① ghi âm (micro, file WAV hoặc kịch bản mẫu trong `data/demo-luong/kich-ban/`) → ② bản thô (tô đỏ, rê chuột thấy mã rule) → ③ bản đã che tự động (nhãn xanh, chốt chặn R11; còn sót thì tự che thêm rồi kiểm lại, xem kịch bản `ca-tu-che`) → ④ AI (mock) → ⑤ phiếu đọc lại từ kho để bác sĩ sửa và duyệt. Một phiếu có nhiều phiên ghi âm; "+ Phiếu khám mới" mở phiếu khác. Công tắc **Bác sĩ / Lãnh đạo | Kỹ thuật**: chế độ Kỹ thuật mở chi tiết từng bước (đếm theo rule, nguyên văn dữ liệu gửi AI, phiên bản rule/prompt/schema, JSON phiếu, dòng nhật ký). Bản thô chỉ nằm trong bộ nhớ trình duyệt; dữ liệu chạy lưu ở `data/demo-luong/` (gitignore), nút "Xóa dữ liệu demo" xóa sạch. Nguồn micro/WAV cần dịch vụ STT local (`npm run stt:start`).
 
 ## Thử nghiệm STT local từ P-018
 

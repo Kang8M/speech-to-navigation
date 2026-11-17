@@ -32,17 +32,22 @@ export function requireRecordingContext(actor: ClinicalActor, value: TranscriptB
   return { binding, record, session, context, known, consent };
 }
 
-/** Che + chốt chặn R11 + đồng ý R14 cho nội dung của một phiên. Bị chặn thì ghi một dòng nhật ký R13 (không gọi AI) và không cấp ticket. */
+/**
+ * Che + tự che phần còn sót + chốt chặn R11 + đồng ý R14 cho nội dung của một phiên.
+ * Chỉ khi tự che xong vẫn còn sót mới bị chặn: ghi một dòng nhật ký R13 (không gọi AI) và không cấp ticket.
+ */
 export function checkRecordingPrivacy(actor: ClinicalActor, value: unknown, options: Options = {}): PrivacyCheckResult {
   const request = checkSchema.parse(value);
   const source = requireRecordingContext(actor, request.binding, options.store);
   const tickets = options.tickets ?? privacyTickets;
   const result = tickets.check(request.text, request.mode, { known: source.known, allowlist: clinicalAllowlist(), consent: source.consent.trang_thai, binding: source.binding });
-  const base = { ...result, gate: { passed: result.gate.passed, reasons: result.gate.reasons.map(item => ({ ...item })) }, dong_y: { ...source.consent }, binding: source.binding };
+  const base = { ...result, auto_masked: result.auto_masked.map(item => ({ ...item })),
+    gate: { passed: result.gate.passed, reasons: result.gate.reasons.map(item => ({ ...item })) }, dong_y: { ...source.consent }, binding: source.binding };
   if (result.status === "blocked") {
     appendPiiAudit(source.record.id, buildAuditEntry({
       now: options.now?.() ?? new Date().toISOString(), encounter_id: source.record.id, session_sequence: source.session.sequence,
       policy_version: PII_POLICY_VERSION, counts: result.counts, gate: false, gate_reasons: result.gate.reasons.map(item => item.reason),
+      ...(result.auto_masked.length ? { auto_masked: result.auto_masked.map(item => item.reason) } : {}),
       ai_route: result.ai_route, provider: AUDIT_NOT_CALLED, model: AUDIT_NOT_CALLED,
       clean_sha256: createHash("sha256").update(result.preview).digest("hex"),
     }), options.auditDirectory);

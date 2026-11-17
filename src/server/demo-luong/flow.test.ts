@@ -104,10 +104,36 @@ test("phiên mới nói lý do khám khác ô bác sĩ đã sửa: giữ giá tr
   assert.notEqual(phieu.snapshot.fields.benh_su.value, "");
 });
 
+test("ca tự che: tên người lạ còn sót được tự che, đủ 5 bước, AI chỉ thấy bản đã che, nhật ký ghi mã tự che", async () => {
+  const store = newStore(); const root = store.root;
+  const p = createDemoPhieu(store, "GIA-000789");
+  const events = await run(store, { encounterId: p.encounter_id, source: kb("ca-tu-che") });
+  assert.deepEqual(events.map((e) => e.buoc), ["stt", "ban_tho", "che", "ai", "luu"]);
+  assert.ok(events.every((e) => e.trang_thai === "xong"));
+  const che = pick(events, "che");
+  assert.equal(che.du_lieu.gate.passed, true);
+  assert.deepEqual(che.du_lieu.auto_masked.map((x) => x.reason), ["R11c_ten_rieng_con_sot"]);
+  assert.match(che.du_lieu.clean, /\[NGƯỜI_KHÁC\]/);
+  assert.equal(foldVietnamese(pick(events, "ai").du_lieu.payload_preview).includes("quoc viet"), false);
+  const phieu = readDemoPhieu(store, p.encounter_id);
+  assert.deepEqual(phieu.sessions[0].auto_masked, ["R11c_ten_rieng_con_sot"]);
+  const audit = fs.readFileSync(path.join(root, "audit", `${p.encounter_id}.ndjson`), "utf8").trim().split("\n").map((l) => JSON.parse(l));
+  assert.equal(audit.length, 1);
+  assert.equal(audit[0].gate, true);
+  assert.deepEqual(audit[0].auto_masked, ["R11c_ten_rieng_con_sot"]);
+  assert.equal(foldVietnamese(JSON.stringify(audit[0])).includes("quoc viet"), false);
+});
+
+// Phần sót không tự che được (giá trị đã biết dính liền trong một từ): vẫn dừng ở chốt chặn.
+const chanInput = (encounterId: string): DemoFlowInput => ({
+  encounterId, source: { kind: "audio" }, audio: new Uint8Array([82, 73, 70, 70]), extraKnown: [{ value: "Quyx", kind: "BỆNH_NHÂN" }],
+  transcribe: async () => ({ text: "đau quyxa tai", engine: "zipformer-gia", audio_ms: 1000 }),
+});
+
 test("ca bị chặn: dừng ở che/bi_chan, không gọi AI, revision không đổi, nhật ký gate:false", async () => {
   const store = newStore(); const root = store.root; const create = (id: string) => createDemoPhieu(store, id);
   const p = create("GIA-000789");
-  const events = await run(store, { encounterId: p.encounter_id, source: kb("ca-bi-chan") });
+  const events = await run(store, chanInput(p.encounter_id));
   assert.deepEqual(events.map((e) => e.buoc), ["stt", "ban_tho", "che"]);
   const che = pick(events, "che");
   assert.equal(che.trang_thai, "bi_chan");
@@ -118,8 +144,9 @@ test("ca bị chặn: dừng ở che/bi_chan, không gọi AI, revision không �
   const audit = fs.readFileSync(path.join(root, "audit", `${p.encounter_id}.ndjson`), "utf8").trim().split("\n").map((l) => JSON.parse(l));
   assert.equal(audit.length, 1);
   assert.equal(audit[0].gate, false);
-  assert.ok(audit[0].gate_reasons.includes("R11c_ten_rieng_con_sot"));
+  assert.ok(audit[0].gate_reasons.includes("R11a_gia_tri_da_biet"));
   assert.equal(JSON.stringify(audit[0]).includes("excerpt"), false);
+  assert.equal(JSON.stringify(audit[0]).includes("quyxa"), false);
 });
 
 test("ca chưa đồng ý: route local_only, AI mock chạy cục bộ", async () => {
@@ -138,7 +165,7 @@ test("ca chưa đồng ý: route local_only, AI mock chạy cục bộ", async (
 test("kịch bản của bệnh nhân khác phiếu đang mở thì 409", async () => {
   const store = newStore(); const create = (id: string) => createDemoPhieu(store, id);
   const p = create("GIA-000123");
-  await assert.rejects(run(store, { encounterId: p.encounter_id, source: kb("ca-bi-chan") }), (e: unknown) => e instanceof ClinicalError && e.status === 409);
+  await assert.rejects(run(store, { encounterId: p.encounter_id, source: kb("ca-tu-che") }), (e: unknown) => e instanceof ClinicalError && e.status === 409);
 });
 
 test("audio: chế độ dictation, gọi transcribe, bản sạch che tên bệnh nhân", async () => {
@@ -160,7 +187,7 @@ test("audio: chế độ dictation, gọi transcribe, bản sạch che tên bệ
 
 test("người đọc dừng ngay ở sự kiện bị chặn: dòng nhật ký đã được ghi", async () => {
   const store = newStore(); const p = createDemoPhieu(store, "GIA-000789");
-  for await (const e of runDemoFlow(store, { encounterId: p.encounter_id, source: kb("ca-bi-chan") })) if (e.buoc === "che") break;
+  for await (const e of runDemoFlow(store, chanInput(p.encounter_id))) if (e.buoc === "che") break;
   const lines = fs.readFileSync(path.join(store.root, "audit", `${p.encounter_id}.ndjson`), "utf8").trim().split(/\r?\n/);
   assert.equal(lines.length, 1);
   assert.equal(JSON.parse(lines[0]).gate, false);
@@ -193,7 +220,7 @@ function walk(dir: string): string[] {
 test("không rò bản thô: không file nào trong kho chứa chuỗi phải che, không có file âm thanh", () => {
   const files = walk(parent);
   assert.ok(files.length > 0);
-  const secrets = ["ca-chuan", "ca-bi-chan", "ca-chua-dong-y"].flatMap((id) => loadKichBan(id).expected.phai_che).map(foldVietnamese);
+  const secrets = ["ca-chuan", "ca-tu-che", "ca-chua-dong-y"].flatMap((id) => loadKichBan(id).expected.phai_che).map(foldVietnamese);
   for (const file of files) {
     assert.equal(/\.(wav|mp3|ogg|webm|m4a|flac)$/i.test(file), false, file);
     const content = foldVietnamese(fs.readFileSync(file, "utf8"));

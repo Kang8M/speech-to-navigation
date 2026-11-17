@@ -212,8 +212,8 @@ export function DemoLuongScreen() {
   const evChe = events.che && !isDemoError(events.che) ? events.che : null;
   const tho: BanThoView | null = xemPhien ? banTho[xemPhien.sequence] ?? null : evTho && { raw: evTho.du_lieu.raw, spans: evTho.du_lieu.spans, mode: evTho.du_lieu.mode };
   const sach: BanSachView | null = xemPhien
-    ? { clean: xemPhien.clean, counts: xemPhien.counts, gate: { passed: true, reasons: [] } }
-    : evChe && { clean: evChe.du_lieu.clean, counts: evChe.du_lieu.counts, gate: evChe.du_lieu.gate };
+    ? { clean: xemPhien.clean, counts: xemPhien.counts, gate: { passed: true, reasons: [] }, tuChe: (xemPhien.auto_masked ?? []).map(reason => ({ reason })) }
+    : evChe && { clean: evChe.du_lieu.clean, counts: evChe.du_lieu.counts, gate: evChe.du_lieu.gate, tuChe: evChe.du_lieu.auto_masked ?? [] };
   const thoGhiChu = xemPhien && !banTho[xemPhien.sequence]
     ? `Bản thô của phiên ${xemPhien.sequence} không còn: chỉ giữ trong bộ nhớ trình duyệt và đã mất khi tải lại trang. Bản đã che bên cạnh đọc lại từ kho.`
     : undefined;

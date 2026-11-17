@@ -29,7 +29,8 @@ export async function extractForRecording(actor: ClinicalActor, ticket: string, 
   });
   appendPiiAudit(source.record.id, buildAuditEntry({
     now: new Date().toISOString(), encounter_id: source.record.id, session_sequence: source.session.sequence,
-    policy_version: PII_POLICY_VERSION, counts: pii.counts, gate: true, gate_reasons: [], ai_route: pii.ai_route,
+    policy_version: PII_POLICY_VERSION, counts: pii.counts, gate: true, gate_reasons: [],
+    ...(pii.auto_masked.length ? { auto_masked: pii.auto_masked } : {}), ai_route: pii.ai_route,
     provider: run.provider, model: run.model, clean_sha256: pii.clean_sha256,
   }), options.auditDirectory);
   return run;

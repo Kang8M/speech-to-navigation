@@ -39,16 +39,31 @@ test("check uses the patient's family names from the fixture and the record's co
   assert.equal(fs.existsSync(path.join(audit, `${binding.encounter_id}.ndjson`)), false);
 });
 
-test("blocked check writes one audit line without raw text and returns no ticket", () => {
+test("residual name is masked automatically: ticket issued, no blocked audit line, reasons returned for display", () => {
   const { store, actor, binding, tickets, audit } = setup();
   const r = checkRecordingPrivacy(actor, { binding, text: "hôm qua đỗ quốc việt mua thuốc giúp", mode: "conversation" }, { store, tickets, auditDirectory: audit });
+  assert.equal(r.status, "passed"); assert.ok(r.ticket); assert.match(r.digest!, /^[a-f0-9]{64}$/);
+  assert.ok(!r.preview.includes("quốc việt"));
+  assert.deepEqual(r.auto_masked.map(x => x.reason), ["R11c_ten_rieng_con_sot"]);
+  assert.equal(fs.existsSync(path.join(audit, `${binding.encounter_id}.ndjson`)), false);
+});
+
+test("blocked check writes one audit line without raw text and returns no ticket", () => {
+  const { store, actor, binding, audit } = setup();
+  // Phần sót không tự che được (giá trị đã biết dính trong một từ): dựng bằng ticket store giả.
+  class BlockingTickets extends PrivacyTickets {
+    override check(text: string, mode: "conversation" | "dictation", input: Parameters<PrivacyTickets["check"]>[2]) {
+      return super.check(text, mode, { ...input, known: [...input.known, { value: "Quyx", kind: "BỆNH_NHÂN" }] });
+    }
+  }
+  const r = checkRecordingPrivacy(actor, { binding, text: "đau quyxa tai", mode: "conversation" }, { store, tickets: new BlockingTickets(), auditDirectory: audit });
   assert.equal(r.status, "blocked"); assert.equal(r.ticket, null); assert.equal(r.digest, undefined);
   const line = fs.readFileSync(path.join(audit, `${binding.encounter_id}.ndjson`), "utf8").trim();
   assert.equal(line.split("\n").length, 1);
   const entry = JSON.parse(line);
   assert.equal(entry.gate, false); assert.equal(entry.provider, "khong_goi"); assert.equal(entry.session_sequence, 1);
-  assert.deepEqual(entry.gate_reasons, ["R11c_ten_rieng_con_sot"]);
-  assert.ok(!line.includes("quốc việt"));
+  assert.deepEqual(entry.gate_reasons, ["R11a_gia_tri_da_biet"]);
+  assert.ok(!line.includes("quyxa"));
 });
 
 test("check rejects fake ownership, a missing session and a stale content revision", () => {

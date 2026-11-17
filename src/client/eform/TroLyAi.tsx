@@ -181,12 +181,16 @@ export function TroLyAi({ bridge, dirty, onDecided, onBatDau, onOpenTab, soChiDi
         {check?.status === "blocked" && <div role="alert" className="space-y-1 rounded-lg border border-ef-do/40 bg-ef-do-nhat px-3 py-2 text-xs text-ef-do">
           <p className="font-semibold">Chưa gửi AI: còn sót thông tin nhận dạng</p>
           <ul className="list-disc space-y-0.5 pl-4">{check.gate.reasons.map((item, index) => <li key={index}>{TEN_LY_DO_CHAN[item.reason] ?? item.reason}{item.excerpt ? <>: <code className="break-all rounded bg-white px-1">{item.excerpt}</code></> : null}</li>)}</ul>
-          <p>Sửa nội dung trong ô rồi bấm lại.</p>
+          <p>Hệ thống không tự che được phần này. Sửa nội dung trong ô rồi bấm lại.</p>
         </div>}
         {check && <section aria-label="Bản đã che" className="space-y-2 rounded-lg border border-tim-vien bg-tim-nhat/50 p-3">
           <h3 className="text-xs font-semibold text-ef-chu">{check.status === "passed" ? "Bản đã che (nội dung gửi AI)" : "Bản đã che (chưa gửi AI)"}</h3>
           <BanDaChe text={check.preview} />
-          <p className="text-xs text-ef-phu">Đã che: {RULES.filter((rule) => check.counts[rule] > 0).map((rule, index) => <span key={rule}>{index > 0 && " · "}<abbr title={TEN_RULE[rule]} className="no-underline">{rule} × {check.counts[rule]}</abbr></span>)}{RULES.every((rule) => check.counts[rule] === 0) && "không có mục nào"}</p>
+          <p className="text-xs text-ef-phu">Đã che: {RULES.filter((rule) => check.counts[rule] > 0).map((rule, index) => <span key={rule}>{index > 0 && " · "}<abbr title={TEN_RULE[rule]} className="no-underline">{rule} × {check.counts[rule]}</abbr></span>)}{RULES.every((rule) => check.counts[rule] === 0) && (check.auto_masked.length ? "không có mục nào theo R1–R8" : "không có mục nào")}</p>
+          {check.auto_masked.length > 0 && <div role="status" className="text-xs text-ef-phu">
+            <p>Tự che thêm {check.auto_masked.length} mục còn sót (không cần sửa tay):</p>
+            <ul className="list-disc space-y-0.5 pl-4">{check.auto_masked.map((item, index) => <li key={index}>{TEN_LY_DO_CHAN[item.reason] ?? item.reason}{item.excerpt ? <>: <code className="break-all rounded bg-white px-1">{item.excerpt}</code></> : null}</li>)}</ul>
+          </div>}
           <p className="text-xs text-ef-phu">{check.dong_y.trang_thai ? `Đồng ý AI: ✓ (lúc tiếp đón, ${gioVN(check.dong_y.luc)})` : "Đồng ý AI: ✗ — chỉ chạy bộ tách trên máy chủ"}</p>
           {privacyReviewRisks(check.preview).includes("rare_disease_review") && <p role="status" className="text-xs text-ef-phu">Có nhắc bệnh hiếm: tuổi, giới, thời điểm và bệnh hiếm ghép lại vẫn có thể nhận ra người bệnh; hệ thống không tự xóa chẩn đoán.</p>}
         </section>}

@@ -73,15 +73,16 @@ test("kich_ban sai, phiếu sai, phiên sai: lỗi JSON trước khi mở stream
   assert.equal((await runFlow(json("POST", "/api/demo-luong?phieu=khong-phai-uuid&kich_ban=ca-chuan"))).status, 400);
   assert.equal((await runFlow(json("POST", `/api/demo-luong?phieu=${p.encounter_id}&kich_ban=ca-chuan&phien=9`))).status, 400);
   assert.equal((await runFlow(json("POST", `/api/demo-luong?phieu=${p.encounter_id}`))).status, 400);
-  const other = await runFlow(json("POST", `/api/demo-luong?phieu=${p.encounter_id}&kich_ban=ca-bi-chan`));
+  const other = await runFlow(json("POST", `/api/demo-luong?phieu=${p.encounter_id}&kich_ban=ca-tu-che`));
   assert.equal(other.status, 409);
 });
 
-test("ca bị chặn: stream dừng ở che/bi_chan", async () => {
+test("ca tự che: stream đủ 5 bước, bước che có auto_masked", async () => {
   const p = await create("GIA-000789");
-  const events = await lines(await runFlow(json("POST", `/api/demo-luong?phieu=${p.encounter_id}&kich_ban=ca-bi-chan`)));
-  assert.deepEqual(events.map(e => e.buoc), ["stt", "ban_tho", "che"]);
-  assert.equal(events[2].trang_thai, "bi_chan");
+  const events = await lines(await runFlow(json("POST", `/api/demo-luong?phieu=${p.encounter_id}&kich_ban=ca-tu-che`)));
+  assert.deepEqual(events.map(e => e.buoc), ["stt", "ban_tho", "che", "ai", "luu"]);
+  assert.equal(events[2].trang_thai, "xong");
+  assert.deepEqual((events[2].du_lieu as { auto_masked: { reason: string }[] }).auto_masked.map(x => x.reason), ["R11c_ten_rieng_con_sot"]);
 });
 
 test("PATCH revision cũ: 409; duyệt; GET; danh sách kịch bản; xóa dữ liệu", async () => {

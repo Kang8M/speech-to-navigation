@@ -1,6 +1,6 @@
 {
-  "id": "ca-bi-chan",
-  "ten": "Ca bị chặn: tên người lạ còn sót sau khi che",
+  "id": "ca-tu-che",
+  "ten": "Ca tự che thêm: tên người lạ còn sót, hệ thống tự che rồi gửi AI",
   "benh_nhan_id": "GIA-000789",
   "mode": "conversation",
   "doan": [
@@ -8,8 +8,9 @@
     { "vai_tro": "benh_nhan", "text": "hôm qua đỗ quốc việt mua thuốc giúp nhưng tôi vẫn đau họng uống paracetamol 500 mg" }
   ],
   "expected": {
-    "phai_che": ["lê văn mới"],
+    "phai_che": ["lê văn mới", "đỗ quốc việt"],
     "phai_giu": ["đau họng", "paracetamol 500 mg"],
-    "bi_chan": true
+    "bi_chan": false,
+    "tu_che": ["R11c_ten_rieng_con_sot"]
   }
 }

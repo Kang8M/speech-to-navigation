@@ -23,6 +23,9 @@ Các trường bác sĩ hay tự nhập/sửa: bệnh sử, lý do đến khám,
 - 30/10: một lần kê đơn mất ~8 phút; 3 lần thiếu điều dưỡng (bác sĩ vừa khám vừa tự nhập); 3 lần bác sĩ phải sửa lại bệnh án điều dưỡng nhập.
 - Nội soi đơn thuần: 3 phút 20 giây (trẻ 2 tuổi), 8 phút 21 giây (bác trai ù tai, gồm hỏi bệnh).
 - 03/11: 8 ca; khám thuần 3–7 phút ở ca thường, ~20 phút ở ca hội chẩn; 2 bệnh nhân đi thăm dò/chụp rồi quay lại mới được kê đơn (~13 và ~49 phút); biên bản hội chẩn ~8 phút sau khám.
+- 10/11 (phòng thứ 2): vào → ra 14–18 phút; khám xong → bệnh nhân ra 6–13 phút, khớp 09/11 (3–13 phút), nên con số này không phải đặc thù một phòng. Điều dưỡng điền phiếu song song bằng phím tắt và mẫu, bác sĩ chỉ sửa.
+- 16/11 (lần đầu ghi giờ bắt đầu và kết thúc từng bước, 6 ca): điền phiếu 3–10 phút, dài hơn thời gian khám (2–4 phút) ở 4/6 ca; chỉ định ~1 phút, kê đơn 1–2 phút; 3/6 ca hoàn thiện phiếu sau khi bệnh nhân ra. Dù có mẫu, bác sĩ vẫn tự sửa 6 trường: lý do khám, bệnh sử, khám chuyên khoa, chẩn đoán ban đầu, chẩn đoán ra viện, chẩn đoán kèm theo.
+- 17/11 (bác sĩ khác, 3 ca): bệnh nhân ngồi chờ bác sĩ làm giấy 5–7 phút/ca, dài hơn thời gian khám (2–4 phút); tư vấn 9–17 phút; nhập phiếu bị ngắt khi bệnh nhân hỏi giữa chừng (có lần 13 phút). Bác sĩ nhập bệnh sử và lý do khám trước rồi điền từ trên xuống; kê đơn luôn là bước cuối. Bác sĩ 16/11 để bệnh nhân về rồi làm giấy, bác sĩ 17/11 làm khi bệnh nhân còn ngồi: cùng một khoảng thời gian, chỉ khác người chịu.
 
 ## Lời nhân viên y tế (trích/ghi nhận trực tiếp)
 - Bác sĩ: vừa khám vừa điền phiếu rồi lại sang phần mềm kê đơn "rất mất thời gian, bị phân tâm, không tập trung được vào bệnh nhân".

@@ -4,6 +4,14 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-17
 
+### Nhật ký thực địa 10/11, 16/11, 17/11 đưa vào docs
+- **Loại:** Tài liệu
+- **Thay đổi:** thêm ngày 10/11 vào cuối `docs/tham-khao/nhat-ky-day-du-tmh-tuan-2.md`. Thêm file mới `docs/tham-khao/nhat-ky-day-du-tmh-tuan-3.md` cho 16/11 và 17/11. Mục lục `docs/tham-khao/README.md` thêm dòng tuần 3 và sửa khoảng ngày của tuần 2. `docs/tong-hop-quan-sat-tmh.md` thêm số đo của ba ngày này vào phần Số liệu chính. Số đo chính: 16/11 điền phiếu 3–10 phút, dài hơn khám (2–4 phút) ở 4/6 ca, trong khi chỉ định và kê đơn chỉ 1–2 phút; 17/11 bệnh nhân ngồi chờ bác sĩ làm giấy 5–7 phút/ca, nhập phiếu bị ngắt khi bệnh nhân hỏi.
+- **Lý do:** người dùng cập nhật ghi chép tay trong `temp-1/ghi-chep/` và muốn đưa lên tài liệu. Số đo mới cho thấy phiếu khám mới là bước lâu nhất, còn chỉ định và kê đơn thì nhanh. Như vậy việc gợi ý điền phiếu (chữ mờ Tab, bong bóng) nên ưu tiên bệnh sử và lý do khám.
+- **File:** `docs/tham-khao/nhat-ky-day-du-tmh-tuan-2.md`, `docs/tham-khao/nhat-ky-day-du-tmh-tuan-3.md`, `docs/tham-khao/README.md`, `docs/tong-hop-quan-sat-tmh.md`
+- **Kiểm tra:** đối chiếu với bản gốc trong `temp-1/ghi-chep/`. Đã làm sạch: bỏ số năm kinh nghiệm của bác sĩ, bỏ đường dẫn `claude/`, dòng chỉ có dấu cách không ngắt được đổi thành dòng trống. Đã grep, không còn tên người hay quốc tịch. Các file khác trong `temp-1/ghi-chep/` (tuần 1, báo cáo tuần 1, quầy tiếp đón, `cau-truc-*`) chỉ khác bản docs ở những chỗ đã làm sạch, nên giữ nguyên.
+- **Ảnh hưởng:** không đổi code.
+
 ### Sơ đồ: Trợ lý AI giúp bác sĩ điền phiếu khám, học theo thói quen từng người
 - **Loại:** Tài liệu
 - **Thay đổi:** thêm một sơ đồ duy nhất `docs/so-do-luong/so-do-dien-phieu-tro-ly-ai.{drawio,png}`, chia 4 làn: Bác sĩ, Trợ lý AI, Thói quen riêng của bác sĩ, Số đo. Luồng đi như sau: mở phiếu → điều dưỡng đã điền sẵn chưa → đặt con trỏ vào ô → gõ vài chữ hoặc mã gõ tắt → AI tìm câu quen của chính bác sĩ đó theo ô, chẩn đoán, lý do khám → hiện chữ mờ → Tab nhận hoặc gõ tiếp → còn ô thì lặp lại → Lưu → AI học thói quen và cập nhật bộ thói quen để lần sau gợi ý trúng hơn. Bong bóng (F2) là đường tắt điền nhiều ô một lúc. Phần đã có trong prototype vẽ viền cam liền, phần sẽ làm vẽ viền cam đứt: học câu ở mọi ô, chấm điểm câu theo nhận hoặc bỏ, lịch sử giả để nạp sẵn. Làn Số đo ghi số hiện tại (sửa phiếu ~11 phút) và cách đo (ca 1 → ca 5, có và không có Trợ lý). Chỉ định, kê đơn để ngoài sơ đồ. Phong cách lấy theo sơ đồ mẫu người dùng đưa.

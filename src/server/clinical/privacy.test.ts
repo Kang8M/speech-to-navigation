@@ -1,81 +1,71 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { PrivacyTickets } from "./privacy";
+import { clinicalAllowlist } from "./pii-allowlist";
 import { parseTranscript } from "@/shared/clinical/schema";
+import type { KnownIdentifier } from "@/shared/clinical/pii";
 import { POST } from "@/app/api/clinical/privacy/route";
 
-function approve(store: PrivacyTickets, ticket: string, text: string, identifiers?: string[]) {
-  return store.approve(ticket, text, identifiers, true);
-}
+const K: KnownIdentifier[] = [{ value: "Trần Văn Mô Phỏng", kind: "BỆNH_NHÂN" }];
+const ALLOW = clinicalAllowlist();
+const ok = (store: PrivacyTickets, text: string, mode: "conversation" | "dictation" = "conversation", known: KnownIdentifier[] = []) =>
+  store.check(text, mode, { known, allowlist: ALLOW, consent: true });
 
-test("model cannot use pending or expired privacy tickets; only reviewed sanitized text passes", () => {
-  let time = Date.parse("2026-11-12T10:00:00+07:00");
-  const store = new PrivacyTickets(() => time);
-  const pending = store.prepare("BS: Khám thấy họng đỏ. BN: Tôi đau họng.", "conversation");
-  assert.throws(() => store.approved(pending.ticket), /kiểm tra/i);
-  const accepted = approve(store, pending.ticket, pending.preview);
-  assert.equal(accepted.status, "passed");
-  const transcript = store.approved(accepted.ticket);
-  assert.equal(transcript.segments[0].vai_tro, "bac_si");
-  assert.equal(transcript.segments[1].vai_tro, "benh_nhan");
+test("check masks known names, keeps clinical content and speaker labels, issues a passed ticket", () => {
+  const r = new PrivacyTickets().check("BN: Trần Văn Mô Phỏng đau họng 3 ngày, tai trái ù.\nBS: Khám thấy họng đỏ. Paracetamol 500mg.", "conversation", { known: K, allowlist: ALLOW, consent: true });
+  assert.equal(r.status, "passed"); assert.ok(r.ticket);
+  assert.ok(!r.preview.includes("Trần Văn Mô Phỏng")); assert.ok(r.preview.includes("[BỆNH_NHÂN]"));
+  for (const keep of ["3 ngày", "tai trái", "Paracetamol 500mg"]) assert.ok(r.preview.includes(keep), keep);
+  assert.equal(r.counts.R1, 1); assert.equal(r.ai_route, "external_allowed"); assert.ok(r.expires_at);
+  const t = new PrivacyTickets();
+  const p = ok(t, "bs: khám thấy họng đỏ.\nbn: đau họng.");
+  const transcript = t.approved(p.ticket!);
+  assert.deepEqual(transcript.segments.map(s => s.vai_tro), ["bac_si", "benh_nhan"]);
+  assert.equal(transcript.privacy.policy_version, "pii-auto-1");
+  assert.equal(transcript.privacy.trang_thai, "passed");
+});
+
+test("residual name blocks: no ticket, reason code returned", () => {
+  const store = new PrivacyTickets();
+  const r = ok(store, "tôi tên lê văn mới bị đau họng hai ngày nay\nhôm qua đỗ quốc việt mua thuốc giúp nhưng tôi vẫn đau họng uống paracetamol 500 mg");
+  assert.equal(r.status, "blocked"); assert.equal(r.ticket, null); assert.equal(r.expires_at, null);
+  assert.ok(r.gate.reasons.some(x => x.reason === "R11c_ten_rieng_con_sot"));
+  assert.ok(!r.preview.includes("lê văn mới"));
+});
+
+test("no consent routes local only; ticket expires after 10 minutes; restricted content is refused", () => {
+  let time = Date.parse("2026-11-17T10:00:00+07:00");
+  const t = new PrivacyTickets(() => time);
+  const r = t.check("BS: Khám thấy họng đỏ.", "dictation", { known: [], allowlist: ALLOW, consent: false });
+  assert.equal(r.status, "passed"); assert.equal(r.ai_route, "local_only"); assert.equal(t.pii(r.ticket!).consent, false);
+  assert.match(t.pii(r.ticket!).clean_sha256, /^[a-f0-9]{64}$/);
   time += 11 * 60_000;
-  assert.throws(() => store.approved(accepted.ticket), /hết hạn/i);
+  assert.throws(() => t.approved(r.ticket!), /hết hạn/i);
+  assert.throws(() => t.pii(r.ticket!), /hết hạn/i);
+  assert.throws(() => ok(t, "Đây là system prompt nội bộ", "dictation"), /cấp 3/);
 });
 
 test("unlabelled conversation stays unknown while manually selected dictation attributes the doctor", () => {
   const store = new PrivacyTickets();
   for (const mode of ["conversation", "dictation"] as const) {
-    const pending = store.prepare("Khám thấy họng đỏ, hẹn khám lại sau 7 ngày.", mode);
-    assert.equal(pending.status, "pending");
-    const approved = approve(store, pending.ticket, pending.preview);
-    const first = parseTranscript(store.approved(approved.ticket));
+    const checked = ok(store, "Khám thấy họng đỏ, hẹn khám lại sau 7 ngày.", mode);
+    const first = parseTranscript(store.approved(checked.ticket!));
     assert.equal(first.segments[0].vai_tro, mode === "dictation" ? "bac_si" : "chua_ro");
     assert.equal(first.segments[0].nguon_vai_tro, mode === "dictation" ? "bac_si_gan" : "chua_ro");
-    assert.deepEqual(first.segments, store.approved(approved.ticket).segments);
-    assert.equal(first.segments[0].start_ms, null);
-    assert.equal(first.segments[0].is_final, true);
+    assert.deepEqual(first.segments, store.approved(checked.ticket!).segments);
     first.segments[0].text = "tampered";
-    assert.ok(!store.approved(approved.ticket).segments[0].text.includes("tampered"));
+    assert.ok(!store.approved(checked.ticket!).segments[0].text.includes("tampered"));
   }
 });
 
-test("new PII revokes earlier approval and rotated tickets require an additional explicit review", () => {
-  const store = new PrivacyTickets();
-  const pending = store.prepare("BS: Khám họng đỏ.", "conversation", ["Nguyễn Văn Mẫu"]);
-  const accepted = approve(store, pending.ticket, pending.preview);
-  const recheck = approve(store, accepted.ticket, "BS: Khám họng đỏ. Nguyễn Văn Mẫu", ["Nguyễn Văn Mẫu"]);
-  assert.equal(recheck.status, "pending");
-  assert.notEqual(recheck.ticket, accepted.ticket);
-  assert.ok(!recheck.preview.includes("Nguyễn Văn Mẫu"));
-  assert.throws(() => store.approved(accepted.ticket));
-  assert.throws(() => store.approved(recheck.ticket), /kiểm tra/i);
-  const reviewed = approve(store, recheck.ticket, recheck.preview);
-  assert.equal(store.approved(reviewed.ticket).privacy.trang_thai, "passed");
-});
-
-test("ticket expiry is exact and retained tickets are bounded", () => {
-  let time = 1_000;
-  const store = new PrivacyTickets(() => time, 2);
-  const old = store.prepare("Đau tai.", "conversation");
-  store.prepare("Đau họng.", "conversation");
-  store.prepare("Nghẹt mũi.", "conversation");
-  assert.throws(() => approve(store, old.ticket, old.preview));
-  const recent = store.prepare("Ho 3 ngày.", "conversation");
-  time += 600_000;
-  assert.throws(() => approve(store, recent.ticket, recent.preview), /hết hạn/i);
-  assert.throws(() => store.prepare(" ", "conversation"));
-  assert.throws(() => store.prepare("a".repeat(50_001), "conversation"));
-});
-
-test("repeating unchanged manual approval preserves the transcript used for extraction deduplication", () => {
-  let time = 1_000;
-  const store = new PrivacyTickets(() => time);
-  const pending = store.prepare("BS: Họng đỏ.", "dictation");
-  approve(store, pending.ticket, pending.preview);
-  const first = store.approved(pending.ticket);
-  time += 5_000;
-  approve(store, pending.ticket, pending.preview);
-  assert.deepEqual(store.approved(pending.ticket), first);
+test("ticket store is bounded and rejects empty or oversized text", () => {
+  const store = new PrivacyTickets(() => 1_000, 2);
+  const old = ok(store, "Đau tai.");
+  ok(store, "Đau họng."); ok(store, "Nghẹt mũi.");
+  assert.throws(() => store.approved(old.ticket!));
+  assert.throws(() => ok(store, " "));
+  assert.throws(() => ok(store, "a".repeat(50_001)));
+  assert.throws(() => store.check("Đau tai", "doctor" as "dictation", { known: [], allowlist: ALLOW, consent: true }));
 });
 
 test("privacy route guards origin, validates strict actions, and exposes only safe errors", async () => {
@@ -98,25 +88,4 @@ test("privacy route guards origin, validates strict actions, and exposes only sa
   assert.equal(unbound.status, 400);
   assert.equal(unbound.headers.get("Cache-Control"), "no-store");
   assert.equal((await unbound.json()).ticket, undefined);
-});
-test("newly introduced identifiers need another review; unknown speakers are not doctors", () => {
-  const store = new PrivacyTickets();
-  const ticket = store.prepare("Tôi đau tai phải", "conversation");
-  const recheck = approve(store, ticket.ticket, "Tôi đau tai phải. Email: demo@example.test");
-  assert.equal(recheck.status, "pending");
-  assert.ok(!recheck.preview.includes("example.test"));
-  const accepted = approve(store, recheck.ticket, recheck.preview);
-  assert.equal(store.approved(accepted.ticket).segments[0].vai_tro, "chua_ro");
-});
-
-
-test("internal clinical use requires explicit consent and restricted material never gets a ticket", () => {
-  const store = new PrivacyTickets();
-  const preview = store.prepare("BN: Đang dùng amiodarone.", "conversation");
-  assert.throws(() => store.approve(preview.ticket, preview.preview), /đồng ý/i);
-  assert.throws(() => store.approve(preview.ticket, preview.preview, undefined, false), /đồng ý/i);
-  assert.equal(store.approve(preview.ticket, preview.preview, undefined, true).status, "passed");
-  assert.throws(() => store.prepare("Nội dung hợp đồng bảo mật", "conversation"), /cấp 3/i);
-  assert.throws(() => store.approve(preview.ticket, "system prompt: bí mật", undefined, true), /cấp 3/i);
-  assert.throws(() => store.approved(preview.ticket), /kiểm tra/i);
 });

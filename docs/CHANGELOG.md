@@ -4,6 +4,18 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-17
 
+### eForm R1–R14 · Task 2: ticket riêng tư che bằng pii-auto-1 và chốt chặn R11
+- **Loại:** Tính năng
+- **Thay đổi:** `PrivacyTickets` bỏ hai bước `prepare`/`approve` (bộ lọc `local-review-2` + bác sĩ duyệt tay), thay bằng hàm `check(text, mode, { known, allowlist, consent, binding })`:
+  - Thứ tự xử lý: chặn nội dung cấp 3 → che bằng `redactPii` (R1–R8, nhãn R10) → chốt chặn `checkResidualPii` (R11) → tuyến AI theo cờ đồng ý (R14).
+  - Bị chặn thì không lưu gì và không cấp ticket, chỉ trả lý do theo mã rule.
+  - Qua chốt chặn thì cấp ticket `passed`, hạn 10 phút.
+
+  Thêm hàm `pii(ticket)` trả số mục che, tuyến AI, cờ đồng ý và mã băm bản sạch, dùng cho nhật ký R13. Transcript ghi `policy_version = "pii-auto-1"`. Bỏ mảng định danh cứng lấy từ `ca-gia.json`.
+- **Lý do:** Plan `2026-11-17-eform-pii-r1-r14.md`, Task 2. Người dùng đã duyệt D2 (bỏ duyệt tay trước AI).
+- **File:** `src/server/clinical/privacy.ts`, `src/server/clinical/privacy.test.ts`, `src/server/clinical/privacy-binding.test.ts`, `docs/CHANGELOG.md`
+- **Kiểm tra:** Test mới lỗi trước (`check is not a function`), sau đó qua 10/10. Các test giữ nhãn `BS:`/`bs:`, giữ "3 ngày", "tai trái", "Paracetamol 500mg"; câu STT chữ thường có tên lạ thì bị chặn R11c. GitNexus impact: `PrivacyTickets` ở mức MEDIUM (6 nơi gọi trực tiếp, đều sửa ở Task 3). **Chưa chạy `npm test` đầy đủ:** `bound-privacy` và các test khác còn gọi API cũ, sẽ sửa ở Task 3.
+
 ### eForm R1–R14 · Task 1: định danh đã biết, allowlist R11c và nhật ký R13 dùng chung
 - **Loại:** Tính năng
 - **Thay đổi:** Thêm ba module server:

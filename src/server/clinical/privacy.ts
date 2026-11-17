@@ -1,10 +1,12 @@
 import "server-only";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
-import ca from "../../../data/eform/ca-gia.json";
-import type { PrivacyPreview, SpeakerMode } from "@/shared/clinical/api";
+import type { SpeakerMode } from "@/shared/clinical/api";
 import type { Transcript } from "@/shared/clinical/types";
 import { parseTranscript } from "@/shared/clinical/schema";
-import { PRIVACY_POLICY_VERSION, redactTranscript } from "@/shared/clinical/privacy";
+import {
+  aiRouteFor, checkResidualPii, PII_POLICY_VERSION, redactPii,
+  type AiRoute, type GateResult, type KnownIdentifier, type PiiRule,
+} from "@/shared/clinical/pii";
 import { ClinicalError } from "./repository";
 
 import { hasRestrictedContent } from "@/shared/clinical/data-policy";
@@ -27,22 +29,37 @@ function checkBinding(entry: Entry, expected: PrivacyBinding | undefined) {
 }
 
 const TTL_MS = 10 * 60_000;
-const syntheticIdentifiers = [ca.ho_ten, ca.dang_nhap, ca.pid, ca.ma_luot_kham, ca.bac_si_kham, ca.bac_si_chinh,
-  ...ca.lich_su.tien_su_ban_than.map(item => item.bac_si), ...ca.lich_su.di_ung.map(item => item.nguoi)];
 
 type Entry = {
   preview: string;
   mode: SpeakerMode;
-  status: "pending" | "passed";
   expires: number;
-  changes: number;
   transcriptId: string;
   requestId: string;
-  revision: number;
-  processedAt: string | null;
-  consentAt: string | null;
+  processedAt: string;
+  consent: boolean;
+  counts: Record<PiiRule, number>;
+  aiRoute: AiRoute;
   binding?: PrivacyBinding;
 };
+
+/** Kết quả che + chốt chặn R11 + đồng ý R14. Bị chặn thì không có ticket. `gate.reasons[].excerpt` chỉ gửi về màn hình, không ghi đĩa hay log. */
+export interface PrivacyCheck {
+  status: "passed" | "blocked";
+  ticket: string | null;
+  preview: string;
+  counts: Record<PiiRule, number>;
+  gate: GateResult;
+  ai_route: AiRoute;
+  expires_at: string | null;
+}
+
+export interface PrivacyCheckInput {
+  known: KnownIdentifier[];
+  allowlist: ReadonlySet<string>;
+  consent: boolean;
+  binding?: PrivacyBinding;
+}
 
 /** Process-local, bounded bearer tickets. Only redacted text is retained; no disk or cloud I/O. */
 export class PrivacyTickets {
@@ -65,66 +82,46 @@ export class PrivacyTickets {
     return entry;
   }
 
-  private view(ticket: string, entry: Entry): PrivacyPreview {
-    return { ticket, preview: entry.preview, status: entry.status, expires_at: new Date(entry.expires).toISOString(), changes: entry.changes };
-  }
-
-  private add(entry: Entry): PrivacyPreview {
+  private add(entry: Entry): string {
     for (const [key, item] of this.entries) if (item.expires <= this.now()) this.entries.delete(key);
     while (this.entries.size >= this.capacity) this.entries.delete(this.entries.keys().next().value!);
     const ticket = randomBytes(32).toString("base64url");
     this.entries.set(ticket, entry);
-    return this.view(ticket, entry);
+    return ticket;
   }
 
-  prepare(text: string, mode: SpeakerMode, knownIdentifiers: string[] = syntheticIdentifiers, binding?: PrivacyBinding): PrivacyPreview {
+  /** Bộ pii-auto-1: che R1–R8 (nhãn R10) → chốt chặn R11 → tuyến AI theo R14. Chỉ bản sạch được giữ lại, và chỉ khi qua chốt chặn. */
+  check(text: string, mode: SpeakerMode, input: PrivacyCheckInput): PrivacyCheck {
     this.checkText(text);
     if (mode !== "conversation" && mode !== "dictation") throw new ClinicalError("Chế độ người nói không hợp lệ.", 400);
     if (hasRestrictedContent(text)) throw new ClinicalError("Dữ liệu cấp 3 không được đưa vào AI.", 403);
-    const sanitized = redactTranscript(text, knownIdentifiers);
-    this.checkText(sanitized.text);
-    return this.add({ preview: sanitized.text, mode, status: "pending", expires: this.now() + TTL_MS,
-      changes: sanitized.changes, transcriptId: randomUUID(), requestId: randomUUID(), revision: 1, processedAt: null, consentAt: null,
-      ...(binding ? { binding: structuredClone(binding) } : {}) });
+    const redacted = redactPii(text.normalize("NFC"), input.known);
+    const clean = redacted.clean.trim();
+    this.checkText(clean);
+    const gate = checkResidualPii(clean, input.known, input.allowlist);
+    const aiRoute = aiRouteFor(input.consent);
+    const result = { preview: clean, counts: { ...redacted.counts }, gate, ai_route: aiRoute };
+    if (!gate.passed) return { ...result, status: "blocked", ticket: null, expires_at: null };
+    const expires = this.now() + TTL_MS;
+    const ticket = this.add({ preview: clean, mode, expires, transcriptId: randomUUID(), requestId: randomUUID(),
+      processedAt: new Date(this.now()).toISOString(), consent: input.consent, counts: { ...redacted.counts }, aiRoute,
+      ...(input.binding ? { binding: structuredClone(input.binding) } : {}) });
+    return { ...result, status: "passed", ticket, expires_at: new Date(expires).toISOString() };
   }
 
-  approve(ticket: string, reviewedText: string, knownIdentifiers: string[] = syntheticIdentifiers, consent = false, binding?: PrivacyBinding): PrivacyPreview {
+  /** Dữ liệu cho bằng chứng khử định danh và nhật ký R13 của một ticket đã qua chốt chặn. */
+  pii(ticket: string, binding?: PrivacyBinding): { counts: Record<PiiRule, number>; ai_route: AiRoute; consent: boolean; clean_sha256: string } {
     const entry = this.read(ticket);
     checkBinding(entry, binding);
-    this.checkText(reviewedText);
-    if (hasRestrictedContent(reviewedText)) {
-      entry.status = "pending"; entry.consentAt = null;
-      throw new ClinicalError("Dữ liệu cấp 3 không được đưa vào AI.", 403);
-    }
-    if (consent !== true) {
-      entry.status = "pending"; entry.consentAt = null;
-      throw new ClinicalError("Cần sự đồng ý xử lý dữ liệu cấp 2 trong nội bộ.", 403);
-    }
-    const sanitized = redactTranscript(reviewedText, knownIdentifiers);
-    this.checkText(sanitized.text);
-    const changed = sanitized.text !== entry.preview;
-    if (sanitized.changes > 0) {
-      // A fresh redaction has not yet been seen by the reviewer. Revoke the old bearer.
-      this.entries.delete(ticket);
-      return this.add({ ...entry, preview: sanitized.text, status: "pending", processedAt: null, consentAt: null,
-        changes: sanitized.changes, revision: entry.revision + 1 });
-    }
-    const needsApprovalTime = entry.status !== "passed" || changed;
-    entry.preview = sanitized.text;
-    entry.status = "passed";
-    if (changed || !entry.consentAt) entry.consentAt = new Date(this.now()).toISOString();
-    entry.changes = 0;
-    if (changed) { entry.revision++; entry.requestId = randomUUID(); }
-    if (needsApprovalTime) entry.processedAt = new Date(this.now()).toISOString();
-    return this.view(ticket, entry);
+    return { counts: { ...entry.counts }, ai_route: entry.aiRoute, consent: entry.consent,
+      clean_sha256: createHash("sha256").update(entry.preview).digest("hex") };
   }
 
   approved(ticket: string, binding?: PrivacyBinding): Transcript {
     const entry = this.read(ticket);
     checkBinding(entry, binding);
-    if (entry.status !== "passed" || !entry.consentAt) throw new ClinicalError("Cần kiểm tra thủ công và xác nhận nội dung trước khi dùng AI.", 400);
     if (hasRestrictedContent(entry.preview)) throw new ClinicalError("Dữ liệu cấp 3 không được đưa vào AI.", 403);
-    // Labels are trusted only after manual review. Unlabelled conversation never implies a doctor.
+    // Unlabelled conversation never implies a doctor.
     const chunks = entry.preview.split(/\n+|(?<=[.!?])\s+(?=(?:BS|BN)\s*[:：])/iu).map(text => text.trim()).filter(Boolean);
     const segments = chunks.map((text, index): Transcript["segments"][number] => {
       const label = /^(BS|BN)\s*[:：]\s*/iu.exec(text);
@@ -134,7 +131,7 @@ export class PrivacyTickets {
         text: text.slice(label?.[0].length ?? 0).trim(), is_final: true };
     }).filter(item => item.text.length > 0);
     return parseTranscript({ schema_version: "1.1.0", request_id: entry.requestId, transcript_id: entry.transcriptId,
-      revision: entry.revision, language: "vi", privacy: { trang_thai: "passed", policy_version: PRIVACY_POLICY_VERSION, processed_at: entry.processedAt },
+      revision: 1, language: "vi", privacy: { trang_thai: "passed", policy_version: PII_POLICY_VERSION, processed_at: entry.processedAt },
       context: { tuoi_thang: null, gioi_tinh: null, can_nang_kg: null }, segments,
       ...(entry.binding ? { binding: entry.binding } : {}) });
   }

@@ -82,7 +82,7 @@ export function EncounterWorkspace({ initialRecordId }: { initialRecordId?: stri
       saveContent: async (binding) => {
         if (!strictRef.current) return;
         const session = responseRef.current?.record.recording_sessions.find((item) => item.id === binding.recordingSessionId);
-        if (session?.content_state === "awaiting_review") throw new Error("Còn nội dung ghi âm chưa kiểm tra. Hãy kiểm tra rồi lưu, hoặc bỏ phần chưa duyệt, trước khi chuyển lượt.");
+        if (session?.content_state === "awaiting_review") throw new Error("Còn nội dung ghi âm chưa che và lưu. Hãy che thông tin và tạo bản nháp, hoặc bỏ phần chưa lưu, trước khi chuyển lượt.");
       },
       load: (key, signal) => openEncounter(key, signal),
       onLoaded: (key, loaded) => {
@@ -163,8 +163,8 @@ export function EncounterWorkspace({ initialRecordId }: { initialRecordId?: stri
     if (!c || switching || key === c.getEncounterId()) return;
     if (dirtyRef.current) { setError("Phiếu còn thay đổi chưa lưu. Hãy Lưu phiếu trước khi chuyển lượt khám."); return; }
     const reason = c.getBinding() ? "Đang ghi âm lượt này."
-      : awaitingReview().length > 0 ? "Còn nội dung ghi âm chưa kiểm tra."
-      : pendingTextRef.current ? "Còn nội dung đã nhập chưa kiểm tra." : null;
+      : awaitingReview().length > 0 ? "Còn nội dung ghi âm chưa che và lưu."
+      : pendingTextRef.current ? "Còn nội dung đã nhập chưa che và lưu." : null;
     if (reason) { setPendingSwitch({ key, reason }); return; }
     void runSwitch(key);
   }
@@ -248,7 +248,7 @@ export function EncounterWorkspace({ initialRecordId }: { initialRecordId?: stri
       {pendingSwitch && (
         <div role="alertdialog" aria-label="Nội dung chưa kiểm tra" className="mx-4 mt-3 rounded-lg border border-ef-vien bg-white px-4 py-3 text-sm print:hidden sm:mx-6">
           <p className="font-semibold text-ef-dam">{pendingSwitch.reason}</p>
-          <p className="text-ef-phu">Hãy kiểm tra riêng tư và lưu phần này trước khi chuyển. Nếu chuyển ngay, phần chưa duyệt sẽ được bỏ (bản đã duyệt trước đó vẫn được giữ).</p>
+          <p className="text-ef-phu">Hãy bấm “Che thông tin và tạo bản nháp” để lưu phần này trước khi chuyển. Nếu chuyển ngay, phần chưa lưu sẽ được bỏ (bản đã lưu trước đó vẫn được giữ).</p>
           <div className="mt-2 flex gap-2">
             <button type="button" className={BTN_OUTLINE} onClick={() => setPendingSwitch(null)}>Ở lại lượt này</button>
             <button type="button" className={BTN_OUTLINE} disabled={switching} onClick={() => void discardAndSwitch(pendingSwitch.key)}>Bỏ phần chưa duyệt và chuyển</button>

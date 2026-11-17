@@ -16,7 +16,7 @@ export interface EncounterBridge {
   publish(next: ClinicalResponse): void;
   /** Phiếu còn thay đổi chưa lưu: chặn chuyển lượt và đóng tab */
   setDirty(value: boolean): void;
-  /** Còn nội dung gõ hoặc nói chưa kiểm tra riêng tư và chưa lưu */
+  /** Còn nội dung gõ hoặc nói chưa được máy chủ che và chưa lưu */
   setPendingText(value: boolean): void;
   beforeStart(): Promise<RecordingBinding>;
   onCaptureReady(handle: RecordingHandle, binding: RecordingBinding): void;

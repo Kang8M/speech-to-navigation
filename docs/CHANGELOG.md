@@ -4,6 +4,37 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-17
 
+### eForm R1–R14 · Task 5: Trợ lý lâm sàng hiện bản đã che, lý do chặn R11 và đồng ý R14
+- **Loại:** Giao diện
+- **Thay đổi:**
+  - Ô "Nội dung buổi khám" giữ chữ gốc (chỉ trong bộ nhớ trình duyệt), không còn che cục bộ.
+  - Một nút **"Che thông tin và tạo bản nháp"** thay cho chuỗi cũ: kiểm tra riêng tư → sửa bản xem trước → tích đồng ý → tạo bản nháp.
+  - Bị chặn: khung đỏ "Chưa gửi AI: còn sót thông tin nhận dạng", liệt kê lý do theo mã R11 và đoạn trích, không tạo bản nháp.
+  - Qua chốt chặn: khối "Bản đã che (nội dung gửi AI)" chỉ đọc, các nhãn `[…]` được tô màu. Kèm dòng số mục che theo rule ("R1 × 1"), dòng "Đồng ý AI: ✓ (lúc tiếp đón, …)" hoặc "✗ — chỉ chạy bộ tách trên máy chủ", và cảnh báo bệnh hiếm.
+  - Bỏ ô tích đồng ý và ô sửa bản đã che.
+  - Nhãn rule, lý do chặn, mẫu nhãn che và `gioVN` chuyển sang `src/shared/clinical/pii/nhan.ts`; `/demo-luong` lấy lại qua `hien-thi.ts`.
+  - Xóa `redactTranscript` và `PRIVACY_POLICY_VERSION` (`local-review-2`), giữ `privacyReviewRisks`.
+  - Hàm `checkClinicalPrivacy` thay `prepareClinicalPrivacy`/`approveClinicalPrivacy`.
+  - Lời nhắc khi chuyển lượt còn nội dung chưa lưu đổi thành "chưa che và lưu", hướng dẫn bấm nút mới.
+  - Route privacy bỏ biến `_action` không dùng.
+- **Lý do:** Plan `2026-11-17-eform-pii-r1-r14.md`, Task 5.
+- **File:** `src/shared/clinical/pii/nhan.ts`, `src/client/demo-luong/hien-thi.ts`, `src/client/clinical-api.ts`, `src/client/eform/TroLyAi.tsx`, `src/client/eform/EncounterWorkspace.tsx`, `src/client/eform/encounter-bridge.ts`, `src/shared/clinical/privacy.ts`, `src/shared/clinical/privacy.test.ts`, `src/app/api/clinical/privacy/route.ts`, `docs/CHANGELOG.md`
+- **Kiểm tra:**
+  - Trước khi sửa: `tsc --noEmit` báo `PrivacyPreview` không tồn tại. Sau khi sửa: `tsc` sạch, `eslint src lib` 0 lỗi (6 cảnh báo cũ).
+  - `npm test`: lỗi có sẵn `encounter-context.test.ts:28` và một test bị sửa từ ngoài phiên (xem mục "Ảnh hưởng").
+  - Trình duyệt (`npm run dev`, mock):
+    - (a) LK-GIA-0456 + "Thử hội thoại tổng hợp": qua chốt chặn, "Đồng ý AI: ✓", có bản nháp.
+    - (b) Câu có tên người nhà giả lấy từ hồ sơ: hiện `[NGƯỜI_NHÀ_1]`, "R1 × 1".
+    - (c) "hôm qua đỗ quốc việt mua thuốc giúp": bị chặn R11c, không có bản nháp. File nhật ký có dòng `gate:false`, `provider:"khong_goi"`, không có chữ gốc.
+    - (d) Mã 000123: "Đồng ý AI: ✗ — chỉ chạy bộ tách trên máy chủ", vẫn tạo được bản nháp.
+    - (e) `/demo-luong` mở được, không tràn ở 375px.
+    - Không có lỗi console.
+  - Ở 375px trang eForm tràn ngang (`scrollWidth` 535) do hàng nút trạng thái có sẵn ("Nhập nội trú", "Chuyển cấp cứu"…), không do khối mới (rộng 310px). Chưa sửa.
+- **Ảnh hưởng:**
+  - Bác sĩ không còn phải duyệt tay trước khi gửi AI (D2 đã được người dùng xác nhận).
+  - Nội dung bị chặn vẫn ở trạng thái "chờ" trong phiên. Muốn chuyển lượt thì bỏ phần đó hoặc sửa rồi bấm lại.
+  - File `src/server/clinical/extract-recording.test.ts` có một sửa đổi chưa commit, không do phiên này làm: đổi regex lỗi mong đợi thành `/đã thay đổi|kiểm tra lại/`, nên test "transcript not yet attached" lỗi. Bản đã commit vẫn qua. Phiên này không đụng vào sửa đổi đó.
+
 ### eForm R1–R14 · Task 4: trích xuất kèm bằng chứng R11/R14 và nhật ký R13
 - **Loại:** Tính năng
 - **Thay đổi:** Thêm `src/server/clinical/extract-recording.ts › extractForRecording`. Hàm này làm lần lượt:

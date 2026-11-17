@@ -1,7 +1,7 @@
 // Gọi API lâm sàng từ trình duyệt. Kiểu request/response lấy từ src/shared/clinical nên lệch với route là báo lỗi ngay.
 // Mọi hàm ghi đều trả bản hồ sơ mới nhất; nơi gọi phải cập nhật phiên bản (revision) từ kết quả.
 import type {
-  ClinicalExtraction, ClinicalResponse, EncounterSummary, PrivacyPreview, SpeakerMode, TranscriptBinding,
+  ClinicalExtraction, ClinicalResponse, EncounterSummary, PrivacyCheckResult, SpeakerMode, TranscriptBinding,
   ApproveClinicalRequest, TransitionClinicalRequest, DecideClinicalChangesRequest,
   StartRecordingRequest, HeartbeatRecordingRequest, FinalizeRecordingRequest, UpdateRecordingContentRequest,
 } from "@/shared/clinical/api";
@@ -61,12 +61,9 @@ export const recordingApi = {
   recover: (deviceId: string) => post<{ ok: true }>("/api/clinical/recording", { action: "recover", device_id: deviceId }, "Không khôi phục được phiên ghi âm."),
 };
 
-export function prepareClinicalPrivacy(text: string, mode: SpeakerMode, binding: TranscriptBinding): Promise<PrivacyPreview> {
-  return post<PrivacyPreview>("/api/clinical/privacy", { action: "prepare", text, mode, binding });
-}
-
-export function approveClinicalPrivacy(ticket: string, text: string, consent: boolean, binding: TranscriptBinding): Promise<PrivacyPreview> {
-  return post<PrivacyPreview>("/api/clinical/privacy", { action: "approve", ticket, text, consent, binding });
+/** Máy chủ che PII (R1–R8, R10), chạy chốt chặn R11 và đọc cờ đồng ý R14. Bị chặn thì không có ticket. */
+export function checkClinicalPrivacy(text: string, mode: SpeakerMode, binding: TranscriptBinding): Promise<PrivacyCheckResult> {
+  return post<PrivacyCheckResult>("/api/clinical/privacy", { action: "check", text, mode, binding }, "Không che được thông tin nhận dạng.");
 }
 
 export function extractClinicalDraft(ticket: string, binding: TranscriptBinding): Promise<ClinicalExtraction> {

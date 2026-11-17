@@ -14,8 +14,8 @@ export async function POST(request: Request) {
     assertLocalDemoRequest(request);
     const body = await request.text();
     if (Buffer.byteLength(body) > 400_000) throw new ClinicalError("Yêu cầu quá lớn.", 413);
-    const { action: _action, ...payload } = input.parse(JSON.parse(body));
-    const result = checkRecordingPrivacy(getDemoClinicalActor(), payload);
+    const { text: content, mode, binding } = input.parse(JSON.parse(body));
+    const result = checkRecordingPrivacy(getDemoClinicalActor(), { text: content, mode, binding });
     return Response.json(result, { headers });
   } catch (error) {
     // Never echo input, Zod issues, provider errors, or raw transcript to responses/logs.

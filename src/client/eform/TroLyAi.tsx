@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { MicButton } from "@/client/chung/MicButton";
-import { useEform } from "@/client/eform/EformContext";
 import { ClinicalChanges } from "@/client/eform/ClinicalChanges";
 import type { EncounterBridge } from "@/client/eform/encounter-bridge";
-import { approveClinicalPrivacy, extractClinicalDraft, prepareClinicalPrivacy, recordingApi, type ClinicalResponse } from "@/client/clinical-api";
-import type { ClinicalExtraction, SpeakerMode, TranscriptBinding } from "@/shared/clinical/api";
-import { privacyReviewRisks, redactTranscript } from "@/shared/clinical/privacy";
+import { checkClinicalPrivacy, extractClinicalDraft, recordingApi, type ClinicalResponse } from "@/client/clinical-api";
+import type { ClinicalExtraction, PrivacyCheckResult, SpeakerMode, TranscriptBinding } from "@/shared/clinical/api";
+import { privacyReviewRisks } from "@/shared/clinical/privacy";
+import { NHAN_CHE, RULES, TEN_LY_DO_CHAN, TEN_RULE, gioVN } from "@/shared/clinical/pii/nhan";
 import type { RecordingSession } from "@/shared/clinical/types";
 import type { InputMode } from "@/shared/metrics";
 
@@ -34,19 +34,26 @@ const NUT_PHU = `w-full rounded-lg border border-tim-vien bg-white py-2.5 text-s
 const MAU_HOI_THOAI = "BN: Đau họng 3 ngày, không sốt.\nBS: Khám thấy họng đỏ. Chẩn đoán ban đầu viêm họng cấp. Chỉ định nội soi họng, số lượng 1. Lời dặn uống đủ nước. Hẹn tái khám sau 3 ngày.";
 
 const OPEN_STATES: RecordingSession["state"][] = ["opening", "recording", "finalizing"];
+
+/** Bản đã che: tô các nhãn [..] để bác sĩ thấy chỗ nào đã được thay. */
+function BanDaChe({ text }: { text: string }) {
+  const parts: ReactNode[] = [];
+  let at = 0;
+  for (const m of text.matchAll(NHAN_CHE)) {
+    if (m.index > at) parts.push(text.slice(at, m.index));
+    parts.push(<mark key={m.index} className="rounded bg-tim-nhat px-0.5 font-semibold text-tim ring-1 ring-tim-vien">{m[0]}</mark>);
+    at = m.index + m[0].length;
+  }
+  parts.push(text.slice(at));
+  return <p className="whitespace-pre-wrap break-words rounded-md border border-ef-vien bg-white px-3 py-2 text-sm leading-6 text-ef-chu">{parts}</p>;
+}
 const usable = (session: RecordingSession) => session.content_state !== "discarded";
 
 export function TroLyAi({ bridge, dirty, onDecided, onBatDau, onOpenTab, soChiDinh, vanBanDau, hoiThoai }: Props) {
-  const { data } = useEform();
-  const knownNames = [data.ca.ho_ten, data.ca.bac_si_kham, data.ca.bac_si_chinh].filter((name): name is string => Boolean(name));
-  const [text, setText] = useState(() => redactTranscript(vanBanDau ?? "", knownNames).text);
+  // Ô nhập giữ chữ gốc, chỉ nằm trong bộ nhớ trình duyệt; máy chủ là nơi duy nhất che trước khi tạo bản nháp.
+  const [text, setText] = useState(() => vanBanDau ?? "");
   const [mode, setMode] = useState<SpeakerMode>("conversation");
-  const [preview, setPreview] = useState("");
-  const [showPreview, setShowPreview] = useState(false);
-  const [ticket, setTicket] = useState<string | null>(null);
-  const [binding, setBinding] = useState<TranscriptBinding | null>(null);
-  const [consent, setConsent] = useState(false);
-  const [pending, setPending] = useState(false);
+  const [check, setCheck] = useState<PrivacyCheckResult | null>(null);
   const [extraction, setExtraction] = useState<ClinicalExtraction | null>(null);
   const [reviewed, setReviewed] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -60,27 +67,22 @@ export function TroLyAi({ bridge, dirty, onDecided, onBatDau, onOpenTab, soChiDi
   const canWrite = record?.status === "dang_kham";
 
   function invalidate() {
-    setConsent(false);
     sequence.current += 1;
-    setTicket(null);
-    setBinding(null);
-    setPreview("");
-    setPending(false);
+    setCheck(null);
     setExtraction(null);
     setReviewed(false);
     setError(null);
-    setShowPreview(false);
     setLoading(false);
   }
 
   function setInput(next: string) {
     invalidate();
-    setText(redactTranscript(next, knownNames).text);
+    setText(next);
   }
 
   function appendInput(chunk: string) {
     invalidate();
-    setText((current) => redactTranscript(current ? `${current}\n${chunk}` : chunk, knownNames).text);
+    setText((current) => (current ? `${current}\n${chunk}` : chunk));
   }
   useEffect(() => { appendRef.current = appendInput; });
 
@@ -114,49 +116,27 @@ export function TroLyAi({ bridge, dirty, onDecided, onBatDau, onOpenTab, soChiDi
     return { encounter_id: session.encounter_id, recording_session_id: session.id, generation: session.generation, content_revision: session.content_revision };
   }
 
-  async function prepare(source = text) {
-    if (!source.trim() || loading || !bridge) return;
+  /** Máy chủ che (R1–R8, R10) → chốt chặn R11 → đồng ý R14. Qua thì lưu bản đã che vào phiên rồi tạo bản nháp; bị chặn thì dừng, không gửi AI. */
+  async function checkAndExtract() {
+    if (!text.trim() || loading || !bridge) return;
     invalidate();
     const request = ++sequence.current;
     setLoading(true);
     try {
       const target = await ensureBinding();
       if (request !== sequence.current) return;
-      const result = await prepareClinicalPrivacy(source, mode, target);
+      const result = await checkClinicalPrivacy(text, mode, target);
       if (request !== sequence.current) return;
-      setBinding(target);
-      setTicket(result.ticket);
-      setPreview(result.preview);
-      setPending(result.status === "pending");
-      setShowPreview(true);
-    } catch (err) {
-      if (request === sequence.current) setError(err instanceof Error ? err.message : "Không kiểm tra được nội dung.");
-    } finally {
-      if (request === sequence.current) setLoading(false);
-    }
-  }
-
-  async function approveAndExtract() {
-    if (!ticket || !binding || !bridge || loading || !consent) return;
-    const request = ++sequence.current;
-    setLoading(true);
-    setError(null);
-    setExtraction(null);
-    try {
-      const privacy = await approveClinicalPrivacy(ticket, preview, consent, binding);
-      if (request !== sequence.current) return;
-      setTicket(privacy.ticket);
-      setPreview(privacy.preview);
-      setPending(privacy.status === "pending");
-      if (privacy.status === "pending") { setConsent(false); return; }
-      // Lưu bản chép lời đã kiểm tra vào đúng phiên trước khi tạo bản nháp; chỉ sau xác nhận của server mới coi là đã lưu.
+      setCheck(result);
+      if (result.status === "blocked" || !result.ticket) return;
+      // Lưu bản đã che vào đúng phiên trước khi tạo bản nháp; chỉ sau xác nhận của server mới coi là đã lưu.
       const latest = bridge.latest().record;
-      bridge.publish(await recordingApi.content({ encounter_id: latest.id, session_id: binding.recording_session_id, expected_revision: latest.revision, content_revision: binding.content_revision, client_request_id: crypto.randomUUID(), action: "attach_reviewed", transcript_ticket: privacy.ticket }));
+      bridge.publish(await recordingApi.content({ encounter_id: latest.id, session_id: target.recording_session_id, expected_revision: latest.revision, content_revision: target.content_revision, client_request_id: crypto.randomUUID(), action: "attach_reviewed", transcript_ticket: result.ticket }));
       if (request !== sequence.current) return;
       setReviewed(true);
-      const result = await extractClinicalDraft(privacy.ticket, binding);
+      const draft = await extractClinicalDraft(result.ticket, target);
       if (request !== sequence.current) return;
-      setExtraction(result);
+      setExtraction(draft);
     } catch (err) {
       if (request === sequence.current) setError(err instanceof Error ? err.message : "Không tạo được bản nháp.");
     } finally {
@@ -170,7 +150,7 @@ export function TroLyAi({ bridge, dirty, onDecided, onBatDau, onOpenTab, soChiDi
     <aside className="flex flex-col self-start rounded-xl border border-tim-vien bg-white text-[13px] shadow-[0_1px_2px_rgba(26,37,51,0.06)] lg:sticky lg:top-[calc(var(--cao-dau)+1rem)] lg:max-h-[calc(100vh-var(--cao-dau)-var(--cao-day)-2rem)] lg:overflow-y-auto">
       <div className="space-y-2 border-b border-tim-vien/60 bg-tim-nhat px-4 py-3">
         <h2 className="text-[15px] font-semibold text-tim">✨ Trợ lý lâm sàng</h2>
-        <p className="text-xs text-ef-phu">Nhập nội dung, kiểm tra riêng tư, rồi chọn từng đề xuất để bác sĩ duyệt.</p>
+        <p className="text-xs text-ef-phu">Nhập nội dung. Máy chủ tự che thông tin nhận dạng (R1–R14) rồi mới tạo bản nháp; bác sĩ chọn từng đề xuất để duyệt.</p>
       </div>
       {!bridge ? (
         <div className="px-4 py-4"><p role="status" className="text-xs text-ef-phu">Trợ lý lâm sàng chỉ hoạt động trong một lượt khám đã mở. Trang trình diễn không ghi hồ sơ.</p></div>
@@ -193,19 +173,23 @@ export function TroLyAi({ bridge, dirty, onDecided, onBatDau, onOpenTab, soChiDi
             onStop={() => { void bridge.stopAndSave().catch(() => undefined); }}
           />
         )}
-        <textarea aria-label="Nội dung buổi khám" rows={5} value={text} onChange={(event) => { setInput(event.target.value); onBatDau("go", false); }} placeholder="Ghi lời bệnh nhân và bác sĩ. Nội dung được lọc cục bộ trước bước kiểm tra." className="w-full rounded-lg border border-ef-vien bg-white px-3 py-2 text-sm leading-6 text-ef-chu outline-none placeholder:text-ef-phu/80 focus:border-tim focus:ring-2 focus:ring-tim/20" />
-        {hasPendingText && <p className="text-xs text-ef-phu">Nội dung này chưa được kiểm tra riêng tư và lưu. Kiểm tra và tạo bản nháp, hoặc xóa trước khi chuyển lượt khám.</p>}
+        <textarea aria-label="Nội dung buổi khám" rows={5} value={text} onChange={(event) => { setInput(event.target.value); onBatDau("go", false); }} placeholder="Ghi lời bệnh nhân và bác sĩ. Máy chủ che thông tin nhận dạng trước khi tạo bản nháp." className="w-full rounded-lg border border-ef-vien bg-white px-3 py-2 text-sm leading-6 text-ef-chu outline-none placeholder:text-ef-phu/80 focus:border-tim focus:ring-2 focus:ring-tim/20" />
+        {hasPendingText && <p className="text-xs text-ef-phu">Nội dung này chưa được che và lưu. Tạo bản nháp, hoặc xóa trước khi chuyển lượt khám.</p>}
         {hoiThoai && <button type="button" className="text-xs font-medium text-tim underline-offset-2 hover:underline" onClick={() => { setInput(hoiThoai.map(({ ai, cau }) => `${ai}: ${cau}`).join("\n")); onBatDau("noi", true); }}>Nạp hội thoại mẫu</button>}
         <button type="button" className="text-xs font-medium text-tim underline-offset-2 hover:underline" onClick={() => { setInput(MAU_HOI_THOAI); onBatDau("noi", true); }}>Thử hội thoại tổng hợp</button>
-        <button type="button" className={NUT_CHINH} disabled={loading || !text.trim() || !canWrite || bridge.recordingActive} onClick={() => void prepare()}>{loading ? "Đang xử lý…" : "Kiểm tra thông tin riêng tư"}</button>
-        {showPreview && <div className="space-y-2 rounded-lg border border-tim-vien bg-tim-nhat/50 p-3">
-          <p className="text-xs font-medium text-ef-chu">Xem và chỉnh sửa nội dung đã lọc. Bộ lọc cục bộ có thể bỏ sót thông tin riêng tư; hãy kiểm tra thủ công. Tuổi, giới tính, thời điểm điều trị và bệnh hiếm có thể kết hợp để nhận diện người bệnh. Bản đã che vẫn là cấp 2, chỉ dùng nội bộ.</p>
-          {privacyReviewRisks(preview).includes("rare_disease_review") && <p role="status" className="text-xs text-ef-phu">Có nhắc bệnh hiếm: xem lại nguy cơ nhận diện trước khi xác nhận; hệ thống không tự xóa chẩn đoán.</p>}
-          <textarea aria-label="Bản xem trước đã lọc" rows={5} value={preview} onChange={(event) => { setConsent(false); sequence.current += 1; setLoading(false); setTicket(null); setPending(false); setExtraction(null); setError(null); setPreview(event.target.value); }} className="w-full rounded-lg border border-ef-vien bg-white px-3 py-2 text-sm leading-6 text-ef-chu outline-none focus:border-tim focus:ring-2 focus:ring-tim/20" />
-          <label className="flex items-start gap-2 text-xs"><input type="checkbox" checked={consent} onChange={(event) => setConsent(event.target.checked)} />Tôi đồng ý xử lý bản bệnh án đã che trong nội bộ cho lượt này. Không gửi đến AI bên ngoài.</label>
-          {pending && <p role="status" className="text-xs text-ef-phu">Cần kiểm tra thêm nội dung; sau khi bấm, hãy xem lại bản xem trước đã cập nhật.</p>}
-          <button type="button" className={NUT_PHU} disabled={loading || (Boolean(ticket) && !consent)} onClick={() => ticket ? void approveAndExtract() : void prepare(preview)}>{loading ? "Đang xử lý…" : ticket ? "Đã kiểm tra — tạo bản nháp" : "Kiểm tra lại bản đã sửa"}</button>
+        <button type="button" className={NUT_CHINH} disabled={loading || !text.trim() || !canWrite || bridge.recordingActive} onClick={() => void checkAndExtract()}>{loading ? "Đang xử lý…" : "Che thông tin và tạo bản nháp"}</button>
+        {check?.status === "blocked" && <div role="alert" className="space-y-1 rounded-lg border border-ef-do/40 bg-ef-do-nhat px-3 py-2 text-xs text-ef-do">
+          <p className="font-semibold">Chưa gửi AI: còn sót thông tin nhận dạng</p>
+          <ul className="list-disc space-y-0.5 pl-4">{check.gate.reasons.map((item, index) => <li key={index}>{TEN_LY_DO_CHAN[item.reason] ?? item.reason}{item.excerpt ? <>: <code className="break-all rounded bg-white px-1">{item.excerpt}</code></> : null}</li>)}</ul>
+          <p>Sửa nội dung trong ô rồi bấm lại.</p>
         </div>}
+        {check && <section aria-label="Bản đã che" className="space-y-2 rounded-lg border border-tim-vien bg-tim-nhat/50 p-3">
+          <h3 className="text-xs font-semibold text-ef-chu">{check.status === "passed" ? "Bản đã che (nội dung gửi AI)" : "Bản đã che (chưa gửi AI)"}</h3>
+          <BanDaChe text={check.preview} />
+          <p className="text-xs text-ef-phu">Đã che: {RULES.filter((rule) => check.counts[rule] > 0).map((rule, index) => <span key={rule}>{index > 0 && " · "}<abbr title={TEN_RULE[rule]} className="no-underline">{rule} × {check.counts[rule]}</abbr></span>)}{RULES.every((rule) => check.counts[rule] === 0) && "không có mục nào"}</p>
+          <p className="text-xs text-ef-phu">{check.dong_y.trang_thai ? `Đồng ý AI: ✓ (lúc tiếp đón, ${gioVN(check.dong_y.luc)})` : "Đồng ý AI: ✗ — chỉ chạy bộ tách trên máy chủ"}</p>
+          {privacyReviewRisks(check.preview).includes("rare_disease_review") && <p role="status" className="text-xs text-ef-phu">Có nhắc bệnh hiếm: tuổi, giới, thời điểm và bệnh hiếm ghép lại vẫn có thể nhận ra người bệnh; hệ thống không tự xóa chẩn đoán.</p>}
+        </section>}
         {error && <p role="alert" className="rounded-md bg-ef-do-nhat px-3 py-2 text-xs text-ef-do">{error}</p>}
         {extraction && <section className="space-y-3 border-t border-ef-vien pt-3" aria-label="Bản nháp lâm sàng">
           <h3 className="font-semibold text-ef-chu">Bản nháp · bác sĩ cần duyệt</h3>

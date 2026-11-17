@@ -81,6 +81,8 @@ Muốn thay một tính năng rule bằng LLM thật (ví dụ tóm tắt lịch
 
 ## Luồng chính
 
+Sơ đồ điền phiếu khám với Trợ lý AI học theo thói quen từng bác sĩ (phần đã có và phần sắp làm): `docs/so-do-luong/so-do-dien-phieu-tro-ly-ai.png`, file `.drawio` để sửa.
+
 **Điền nháp (cột Trợ lý AI của trang eForm):**
 `BongBongAi.tsx` (giao diện gọn) hoặc `TroLyAi.tsx` (giao diện cũ) → `client/eform/useDienAi.ts › dien` → `client/api.ts › goiAiDienNhap` → `POST /api/extract` → `server/ai/pipeline.ts › runPipeline` → `llm/index.ts` (chọn theo `LLM_PROVIDER`, kiểm tra zod, thử lại 1 lần) → bỏ trường không `ai_fill` → `shared/match.ts` gán mã → `shared/validate.ts` tính tổng → trả `PipelineResult`.
 

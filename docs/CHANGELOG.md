@@ -2,6 +2,16 @@
 
 Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nhất ở trên cùng. Cách ghi xem `.claude/skills/ghi-tai-lieu/SKILL.md`.
 
+## 2026-11-17
+
+### Sơ đồ: Trợ lý AI giúp bác sĩ điền phiếu khám, học theo thói quen từng người
+- **Loại:** Tài liệu
+- **Thay đổi:** thêm một sơ đồ duy nhất `docs/so-do-luong/so-do-dien-phieu-tro-ly-ai.{drawio,png}`, chia 4 làn: Bác sĩ, Trợ lý AI, Thói quen riêng của bác sĩ, Số đo. Luồng đi như sau: mở phiếu → điều dưỡng đã điền sẵn chưa → đặt con trỏ vào ô → gõ vài chữ hoặc mã gõ tắt → AI tìm câu quen của chính bác sĩ đó theo ô, chẩn đoán, lý do khám → hiện chữ mờ → Tab nhận hoặc gõ tiếp → còn ô thì lặp lại → Lưu → AI học thói quen và cập nhật bộ thói quen để lần sau gợi ý trúng hơn. Bong bóng (F2) là đường tắt điền nhiều ô một lúc. Phần đã có trong prototype vẽ viền cam liền, phần sẽ làm vẽ viền cam đứt: học câu ở mọi ô, chấm điểm câu theo nhận hoặc bỏ, lịch sử giả để nạp sẵn. Làn Số đo ghi số hiện tại (sửa phiếu ~11 phút) và cách đo (ca 1 → ca 5, có và không có Trợ lý). Chỉ định, kê đơn để ngoài sơ đồ. Phong cách lấy theo sơ đồ mẫu người dùng đưa.
+- **Lý do:** người dùng chốt trọng tâm là giúp bác sĩ giảm thời gian thao tác phần mềm khi điền phiếu. Mỗi bác sĩ có thói quen nhập riêng nên AI phải học được, và chỉ cần một sơ đồ. Các bản nháp trước trong ngày (4 sơ đồ kỹ thuật, sơ đồ cả ca khám) đã bỏ.
+- **File:** `docs/so-do-luong/so-do-dien-phieu-tro-ly-ai.drawio`, `docs/so-do-luong/so-do-dien-phieu-tro-ly-ai.png`, `docs/cau-truc-du-an.md`, `README.md`
+- **Kiểm tra:** đối chiếu với code. Đã có: `goi-y-tab.ts` (nguồn câu: gõ tắt, lời dặn đã kê, phiếu mẫu, thư viện), `thoi-quen.ts` (chỉ ghi chỉ định, thuốc, lời dặn theo ICD), `BongBongAi.tsx`, `do-luong.ts`. Mở bằng trình xem draw.io, xuất PNG và xem lại bằng mắt.
+- **Ảnh hưởng:** không đổi code. Làm xong phần "sắp làm" thì đổi viền đứt thành viền liền trong file `.drawio` rồi xuất lại PNG.
+
 ## 2026-11-16
 
 ### Giao diện gọn: bong bóng Trợ lý thay cột AI, bỏ nút gợi ý rải trên phiếu, chữ mờ ô trống chỉ gợi ý câu đủ chắc

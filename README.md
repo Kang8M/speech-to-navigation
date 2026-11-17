@@ -352,7 +352,7 @@ scripts/tao-am-thanh-mau.ts (+ tts-windows.ps1) giọng máy Windows đọc các
 scripts/cao-du-lieu.ts cào danh mục công khai về data/tham-khao/
 scripts/tai-model-giong-noi.ts tải model Zipformer và Silero VAD về models/
 models/         model nhận dạng giọng nói (tự tải, không đưa lên git)
-docs/           quan sát thực địa, cấu trúc màn hình EMR, kịch bản thử với bác sĩ, CHANGELOG.md
+docs/           quan sát thực địa, cấu trúc màn hình EMR, kịch bản thử với bác sĩ, sơ đồ điền phiếu với Trợ lý AI (so-do-luong/), CHANGELOG.md
 .claude/        cấu hình Claude Code: plugin, hook, skill
 ```
 

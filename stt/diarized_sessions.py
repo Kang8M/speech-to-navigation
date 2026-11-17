@@ -13,6 +13,8 @@ from stt.diarization import SpeakerProfiles, tokens_to_words, attribute_words
 from stt.errors import VoiceNoSpeechError
 
 WINDOW_FRAMES = 25 * 16000
+# Lấy 1 giây âm thanh thô liền trước đoạn mới làm ngữ cảnh khi khử nhiễu, để mối nối đoạn không bị rạn.
+DENOISE_CONTEXT = 16000
 REVISION_MS = 10000
 
 
@@ -63,6 +65,8 @@ class SessionError(Exception):
 class Session:
     denoise: bool = False
     samples: np.ndarray = field(default_factory=lambda: np.empty(0, dtype=np.float32))
+    # Âm thanh đã khử nhiễu, cùng độ dài và mốc thời gian với samples; mỗi đoạn chỉ khử nhiễu một lần.
+    clean: np.ndarray = field(default_factory=lambda: np.empty(0, dtype=np.float32))
     profiles: SpeakerProfiles = field(default_factory=SpeakerProfiles)
     total_frames: int = 0
     sequence: int = 0
@@ -131,6 +135,7 @@ class SessionStore:
             state = copy.deepcopy(original)
         # Caller serializes native inference with the existing engine lock. Commit only on success.
         started = monotonic()
+        context = state.samples[-DENOISE_CONTEXT:]
         state.samples = np.concatenate((state.samples, audio.waveform))[-WINDOW_FRAMES:]
         state.total_frames += audio.frame_count
         offset_ms = round((state.total_frames - len(state.samples)) / 16)
@@ -141,7 +146,15 @@ class SessionStore:
         try:
             if state.denoise and self.denoiser is None:
                 raise RuntimeError('DENOISE_NOT_READY')
-            speech_window = self.denoiser.enhance(window) if state.denoise else window
+            if state.denoise:
+                # Chỉ khử nhiễu đoạn mới (kèm ngữ cảnh), không làm lại cả cửa sổ 25 giây mỗi lần.
+                joined = np.concatenate((context, audio.waveform))
+                enhanced = self.denoiser.enhance(CanonicalAudio(
+                    joined, 16000, len(joined), round(len(joined) / 16), f'{key}:{sequence}:denoise'))
+                state.clean = np.concatenate((state.clean, enhanced.waveform[len(context):]))[-WINDOW_FRAMES:]
+                speech_window = CanonicalAudio(state.clean, 16000, len(state.clean), duration_ms, f'{key}:{sequence}')
+            else:
+                speech_window = window
             result = transcribe_speech(self.engine, self.vad, speech_window)
             regions = self.diarizer.regions(state.samples, state.profiles)
             inference_ms = result.inference_ms
@@ -184,6 +197,7 @@ class SessionStore:
             state.response = {**state.response, 'final': True, 'stable_until_ms': round(state.total_frames / 16)}
             state.finalized = True
             state.samples = np.empty(0, dtype=np.float32)
+            state.clean = np.empty(0, dtype=np.float32)
             state.previous_words = []
             state.profiles = SpeakerProfiles()
             state.touched = monotonic()

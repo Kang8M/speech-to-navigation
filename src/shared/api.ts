@@ -38,6 +38,10 @@ export interface AsrTrangThai {
   provider: string;
   /** Chỉ true khi provider là zipformer và model đã tải về models/ */
   sanSang: boolean;
+  /** Thư mục model, tính từ gốc dự án (vd. models/stt/zipformer-vi) */
+  thuMucModel: string;
+  /** File model còn thiếu, tính từ gốc dự án; rỗng khi đủ hoặc khi không dùng zipformer */
+  thieu: string[];
 }
 
 /** POST /api/asr trả về id phiên */

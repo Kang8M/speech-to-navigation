@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { DenoisedMic } from "./DenoisedMic";
+import { MicIcon, NhanNut, StopIcon } from "./mic-ui";
 import { ASR_MAX_SECONDS, ASR_SAMPLE_RATE, type ApiLoi, type AsrKetQua, type AsrPhienMoi, type AsrTrangThai } from "@/shared/api";
 import type { RecordingBinding, RecordingHandle } from "@/shared/clinical/recording";
 
@@ -21,7 +22,7 @@ export interface GiaoDienMic {
   /** Thêm vào khi chưa nghe */
   cho: string;
   /** Nhãn khi chưa nghe */
-  nhan: string;
+  nhan: ReactNode;
 }
 
 export interface MicButtonProps {
@@ -30,6 +31,8 @@ export interface MicButtonProps {
   onText: (text: string, binding?: RecordingBinding) => void;
   /** Gọi khi dừng nghe (bác sĩ bấm dừng, hết giờ hoặc lỗi) */
   onStop?: () => void;
+  /** Chữ tạm (câu đang nói dở) cập nhật liên tục; chuỗi rỗng khi hết. Có truyền thì nút không tự hiện chữ tạm bên dưới */
+  onInterim?: (text: string) => void;
   /** Giữ chỗ phiên ghi âm trước khi mở micro; lỗi (vd. micro đang dùng ở tab khác) thì không mở micro */
   beforeStart?: () => Promise<RecordingBinding>;
   /** Micro đã thu; handle.stop() chỉ xong sau khi chữ cuối đã đưa vào onText */
@@ -42,10 +45,10 @@ export interface MicButtonProps {
 }
 
 const MAC_DINH: GiaoDienMic = {
-  nut: "w-full rounded border py-2 font-medium disabled:cursor-wait disabled:opacity-70",
-  dangNghe: "border-warn bg-warn/10 text-warn-text",
-  cho: "border-primary text-primary hover:bg-soft",
-  nhan: "🎤 Nói",
+  nut: "w-full rounded-xl border-2 py-3.5 text-base font-semibold shadow-sm transition disabled:cursor-not-allowed disabled:opacity-60",
+  dangNghe: "border-warn bg-warn/10 text-warn-text animate-pulse",
+  cho: "border-primary bg-primary/5 text-primary hover:bg-primary/10",
+  nhan: <NhanNut bieuTuong={<MicIcon />}>Nói</NhanNut>,
 };
 
 /** Only local Zipformer is allowed for medical audio; fail closed without cloud fallback. */
@@ -62,7 +65,9 @@ export function MicButton(props: MicButtonProps) {
         if (data.provider === "zipformer" && data.sanSang) return setMode("zipformer");
         setMode("blocked");
         setNote(data.provider === "zipformer"
-          ? "Chưa có model giọng nói trên máy. Chạy npm run tai-model-giong-noi hoặc gõ tay."
+          ? `Máy chủ chưa thấy model giọng nói ở ${data.thuMucModel}`
+            + (data.thieu?.length ? ` (thiếu ${data.thieu.join(", ")})` : "")
+            + ". Chạy npm run tai-model-giong-noi ở thư mục dự án đang chạy server, hoặc gõ tay."
           : "Chính sách dữ liệu y tế chỉ cho phép nhận dạng trên máy. Đặt ASR_PROVIDER=zipformer hoặc gõ tay.");
       })
       .catch(() => {
@@ -128,8 +133,9 @@ type KetQuaPhien = Partial<AsrKetQua & ApiLoi>;
  * Server trả chữ tạm (câu đang nói dở, hiện in nghiêng) và câu đã chốt khi bác sĩ ngắt nghỉ (đưa vào ô nhập).
  * Âm thanh không ra khỏi máy chạy prototype và không được lưu.
  */
-function ZipformerMic({ onStart, onText, onStop, beforeStart, onCaptureReady, onCaptureFailed, onStopRequest, giaoDien = MAC_DINH }: MicButtonProps) {
-  const [denoise, setDenoise] = useState(false);
+function ZipformerMic({ onStart, onText, onStop, onInterim, beforeStart, onCaptureReady, onCaptureFailed, onStopRequest, giaoDien = MAC_DINH }: MicButtonProps) {
+  // Khử nhiễu luôn bật (không hiện lựa chọn cho bác sĩ); chỉ chạy đường không khử nhiễu khi không có STT backend
+  const denoise = true;
   const [state, setState] = useState<"idle" | "starting" | "recording" | "stopping">("idle");
   const [seconds, setSeconds] = useState(0);
   const [interim, setInterim] = useState("");
@@ -138,10 +144,12 @@ function ZipformerMic({ onStart, onText, onStop, beforeStart, onCaptureReady, on
   const recordingRef = useRef<Recording | null>(null);
   const stoppingRef = useRef<Recording | null>(null);
   const onTextRef = useRef(onText);
+  const onInterimRef = useRef(onInterim);
 
   useEffect(() => {
     onTextRef.current = onText;
-  }, [onText]);
+    onInterimRef.current = onInterim;
+  }, [onText, onInterim]);
 
   const release = (rec: Recording) => {
     clearInterval(rec.timer);
@@ -166,6 +174,7 @@ function ZipformerMic({ onStart, onText, onStop, beforeStart, onCaptureReady, on
     if (!res.ok) throw new Error(data.error ?? "Không nhận dạng được.");
     for (const cau of data.chot ?? []) onTextRef.current(cau, rec.binding);
     setInterim(data.tam ?? "");
+    onInterimRef.current?.(data.tam ?? "");
   };
 
   /** Lấy các khối đã thu, đưa vào hàng đợi gửi lên server */
@@ -208,6 +217,7 @@ function ZipformerMic({ onStart, onText, onStop, beforeStart, onCaptureReady, on
       } finally {
         stoppingRef.current = null;
         setInterim("");
+        onInterimRef.current?.("");
         setState("idle");
         setSeconds(0);
         setConsent(false);
@@ -282,21 +292,17 @@ function ZipformerMic({ onStart, onText, onStop, beforeStart, onCaptureReady, on
     }
   }
 
-  if (denoise) return <DenoisedMic onStart={onStart} onText={onText} onStop={onStop} beforeStart={beforeStart} onCaptureReady={onCaptureReady} onCaptureFailed={onCaptureFailed} onStopRequest={onStopRequest} giaoDien={giaoDien} onDisable={() => { setDenoise(false); setConsent(false); }} />;
+  if (denoise) return <DenoisedMic onStart={onStart} onText={onText} onStop={onStop} onInterim={onInterim} beforeStart={beforeStart} onCaptureReady={onCaptureReady} onCaptureFailed={onCaptureFailed} onStopRequest={onStopRequest} giaoDien={giaoDien} />;
 
   const clock = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
   const label = {
     idle: giaoDien.nhan,
     starting: "Đang mở micro…",
-    recording: `⏹ Dừng nghe · ${clock}`,
+    recording: <NhanNut bieuTuong={<StopIcon />}>Dừng nghe · {clock}</NhanNut>,
     stopping: "Đang chốt câu cuối…",
   }[state];
   return (
     <div>
-      <label className="mb-2 flex items-start gap-2 text-xs text-muted">
-        <input type="checkbox" checked={false} disabled={state !== "idle"} onChange={() => { setDenoise(true); setConsent(false); }} />
-        Khử nhiễu DeepFilterNet3 trên máy (tùy chọn)
-      </label>
       <label className="mb-2 flex items-start gap-2 text-xs text-muted">
         <input type="checkbox" checked={consent} disabled={state !== "idle"}
           onChange={(event) => setConsent(event.target.checked)} />
@@ -311,7 +317,7 @@ function ZipformerMic({ onStart, onText, onStop, beforeStart, onCaptureReady, on
       >
         {label}
       </button>
-      {interim && <p className="mt-1 text-sm text-muted italic">{interim}</p>}
+      {interim && !onInterim && <p className="mt-1 text-sm text-muted italic">{interim}</p>}
       {error && (
         <p role="alert" className="mt-1 text-sm text-warn-text">
           {error}

@@ -1,4 +1,5 @@
-import { foldVietnamese, isCommonHoPair, isHo, nameTailEnd } from "./redact";
+import { HO_VIET } from "./ho-viet";
+import { COMMON_HO_FOLD, foldVietnamese, isCommonHoPair, isHo, nameTailEnd } from "./redact";
 import type { KnownIdentifier } from "./types";
 
 export type GateReason = "R11a_gia_tri_da_biet" | "R11b_day_so_dai" | "R11c_ten_rieng_con_sot" | "R11d_email_url";
@@ -10,8 +11,22 @@ const MAX_EXCERPT = 40;
 
 /** Cụm từ lâm sàng bắt đầu bằng họ ("tiền sử", "cao huyết áp", "dương tính"...), viết không dấu. Luôn gộp với allowlist của người gọi. */
 export const DEFAULT_CLINICAL_ALLOWLIST: ReadonlySet<string> = new Set(
-  ["tiền sử", "cao huyết áp", "dịch mủ", "dương tính", "phù nề", "niêm mạc", "ngày mai", "tái khám ngày mai"].map(foldVietnamese),
+  ["tiền sử", "cao huyết áp", "dịch mủ", "dương tính", "phù nề", "niêm mạc", "ngày mai", "tái khám ngày mai",
+    "dị ứng", "phản ứng", "đáp ứng", "toàn thân"].map(foldVietnamese),
 );
+
+const HO_CO_DAU = new Set(HO_VIET);
+/**
+ * Văn bản gõ có dấu (hay chữ từ STT) thì chữ không dấu như "ba", "thai", "ha" là chữ thường, không phải họ
+ * "Bá", "Thái", "Hà". Khi đó chữ không dấu chỉ tính là họ nếu chính nó là họ ("phan") hoặc là họ phổ biến
+ * viết không dấu ("nguyen", "tran"). Văn bản gõ không dấu thì giữ nguyên cách dò cũ.
+ */
+function vanBanCoDau(toks: Tok[]): boolean {
+  const chu = toks.filter((t) => /^\p{L}+$/u.test(t.w));
+  return chu.length >= 4 && chu.filter((t) => t.w !== t.f).length / chu.length >= 0.3;
+}
+const laHo = (t: Tok, coDau: boolean) =>
+  isHo(t.w) && (!coDau || !/^[a-z]+$/.test(t.w) || HO_CO_DAU.has(t.w) || COMMON_HO_FOLD.has(t.w));
 
 /** Token nào nằm trong một lần xuất hiện bất kỳ của cụm allowlist (so không dấu). */
 function coveredByAllowlist(folded: string[], allow: ReadonlySet<string>): boolean[] {
@@ -75,8 +90,9 @@ function residualNames(text: string, allowlist: ReadonlySet<string>): { s: numbe
   const joined = (a: number, b: number) => !/[|,;.!?\n:]/.test(lower.slice(toks[a].e, toks[b].s));
   const covered = coveredByAllowlist(toks.map((t) => t.f), new Set([...DEFAULT_CLINICAL_ALLOWLIST, ...[...allowlist].map(foldVietnamese)]));
   const found: { s: number; e: number }[] = [];
+  const coDau = vanBanCoDau(toks);
   for (let j = 0; j < toks.length - 1; j++) {
-    if (covered[j] || !isHo(toks[j].w) || isCommonHoPair(toks, j)) continue;
+    if (covered[j] || !laHo(toks[j], coDau) || isCommonHoPair(toks, j)) continue;
     // "thị"/"văn" không dấu sau họ là đệm tên điển hình; "thi" trùng từ dừng "thì" nên bộ dò R2 bỏ qua, ở đây vẫn chặn.
     const dem = j + 2 < toks.length && (toks[j + 1].f === "thi" || toks[j + 1].f === "van") && joined(j, j + 1) && joined(j + 1, j + 2);
     const k = nameTailEnd(toks, j, joined);

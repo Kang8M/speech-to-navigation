@@ -11,6 +11,12 @@ def test_bpe_tokens_become_timed_words_without_losing_word_fragments():
     assert words[-1]['end_ms'] == 3000
 
 
+def test_lone_space_token_starts_a_new_word():
+    # Zipformer 70 MB trả "▁" riêng rồi mới đến "À": không được dính vào từ trước ("sốtà").
+    words = tokens_to_words([' SỐT', '▁', 'À', ' BỆNH'], [0, 0.4, 0.5, 1], 2)
+    assert [word['text'] for word in words] == ['sốt', 'à', 'bệnh']
+
+
 def test_profiles_stay_stable_when_local_cluster_order_swaps():
     profiles = SpeakerProfiles()
     a, b = np.array([1., 0, 0]), np.array([0., 1, 0])

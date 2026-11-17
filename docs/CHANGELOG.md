@@ -4,6 +4,62 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-17
 
+### Sửa /stt dính chữ ở chỗ nối đoạn và /demo-luong che nhầm chữ STT
+- **Loại:** Sửa lỗi
+- **Thay đổi:**
+  - /stt (Python): `tokens_to_words` coi token chỉ có dấu cách (`"▁"`) là dấu hiệu bắt đầu từ mới. Zipformer 70 MB hay trả `"▁"` riêng rồi mới đến chữ ở đầu đoạn VAD, nên trước đây chữ đó dính vào từ trước ("sốtà", "độừ", "ngoại trúà").
+  - /demo-luong: chữ STT đi qua bộ sửa chữ `config/sua-chu-giong-noi.json` như eForm trước khi che ("thai" → "tai", "ba mươi tám phẩy năm" → "38,5", "ha ceamon" → "Paracetamol").
+  - Chốt chặn R11c (`gate.ts`): với văn bản có dấu (≥ 30% âm tiết có dấu), chữ không dấu chỉ tính là họ nếu chính nó là họ ("phan") hoặc là họ phổ biến viết không dấu ("nguyen", "tran"…). Trước đây "ba", "thai", "ha" bị hiểu là "Bá", "Thái", "Hà" nên cả cụm bị tự che thành `[NGƯỜI_KHÁC]`. Thêm "dị ứng", "phản ứng", "đáp ứng", "toàn thân" vào allowlist lâm sàng mặc định.
+  - Bộ che R3 (`redact.ts`): "tỉnh" theo sau bởi sốt/suốt/không/và/tiếp/xúc không coi là đơn vị hành chính ("bé tỉnh, sốt 38 độ").
+  - Bộ che R2/R11c: thêm động từ mua, đưa, dẫn, gọi, lấy, uống, dùng, kê, đi, về vào từ dừng, để đuôi tên không che lố ("[NGƯỜI_KHÁC] mua thuốc" thay vì "[NGƯỜI_KHÁC] thuốc").
+- **Lý do:** Người dùng yêu cầu kiểm tra và sửa /stt và /demo-luong. Chạy file `data/giong-noi/ca-01.tts.wav` qua cả hai trang thì thấy: /stt dính chữ; /demo-luong (nguồn File WAV) tự che 8 cụm chữ lâm sàng ("sốt [NGƯỜI_KHÁC] năm độ", "chưa dị [NGƯỜI_KHÁC]", "viêm [NGƯỜI_KHÁC] phải"), làm hỏng bản gửi AI.
+- **File:** `stt/diarization.py`, `stt/tests/test_diarization.py`, `src/app/api/demo-luong/route.ts`, `src/shared/clinical/pii/gate.ts`, `src/shared/clinical/pii/gate.test.ts`, `src/shared/clinical/pii/redact.ts`
+- **Kiểm tra:**
+  - `pytest stt/tests`: 95 đạt. Bản sửa Python chạy qua server tạm ở cổng 8766 thì ra "sốt à", "độ ừ".
+  - `npm test`: 356/357; lỗi còn lại có từ trước (`encounter-context.test.ts`). `tsc` sạch. `eslint src lib components scripts`: 0 lỗi.
+  - /demo-luong với ca-01.tts.wav: bước che 0 cụm tự che, qua chốt chặn. Kịch bản "Ca tự che thêm" vẫn tự che đúng "đỗ quốc việt". Kịch bản "Ca chuẩn" vẫn che đủ 9 mục.
+- **Ảnh hưởng:**
+  - Server STT Python đang chạy (cổng 8765, không có `--reload`) phải khởi động lại (`npm run stt:start`) thì /stt mới hết dính chữ.
+  - Đã thử tách chữ STT của /demo-luong thành câu theo khoảng nghỉ nhưng bỏ: giọng đọc ngừng ở dấu phẩy nên cắt giữa tên thuốc và liều ("amoxin" | "250 mg").
+
+### Bộ sửa chữ giọng nói chỉnh theo lỗi của Zipformer 70 MB
+- **Loại:** Cấu hình
+- **Thay đổi:** `config/sua-chu-giong-noi.json`:
+  - Thêm luật thay cụm cho các lỗi lặp lại của bản 70 MB: "mi lim"/"miligam" → mg, "centi mét" → cm, "ít quan" → X-quang, thêm các cách nghe nhầm amidan ("à mịn", "ào mỉ", "a đẳng"…), "hai mũi" → "tai mũi" (chỉ khi sau là "bình"/"họng"), "đau phải/trái" → "đau tai phải/trái", "thái phải/trái", "gù tai", "khô thay", "mùi bám", "nốt" → "nuốt" (chỉ khi sau là đau/vướng/nghẹn), "khan tiếng", "nghỉ rộng", "niên mạc", "xung huyết", "mãn tính" → "mạn tính", "tiên sử", "gì ứng", "dịch nhảy", "chức ăn" → "trước ăn", "tiểu sâu", "cấp chỉ".
+  - Thêm cách đọc tên thuốc mà bản 70 MB nghe ra: Augmentin, Amoxicillin, Cefuroxim, Cefixim, Ofloxacin, Paracetamol ("ha ceamon"), Ibuprofen, Methylprednisolon, Mometason, Betahistin, Ginkgo biloba, Esomeprazol, Strepsils.
+- **Lý do:** Sau khi đổi eForm sang Zipformer 70 MB (mục dưới), bộ sửa chữ vẫn chỉnh theo lỗi của bản 27 MB nên kết quả sau sửa kém hơn. Người dùng yêu cầu chỉnh lại.
+- **File:** `config/sua-chu-giong-noi.json`, `docs/CHANGELOG.md`
+- **Kiểm tra:** `npm run eval-giong-noi` (11 file giọng máy), sau khi sửa: WER 12,1% → **6,7%**, Mã 16/42 → **30/42**, Liều 6/24 → **20/24**, sửa nhầm trên câu gốc vẫn 0 từ. Chữ thô không đổi (17,4%). `npm test` 355/356 (lỗi còn lại có từ trước: `encounter-context.test.ts`).
+- **Ảnh hưởng:** Bác sĩ đọc bằng micro trên eForm thấy chữ đúng hơn, nhất là đơn vị liều và tên thuốc. Các cách đọc thêm vào lấy từ giọng máy (`npm run tao-am-thanh-mau`), nên giọng người thật có thể nghe ra kiểu khác. Cần đo lại khi có ghi âm thật.
+
+### eForm giọng nói: chữ hiện dần trong ô nhập, khử nhiễu nhanh hơn và luôn bật, nút Nói to hơn
+- **Loại:** Tính năng
+- **Thay đổi:**
+  - Chữ tạm (phần đang nói, chưa chốt) hiện nối sau nội dung ngay trong ô "Nội dung buổi khám" khi đang ghi âm (ô chỉ đọc lúc đó); chốt thì chuyển thành chữ thật. `MicButton` có prop mới `onInterim`.
+  - Khử nhiễu DeepFilterNet3 luôn bật: bỏ checkbox "Khử nhiễu ... (tùy chọn)" và đoạn giải thích khỏi giao diện bác sĩ.
+  - Tăng tốc khử nhiễu: trước đây mỗi đoạn âm thanh làm khử nhiễu lại cả cửa sổ 25 giây (khởi động lại `deep-filter.exe` trên toàn bộ), nên backlog khi bấm Dừng rất lâu. Nay `stt/diarized_sessions.py` chỉ khử nhiễu đoạn mới kèm 1 giây ngữ cảnh và giữ bộ đệm đã khử nhiễu (`Session.clean`).
+  - Nút Nói/Dừng nghe to hơn, có biểu tượng micro/dừng dạng SVG (`src/client/chung/mic-ui.tsx`).
+- **Lý do:** bác sĩ không thấy chữ ghi được khi đang nói, bấm Dừng phải chờ khử nhiễu rất lâu, nút nhỏ và xấu, lựa chọn khử nhiễu không cần để bác sĩ thấy.
+- **File:** `stt/diarized_sessions.py`, `stt/tests/test_diarized_sessions.py`, `src/client/chung/MicButton.tsx`, `src/client/chung/DenoisedMic.tsx`, `src/client/chung/mic-ui.tsx`, `src/client/eform/TroLyAi.tsx`
+- **Kiểm tra:** `pytest` (test_diarized_sessions, test_session_api, test_denoise) đạt 26/26; `tsc`, `eslint` các file sửa sạch; `npm test` 355 đạt, 1 lỗi sẵn có `encounter-context.test.ts` (5 !== 4, có ở HEAD, không do thay đổi này). Chưa thử bằng micro thật và chưa xem giao diện trên trình duyệt; cần khởi động lại `npm run stt:start` để backend nhận code mới.
+- **Ảnh hưởng:** chữ chốt vẫn theo cơ chế cũ (ổn định sau ~10 giây), nay có thêm chữ tạm trong ô. Khử nhiễu mất lựa chọn tắt trên eForm, cần STT backend chạy.
+
+### eForm nhận dạng giọng nói bằng Zipformer ~70 MB (bỏ bản 27 MB); thông báo thiếu model ghi rõ file thiếu
+- **Loại:** Cấu hình
+- **Thay đổi:**
+  - eForm (`/api/asr`) dùng `csukuangfj/sherpa-onnx-zipformer-vi-int8-2025-04-20` (revision `b2745a4`, encoder ~70 MB, gốc zzasdf/viet_iter3_pseudo_label, ~70 nghìn giờ dữ liệu) ở `models/stt/zipformer-vi/`, cùng bộ với trang `/stt`. Thông số model gom vào `src/shared/model-giong-noi.ts`, khớp `stt/model_artifacts.py`.
+  - `npm run tai-model-giong-noi` tải 5 file của bản 70 MB từ Hugging Face theo revision đã khóa, kiểm SHA-256 (sai thì xóa file và báo lỗi), ghi `provision.json` giống bước setup của `/stt`. File đã có và đúng SHA-256 thì bỏ qua. Silero VAD vẫn ở `models/silero_vad.onnx`.
+  - `GET /api/asr` trả thêm `thuMucModel` và `thieu` (danh sách file còn thiếu). Nút micro ghi rõ thư mục và file thiếu thay vì "Chưa có model giọng nói trên máy".
+  - Đã xóa thư mục `models/sherpa-onnx-zipformer-vi-30M-int8-2026-02-09/` (bản 27 MB, 32,8 MB trên đĩa, nằm ngoài git).
+- **Lý do:** Người dùng muốn dùng bản 70 MB đã có sẵn thay vì bản 27 MB, và thấy dòng "Chạy npm run tai-model-giong-noi" mà không biết thiếu gì. Dòng đó hiện khi server chạy từ một bản checkout không có `models/` (5 worktree trong `.claude/worktrees/` đều thiếu).
+- **File:** `src/shared/model-giong-noi.ts` (mới), `src/server/ai/asr.ts`, `src/app/api/asr/route.ts`, `src/app/api/asr/route.test.ts`, `src/shared/api.ts`, `src/client/chung/MicButton.tsx`, `scripts/tai-model-giong-noi.ts`, `README.md`, `CLAUDE.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:**
+  - Chạy script trong thư mục trống: tải đủ 5 file (encoder 70,9 MB), SHA-256 khớp. Chạy lại trong dự án: bỏ qua cả 5.
+  - `GET /api/asr` trả `sanSang: true`, `thuMucModel: "models/stt/zipformer-vi"`, `thieu: []`. Gửi `models/stt/zipformer-vi/test_wavs/1.wav` qua `/api/asr` từng mẩu 0,4 giây: ra "Những nơi đã khống chế được căn bệnh.".
+  - `tsc` sạch, `eslint src scripts` 0 lỗi, `npm test` 355/356 (lỗi còn lại có từ trước: `encounter-context.test.ts`).
+  - Chưa xem tận mắt dòng thông báo thiếu model trên trình duyệt (máy này có đủ model).
+- **Ảnh hưởng:** `npm run eval-giong-noi` (11 file giọng máy): chữ thô WER 21,4% (bản 27 MB, số đo ghi ở mục cũ, có thể đã khác do bộ sửa chữ đổi sau đó) → 17,4%. Sau bộ sửa chữ: WER 12,1%, Mã 16/42, Liều 6/24, sửa nhầm 0 từ; bản 27 MB từng đạt 10,5%, 22/42, 11/24. Bộ sửa chữ `config/sua-chu-giong-noi.json` được chỉnh theo lỗi của bản 27 MB nên hợp với bản 70 MB kém hơn, cần chỉnh lại. Chưa đo tốc độ so với bản 27 MB. Máy đã kéo repo cần chạy lại `npm run tai-model-giong-noi`, trừ khi đã setup `/stt`.
+
 ### /demo-luong cũng tự che phần còn sót sau chốt chặn R11; kịch bản `ca-bi-chan` thành `ca-tu-che`
 - **Loại:** Tính năng
 - **Thay đổi:**

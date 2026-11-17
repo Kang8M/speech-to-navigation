@@ -47,7 +47,8 @@ def test_denoising_uses_rolling_context_keeps_raw_speaker_audio_and_retries_once
     first = subject.process(key, 1, 0, audio)
     assert subject.process(key, 1, 0, audio) == first
     subject.process(key, 2, 80000, audio)
-    assert clean_windows == [80000, 160000]
+    # Mỗi đoạn chỉ khử nhiễu một lần (đoạn 2 kèm 1 giây ngữ cảnh), không làm lại cả cửa sổ
+    assert clean_windows == [80000, 80000 + 16000]
     np.testing.assert_array_equal(raw_windows[0], audio.waveform)
     assert first['denoiser'] == 'deepfilternet3'
 

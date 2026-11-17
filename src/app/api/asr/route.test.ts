@@ -11,6 +11,8 @@ test("ASR defaults to the local provider and external configuration cannot start
       process.env.ASR_PROVIDER = provider;
       const status = await GET().json();
       assert.equal(status.sanSang, false);
+      assert.deepEqual(status.thieu, []);
+      assert.equal(status.thuMucModel, "models/stt/zipformer-vi");
       assert.equal(POST(new Request("http://localhost/api/asr", { method: "POST", headers: { "X-Clinical-Consent": "true" } })).status, 403);
     }
   } finally {

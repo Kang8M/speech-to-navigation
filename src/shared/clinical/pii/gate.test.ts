@@ -34,6 +34,19 @@ test("R11c: họ + âm tiết chữ thường, không dấu cũng bắt", () => 
   assert.ok(gap.reasons.some((x) => x.reason === "R11c_ten_rieng_con_sot"));
 });
 
+test("R11c: chữ STT có dấu, đọc liền không dấu câu không bị coi là tên", () => {
+  // "ba" (số), "thai", "ha" là chữ thường trong văn bản có dấu, không phải họ Bá/Thái/Hà
+  for (const s of [
+    "sốt ba mươi tám phẩy năm độ trước đó có sổ mũi",
+    "chưa dị ứng thuốc gì toàn thân bé tỉnh",
+    "chẩn đoán viêm thai giữa cấp thai phải hướng điều trị",
+    "ha ceamon hai trăm năm mươi mi lim uống ngày ba lần",
+  ]) assert.equal(checkResidualPii(s, none, noAllow).passed, true, s);
+  // tên thật trong văn bản có dấu vẫn chặn, kể cả họ phổ biến viết không dấu
+  assert.equal(checkResidualPii("bệnh nhân khai gặp trần văn khải ở chợ", none, noAllow).passed, false);
+  assert.equal(checkResidualPii("bệnh nhân khai gặp nguyen hoai an ở chợ", none, noAllow).passed, false);
+});
+
 test("R11c: câu lâm sàng thường qua; nhãn không bị coi là tên", () => {
   assert.equal(checkResidualPii("thủng màng nhĩ, viêm tai giữa", none, noAllow).passed, true);
   assert.equal(reasons("[BỆNH_NHÂN] đau tai [NGƯỜI_1] đưa đến").includes("R11c_ten_rieng_con_sot"), false);

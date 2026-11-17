@@ -60,10 +60,16 @@ def tokens_to_words(tokens, timestamps, duration: float) -> list[dict]:
     if len(tokens) != len(timestamps):
         raise ValueError('STT_TOKEN_TIMESTAMPS_MISSING')
     words = []
+    # Model có lúc trả riêng một token dấu cách rồi mới đến chữ ("▁", "À"): token đó vẫn báo bắt đầu từ mới.
+    new_word = False
     for index, (token, timestamp) in enumerate(zip(tokens, timestamps)):
         token = token.replace('▁', ' ')
         if not token.strip():
+            new_word = True
             continue
+        if new_word and not token[0].isspace():
+            token = ' ' + token
+        new_word = False
         start = max(0, round(float(timestamp) * 1000))
         end = min(round(duration * 1000), start + 800,
                   round(float(timestamps[index + 1]) * 1000) if index + 1 < len(tokens) else round(duration * 1000))

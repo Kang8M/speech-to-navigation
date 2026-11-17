@@ -6,6 +6,8 @@ import { loadKichBan } from "@/server/demo-luong/kich-ban";
 import { readDemoPhieu } from "@/server/demo-luong/store";
 import { ndjsonStream, SttFailure } from "@/server/demo-luong/stream";
 import { proxyStt } from "@/lib/stt/proxy";
+import { loadSuaChu } from "@/server/du-lieu/config";
+import { suaChu } from "@/shared/giong-noi/sua-chu";
 import type { DemoSource } from "@/shared/demo-luong/types";
 
 export const runtime = "nodejs";
@@ -17,7 +19,10 @@ async function transcribe(wav: Uint8Array) {
   const response = await proxyStt(new Request("http://localhost/api/stt", { method: "POST", headers: { "content-type": "audio/wav" }, body: Buffer.from(wav) }));
   const data = await response.json().catch(() => null) as { transcript?: string; text?: string; audio_ms?: number; engine?: string } | null;
   if (!response.ok || !data) throw new SttFailure("Không nhận dạng được giọng nói. Kiểm tra dịch vụ STT rồi thử lại.");
-  return { text: data.transcript ?? data.text ?? "", engine: data.engine ?? "stt", audio_ms: typeof data.audio_ms === "number" ? data.audio_ms : null };
+  // Sửa chữ như eForm ("thai" → "tai", "ba mươi tám" → "38"): số đọc bằng chữ để nguyên dễ bị chốt R11c nhầm là tên
+  const tho = (data.transcript ?? data.text ?? "").trim();
+  const text = tho ? suaChu(tho, loadSuaChu()) : "";
+  return { text, engine: data.engine ?? "stt", audio_ms: typeof data.audio_ms === "number" ? data.audio_ms : null };
 }
 
 /** Đọc body theo từng đoạn, dừng ngay khi vượt giới hạn (kể cả không có Content-Length). */

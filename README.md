@@ -76,12 +76,12 @@ Có hai chế độ, chọn bằng `ASR_PROVIDER` trong `.env.local`:
 | `ASR_PROVIDER` | Cách chạy | Ghi chú |
 |---|---|---|
 | `web` (mặc định) | Web Speech API của Chrome (`vi-VN`), hiện chữ ngay khi đang nói | **Gửi âm thanh lên Google, cần internet.** Trình duyệt không hỗ trợ thì nút 🎤 tự ẩn |
-| `zipformer` | Trình duyệt gửi âm thanh mỗi 0,4 giây lên `/api/asr` của chính prototype; model Zipformer tiếng Việt (`sherpa-onnx-zipformer-vi-30M-int8`, ~26 MB) nhận dạng trên máy. Đang nói thì hiện chữ tạm (in nghiêng dưới nút); ngắt nghỉ ~0,5 giây thì Silero VAD chốt câu và đưa vào ô | **Âm thanh không ra khỏi máy và không được lưu**, không cần internet. Tối đa 10 phút mỗi lần bấm |
+| `zipformer` | Trình duyệt gửi âm thanh mỗi 0,4 giây lên `/api/asr` của chính prototype; model Zipformer tiếng Việt (`csukuangfj/sherpa-onnx-zipformer-vi-int8-2025-04-20`, encoder ~70 MB, ở `models/stt/zipformer-vi/`, dùng chung với trang `/stt`) nhận dạng trên máy. Đang nói thì hiện chữ tạm (in nghiêng dưới nút); ngắt nghỉ ~0,5 giây thì Silero VAD chốt câu và đưa vào ô | **Âm thanh không ra khỏi máy và không được lưu**, không cần internet. Tối đa 10 phút mỗi lần bấm |
 
 Bật `zipformer`:
 
 ```bash
-npm run tai-model-giong-noi   # tải model về models/ (không đưa lên git), chạy một lần
+npm run tai-model-giong-noi   # tải Zipformer ~70 MB về models/stt/zipformer-vi/ (kiểm SHA-256) và Silero VAD về models/; không đưa lên git, đã có thì bỏ qua
 ```
 
 rồi thêm `ASR_PROVIDER=zipformer` vào `.env.local` và khởi động lại `npm run dev`. Chưa tải model thì nút 🎤 tự quay về Web Speech và báo dưới nút.

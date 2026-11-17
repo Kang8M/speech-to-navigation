@@ -53,6 +53,8 @@ export function TroLyAi({ bridge, dirty, onDecided, onBatDau, onOpenTab, soChiDi
   // Ô nhập giữ chữ gốc, chỉ nằm trong bộ nhớ trình duyệt; máy chủ là nơi duy nhất che trước khi tạo bản nháp.
   const [text, setText] = useState(() => vanBanDau ?? "");
   const [mode, setMode] = useState<SpeakerMode>("conversation");
+  /** Chữ tạm từ micro (chưa chốt): hiện nối sau nội dung trong ô nhập để bác sĩ thấy máy đang nghe được gì */
+  const [interim, setInterim] = useState("");
   const [check, setCheck] = useState<PrivacyCheckResult | null>(null);
   const [extraction, setExtraction] = useState<ClinicalExtraction | null>(null);
   const [reviewed, setReviewed] = useState(false);
@@ -165,6 +167,7 @@ export function TroLyAi({ bridge, dirty, onDecided, onBatDau, onOpenTab, soChiDi
         {canWrite && (
           <MicButton
             onStart={() => { onBatDau("noi", false); }}
+            onInterim={setInterim}
             onText={(chunk, source) => { if (source) bridge.routeText(source, chunk); }}
             beforeStart={bridge.beforeStart}
             onCaptureReady={bridge.onCaptureReady}
@@ -173,7 +176,8 @@ export function TroLyAi({ bridge, dirty, onDecided, onBatDau, onOpenTab, soChiDi
             onStop={() => { void bridge.stopAndSave().catch(() => undefined); }}
           />
         )}
-        <textarea aria-label="Nội dung buổi khám" rows={5} value={text} onChange={(event) => { setInput(event.target.value); onBatDau("go", false); }} placeholder="Ghi lời bệnh nhân và bác sĩ. Máy chủ che thông tin nhận dạng trước khi tạo bản nháp." className="w-full rounded-lg border border-ef-vien bg-white px-3 py-2 text-sm leading-6 text-ef-chu outline-none placeholder:text-ef-phu/80 focus:border-tim focus:ring-2 focus:ring-tim/20" />
+        <textarea aria-label="Nội dung buổi khám" rows={5} value={interim ? (text ? `${text}
+${interim}` : interim) : text} readOnly={Boolean(interim)} onChange={(event) => { setInput(event.target.value); onBatDau("go", false); }} placeholder="Ghi lời bệnh nhân và bác sĩ. Máy chủ che thông tin nhận dạng trước khi tạo bản nháp." className="w-full rounded-lg border border-ef-vien bg-white px-3 py-2 text-sm leading-6 text-ef-chu outline-none placeholder:text-ef-phu/80 focus:border-tim focus:ring-2 focus:ring-tim/20" />
         {hasPendingText && <p className="text-xs text-ef-phu">Nội dung này chưa được che và lưu. Tạo bản nháp, hoặc xóa trước khi chuyển lượt khám.</p>}
         {hoiThoai && <button type="button" className="text-xs font-medium text-tim underline-offset-2 hover:underline" onClick={() => { setInput(hoiThoai.map(({ ai, cau }) => `${ai}: ${cau}`).join("\n")); onBatDau("noi", true); }}>Nạp hội thoại mẫu</button>}
         <button type="button" className="text-xs font-medium text-tim underline-offset-2 hover:underline" onClick={() => { setInput(MAU_HOI_THOAI); onBatDau("noi", true); }}>Thử hội thoại tổng hợp</button>

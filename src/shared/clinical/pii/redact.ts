@@ -58,6 +58,8 @@ const STOP_WORDS = [
   "viêm", "nghẹt", "khàn", "chóng", "mặt", "tiếng", "khó", "thở", "mệt", "mỏi", "nhẹ", "nặng", "tăng", "giảm", "đỡ",
   "hết", "lành", "tốt", "khô", "ướt", "mủ", "máu", "sưng", "kém", "thường", "nôn", "buồn", "mất", "ngạt", "hắt",
   "nhiễm", "đồng", "ý", "hóa", "nội", "ngoại", "soi", "phẫu", "mổ", "điếc",
+  // động từ hay đứng ngay sau tên ("Đỗ Quốc Việt mua thuốc"): đuôi tên dừng ở đây, không che lố
+  "mua", "đưa", "dẫn", "gọi", "lấy", "uống", "dùng", "kê", "đi", "về",
 ];
 /** Dạng không dấu chỉ áp cho từ viết không dấu ("thị" khác "thì"). */
 /** Tên riêng thường gặp trùng dạng không dấu với từ dừng ("hoa"/"hóa", "nam"/"năm"): đuôi tên không bao giờ dừng ở đây. */
@@ -69,11 +71,12 @@ const COMMON_AFTER_HO = new Set([
   "phù hợp", "sử dụng", "thân nhiệt", "tiết dịch", "tiết niệu", "cao huyết", "lý do", "ung thư", "mã bệnh",
 ]);
 /** Họ phổ biến: đầu câu không có từ chỉ người thì chỉ nhận các họ này hoặc khi có đệm văn/thị. */
-const COMMON_HO_FOLD = new Set(["nguyen", "tran", "le", "pham", "hoang", "huynh", "vo", "vu", "dang", "bui", "ngo", "do", "dinh", "trinh"]);
+export const COMMON_HO_FOLD: ReadonlySet<string> = new Set(["nguyen", "tran", "le", "pham", "hoang", "huynh", "vo", "vu", "dang", "bui", "ngo", "do", "dinh", "trinh"]);
 const ADMIN_WORDS = [
   "đường(?!\\s+(?:huyết|ruột|thở|mật|tiêu hóa|hô hấp|niệu|tiết niệu|dẫn|truyền|uống|tiêm|máu|kính|vào|ra|giữa|rạch|mổ|cong|dò|rò|ống|xương|khâu|lệch|sau|trước|bên|tiết|thông|vết|cắt|mê|khí|dài|ngang|dọc))",
   "phố", "ngõ", "ngách", "hẻm", "phường", "xã(?!\\s+hội)", "thị trấn", "quận", "huyện", "thành phố",
-  "tỉnh(?!\\s+(?:táo|dậy|lại|giấc|ngủ))", "thôn", "ấp", "khu phố", "tổ dân phố",
+  // "bé tỉnh, sốt 38 độ" đọc liền không dấu câu: "tỉnh" là tỉnh táo, không phải đơn vị hành chính
+  "tỉnh(?!\\s+(?:táo|dậy|lại|giấc|ngủ|sốt|suốt|không|và|tiếp|xúc))", "thôn", "ấp", "khu phố", "tổ dân phố",
 ];
 const ADMIN_SRC = ADMIN_WORDS.join("|");
 const STOP_SRC = STOP_WORDS.join("|");

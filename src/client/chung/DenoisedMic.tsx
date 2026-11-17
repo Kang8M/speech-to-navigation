@@ -6,6 +6,7 @@ import { SpeakerSessionClient } from "@/lib/stt/speaker-client";
 import { reviseWords, type SpeakerWord } from "@/lib/stt/speakers";
 import type { RecordingBinding } from "@/shared/clinical/recording";
 import type { MicButtonProps } from "./MicButton";
+import { MicIcon, NhanNut, StopIcon } from "./mic-ui";
 
 const ERRORS: Record<string, string> = {
   DENOISE_NOT_READY: "DeepFilterNet3 chưa sẵn sàng. Cài runtime và tải model local rồi thử lại.",
@@ -33,7 +34,7 @@ function describe(error: unknown) {
 }
 
 /** Stable text only is committed to clinical inputs; the revisable tail stays in the preview. */
-export function DenoisedMic({ onStart, onText, onStop, beforeStart, onCaptureReady, onCaptureFailed, onStopRequest, giaoDien, onDisable }: MicButtonProps & { onDisable(): void }) {
+export function DenoisedMic({ onStart, onText, onStop, onInterim, beforeStart, onCaptureReady, onCaptureFailed, onStopRequest, giaoDien }: MicButtonProps) {
   const [phase, setPhase] = useState<"idle" | "opening" | "recording" | "processing">("idle");
   const [consent, setConsent] = useState(false);
   const [error, setError] = useState("");
@@ -43,8 +44,10 @@ export function DenoisedMic({ onStart, onText, onStop, beforeStart, onCaptureRea
   const request = useRef<AbortController | null>(null);
   const generation = useRef(0);
   const busy = useRef(false);
-  const callbacks = useRef({ onStart, onText, onStop });
-  useEffect(() => { callbacks.current = { onStart, onText, onStop }; }, [onStart, onText, onStop]);
+  const callbacks = useRef({ onStart, onText, onStop, onInterim });
+  useEffect(() => { callbacks.current = { onStart, onText, onStop, onInterim }; }, [onStart, onText, onStop, onInterim]);
+  /** Chữ tạm vừa hiện dưới nút (nếu cần) vừa báo ra ngoài để đưa lên ô nhập */
+  const showInterim = (text: string) => { setInterim(text); callbacks.current.onInterim?.(text); };
   /** Lần dừng đang chạy: gọi lại thì trả đúng promise đó, để bên ngoài chỉ tiếp tục sau khi chữ cuối đã được giao. */
   const stopping = useRef<Promise<void> | null>(null);
   useEffect(() => () => {
@@ -59,7 +62,7 @@ export function DenoisedMic({ onStart, onText, onStop, beforeStart, onCaptureRea
     const current = ++generation.current;
     const controller = new AbortController();
     request.current = controller;
-    setPhase("opening"); setError(""); setInterim(""); setSeconds(0);
+    setPhase("opening"); setError(""); showInterim(""); setSeconds(0);
     let session: SpeakerSessionClient | null = null;
     let binding: RecordingBinding | undefined;
     let started = false;
@@ -71,7 +74,7 @@ export function DenoisedMic({ onStart, onText, onStop, beforeStart, onCaptureRea
       if (!active() || settled) return;
       settled = true;
       capture.current = null; request.current = null; busy.current = false;
-      setPhase("idle"); setConsent(false); setInterim("");
+      setPhase("idle"); setConsent(false); showInterim("");
       if (started) callbacks.current.onStop?.();
     };
     const accept = (part: SttResult) => {
@@ -83,7 +86,7 @@ export function DenoisedMic({ onStart, onText, onStop, beforeStart, onCaptureRea
       // The server replaces words by start_ms; using end_ms would lose words crossing the boundary.
       emittedUntil = Math.max(emittedUntil, boundary);
       words = words.filter((word) => word.start_ms >= boundary);
-      setInterim(words.map((word) => word.text).join(" "));
+      showInterim(words.map((word) => word.text).join(" "));
     };
     try {
       // Giữ chỗ phiên trước khi mở micro; lỗi giữ chỗ (tab khác đang dùng micro) thì không thu.
@@ -145,19 +148,15 @@ export function DenoisedMic({ onStart, onText, onStop, beforeStart, onCaptureRea
   const clock = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
   return <div>
     <label className="mb-2 flex items-start gap-2 text-xs text-muted">
-      <input type="checkbox" checked disabled={!idle} onChange={onDisable} />Khử nhiễu DeepFilterNet3 trên máy (tùy chọn)
-    </label>
-    <p className="mb-2 text-xs text-muted">Audio được khử nhiễu và nhận dạng local. WAV tạm được xóa sau xử lý; không gửi audio tới AI bên ngoài. Chữ tạm chỉ được đưa vào ô nhập khi đã chốt.</p>
-    <label className="mb-2 flex items-start gap-2 text-xs text-muted">
       <input type="checkbox" checked={consent} disabled={!idle} onChange={(event) => setConsent(event.target.checked)} />
       Tôi đồng ý xử lý âm thanh và nội dung y tế trong hệ thống nội bộ cho lần thu này.
     </label>
     <button type="button" disabled={phase === "opening" || phase === "processing" || (idle && !consent)}
       aria-pressed={phase === "recording"} onClick={() => phase === "recording" ? (onStopRequest ? onStopRequest() : void stopCapture().catch(() => undefined)) : void start()}
-      className={`${giaoDien?.nut ?? "w-full rounded border py-2 font-medium disabled:opacity-70"} ${phase === "recording" ? giaoDien?.dangNghe ?? "border-warn text-warn-text" : giaoDien?.cho ?? "border-primary text-primary"}`}>
-      {phase === "recording" ? `⏹ Dừng nghe · ${clock}` : phase === "opening" ? "Đang mở micro…" : phase === "processing" ? "Đang chốt câu cuối…" : giaoDien?.nhan ?? "🎤 Nói"}
+      className={`${giaoDien?.nut ?? "w-full rounded-xl border-2 py-3.5 text-base font-semibold shadow-sm transition disabled:cursor-not-allowed disabled:opacity-60"} ${phase === "recording" ? giaoDien?.dangNghe ?? "border-warn text-warn-text" : giaoDien?.cho ?? "border-primary text-primary"}`}>
+      {phase === "recording" ? <NhanNut bieuTuong={<StopIcon />}>Dừng nghe · {clock}</NhanNut> : phase === "opening" ? "Đang mở micro…" : phase === "processing" ? "Đang chốt câu cuối…" : giaoDien?.nhan ?? <NhanNut bieuTuong={<MicIcon />}>Nói</NhanNut>}
     </button>
-    {interim && <p className="mt-1 text-sm text-muted italic">{interim}</p>}
+    {interim && !onInterim && <p className="mt-1 text-sm text-muted italic">{interim}</p>}
     {error && <p role="alert" className="mt-1 text-sm text-warn-text">{error}</p>}
   </div>;
 }

@@ -4,6 +4,18 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-17
 
+### eForm R1–R14 · Task 1: định danh đã biết, allowlist R11c và nhật ký R13 dùng chung
+- **Loại:** Tính năng
+- **Thay đổi:** Thêm ba module server:
+  - `src/server/clinical/known-identifiers.ts`: hàm `patientKnownIdentifiers` lấy định danh của bệnh nhân từ hồ sơ giả và cờ đồng ý R14. Hàm `knownIdentifiersForContext` gộp ngữ cảnh lượt khám, hồ sơ bệnh nhân và danh bạ bác sĩ, có bỏ trùng; bệnh nhân không có trong hồ sơ thì coi là chưa đồng ý.
+  - `src/server/clinical/pii-allowlist.ts`: hàm `clinicalAllowlist`, chuyển nguyên từ `demoAllowlist`.
+  - `src/server/clinical/pii-audit.ts`: hàm `appendPiiAudit` ghi ndjson vào `data/clinical/audit/`, chỉ nhận mã lượt khám dạng UUID và dựng lại dòng qua `buildAuditEntry` để không trường lạ nào lọt vào file.
+
+  `/demo-luong` gọi lại hai hàm dùng chung (`knownIdentifiersFor`, `demoAllowlist`), hành vi không đổi.
+- **Lý do:** Plan `2026-11-17-eform-pii-r1-r14.md`, Task 1.
+- **File:** `src/server/clinical/known-identifiers.ts`, `src/server/clinical/known-identifiers.test.ts`, `src/server/clinical/pii-allowlist.ts`, `src/server/clinical/pii-audit.ts`, `src/server/clinical/pii-audit.test.ts`, `src/server/demo-luong/known-identifiers.ts`, `src/server/demo-luong/kich-ban.ts`, `docs/CHANGELOG.md`
+- **Kiểm tra:** Test mới lỗi trước (không tìm thấy module), sau khi viết code thì qua. Chạy test mới cùng test của `demo-luong` và `pii`: 69/69 qua. GitNexus impact: `knownIdentifiersFor` ở mức LOW.
+
 ### Plan chuyển eForm sang bộ che PII R1–R14
 - **Loại:** Tài liệu
 - **Thay đổi:** Thêm thiết kế và plan 6 task trong `docs/superpowers/plans/pending/`, để eForm `/` dùng bộ `pii-auto-1` như trang "Phần chung" của sơ đồ. Nội dung chính:

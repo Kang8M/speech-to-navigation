@@ -1,7 +1,7 @@
 import "server-only";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
-import { foldVietnamese } from "@/shared/clinical/pii";
+import { clinicalAllowlist } from "@/server/clinical/pii-allowlist";
 import type { KichBan, KichBanTomTat } from "@/shared/demo-luong/types";
 import { ClinicalError } from "@/server/clinical/repository";
 
@@ -31,24 +31,7 @@ export function doanForPhien(k: KichBan, phien?: number): KichBan["doan"] {
   return phien === undefined ? k.doan : k.doan.filter((d) => d.phien === phien);
 }
 
-/** Cụm từ lâm sàng TMH bắt đầu bằng họ hoặc từ trùng họ: không phải tên người. */
-const TERMS = [
-  "dịch nhầy", "phù thanh quản", "sốt cao", "cao liên tục", "co giật", "cổ chướng", "mạc treo",
-  "ung thư", "ung thư vòm", "vòm họng", "mạc nhĩ", "thông khí", "dị vật", "đường thở",
-  "hạ họng", "tai ngoài", "tai giữa", "tai trong", "viêm xoang", "viêm mũi", "viêm họng", "viêm amidan",
-  "ho khan", "ho có đờm", "đau họng", "nghẹt mũi", "chảy mũi", "ù tai", "nghe kém", "thủng màng nhĩ", "chóng mặt",
-  "cao huyết áp", "huyết áp cao", "tiền sử", "dương tính", "phù nề", "niêm mạc", "dịch mủ", "mô phỏng bệnh",
-];
-
-function readList(rel: string): { ten: string; ten_khac?: string[] }[] {
-  return JSON.parse(readFileSync(path.join(process.cwd(), rel), "utf8"));
-}
-
-/** Allowlist R11c cho demo: thuật ngữ TMH, tên thuốc và tên dịch vụ trong danh mục (đã bỏ dấu). */
+/** Allowlist R11c cho demo: dùng chung với eForm (src/server/clinical/pii-allowlist.ts). */
 export function demoAllowlist(): ReadonlySet<string> {
-  const out = new Set<string>(TERMS.map(foldVietnamese));
-  for (const rel of ["data/catalog/thuoc.json", "data/catalog/dich-vu.json"]) {
-    for (const it of readList(rel)) for (const n of [it.ten, ...(it.ten_khac ?? [])]) if (n) out.add(foldVietnamese(n));
-  }
-  return out;
+  return clinicalAllowlist();
 }

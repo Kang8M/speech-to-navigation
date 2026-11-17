@@ -4,6 +4,26 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-17
 
+### eForm R1–R14 · Task 6: chính sách dữ liệu, luồng khám và sơ đồ theo R1–R14
+- **Loại:** Tài liệu
+- **Thay đổi:**
+  - `docs/DATA-USE-POLICY.md`: cấp `deidentified` áp dụng cho cả eForm. Bỏ câu "eForm vẫn cần duyệt riêng tư thủ công". Checkbox đồng ý đổi thành cờ R14 lấy từ hồ sơ. Ghi nơi lưu nhật ký R13 của eForm và quyết định D2.
+  - `docs/CLINICAL-WORKFLOW.md`: các bước 2–3 theo nút "Che thông tin và tạo bản nháp". Bảng endpoint đổi sang `check`. Mục giới hạn nói rõ không còn duyệt tay trước model.
+  - `README.md`: dòng "Luồng hiện tại" (17/11) và dòng sơ đồ.
+  - `docs/so-do/luong-chinh.drawio`: ba ghi chú vàng đổi thành "eForm và /demo-luong cùng dùng pii-auto-1".
+  - `pending/README.md`: cập nhật trạng thái plan.
+- **Lý do:** Plan `2026-11-17-eform-pii-r1-r14.md`, Task 6.
+- **File:** `docs/DATA-USE-POLICY.md`, `docs/CLINICAL-WORKFLOW.md`, `README.md`, `docs/so-do/luong-chinh.drawio`, `docs/superpowers/plans/pending/README.md`, `docs/CHANGELOG.md`
+- **Kiểm tra nghiệm thu toàn plan:**
+  - `npm test`: 346/348 qua. Hai test lỗi:
+    - `encounter-context.test.ts:28` (lỗi có sẵn);
+    - `extract-recording.test.ts` "transcript not yet attached": file này bị sửa từ ngoài phiên, chưa commit; bản đã commit qua 4/4.
+  - `tsc --noEmit`: sạch. `eslint src lib`: 0 lỗi, 5 cảnh báo cũ. `npm run build`: thành công.
+  - `npm run eval -- --rule-only`: chạy bình thường, 0 dòng thừa. Bộ tách quy tắc không bị sửa.
+  - `npm run clinical:check`: lỗi "Clinical types are stale". Nguyên nhân: `src/shared/clinical/types.ts` trong bản checkout là CRLF (autocrlf) còn file sinh ra là LF. Plan không đụng tới schema hay types, nên đây là lỗi có sẵn.
+  - `npm run lint`: lỗi ở `.claude/worktrees/*/.next` (build của worktree khác), không thuộc mã nguồn.
+  - GitNexus `detect_changes --scope compare --base-ref 15fbe52`: 35 file, rủi ro critical. Phần lớn số luồng bị kéo vào vì khớp với ký hiệu chung `actor` trong test. Các luồng thật bị ảnh hưởng (`TroLyAi`, `EncounterWorkspace`, POST privacy/extract) đã có test và đã kiểm trên trình duyệt.
+
 ### eForm R1–R14 · Task 5: Trợ lý lâm sàng hiện bản đã che, lý do chặn R11 và đồng ý R14
 - **Loại:** Giao diện
 - **Thay đổi:**

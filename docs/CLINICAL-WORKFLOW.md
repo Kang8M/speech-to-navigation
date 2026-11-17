@@ -12,8 +12,8 @@ npm run dev
 Mở `http://localhost:3000`. Mặc định dùng `mock`; đây là bộ trích xuất quy tắc có giới hạn, không cần API key. Bấm **Thử hội thoại tổng hợp** để thử luồng mà không cần ghi âm.
 
 1. Chọn **Hội thoại** hoặc **Bác sĩ đọc**. Trong hội thoại, chỉ gán vai trò khi có nhãn `BS:`/`BN:` được người dùng kiểm tra; không đoán bác sĩ từ mã Người nói 1/2.
-2. Nói hoặc nhập text. Đoạn STT được lọc cục bộ ngay trong callback trước khi hiển thị. Server lọc lại ở bước **Kiểm tra thông tin riêng tư**.
-3. Xem và sửa bản đã lọc, rồi bấm **Đã kiểm tra — tạo bản nháp**. Ticket chưa được xác nhận/hết hạn không gọi model. Bản sửa có định danh mới bị phát hiện phải được xem lại.
+2. Nói hoặc nhập text. Ô nhập giữ chữ gốc, chỉ trong bộ nhớ trình duyệt.
+3. Bấm **Che thông tin và tạo bản nháp**. Máy chủ che bằng bộ `pii-auto-1`: R1–R8 (nhãn R10), chốt chặn R11, cờ đồng ý R14 lấy từ hồ sơ bệnh nhân. Bị chặn thì hiện lý do theo mã rule (vd. R11c), không gửi AI; sửa nội dung trong ô rồi bấm lại. Qua chốt chặn thì hiện **bản đã che** (chỉ đọc), số mục che theo rule và dòng "Đồng ý AI", rồi tạo bản nháp. Mỗi lượt ghi một dòng nhật ký R13 vào `data/clinical/audit/`.
 4. Xem tóm tắt, chẩn đoán, tiền sử thuốc/dị ứng, cờ cần kiểm tra và câu nguồn. **Áp dụng bản nháp** đưa dữ kiện lên hai màn; giữ các ô bác sĩ đã sửa, không ghi đè tóm tắt nhập tay.
 5. Bác sĩ sửa nội dung, chọn ICD và đúng dịch vụ, số lượng, vị trí/bên. Khi có chẩn đoán kèm, chọn rõ giai đoạn. Khi không có dịch vụ, tích **Bác sĩ xác nhận không chỉ định dịch vụ**. Khi có dịch vụ, điền chẩn đoán/lịch sử lâm sàng chung.
 6. **Lưu phiếu & chỉ định** hoặc **Lưu nháp** trong tab chỉ định ghi cùng một hồ sơ JSON. URL nhận `?ho_so=<uuid>`; tải lại URL để mở đúng hồ sơ. Hai tab lưu cùng revision thì tab đến sau nhận lỗi xung đột.
@@ -22,7 +22,7 @@ Mở `http://localhost:3000`. Mặc định dùng `mock`; đây là bộ trích 
 
 ## Demo luồng dữ liệu (`/demo-luong`)
 
-Trang riêng, tách khỏi eForm `/`. Eform giữ bước bác sĩ duyệt bản đã lọc thủ công trước khi gọi AI; `/demo-luong` thử luồng tự động: ghi âm (micro, file WAV hoặc kịch bản mẫu) → bản thô → che PII tự động (bộ rule R1–R8, R10, `pii-auto-1`) → chốt chặn R11 (nghi còn sót thì không gửi AI) → AI mock → lưu → phiếu đọc lại từ kho để bác sĩ sửa và duyệt. Cờ đồng ý xử lý AI lấy từ hồ sơ tiếp đón (R14): chưa đồng ý thì chỉ chạy bộ tách local. Một phiếu có nhiều phiên ghi âm; ô bác sĩ đã sửa không bị phiên sau ghi đè (phiên sau nói khác thì hiện cờ xung đột); ghi phiên mới vào phiếu đã duyệt thì phiếu về nháp. Bản thô không ghi đĩa, không log; dữ liệu chạy nằm ở `data/demo-luong/` (gitignore). Chính sách dữ liệu: `docs/DATA-USE-POLICY.md` (cấp `deidentified`, chỉ áp dụng luồng này).
+Trang riêng, tách khỏi eForm `/`. eForm và `/demo-luong` cùng dùng bộ che `pii-auto-1`; `/demo-luong` trình diễn từng bước: ghi âm (micro, file WAV hoặc kịch bản mẫu) → bản thô → che PII tự động (bộ rule R1–R8, R10, `pii-auto-1`) → chốt chặn R11 (nghi còn sót thì không gửi AI) → AI mock → lưu → phiếu đọc lại từ kho để bác sĩ sửa và duyệt. Cờ đồng ý xử lý AI lấy từ hồ sơ tiếp đón (R14): chưa đồng ý thì chỉ chạy bộ tách local. Một phiếu có nhiều phiên ghi âm; ô bác sĩ đã sửa không bị phiên sau ghi đè (phiên sau nói khác thì hiện cờ xung đột); ghi phiên mới vào phiếu đã duyệt thì phiếu về nháp. Bản thô không ghi đĩa, không log; dữ liệu chạy nằm ở `data/demo-luong/` (gitignore). Chính sách dữ liệu: `docs/DATA-USE-POLICY.md` (cấp `deidentified`, áp dụng cho cả eForm và luồng này).
 
 ## Cấu hình model
 
@@ -41,7 +41,7 @@ Các ứng viên đã tra cứu để đánh giá thêm: [Gemini 3.8 Flash](http
 
 | Endpoint | Chức năng |
 |---|---|
-| `POST /api/clinical/privacy` | `prepare` hoặc `approve`, không gọi LLM |
+| `POST /api/clinical/privacy` | `check`: che R1–R8, chốt chặn R11, đọc đồng ý R14; không gọi LLM |
 | `POST /api/clinical/extract` | Nhận ticket đã duyệt, trả `ClinicalExtraction` |
 | `POST /api/clinical/encounters` | Tạo/cập nhật hồ sơ với expected revision và run ID đã áp dụng |
 | `GET /api/clinical/encounters/[id]` | Đọc hồ sơ, projection và artifact AI gần nhất nếu còn |
@@ -53,7 +53,7 @@ Gói STT ở root `app/` đã được chuyển vào `src/app/` để Next.js đ
 ## Giới hạn có chủ đích
 
 - Chỉ dữ liệu giả, persona bệnh nhân/bác sĩ từ fixture server. Local/origin guard là ranh giới của bản demo, **không phải xác thực/phân quyền HIS**. Chưa tích hợp đăng nhập, lịch khám thật, hệ thống CLS, chữ ký số, gửi chỉ định hoặc database bệnh viện.
-- Bộ lọc dùng quy tắc và danh tính đã biết, có thể bỏ sót tên hoặc chuyện riêng tư viết tự do. Bước kiểm tra thủ công là bắt buộc trước model; chưa chứng minh khử định danh tự động đầy đủ. Không nhập bệnh nhân thật trước khi có đánh giá riêng tư và phân quyền phù hợp.
+- Bộ lọc dùng quy tắc và danh tính đã biết, có thể bỏ sót tên hoặc chuyện riêng tư viết tự do. Từ 17/11/2026 không còn bước duyệt tay trước model: lớp bảo vệ là chốt chặn R11 và việc bác sĩ duyệt phiếu sau cùng. Che tự động chưa chứng minh khử định danh đầy đủ. Không nhập bệnh nhân thật trước khi có đánh giá riêng tư và phân quyền phù hợp.
 - Kiểm chứng bằng chứng phát hiện nhiều lỗi cấu trúc, trích dẫn, vai trò, số và bên; không chứng minh mọi kết luận/tóm tắt của model đúng. Bác sĩ vẫn chịu trách nhiệm duyệt.
 - Mock chỉ trích mệnh đề rõ ràng, chưa đủ khả năng hiểu hội thoại như LLM. Không tự suy thuốc, chẩn đoán hoặc dịch vụ từ triệu chứng.
 - Repository dành cho prototype một instance; khóa file không có cơ chế tự phá khóa sau process crash. Giữ metadata chuẩn giúp thay repository bằng database sau.

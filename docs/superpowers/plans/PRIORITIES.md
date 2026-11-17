@@ -2,7 +2,7 @@
 
 Cập nhật: 14/11/2026.
 
-Mục tiêu điều phối: hoàn thiện prototype theo quy trình khám. Hiện có **3 plan pending**, mỗi plan có một tài liệu thiết kế đi kèm. Trạng thái gốc được quản lý tại [pending/README.md](pending/README.md).
+Mục tiêu điều phối: hoàn thiện prototype theo quy trình khám. Hiện có **4 plan pending**, mỗi plan có một tài liệu thiết kế đi kèm. Trạng thái gốc được quản lý tại [pending/README.md](pending/README.md).
 
 Tài liệu này ghi nhận thứ tự đề xuất, không đánh dấu bắt đầu triển khai hoặc thay thế bước duyệt thiết kế/plan còn chờ.
 
@@ -13,6 +13,7 @@ Tài liệu này ghi nhận thứ tự đề xuất, không đánh dấu bắt �
 | 1 | [Một lượt khám, nhiều phiên ghi âm](pending/2026-11-14-interrupted-encounters.md) | Mở đúng hồ sơ, chuyển bệnh nhân an toàn, tiếp tục ghi âm và giữ lịch sử nội dung đã duyệt | Duyệt thiết kế/plan trước khi sửa mã sản phẩm |
 | 2 | [Dashboard lịch khám và thông tin bệnh nhân](pending/2026-11-14-dashboard-patient.md) | Xem lịch → chọn bệnh nhân → mở/tiếp tục phiếu → xem lịch sử | Contracts/context thống nhất; phần tạo/tiếp tục phiếu cần nền tảng ưu tiên 1 đã nghiệm thu |
 | 3 | [WER CLI cho micro và file audio](pending/2026-11-13-wer-cli.md) | Đo WER/CER tái lập được, so sánh bật/tắt lọc nhiễu trên cùng audio | Runtime STT local và dữ liệu tham chiếu; kiểm chứng micro thật cần người dùng tham gia |
+| 4 | [Màn demo luồng dữ liệu và che PII tự động](pending/2026-11-16-demo-luong-du-lieu.md) | Trang `/demo-luong` chạy trọn ghi âm → che PII → AI mock → phiếu nhiều phiên. Đã triển khai Task 1–8 (17/11), còn thử micro thật | STT local cho nguồn micro/WAV; kịch bản mẫu chạy không cần STT |
 
 ## Các chặng điều phối
 

@@ -15,7 +15,7 @@ const NGUON: { id: Nguon; nhan: string }[] = [
   { id: "file", nhan: "File WAV" },
   { id: "kich_ban", nhan: "Kịch bản mẫu" },
 ];
-const SELECT = `rounded-md border border-ef-vien bg-white px-2 py-1 text-[13px] font-medium text-ef-chu disabled:opacity-60 ${FOCUS}`;
+const SELECT = `max-w-full min-w-0 rounded-md border border-ef-vien bg-white px-2 py-1 text-[13px] font-medium text-ef-chu disabled:opacity-60 ${FOCUS}`;
 
 /** Chọn nguồn của phiên mới: micro (thu thành WAV), file WAV, hoặc kịch bản mẫu (bỏ qua STT). */
 export function NguonPicker({ nguon, onNguon, kichBan, kbId, onKichBan, benhNhan, phan, onPhan, wav, onWav, khoa }: {
@@ -51,7 +51,7 @@ export function NguonPicker({ nguon, onNguon, kichBan, kbId, onKichBan, benhNhan
         ))}
       </div>
       {nguon === "kich_ban" && (
-        <span className="inline-flex flex-wrap items-center gap-2">
+        <span className="inline-flex min-w-0 max-w-full flex-wrap items-center gap-2">
           <select aria-label="Kịch bản mẫu" value={kbId} disabled={khoa} onChange={e => onKichBan(e.target.value)} className={SELECT}>
             {kichBan.map(k => <option key={k.id} value={k.id}>{k.ten} · {benhNhan[k.benh_nhan_id]?.ten ?? k.benh_nhan_id}</option>)}
           </select>

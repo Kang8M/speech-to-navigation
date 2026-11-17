@@ -20,6 +20,10 @@ Mở `http://localhost:3000`. Mặc định dùng `mock`; đây là bộ trích 
 7. Xác nhận đã xem các điểm AI đánh dấu, rồi **Duyệt phiếu và chỉ định**. Backend kiểm dữ liệu bắt buộc và ghi người/thời gian duyệt từ persona server.
 8. **In ngay** chỉ bật cho bản đã duyệt, không có thay đổi chưa lưu. Sửa sau duyệt làm bản đang sửa không in được; lưu lại sẽ xóa duyệt cũ. Ctrl+P khi chưa duyệt chỉ có thông báo bản nháp.
 
+## Demo luồng dữ liệu (`/demo-luong`)
+
+Trang riêng, tách khỏi eForm `/`. Eform giữ bước bác sĩ duyệt bản đã lọc thủ công trước khi gọi AI; `/demo-luong` thử luồng tự động: ghi âm (micro, file WAV hoặc kịch bản mẫu) → bản thô → che PII tự động (bộ rule R1–R8, R10, `pii-auto-1`) → chốt chặn R11 (nghi còn sót thì không gửi AI) → AI mock → lưu → phiếu đọc lại từ kho để bác sĩ sửa và duyệt. Cờ đồng ý xử lý AI lấy từ hồ sơ tiếp đón (R14): chưa đồng ý thì chỉ chạy bộ tách local. Một phiếu có nhiều phiên ghi âm; ô bác sĩ đã sửa không bị phiên sau ghi đè (phiên sau nói khác thì hiện cờ xung đột); ghi phiên mới vào phiếu đã duyệt thì phiếu về nháp. Bản thô không ghi đĩa, không log; dữ liệu chạy nằm ở `data/demo-luong/` (gitignore). Chính sách dữ liệu: `docs/DATA-USE-POLICY.md` (cấp `deidentified`, chỉ áp dụng luồng này).
+
 ## Cấu hình model
 
 Trong `.env.local` đặt `CLINICAL_LLM_PROVIDER=mock|gemini|anthropic|openai`; bỏ trống để dùng `LLM_PROVIDER`. Provider thực cần API key và `<PROVIDER>_MODEL` tương ứng theo `.env.example`. Không đổi model chỉ vì thay database.

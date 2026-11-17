@@ -2,6 +2,22 @@
 
 Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nhất ở trên cùng. Cách ghi xem `.claude/skills/ghi-tai-lieu/SKILL.md`.
 
+## 2026-11-17
+
+### Nghiệm thu màn /demo-luong, sửa tràn ngang 375px, tài liệu và số đo PII
+- **Loại:** Sửa lỗi, Tài liệu
+- **Thay đổi:** Kiểm trong trình duyệt (dữ liệu giả, AI mock) Task 7 bước 3 của plan demo luồng dữ liệu: ca chuẩn phần 1 (rev 2, 9 mục che) → sửa ô "Lý do đến khám" thành "BS sửa" (rev 3, nguồn "Bác sĩ sửa") → phần 2 (rev 4, ô giữ giá trị bác sĩ, thêm "Khám chuyên khoa TMH" và chỉ định từ AI · phiên 2) → Duyệt (rev 5, "Đã duyệt") → phiên 3 (rev 6, phiếu về nháp). Ca bị chặn: ③ "Bị chặn · R11c", ④⑤ "Không gửi AI", phiếu giữ rev 1. Ca chưa đồng ý: dòng "Đồng ý AI: ✗", ④ "Không được gửi AI ngoài — chạy bộ tách local". Chế độ Kỹ thuật mở được chi tiết từng bước; "+ Phiếu khám mới" ra phiếu rev 1, chưa có phiên. Không có lỗi console. Lỗi tìm thấy: ở khung 375px trang tràn ngang (cuộn ngang 514px) vì ô chọn kịch bản mẫu không co lại; thêm `max-w-full min-w-0` cho ô chọn và khối chứa trong `NguonPicker.tsx`, đo lại `scrollWidth` = `clientWidth` = 375.
+  - Số đo che PII trên 3 kịch bản (chạy `redactPii` + `checkResidualPii` với `knownIdentifiersFor`):
+
+    | Kịch bản | Phải che | Đã che | Còn sót | Che thừa (mục phải giữ bị che) | Chốt chặn |
+    | --- | --- | --- | --- | --- | --- |
+    | `ca-chuan` | 9 | 9 | 0 | 0 | qua (đúng kỳ vọng) |
+    | `ca-chua-dong-y` | 2 | 2 | 0 | 0 | qua (đúng kỳ vọng) |
+    | `ca-bi-chan` | 1 | 1 | 0 | 0 | chặn R11c (đúng kỳ vọng) |
+  - `README.md`, `docs/CLINICAL-WORKFLOW.md` (mục "Demo luồng dữ liệu"), `docs/cau-truc-du-an.md` (bảng dùng chung), `docs/superpowers/plans/PRIORITIES.md` và `pending/README.md` ghi trạng thái mới. Plan vẫn để trong `pending/` vì chưa thử micro thật.
+- **File:** `src/client/demo-luong/NguonPicker.tsx`, `README.md`, `docs/CLINICAL-WORKFLOW.md`, `docs/cau-truc-du-an.md`, `docs/superpowers/plans/PRIORITIES.md`, `docs/superpowers/plans/pending/README.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** `npm test`: chỉ một lỗi có sẵn ở `encounter-context.test.ts:28` (5 !== 4), không liên quan; `npx eslint src lib` 0 lỗi, 6 cảnh báo cũ; `npm run build` thành công (có route `/demo-luong`); `npm run eval -- --rule-only` chạy bình thường, 0 dòng thừa (không so diff với trước vì không dựng lại bản cũ; đường cũ chỉ thêm tham số tùy chọn, có test giữ hành vi). `detect-changes --scope all`: chỉ chạm 1 file, không trùng ký hiệu đã lập chỉ mục nên không coi là kết quả sạch; `--scope compare --base-ref main` báo critical với 470 luồng vì gộp cả nhánh. **Chưa kiểm tra:** micro thật và STT (`npm run stt:start` chưa chạy), nên chưa chuyển plan ra khỏi `pending/`. Ca chưa đồng ý chạy bộ tách local nên phiếu gần như trống (ví dụ "Lý do đến khám" không điền dù bản đã che có "đến khám vì ù tai trái 2 tuần"): giới hạn của bộ quy tắc, chưa sửa.
+
 ## 2026-11-16
 
 ### Sửa rà soát vòng 1 cho màn /demo-luong

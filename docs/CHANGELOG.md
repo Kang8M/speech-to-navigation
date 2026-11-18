@@ -4,6 +4,13 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-18
 
+### Đưa hai quy tắc làm việc từ worktree priority-plan-2 vào nhánh
+- **Loại:** Tài liệu, Quy trình
+- **Thay đổi:** Quy tắc 6 (nhánh mới chỉ tạo từ `dev`, `main` là production) và quy tắc 7 (chia việc cho sub-agent) trong `CLAUDE.md`, cùng hai mục CHANGELOG ngày 2026-11-14, trước đây chỉ nằm ở thay đổi chưa commit của worktree `.claude/worktrees/priority-plan-2-c8793f`. Nay chép nguyên văn vào nhánh `ner-phobert`.
+- **Lý do:** Rà soát trước khi merge `ner-phobert` vào `dev` cho thấy hai quy tắc này chưa có trên nhánh nào; xóa worktree là mất.
+- **File:** `CLAUDE.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** Đối chiếu từng dòng thêm với bản trong worktree. Không có thay đổi code.
+
 ### Sửa R3 "đường" và R2 che lấn: hết che nhầm chữ lâm sàng
 - **Loại:** Sửa lỗi
 - **Thay đổi** (`src/shared/clinical/pii/redact.ts`, theo plan `docs/superpowers/plans/pending/2026-11-18-sua-r2-r3.md`):
@@ -729,6 +736,22 @@ Thiết kế đã được duyệt và có plan triển khai 8 task, mỗi task 
 - **Ảnh hưởng:** dashboard mặc định hiện lịch cố định 15–17/11/2026 (không tự dịch theo ngày chạy; ngày khác dùng `?date=`). Hãy mở bằng `localhost`: với `next dev -H 127.0.0.1` truy cập bằng `127.0.0.1` thì lớp clinical trả "Nguồn yêu cầu không hợp lệ". Chưa kiểm: hai tab mở cùng lúc, rời eForm khi còn micro/chưa lưu, phiếu cũ đã duyệt (nhãn "Đã duyệt"), mốc 12:00 và khối trên 5 dòng.
 
 ## 2026-11-14
+
+### Quy tắc phân chia công việc cho sub-agent
+- **Loại:** Tài liệu, Quy trình
+- **Thay đổi:** Thêm quy tắc bắt buộc số 7 vào `CLAUDE.md`: session chính chỉ điều phối; việc dễ giao Haiku 5.5 (effort Medium), việc khó hơn giao Sonnet 5.5 (effort Medium), Opus 5.5 chỉ để review code (một lần cho cả cụm task). Kèm các nguyên tắc rút ra từ lượt làm ưu tiên 2: brief tự đủ ngữ cảnh, kiểm lại kết quả sub-agent, chỉ chạy song song khi khác file và chỉ một agent chạy `next dev`, commit đúng đường dẫn, kiểm tra phụ thuộc nhánh trước khi giao việc.
+- **Lý do:** Người dùng muốn dùng lại cách chia việc tiết kiệm token này cho các session sau.
+- **File:** `CLAUDE.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** Đọc lại mục "Quy tắc bắt buộc" trong `CLAUDE.md`. Không có thay đổi code.
+- **Ảnh hưởng:** Chỉ là quy tắc làm việc cho Claude.
+
+### Quy tắc nhánh: tạo từ `dev`, `main` chỉ nhận merge từ `dev`
+- **Loại:** Tài liệu, Quy trình
+- **Thay đổi:** Thêm quy tắc bắt buộc số 6 vào `CLAUDE.md`: `dev` là nhánh phát triển gốc, `main` là nhánh production. Mọi nhánh và worktree mới chỉ được tạo từ `dev`, PR của nhánh con trỏ vào `dev`, `main` chỉ nhận merge từ `dev`. Có bước kiểm tra gốc nhánh trước khi tạo (`git fetch origin`, `git merge-base HEAD origin/dev`) và yêu cầu dừng báo người dùng nếu phát hiện nhánh tạo từ `main`.
+- **Lý do:** Nhánh `claude/priority-plan-2-c8793f` lỡ được tạo từ `main` nên xung đột với `dev` ở 3 file khi merge.
+- **File:** `CLAUDE.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** Đọc lại mục "Quy tắc bắt buộc" trong `CLAUDE.md`. Không có thay đổi code.
+- **Ảnh hưởng:** Chỉ là quy tắc làm việc cho người và Claude. Nhánh priority-plan-2 hiện tại vẫn từ `main`; việc merge vào `dev` do người dùng xử lý.
 
 ### Chuyển trang và API thử nghiệm STT từ `app/` sang `src/app/`
 - **Loại:** Dọn dẹp

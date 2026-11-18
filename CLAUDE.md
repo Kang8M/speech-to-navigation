@@ -11,6 +11,16 @@ Prototype Next.js 16 (App Router) + React 19 + Tailwind 4. Bác sĩ nói hoặc 
 3. **Mã danh mục chỉ được gán bởi code khớp danh mục** (`src/shared/match.ts`), không bao giờ để LLM tự điền mã. Không đặt `ai_fill: true` cho trường mã.
 4. **Next.js 16 khác dữ liệu huấn luyện.** Trước khi viết code dùng API Next, đọc `node_modules/next/dist/docs/` hoặc tra context7.
 5. Viết tài liệu, nhãn giao diện, thông báo lỗi bằng tiếng Việt, giữ giọng văn hiện có.
+6. **Quy trình nhánh: `dev` là nhánh gốc để phát triển, `main` là nhánh production.** Mọi nhánh mới (tính năng, sửa lỗi, worktree của Claude) **chỉ được tạo từ `dev`**, không bao giờ tạo từ `main`. Nhánh con tạo PR vào `dev`. `main` chỉ nhận merge từ `dev`: không merge nhánh con thẳng vào `main`, không commit/push trực tiếp lên `main`. Trước khi tạo nhánh hoặc worktree, chạy `git fetch origin` và kiểm tra gốc là `origin/dev` (ví dụ `git checkout -b <tên> origin/dev`; `git merge-base HEAD origin/dev` phải là commit mới của `dev`). Nếu phát hiện nhánh đang làm được tạo từ `main`, dừng lại báo người dùng, không tự rebase hay merge để "sửa" khi chưa được đồng ý.
+7. **Phân chia công việc cho sub-agent, ưu tiên tiết kiệm token.** Khi người dùng giao một plan hoặc việc nhiều bước, tự chia việc rồi giao cho sub-agent (công cụ Agent) theo độ khó, không làm hết ở session chính:
+   - **Haiku 5.5, effort Medium** (`model: haiku`, `effort: medium`): việc dễ, cơ học, ít phán đoán. Ví dụ: refactor gộp trùng lặp, đổi tên, chuyển file, cập nhật tài liệu/CHANGELOG, chạy checklist kiểm tra trình duyệt theo kịch bản có sẵn, ghi kết quả test.
+   - **Sonnet 5.5, effort Medium** (`model: sonnet`, `effort: medium`): việc khó hơn cần thiết kế/logic. Ví dụ: viết logic nghiệp vụ và test, service/API, component giao diện mới, sửa lỗi sau review.
+   - **Opus 5.5** (`model: opus`): **chỉ để review code** (đọc, chạy test/lint, báo lỗi), không giao việc triển khai cho Opus. Review một lần cho cả cụm task thay vì từng task nhỏ; sau đó giao Sonnet/Haiku sửa các phát hiện.
+   - Session chính chỉ điều phối: đọc plan, kiểm tra phụ thuộc, viết brief, kiểm lại kết quả (chạy lại test/lint/tsc, `git status`) rồi báo cáo; không tin báo cáo của sub-agent mà không kiểm chứng.
+   - **Brief phải tự đủ ngữ cảnh** (sub-agent không thấy hội thoại): đường dẫn worktree, file plan/thiết kế cần đọc, phạm vi làm và KHÔNG làm, lệnh test/lint, yêu cầu ghi tài liệu bằng skill `ghi-tai-lieu`, cách commit và định dạng báo cáo cuối (ngắn, PASS/FAIL thật, chỗ khác plan, việc còn chờ).
+   - **Chạy song song chỉ khi hai agent sửa file khác nhau** và chỉ một agent được chạy `next dev` trong cùng thư mục (hai `next dev` xung đột `.next`); agent còn lại không chạy dev/build. Việc có phụ thuộc kết quả của nhau thì chạy tuần tự.
+   - Mỗi agent chỉ `git add` đúng đường dẫn của mình (không `git add -A`), commit tiếng Việt, không push/merge/stash; khi sửa `docs/CHANGELOG.md` thì đọc lại file ngay trước khi sửa vì agent khác cũng thêm mục.
+   - Trước khi giao việc, kiểm tra nhánh đang làm có chứa phần code mà plan phụ thuộc không (vd. lớp clinical của ưu tiên 1); nếu thiếu, tách phần làm được độc lập, để phần phụ thuộc chờ và báo rõ cho người dùng.
 
 ## Lệnh thường dùng
 

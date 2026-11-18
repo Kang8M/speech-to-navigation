@@ -4,9 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { openContinuousSession, type ContinuousCapture, type SttResult } from "@/lib/stt/continuous";
 import { SpeakerSessionClient } from "@/lib/stt/speaker-client";
 import { reviseWords, type SpeakerWord } from "@/lib/stt/speakers";
+import { ghepTheoNguoiNoi } from "@/shared/clinical/vai-tro-nguoi-noi";
 import type { RecordingBinding } from "@/shared/clinical/recording";
 import type { MicButtonProps } from "./MicButton";
-import { MicIcon, NhanNut, StopIcon } from "./mic-ui";
+import { GIAO_DIEN_MIC, NoiDungMic } from "./mic-ui";
 
 const ERRORS: Record<string, string> = {
   DENOISE_NOT_READY: "DeepFilterNet3 chưa sẵn sàng. Cài runtime và tải model local rồi thử lại.",
@@ -28,15 +29,16 @@ const ERRORS: Record<string, string> = {
   NotFoundError: "Không tìm thấy micro. Kết nối micro rồi thử lại.",
 };
 
+const SEGMENT_FRAMES = 40000;
+
 function describe(error: unknown) {
   const code = error instanceof DOMException ? error.name : error instanceof Error ? error.message : "";
   return ERRORS[code] || `Không nhận dạng được${code ? ` (${code})` : ""}. Thử lại hoặc tắt khử nhiễu.`;
 }
 
 /** Stable text only is committed to clinical inputs; the revisable tail stays in the preview. */
-export function DenoisedMic({ onStart, onText, onStop, onInterim, beforeStart, onCaptureReady, onCaptureFailed, onStopRequest, giaoDien }: MicButtonProps) {
+export function DenoisedMic({ onStart, onText, onStop, onInterim, onGiongBacSi, beforeStart, onCaptureReady, onCaptureFailed, onStopRequest, giaoDien = GIAO_DIEN_MIC }: MicButtonProps) {
   const [phase, setPhase] = useState<"idle" | "opening" | "recording" | "processing">("idle");
-  const [consent, setConsent] = useState(false);
   const [error, setError] = useState("");
   const [interim, setInterim] = useState("");
   const [seconds, setSeconds] = useState(0);
@@ -44,8 +46,8 @@ export function DenoisedMic({ onStart, onText, onStop, onInterim, beforeStart, o
   const request = useRef<AbortController | null>(null);
   const generation = useRef(0);
   const busy = useRef(false);
-  const callbacks = useRef({ onStart, onText, onStop, onInterim });
-  useEffect(() => { callbacks.current = { onStart, onText, onStop, onInterim }; }, [onStart, onText, onStop, onInterim]);
+  const callbacks = useRef({ onStart, onText, onStop, onInterim, onGiongBacSi });
+  useEffect(() => { callbacks.current = { onStart, onText, onStop, onInterim, onGiongBacSi }; }, [onStart, onText, onStop, onInterim, onGiongBacSi]);
   /** Chữ tạm vừa hiện dưới nút (nếu cần) vừa báo ra ngoài để đưa lên ô nhập */
   const showInterim = (text: string) => { setInterim(text); callbacks.current.onInterim?.(text); };
   /** Lần dừng đang chạy: gọi lại thì trả đúng promise đó, để bên ngoài chỉ tiếp tục sau khi chữ cuối đã được giao. */
@@ -57,7 +59,7 @@ export function DenoisedMic({ onStart, onText, onStop, onInterim, beforeStart, o
   }, []);
 
   async function start() {
-    if (busy.current || !consent) return;
+    if (busy.current) return;
     busy.current = true;
     const current = ++generation.current;
     const controller = new AbortController();
@@ -69,12 +71,13 @@ export function DenoisedMic({ onStart, onText, onStop, onInterim, beforeStart, o
     let settled = false;
     let words: SpeakerWord[] = [];
     let emittedUntil = 0;
+    let lastSpeaker: number | null | undefined;
     const active = () => current === generation.current;
     const settle = () => {
       if (!active() || settled) return;
       settled = true;
       capture.current = null; request.current = null; busy.current = false;
-      setPhase("idle"); setConsent(false); showInterim("");
+      setPhase("idle"); showInterim("");
       if (started) callbacks.current.onStop?.();
     };
     const accept = (part: SttResult) => {
@@ -82,11 +85,16 @@ export function DenoisedMic({ onStart, onText, onStop, onInterim, beforeStart, o
       words = reviseWords(words, { replace_from_ms: part.replace_from_ms ?? 0, words: part.words ?? [] });
       const boundary = part.final ? Infinity : (part.stable_until_ms ?? 0);
       const committed = words.filter((word) => word.start_ms >= emittedUntil && word.start_ms < boundary);
-      if (committed.length) callbacks.current.onText(committed.map((word) => word.text).join(" "), binding);
+      // Chữ theo lượt kèm nhãn tạm "Người nói N:"; dừng ghi thì TroLyAi đổi nhãn thành BS/BN theo nội dung.
+      if (committed.length) {
+        const ghep = ghepTheoNguoiNoi(committed, lastSpeaker);
+        lastSpeaker = ghep.cuoi;
+        callbacks.current.onText(ghep.text, binding);
+      }
       // The server replaces words by start_ms; using end_ms would lose words crossing the boundary.
       emittedUntil = Math.max(emittedUntil, boundary);
       words = words.filter((word) => word.start_ms >= boundary);
-      showInterim(words.map((word) => word.text).join(" "));
+      showInterim(ghepTheoNguoiNoi(words, lastSpeaker).text);
     };
     try {
       // Giữ chỗ phiên trước khi mở micro; lỗi giữ chỗ (tab khác đang dùng micro) thì không thu.
@@ -98,12 +106,14 @@ export function DenoisedMic({ onStart, onText, onStop, onInterim, beforeStart, o
       if (!health.denoise_ready) throw new Error("DENOISE_NOT_READY");
       if (!health.vad_ready) throw new Error("STT_VAD_MODEL_MISSING");
       if (!health.diarization_ready) throw new Error("DIARIZATION_MODEL_MISSING");
-      session = await SpeakerSessionClient.create(controller.signal, fetch, "deepfilternet3");
+      session = await SpeakerSessionClient.create(controller.signal, fetch, "deepfilternet3", true, true);
       if (!active()) { await session.close(); return; }
       const backend = session;
       const recording = await openContinuousSession({
         transcribe: (wav) => backend.transcribe(wav),
         onResult: accept,
+        // Đoạn tối đa 2,5 giây thay vì 5 giây: chữ hiện sớm hơn khi bác sĩ nói liền không ngắt.
+        segmentFrames: SEGMENT_FRAMES,
         onElapsed: (elapsed) => { if (active()) setSeconds(elapsed); },
         onPending: () => {},
         onStopping: () => { if (active()) setPhase("processing"); },
@@ -116,7 +126,11 @@ export function DenoisedMic({ onStart, onText, onStop, onInterim, beforeStart, o
             settle(); generation.current++;
           }
         },
-        onFinish: async () => { accept(await backend.finish()); },
+        onFinish: async () => {
+          const ket = await backend.finish();
+          accept(ket);
+          if (active()) callbacks.current.onGiongBacSi?.(ket.voice_match?.speaker ?? null);
+        },
         onCancel: () => { void backend.close(); },
       });
       if (!active()) { recording.cancel(); return; }
@@ -144,17 +158,13 @@ export function DenoisedMic({ onStart, onText, onStop, onInterim, beforeStart, o
     return stopping.current;
   }
 
-  const idle = phase === "idle";
   const clock = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+  // Đồng ý xử lý âm thanh y tế mặc định đã có, không hỏi lại bằng ô đánh dấu.
   return <div>
-    <label className="mb-2 flex items-start gap-2 text-xs text-muted">
-      <input type="checkbox" checked={consent} disabled={!idle} onChange={(event) => setConsent(event.target.checked)} />
-      Tôi đồng ý xử lý âm thanh và nội dung y tế trong hệ thống nội bộ cho lần thu này.
-    </label>
-    <button type="button" disabled={phase === "opening" || phase === "processing" || (idle && !consent)}
+    <button type="button" disabled={phase === "opening" || phase === "processing"}
       aria-pressed={phase === "recording"} onClick={() => phase === "recording" ? (onStopRequest ? onStopRequest() : void stopCapture().catch(() => undefined)) : void start()}
-      className={`${giaoDien?.nut ?? "w-full rounded-xl border-2 py-3.5 text-base font-semibold shadow-sm transition disabled:cursor-not-allowed disabled:opacity-60"} ${phase === "recording" ? giaoDien?.dangNghe ?? "border-warn text-warn-text" : giaoDien?.cho ?? "border-primary text-primary"}`}>
-      {phase === "recording" ? <NhanNut bieuTuong={<StopIcon />}>Dừng nghe · {clock}</NhanNut> : phase === "opening" ? "Đang mở micro…" : phase === "processing" ? "Đang chốt câu cuối…" : giaoDien?.nhan ?? <NhanNut bieuTuong={<MicIcon />}>Nói</NhanNut>}
+      className={`${giaoDien.nut} ${phase === "recording" ? giaoDien.dangNghe : giaoDien.cho}`}>
+      <NoiDungMic pha={phase} clock={clock} />
     </button>
     {interim && !onInterim && <p className="mt-1 text-sm text-muted italic">{interim}</p>}
     {error && <p role="alert" className="mt-1 text-sm text-warn-text">{error}</p>}

@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
 import { DenoisedMic } from "./DenoisedMic";
-import { MicIcon, NhanNut, StopIcon } from "./mic-ui";
+import { GIAO_DIEN_MIC, NoiDungMic } from "./mic-ui";
 import { ASR_MAX_SECONDS, ASR_SAMPLE_RATE, type ApiLoi, type AsrKetQua, type AsrPhienMoi, type AsrTrangThai } from "@/shared/api";
 import type { RecordingBinding, RecordingHandle } from "@/shared/clinical/recording";
 
@@ -21,8 +21,6 @@ export interface GiaoDienMic {
   dangNghe: string;
   /** Thêm vào khi chưa nghe */
   cho: string;
-  /** Nhãn khi chưa nghe */
-  nhan: ReactNode;
 }
 
 export interface MicButtonProps {
@@ -33,6 +31,8 @@ export interface MicButtonProps {
   onStop?: () => void;
   /** Chữ tạm (câu đang nói dở) cập nhật liên tục; chuỗi rỗng khi hết. Có truyền thì nút không tự hiện chữ tạm bên dưới */
   onInterim?: (text: string) => void;
+  /** Gọi ngay trước onStop: người nói khớp giọng bác sĩ đã đăng ký (null: chưa đăng ký hoặc không khớp rõ) */
+  onGiongBacSi?: (speaker: number | null) => void;
   /** Giữ chỗ phiên ghi âm trước khi mở micro; lỗi (vd. micro đang dùng ở tab khác) thì không mở micro */
   beforeStart?: () => Promise<RecordingBinding>;
   /** Micro đã thu; handle.stop() chỉ xong sau khi chữ cuối đã đưa vào onText */
@@ -44,12 +44,6 @@ export interface MicButtonProps {
   giaoDien?: GiaoDienMic;
 }
 
-const MAC_DINH: GiaoDienMic = {
-  nut: "w-full rounded-xl border-2 py-3.5 text-base font-semibold shadow-sm transition disabled:cursor-not-allowed disabled:opacity-60",
-  dangNghe: "border-warn bg-warn/10 text-warn-text animate-pulse",
-  cho: "border-primary bg-primary/5 text-primary hover:bg-primary/10",
-  nhan: <NhanNut bieuTuong={<MicIcon />}>Nói</NhanNut>,
-};
 
 /** Only local Zipformer is allowed for medical audio; fail closed without cloud fallback. */
 export function MicButton(props: MicButtonProps) {
@@ -133,14 +127,13 @@ type KetQuaPhien = Partial<AsrKetQua & ApiLoi>;
  * Server trả chữ tạm (câu đang nói dở, hiện in nghiêng) và câu đã chốt khi bác sĩ ngắt nghỉ (đưa vào ô nhập).
  * Âm thanh không ra khỏi máy chạy prototype và không được lưu.
  */
-function ZipformerMic({ onStart, onText, onStop, onInterim, beforeStart, onCaptureReady, onCaptureFailed, onStopRequest, giaoDien = MAC_DINH }: MicButtonProps) {
+function ZipformerMic({ onStart, onText, onStop, onInterim, onGiongBacSi, beforeStart, onCaptureReady, onCaptureFailed, onStopRequest, giaoDien = GIAO_DIEN_MIC }: MicButtonProps) {
   // Khử nhiễu luôn bật (không hiện lựa chọn cho bác sĩ); chỉ chạy đường không khử nhiễu khi không có STT backend
   const denoise = true;
   const [state, setState] = useState<"idle" | "starting" | "recording" | "stopping">("idle");
   const [seconds, setSeconds] = useState(0);
   const [interim, setInterim] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [consent, setConsent] = useState(false);
   const recordingRef = useRef<Recording | null>(null);
   const stoppingRef = useRef<Recording | null>(null);
   const onTextRef = useRef(onText);
@@ -220,7 +213,6 @@ function ZipformerMic({ onStart, onText, onStop, onInterim, beforeStart, onCaptu
         onInterimRef.current?.("");
         setState("idle");
         setSeconds(0);
-        setConsent(false);
         onStop?.();
       }
       // Lỗi chốt câu cuối phải để bên điều phối giữ phiên lại và thử lại, không được coi là đã lưu.
@@ -230,10 +222,6 @@ function ZipformerMic({ onStart, onText, onStop, onInterim, beforeStart, onCaptu
   }
 
   async function start() {
-    if (!consent) {
-      setError("Cần sự đồng ý xử lý âm thanh y tế nội bộ trước khi thu âm.");
-      return;
-    }
     setError(null);
     setState("starting");
     let stream: MediaStream | null = null;
@@ -292,30 +280,21 @@ function ZipformerMic({ onStart, onText, onStop, onInterim, beforeStart, onCaptu
     }
   }
 
-  if (denoise) return <DenoisedMic onStart={onStart} onText={onText} onStop={onStop} onInterim={onInterim} beforeStart={beforeStart} onCaptureReady={onCaptureReady} onCaptureFailed={onCaptureFailed} onStopRequest={onStopRequest} giaoDien={giaoDien} />;
+  if (denoise) return <DenoisedMic onStart={onStart} onText={onText} onStop={onStop} onInterim={onInterim} onGiongBacSi={onGiongBacSi} beforeStart={beforeStart} onCaptureReady={onCaptureReady} onCaptureFailed={onCaptureFailed} onStopRequest={onStopRequest} giaoDien={giaoDien} />;
 
   const clock = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
-  const label = {
-    idle: giaoDien.nhan,
-    starting: "Đang mở micro…",
-    recording: <NhanNut bieuTuong={<StopIcon />}>Dừng nghe · {clock}</NhanNut>,
-    stopping: "Đang chốt câu cuối…",
-  }[state];
+  const pha = ({ idle: "idle", starting: "opening", recording: "recording", stopping: "processing" } as const)[state];
+  // Đồng ý xử lý âm thanh y tế mặc định đã có (gửi kèm X-Clinical-Consent), không hỏi lại bằng ô đánh dấu.
   return (
     <div>
-      <label className="mb-2 flex items-start gap-2 text-xs text-muted">
-        <input type="checkbox" checked={consent} disabled={state !== "idle"}
-          onChange={(event) => setConsent(event.target.checked)} />
-        Tôi đồng ý xử lý âm thanh và nội dung y tế trong hệ thống nội bộ cho lần thu này.
-      </label>
       <button
         type="button"
         onClick={state === "recording" ? () => (onStopRequest ? onStopRequest() : void stop().catch(() => undefined)) : () => void start()}
-        disabled={state === "starting" || state === "stopping" || (state === "idle" && !consent)}
+        disabled={state === "starting" || state === "stopping"}
         aria-pressed={state === "recording"}
         className={`${giaoDien.nut} ${state === "recording" ? giaoDien.dangNghe : giaoDien.cho}`}
       >
-        {label}
+        <NoiDungMic pha={pha} clock={clock} />
       </button>
       {interim && !onInterim && <p className="mt-1 text-sm text-muted italic">{interim}</p>}
       {error && (

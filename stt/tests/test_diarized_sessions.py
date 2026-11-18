@@ -150,3 +150,15 @@ def test_failed_diarization_does_not_poison_session_speaker_profiles():
     subject.diarizer.regions = original
     retry = subject.process(key, 2, 80000, audio)
     assert {word['speaker'] for word in retry['words']} == {1}
+
+
+def test_low_latency_session_uses_short_window_and_earlier_commit():
+    subject = store()
+    created = subject.create(low_latency=True)
+    key = created['session_id']
+    assert created['revision_ms'] == 6000
+    for sequence in range(1, 5):
+        response = subject.process(key, sequence, (sequence - 1) * 80000, decode(wav_bytes(seconds=5)))
+    assert len(subject.sessions[key].samples) == 15 * 16000
+    assert response['stable_until_ms'] == 20000 - 6000
+    assert subject.create()['revision_ms'] == 10000

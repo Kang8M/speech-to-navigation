@@ -11,11 +11,16 @@ from stt.audio import CanonicalAudio
 from stt.vad import SileroVad, transcribe_speech
 from stt.diarization import SpeakerProfiles, tokens_to_words, attribute_words
 from stt.errors import VoiceNoSpeechError
+from stt.voice_profiles import match_speaker
 
 WINDOW_FRAMES = 25 * 16000
 # Lấy 1 giây âm thanh thô liền trước đoạn mới làm ngữ cảnh khi khử nhiễu, để mối nối đoạn không bị rạn.
 DENOISE_CONTEXT = 16000
 REVISION_MS = 10000
+# Phiên độ trễ thấp (eForm, X-STT-Latency: low): nhận dạng lại cửa sổ 15 giây và chốt chữ cũ hơn 6 giây,
+# để mỗi đoạn xử lý nhanh hơn thời gian nói (không ứ đọng khi dừng) và chữ chốt vào ô nhập sớm hơn.
+LOW_LATENCY_WINDOW_FRAMES = 15 * 16000
+LOW_LATENCY_REVISION_MS = 6000
 
 
 def reconcile_tail(previous: list[dict], incoming: list[dict], cursor: int) -> list[dict]:
@@ -64,6 +69,10 @@ class SessionError(Exception):
 @dataclass
 class Session:
     denoise: bool = False
+    window_frames: int = WINDOW_FRAMES
+    revision_ms: int = REVISION_MS
+    # Đặc trưng giọng bác sĩ đã đăng ký (nếu có): chốt phiên thì so với hồ sơ giọng Người nói 1/2
+    voice: np.ndarray | None = None
     samples: np.ndarray = field(default_factory=lambda: np.empty(0, dtype=np.float32))
     # Âm thanh đã khử nhiễu, cùng độ dài và mốc thời gian với samples; mỗi đoạn chỉ khử nhiễu một lần.
     clean: np.ndarray = field(default_factory=lambda: np.empty(0, dtype=np.float32))
@@ -96,14 +105,17 @@ class SessionStore:
             if now - self.sessions[key].touched > self.ttl_seconds:
                 del self.sessions[key]
 
-    def create(self, *, denoise=False):
+    def create(self, *, denoise=False, low_latency=False, voice=None):
         with self.lock:
             self._prune()
             if len(self.sessions) >= self.max_sessions:
                 raise SessionError('STT_SESSIONS_FULL', 503)
             key = str(uuid4())
-            self.sessions[key] = Session(denoise=denoise)
-            return {'session_id': key, 'max_speakers': 2, 'revision_ms': REVISION_MS,
+            session = Session(denoise=denoise, voice=voice)
+            if low_latency:
+                session.window_frames, session.revision_ms = LOW_LATENCY_WINDOW_FRAMES, LOW_LATENCY_REVISION_MS
+            self.sessions[key] = session
+            return {'session_id': key, 'max_speakers': 2, 'revision_ms': session.revision_ms,
                     'denoiser': 'deepfilternet3' if denoise else 'off'}
 
     def _get(self, key):
@@ -136,7 +148,7 @@ class SessionStore:
         # Caller serializes native inference with the existing engine lock. Commit only on success.
         started = monotonic()
         context = state.samples[-DENOISE_CONTEXT:]
-        state.samples = np.concatenate((state.samples, audio.waveform))[-WINDOW_FRAMES:]
+        state.samples = np.concatenate((state.samples, audio.waveform))[-state.window_frames:]
         state.total_frames += audio.frame_count
         offset_ms = round((state.total_frames - len(state.samples)) / 16)
         duration_ms = round(len(state.samples) / 16)
@@ -151,7 +163,7 @@ class SessionStore:
                 joined = np.concatenate((context, audio.waveform))
                 enhanced = self.denoiser.enhance(CanonicalAudio(
                     joined, 16000, len(joined), round(len(joined) / 16), f'{key}:{sequence}:denoise'))
-                state.clean = np.concatenate((state.clean, enhanced.waveform[len(context):]))[-WINDOW_FRAMES:]
+                state.clean = np.concatenate((state.clean, enhanced.waveform[len(context):]))[-state.window_frames:]
                 speech_window = CanonicalAudio(state.clean, 16000, len(state.clean), duration_ms, f'{key}:{sequence}')
             else:
                 speech_window = window
@@ -168,7 +180,7 @@ class SessionStore:
         words = reconcile_tail(state.previous_words, words, replace_from)
         state.previous_words = [word for word in state.previous_words if offset_ms <= word['start_ms'] < replace_from] + copy.deepcopy(words)
         total_ms = round(state.total_frames / 16)
-        state.stable_until_ms = max(replace_from, total_ms - REVISION_MS)
+        state.stable_until_ms = max(replace_from, total_ms - state.revision_ms)
         response = {
             'session_id': key, 'sequence': sequence, 'replace_from_ms': replace_from,
             'stable_until_ms': state.stable_until_ms, 'words': words,
@@ -195,6 +207,8 @@ class SessionStore:
                 state.response = {'session_id': key, 'sequence': 0, 'words': [], 'transcript': '', 'no_speech': True,
                                   'replace_from_ms': 0, 'audio_ms': 0, 'inference_ms': 0}
             state.response = {**state.response, 'final': True, 'stable_until_ms': round(state.total_frames / 16)}
+            if state.voice is not None:
+                state.response['voice_match'] = match_speaker(state.voice, state.profiles.vectors)
             state.finalized = True
             state.samples = np.empty(0, dtype=np.float32)
             state.clean = np.empty(0, dtype=np.float32)

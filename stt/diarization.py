@@ -109,7 +109,7 @@ def attribute_words(words: list[dict], regions: list[Region]) -> list[dict]:
     return output
 
 
-def clean_speech(samples, regions: list[Region], cluster: int) -> np.ndarray:
+def clean_speech(samples, regions: list[Region], cluster: int, max_frames: int | None = 6 * 16000) -> np.ndarray:
     """Pool available speech, subtracting overlap rather than dropping a whole turn."""
     intervals = []
     for region in regions:
@@ -128,7 +128,7 @@ def clean_speech(samples, regions: list[Region], cluster: int) -> np.ndarray:
     for start, end in sorted(intervals):
         if merged and start <= merged[-1][1]: merged[-1] = (merged[-1][0], max(end, merged[-1][1]))
         else: merged.append((start, end))
-    return np.concatenate([samples[start:end] for start, end in merged])[:6 * 16000] if merged else np.empty(0, dtype=np.float32)
+    return np.concatenate([samples[start:end] for start, end in merged])[:max_frames] if merged else np.empty(0, dtype=np.float32)
 
 
 class LocalDiarizer:
@@ -156,6 +156,37 @@ class LocalDiarizer:
             raise RuntimeError('DIARIZATION_MODEL_INVALID')
         self._model = sherpa.OfflineSpeakerDiarization(config)
         self._extractor = sherpa.SpeakerEmbeddingExtractor(embedding)
+
+    def enrollment_embedding(self, samples) -> tuple[np.ndarray, float]:
+        """Đặc trưng giọng của người đọc đoạn đăng ký: lấy giọng nói nhiều nhất, trung bình embedding từng khúc 6 giây."""
+        from stt.voice_profiles import MAX_OTHER_SPEAKER_RATIO, MIN_SPEECH_SECONDS, VoiceProfileError
+        self._load()
+        samples = np.asarray(samples, dtype=np.float32)
+        segments = [Region(max(0, r.start), min(len(samples) / 16000, r.end), None, r.speaker)
+                    for r in self._model.process(samples).sort_by_start_time()]
+        durations: dict[int, float] = {}
+        for region in segments:
+            durations[region.cluster] = durations.get(region.cluster, 0.0) + max(0.0, region.end - region.start)
+        if not durations:
+            raise VoiceProfileError('VOICE_ENROLL_NO_SPEECH')
+        main = max(durations, key=durations.get)
+        if any(seconds > durations[main] * MAX_OTHER_SPEAKER_RATIO for cluster, seconds in durations.items() if cluster != main):
+            raise VoiceProfileError('VOICE_ENROLL_MULTIPLE_SPEAKERS')
+        speech = clean_speech(samples, segments, main, max_frames=None)
+        if len(speech) < MIN_SPEECH_SECONDS * 16000:
+            raise VoiceProfileError('VOICE_ENROLL_TOO_SHORT')
+        vectors = []
+        for start in range(0, len(speech) - 3 * 16000 + 1, 6 * 16000):
+            stream = self._extractor.create_stream()
+            stream.accept_waveform(16000, speech[start:start + 6 * 16000])
+            stream.input_finished()
+            if self._extractor.is_ready(stream):
+                vector = np.asarray(self._extractor.compute(stream), dtype=np.float32)
+                vectors.append(vector / np.linalg.norm(vector))
+        if not vectors:
+            raise VoiceProfileError('VOICE_ENROLL_TOO_SHORT')
+        mean = np.mean(vectors, axis=0)
+        return mean / np.linalg.norm(mean), len(speech) / 16000
 
     def regions(self, samples, profiles: SpeakerProfiles) -> list[Region]:
         self._load()

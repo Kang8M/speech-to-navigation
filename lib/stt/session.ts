@@ -3,19 +3,20 @@ export class PcmSegmenter {
   private chunks: Int16Array[] = [];
   private frames = 0;
   private silentFrames = 0;
-  constructor(private readonly emit: (pcm: Int16Array) => void) {}
+  /** maxFrames: cắt đoạn khi dài tới chừng này mẫu dù chưa ngắt nghỉ (mặc định 5 giây, tối đa 80000). */
+  constructor(private readonly emit: (pcm: Int16Array) => void, private readonly maxFrames = 80000) {}
 
   push(input: Int16Array) {
     // Ten-millisecond analysis frames; split on a pause after at least one second.
     for (let offset = 0; offset < input.length;) {
-      const frame = input.slice(offset, offset + Math.min(160, 80000 - this.frames));
+      const frame = input.slice(offset, offset + Math.min(160, this.maxFrames - this.frames));
       offset += frame.length;
       let power = 0;
       for (const sample of frame) power += (sample / 32768) ** 2;
       this.silentFrames = Math.sqrt(power / frame.length) < 0.008 ? this.silentFrames + frame.length : 0;
       this.chunks.push(frame);
       this.frames += frame.length;
-      if ((this.frames >= 16000 && this.silentFrames >= 9600) || this.frames >= 80000) this.finish();
+      if ((this.frames >= 16000 && this.silentFrames >= 9600) || this.frames >= this.maxFrames) this.finish();
     }
   }
 

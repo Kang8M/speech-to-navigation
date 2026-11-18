@@ -62,3 +62,12 @@ export interface LuuThoiQuenRequest {
   tai_khoan: string;
   don: Omit<DonDaKe, "thoi_diem">;
 }
+
+/** GET/POST/DELETE /api/stt/giong-bac-si: giọng bác sĩ đã đăng ký (chỉ lưu đặc trưng giọng, không lưu âm thanh) */
+export interface GiongBacSiTrangThai {
+  enrolled: boolean;
+  /** Thời điểm đăng ký (ISO, UTC) */
+  created_at?: string;
+  /** Số giây lời nói dùng để tạo đặc trưng giọng */
+  speech_seconds?: number;
+}

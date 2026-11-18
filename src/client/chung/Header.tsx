@@ -9,6 +9,7 @@ const LINKS: { href: string; label: string; cungNhom?: string[] }[] = [
   { href: "/dashboard", label: "Lịch khám", cungNhom: ["/benh-nhan"] },
   { href: "/ket-qua", label: "Kết quả thử nghiệm" },
   { href: "/stt", label: "Thử nghiệm STT" },
+  { href: "/giong-bac-si", label: "Giọng bác sĩ" },
   { href: "/demo-luong", label: "Demo luồng dữ liệu" },
 ];
 

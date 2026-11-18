@@ -11,8 +11,15 @@ export class SpeakerSessionClient {
     this.send = (input, init) => send(input, init);
   }
 
-  static async create(signal: AbortSignal, send: typeof fetch = fetch, denoise: "off" | "deepfilternet3" = "off") {
-    const response = await send("/api/stt/session", { method: "POST", signal, headers: { "X-STT-Denoise": denoise } });
+  /**
+   * lowLatency: cửa sổ ngắn hơn, chữ chốt sớm hơn (eForm cần chữ hiện ngay khi bác sĩ nói).
+   * soGiongBacSi: chốt phiên thì so với giọng bác sĩ đã đăng ký (kết quả ở voice_match của finish()).
+   */
+  static async create(signal: AbortSignal, send: typeof fetch = fetch, denoise: "off" | "deepfilternet3" = "off", lowLatency = false, soGiongBacSi = false) {
+    const headers: Record<string, string> = { "X-STT-Denoise": denoise };
+    if (lowLatency) headers["X-STT-Latency"] = "low";
+    if (soGiongBacSi) headers["X-STT-Voice"] = "bac-si";
+    const response = await send("/api/stt/session", { method: "POST", signal, headers });
     const data = await response.json();
     if (!response.ok) throw new Error(data.detail || "STT_BACKEND_UNAVAILABLE");
     return new SpeakerSessionClient(data.session_id, signal, send);

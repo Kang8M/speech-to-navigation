@@ -4,7 +4,9 @@ import { PcmSegmenter, SegmentQueue } from "./session";
 import type { SpeakerWord } from "./speakers";
 
 export type SttResult = { transcript: string; inference_ms: number; audio_ms: number; no_speech: boolean; model_id?: string;
-  words?: SpeakerWord[]; replace_from_ms?: number; stable_until_ms?: number; final?: boolean; chunk_audio_ms?: number };
+  words?: SpeakerWord[]; replace_from_ms?: number; stable_until_ms?: number; final?: boolean; chunk_audio_ms?: number;
+  /** Chỉ có ở kết quả chốt phiên xin so giọng: người nói khớp giọng bác sĩ đã đăng ký (null nếu không rõ) */
+  voice_match?: { speaker: number | null; scores: (number | null)[] } };
 export type ContinuousCapture = { stop(): Promise<void>; cancel(): void };
 type Options = {
   transcribe(wav: Blob): Promise<SttResult>;
@@ -16,6 +18,8 @@ type Options = {
   onStopped(): void;
   onFinish?(): Promise<void>;
   onCancel?(): void;
+  /** Độ dài tối đa mỗi đoạn gửi đi (mẫu 16 kHz); ngắn hơn thì chữ hiện sớm hơn. Mặc định 5 giây. */
+  segmentFrames?: number;
 };
 
 export async function openContinuousSession(options: Options, open: () => Promise<MicPipeline> = openBrowserMicPipeline): Promise<ContinuousCapture> {
@@ -38,7 +42,7 @@ export async function openContinuousSession(options: Options, open: () => Promis
       options.onError(error);
       void stop().catch((cause) => options.onError(cause));
     }
-  });
+  }, options.segmentFrames);
   pipeline.onChunk = (pcm) => { if (!cancelled) segmenter.push(pcm); };
   pipeline.onError = (code) => { options.onError(new Error(code)); void stop().catch((cause) => options.onError(cause)); };
 

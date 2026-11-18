@@ -25,9 +25,9 @@ test("contracts and confidential system prompts cannot be sent to any AI", () =>
   }
 });
 
-const proof = (consent: boolean) => ({ policy_version: "pii-auto-1", gate_passed: true, consent }) as const;
+const proof = (consent: boolean) => ({ policy_version: "pii-auto-2", gate_passed: true, consent }) as const;
 
-test("bản đã qua chốt chặn pii-auto-1 thành deidentified; restricted vẫn restricted", () => {
+test("bản đã qua chốt chặn pii-auto-2 thành deidentified; restricted vẫn restricted", () => {
   assert.equal(classifyData("[BỆNH_NHÂN] đau họng ba ngày", "clinical", proof(true)), "deidentified");
   assert.equal(classifyData("[BỆNH_NHÂN] đau họng ba ngày", "clinical", proof(false)), "deidentified");
   assert.equal(classifyData("Hợp đồng khám sức khỏe", "clinical", proof(true)), "restricted");

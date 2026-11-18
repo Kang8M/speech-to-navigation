@@ -5,7 +5,7 @@ import { HO_VIET, PII_POLICY_VERSION, foldVietnamese, redactPii } from "./index"
 const none = [] as never[];
 
 test("phiên bản rule và bỏ dấu", () => {
-  assert.equal(PII_POLICY_VERSION, "pii-auto-1");
+  assert.equal(PII_POLICY_VERSION, "pii-auto-2");
   assert.equal(foldVietnamese("  Nguyễn  Thị Đào "), "nguyen thi dao");
   assert.ok(HO_VIET.length >= 90);
 });
@@ -152,4 +152,55 @@ test("vòng 1: tên người thân không cần từ 'tên', giữ tiền sử",
 test("vòng 2: đuôi tên không dừng ở tên riêng trùng từ dừng không dấu", () => {
   assert.equal(redactPii("bé lê thị hoa đau tai", none).clean, "bé [NGƯỜI_1] đau tai");
   assert.equal(redactPii("bé hoàng văn nam sốt cao", none).clean, "bé [NGƯỜI_1] sốt cao");
+});
+
+test("R3: 'đường' trong tên bệnh (đái tháo đường, tiểu đường, lượng đường) không phải địa danh", () => {
+  for (const text of [
+    "tiền sử tăng huyết áp đái tháo đường rối loạn mỡ máu",
+    "đái tháo đường type 2 đang điều trị",
+    "bố bị tiểu đường nhiều năm",
+    "lượng đường trong máu cao",
+    "hạ đường huyết lúc đói",
+  ]) assert.equal(redactPii(text, none).clean, text, text);
+  // địa chỉ thật vẫn che
+  assert.ok(redactPii("nhà ở đường nguyễn trãi", none).clean.includes("[ĐỊA_DANH_1]"));
+  assert.ok(redactPii("mẹ bị tiểu đường, nhà ở đường lê lợi", none).clean.includes("[ĐỊA_DANH_1]"));
+});
+
+test("R3: 'đường' chỉ là tên đường khi có dấu hiệu nơi chốn", () => {
+  for (const text of ["ông nhà em bị đái đường biến chứng thận", "nhiễm trùng đường tiểu tái phát",
+    "trên đường đi học bé bị ngã", "viêm đường sinh dục", "đường dẫn lưu còn ít dịch"])
+    assert.equal(redactPii(text, none).clean, text, text);
+  for (const [text, masked] of [["nhà em đường nguyễn trãi", "đường nguyễn trãi"], ["số 12 đường lê lợi", "số 12 đường lê lợi"],
+    ["chị ở đường láng", "đường láng"], ["ở đường số 5", "đường số 5"], ["Nhà ở Đường Hòa Bình", "Đường Hòa Bình"]] as const) {
+    const r = redactPii(text, none);
+    assert.deepEqual(r.spans.filter(s => s.rule === "R3").map(s => text.slice(s.start, s.end)), [masked], text);
+  }
+});
+
+test("R3: không che qua dòng mới", () => {
+  const text = "em ở đường láng\nngười nhà khai đái tháo đường";
+  assert.deepEqual(redactPii(text, none).spans.map(s => text.slice(s.start, s.end)), ["đường láng"]);
+  const addr = "nhà ở số 12 đường lê lợi\nphường bến thành";
+  assert.deepEqual(redactPii(addr, none).spans.map(s => addr.slice(s.start, s.end)), ["số 12 đường lê lợi", "phường bến thành"]);
+});
+
+test("R2: đuôi tên dừng sau tên gọi, không nuốt chữ lâm sàng", () => {
+  const cases: [string, string][] = [
+    ["bà nội của bé là nguyễn thị tâm dị ứng penicillin", "nguyễn thị tâm"],
+    ["bố cháu đinh văn long hút thuốc", "đinh văn long"],
+    ["ông lê văn tám hen phế quản", "lê văn tám"],
+    ["bà hoàng thị mai tiền sử lao phổi", "hoàng thị mai"],
+    ["chị võ thị hằng thai ba tháng", "võ thị hằng"],
+    ["anh trần nam hút thuốc", "trần nam"],
+    ["bà nguyen thi tam di ung penicillin", "nguyen thi tam"],
+    ["em tên là phạm ngọc anh thư bị viêm họng", "phạm ngọc anh thư"],
+    ["cháu bùi gia bảo amidan to", "bùi gia bảo"],
+    ["chị nguyễn thị minh khai ở nhà", "nguyễn thị minh khai"],
+    ["anh đỗ quốc việt nghẹt mũi", "đỗ quốc việt"],
+    ["cô trần thu hà khàn tiếng", "trần thu hà"],
+    ["bé nguyễn minh khôi chảy mũi xanh", "nguyễn minh khôi"],
+  ];
+  for (const [text, name] of cases)
+    assert.deepEqual(redactPii(text, none).spans.filter(s => s.rule === "R2").map(s => text.slice(s.start, s.end)), [name], text);
 });

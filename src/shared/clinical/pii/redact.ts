@@ -1,8 +1,8 @@
 import { HO_VIET } from "./ho-viet";
-import type { KnownIdentifier, PiiLabelKind, PiiRule, PiiSpan, RedactionResult } from "./types";
+import type { KnownIdentifier, NerChapNhan, PiiLabelKind, PiiRule, PiiSpan, RedactionResult } from "./types";
 
 /**
- * Bộ che PII tự động pii-auto-1 (R1–R8, nhãn R10). Chạy được ở cả hai phía, không phụ thuộc chữ hoa.
+ * Bộ che PII tự động pii-auto-2 (R1–R8, nhãn R10, cộng đoạn NER tùy chọn). Chạy được ở cả hai phía, không phụ thuộc chữ hoa.
  * Mọi dò tìm chạy trên hai chuỗi cùng độ dài: `f` (bỏ dấu) và `d` (chữ thường, giữ dấu), có bảng ánh xạ về bản thô.
  * Heuristic, không phải bảo đảm ẩn danh: chốt chặn phần còn sót là việc của bước sau.
  */
@@ -34,8 +34,16 @@ function buildText(raw: string): Text {
   let prevSpace = false;
   for (const c of clusters) {
     if (/^\s+$/.test(c.text)) {
-      if (prevSpace) { endMap[endMap.length - 1] = c.e; continue; }
-      f += " "; d += " "; startMap.push(c.s); endMap.push(c.e); prevSpace = true; continue;
+      // Cụm khoảng trắng gộp thành một ký tự; có xuống dòng thì giữ "\n" để rule không che lan sang dòng sau
+      // và R2 nhận ra đầu câu. Độ dài không đổi nên startMap/endMap vẫn đúng.
+      const nl = c.text.includes("\n");
+      if (prevSpace) {
+        endMap[endMap.length - 1] = c.e;
+        if (nl && !f.endsWith("\n")) { f = f.slice(0, -1) + "\n"; d = d.slice(0, -1) + "\n"; }
+        continue;
+      }
+      const ws = nl ? "\n" : " ";
+      f += ws; d += ws; startMap.push(c.s); endMap.push(c.e); prevSpace = true; continue;
     }
     prevSpace = false;
     const lower = c.text.normalize("NFC").toLowerCase();
@@ -60,10 +68,14 @@ const STOP_WORDS = [
   "nhiễm", "đồng", "ý", "hóa", "nội", "ngoại", "soi", "phẫu", "mổ", "điếc",
   // động từ hay đứng ngay sau tên ("Đỗ Quốc Việt mua thuốc"): đuôi tên dừng ở đây, không che lố
   "mua", "đưa", "dẫn", "gọi", "lấy", "uống", "dùng", "kê", "đi", "về",
+  // hư từ hay đứng sau chữ trùng họ trong lời kể liền mạch từ STT ("mỡ máu hơi cao còn tiểu đường")
+  "còn", "chưa", "được", "những", "mỗi", "gì", "nào",
+  "cái", "các", "cho", "đúng", "cùng", "để", "đấy", "xong", "thứ", "mình", "làm", "xem", "lên", "ra", "vào", "phải",
+  "vẫn", "đều", "theo", "bằng", "giúp", "biết", "nhiều", "luôn", "thôi", "nếu", "bệnh", "thuốc",
 ];
 /** Dạng không dấu chỉ áp cho từ viết không dấu ("thị" khác "thì"). */
 /** Tên riêng thường gặp trùng dạng không dấu với từ dừng ("hoa"/"hóa", "nam"/"năm"): đuôi tên không bao giờ dừng ở đây. */
-const GIVEN_NAMES_FOLD = new Set(["nam", "hoa", "mai", "lan", "an", "binh", "tho", "het", "mat", "lanh", "hung", "huong", "thao", "linh", "minh", "my", "nga", "ngoc", "phuong", "thu", "trang", "hanh", "hien", "hieu", "hai", "ha", "hang", "yen", "tam", "tuan", "dung", "duc", "giang", "khanh", "long", "loan", "oanh", "quynh", "son", "tai", "thanh", "thuy", "trung", "vinh", "xuan"]);
+const GIVEN_NAMES_FOLD = new Set(["nam", "van", "lam", "bang", "nhung", "cung", "hoa", "mai", "lan", "an", "binh", "tho", "het", "mat", "lanh", "hung", "huong", "thao", "linh", "minh", "my", "nga", "ngoc", "phuong", "thu", "trang", "hanh", "hien", "hieu", "hai", "ha", "hang", "yen", "tam", "tuan", "dung", "duc", "giang", "khanh", "long", "loan", "oanh", "quynh", "son", "tai", "thanh", "thuy", "trung", "vinh", "xuan"]);
 const STOP_FOLD = new Set(STOP_WORDS.map(w => foldVietnamese(w)).filter(w => w.length > 1 && !GIVEN_NAMES_FOLD.has(w)));
 /** Cặp họ + từ thường gặp không phải tên người ("em bình thường", "bé đồng ý"). */
 const COMMON_AFTER_HO = new Set([
@@ -72,15 +84,25 @@ const COMMON_AFTER_HO = new Set([
 ]);
 /** Họ phổ biến: đầu câu không có từ chỉ người thì chỉ nhận các họ này hoặc khi có đệm văn/thị. */
 export const COMMON_HO_FOLD: ReadonlySet<string> = new Set(["nguyen", "tran", "le", "pham", "hoang", "huynh", "vo", "vu", "dang", "bui", "ngo", "do", "dinh", "trinh"]);
+// "đường" là tên bệnh khi đứng sau "đái tháo", "tiểu", "lượng"... hoặc trước "huyết", "hô hấp"... ("đái tháo đường rối loạn
+// mỡ máu" đọc liền không dấu câu). Từ 18/11/2026 đây chỉ là lớp chặn thứ hai: "đường" chỉ được coi là tên đường khi có số
+// nhà hoặc dấu hiệu nơi chốn đứng trước (lượt quét R3 "đường" trong redactPii).
+const DUONG_SRC = "(?<!(?:tháo|tiểu|lượng|hạ|độ|thử|chỉ số|bột|men|ngọt)\\s+)đường(?!\\s+(?:huyết|ruột|thở|mật|tiêu hóa|hô hấp|niệu|tiết niệu|dẫn|truyền|uống|tiêm|máu|kính|vào|ra|giữa|rạch|mổ|cong|dò|rò|ống|xương|khâu|lệch|sau|trước|bên|tiết|thông|vết|cắt|mê|khí|dài|ngang|dọc|type|tuýp|típ|thai kỳ)(?![\\p{L}]))";
 const ADMIN_WORDS = [
-  "đường(?!\\s+(?:huyết|ruột|thở|mật|tiêu hóa|hô hấp|niệu|tiết niệu|dẫn|truyền|uống|tiêm|máu|kính|vào|ra|giữa|rạch|mổ|cong|dò|rò|ống|xương|khâu|lệch|sau|trước|bên|tiết|thông|vết|cắt|mê|khí|dài|ngang|dọc))",
   "phố", "ngõ", "ngách", "hẻm", "phường", "xã(?!\\s+hội)", "thị trấn", "quận", "huyện", "thành phố",
   // "bé tỉnh, sốt 38 độ" đọc liền không dấu câu: "tỉnh" là tỉnh táo, không phải đơn vị hành chính
   "tỉnh(?!\\s+(?:táo|dậy|lại|giấc|ngủ|sốt|suốt|không|và|tiếp|xúc))", "thôn", "ấp", "khu phố", "tổ dân phố",
 ];
 const ADMIN_SRC = ADMIN_WORDS.join("|");
 const STOP_SRC = STOP_WORDS.join("|");
-const SYL = `(?!(?:${ADMIN_SRC}|${STOP_SRC})(?![\\p{L}\\d]))\\p{L}+`;
+const SYL = `(?!(?:${ADMIN_SRC}|đường|${STOP_SRC})(?![\\p{L}\\d]))\\p{L}+`;
+/** Khoảng trắng trong cùng một dòng: địa danh không bao giờ được che lan sang dòng sau. */
+const WS = "[^\\S\\n]+";
+/** Dấu hiệu nơi chốn đứng ngay trước "đường" ("ở đường láng", "nhà em đường nguyễn trãi"). */
+const DUONG_CUE = `(?:ở|tại|sống(?:${WS}ở)?|địa chỉ(?:${WS}nhà)?(?:${WS}là)?|nhà(?:${WS}(?:em|tôi|mình|cháu|con|anh|chị|ông|bà|bác|cô|chú))?)`;
+const SO_NHA = `(?:số(?:${WS}nhà)?${WS})?\\d+[a-z]?(?:/\\d+)*`;
+/** Phần tên sau từ hành chính: một số, hoặc tối đa 3 âm tiết trên cùng dòng. */
+const TEN_DIA_DANH = `(?:\\d+|${SYL}(?:${WS}${SYL}){0,2})(?![\\p{L}\\d])`;
 const CITIES = "hà nội|hồ chí minh|sài gòn|tp\\.?\\s*hcm|đà nẵng|hải phòng|cần thơ|huế";
 
 const HO_D = new Set(HO_VIET);
@@ -99,8 +121,8 @@ export function isHo(d: string): boolean {
 }
 
 // ---------- Thu thập ứng viên ----------
-interface Cand { rule: PiiRule; kind: PiiLabelKind; start: number; end: number; key: string }
-type Add = (rule: PiiRule, kind: PiiLabelKind, s: number, e: number, key?: string) => void;
+interface Cand { rule: PiiRule; kind: PiiLabelKind; start: number; end: number; key: string; nguon?: "ner" }
+type Add = (rule: PiiRule, kind: PiiLabelKind, s: number, e: number, key?: string, nguon?: "ner") => void;
 
 const UNNUMBERED = new Set<PiiLabelKind>(["BỆNH_NHÂN", "BÁC_SĨ", "NGÀY", "TUỔI", "GIỚI_TÍNH", "NỘI_DUNG_NGOÀI_KHÁM"]);
 const RULES: PiiRule[] = ["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8"];
@@ -116,14 +138,18 @@ function knownRegex(value: string): RegExp | null {
   return new RegExp(`(?<![a-z0-9])${body}(?![a-z0-9])`, "g");
 }
 
-export function redactPii(raw: string, known: KnownIdentifier[]): RedactionResult {
+/**
+ * `extra`: đoạn do lớp NER thêm (vị trí trên `raw`, đã lọc bằng `locNer`). Được thêm SAU mọi rule nên không thể
+ * làm mất đoạn rule đã che; phần chồng lên đoạn đã nhận bị cắt, phần còn lại vẫn che. Không truyền thì như cũ.
+ */
+export function redactPii(raw: string, known: KnownIdentifier[], extra: readonly NerChapNhan[] = []): RedactionResult {
   const t = buildText(raw);
   const { f, d } = t;
   const accepted: Cand[] = [];
   // Phần chồng lên span đã nhận bị cắt bỏ, phần còn lại vẫn được che (không để lọt mảnh nào).
-  const add: Add = (rule, kind, s, e, key) => {
-    // Tên đoán (R2) chồng lên span khác thì bỏ hẳn: mảnh còn lại chỉ là từ thường.
-    if (rule === "R2" && accepted.some(c => s < c.end && e > c.start)) return;
+  const add: Add = (rule, kind, s, e, key, nguon) => {
+    // Tên đoán (R2) chồng lên span khác thì bỏ hẳn: mảnh còn lại chỉ là từ thường. Đoạn NER thì vẫn che phần còn lại.
+    if (rule === "R2" && !nguon && accepted.some(c => s < c.end && e > c.start)) return;
     let segs: [number, number][] = [[s, e]];
     for (const c of accepted) {
       segs = segs.flatMap(([a, b]): [number, number][] => {
@@ -139,7 +165,7 @@ export function redactPii(raw: string, known: KnownIdentifier[]): RedactionResul
       while (a < b && f[a] === " ") a++;
       while (b > a && f[b - 1] === " ") b--;
       if (b <= a) continue;
-      accepted.push({ rule, kind, start: a, end: b, key: whole && key ? key : f.slice(a, b).replace(/[\s.,-]/g, "") });
+      accepted.push({ rule, kind, start: a, end: b, key: whole && key ? key : f.slice(a, b).replace(/[\s.,-]/g, ""), ...(nguon ? { nguon } : {}) });
     }
   };
   const scan = (rule: PiiRule, kind: PiiLabelKind, re: RegExp) => {
@@ -177,10 +203,15 @@ export function redactPii(raw: string, known: KnownIdentifier[]): RedactionResul
   scan("R4", "NGÀY", /(?<=(?:ngày\s+(?:khám|nhập viện|xuất viện|điều trị|tái khám)|(?:khám|nhập viện|xuất viện|điều trị|tái khám)\s+ngày)\s*[:：]?\s*)\d{1,2}[/.-]\d{1,2}(?![\d/.-])/gu);
 
   // R3: địa chỉ, địa danh
-  scan("R3", "ĐỊA_DANH", new RegExp(`(?<![\\p{L}\\d])(?:số\\s+\\d+[a-z]?(?:/\\d+)*\\s+)?(?:${ADMIN_SRC})\\s+(?:\\d+|${SYL}(?:\\s+${SYL}){0,2})(?![\\p{L}\\d])`, "gu"));
-  scan("R3", "ĐỊA_DANH", /(?<![\p{L}\d])số nhà\s*\d+[a-z]?(?:\/\d+)*/gu);
+  scan("R3", "ĐỊA_DANH", new RegExp(`(?<![\\p{L}\\d])(?:số${WS}\\d+[a-z]?(?:/\\d+)*${WS})?(?:${ADMIN_SRC})${WS}${TEN_DIA_DANH}`, "gu"));
+  // "đường" chỉ là tên đường khi có số nhà ("số 12 đường lê lợi"), dấu hiệu nơi chốn đứng trước ("ở đường láng"),
+  // hoặc dạng "đường số 5". Cụm y khoa ("đái đường", "đường tiểu") không có các dấu hiệu này nên không bị che.
+  scan("R3", "ĐỊA_DANH", new RegExp(`(?<![\\p{L}\\d])${SO_NHA}${WS}${DUONG_SRC}${WS}${TEN_DIA_DANH}`, "gu"));
+  scan("R3", "ĐỊA_DANH", new RegExp(`(?<![\\p{L}\\d])đường${WS}số${WS}\\d+(?![\\p{L}\\d])`, "gu"));
+  scan("R3", "ĐỊA_DANH", new RegExp(`(?<=(?<![\\p{L}])${DUONG_CUE}${WS})${DUONG_SRC}${WS}${TEN_DIA_DANH}`, "gu"));
+  scan("R3", "ĐỊA_DANH", /(?<![\p{L}\d])số nhà[^\S\n]*\d+[a-z]?(?:\/\d+)*/gu);
   scan("R3", "ĐỊA_DANH", new RegExp(`(?<![\\p{L}])(?:${CITIES})(?![\\p{L}])`, "gu"));
-  scan("R3", "ĐỊA_DANH", new RegExp(`(?<=(?<![\\p{L}])(?:quê quán|quê|sống ở|sinh sống ở|cư trú ở|cư trú tại|sống tại|địa chỉ(?: nhà)?(?: là)?)\\s+(?:ở\\s+)?)${SYL}(?:\\s+${SYL}){0,2}`, "gu"));
+  scan("R3", "ĐỊA_DANH", new RegExp(`(?<=(?<![\\p{L}])(?:quê quán|quê|sống ở|sinh sống ở|cư trú ở|cư trú tại|sống tại|địa chỉ(?: nhà)?(?: là)?)${WS}(?:ở${WS})?)${SYL}(?:${WS}${SYL}){0,2}`, "gu"));
 
   // R7: thông tin nhạy cảm
   const religions = "thiên chúa(?: giáo)?|công giáo|phật(?: giáo)?|tin lành|hồi(?: giáo)?|cao đài|hòa hảo";
@@ -202,6 +233,15 @@ export function redactPii(raw: string, known: KnownIdentifier[]): RedactionResul
   scan("R7", "GIỚI_TÍNH", /(?<=(?:giới tính\s*[:：]?\s*|(?<![\p{L}])bệnh nhân\s+|(?<![\p{L}])bn\s*[:：]\s*|tôi là\s+))(?:nam|nữ)(?![\p{L}])/gu);
   scan("R7", "GIỚI_TÍNH", new RegExp(`(?<![\\p{L}])(?:nam|nữ)(?=\\s+${age})`, "gu"));
 
+  // Lớp NER (sau mọi rule): đổi vị trí trên bản thô sang vị trí trên chuỗi gấp `f`.
+  for (const x of extra) {
+    let a = 0;
+    while (a < t.startMap.length && t.startMap[a] < x.start) a++;
+    let b = t.endMap.length;
+    while (b > a && t.endMap[b - 1] > x.end) b--;
+    if (b > a) add(x.rule, x.kind, a, b, f.slice(a, b).replace(/[\s.,-]/g, ""), "ner");
+  }
+
   // Dựng kết quả: sắp theo vị trí, gán nhãn R10
   accepted.sort((a, b) => a.start - b.start);
   const counters = new Map<string, Map<string, number>>();
@@ -216,7 +256,7 @@ export function redactPii(raw: string, known: KnownIdentifier[]): RedactionResul
   const counts = Object.fromEntries(RULES.map(r => [r, 0])) as Record<PiiRule, number>;
   const spans: PiiSpan[] = accepted.map(c => {
     counts[c.rule]++;
-    return { rule: c.rule, kind: c.kind, start: t.startMap[c.start], end: t.endMap[c.end - 1], label: label(c) };
+    return { rule: c.rule, kind: c.kind, start: t.startMap[c.start], end: t.endMap[c.end - 1], label: label(c), ...(c.nguon ? { nguon: c.nguon } : {}) };
   });
   let clean = raw;
   for (let i = spans.length - 1; i >= 0; i--) clean = clean.slice(0, spans[i].start) + spans[i].label + clean.slice(spans[i].end);
@@ -228,10 +268,45 @@ export function isCommonHoPair(toks: { w: string }[], j: number): boolean {
   return j + 1 < toks.length && COMMON_AFTER_HO.has(`${toks[j].w} ${toks[j + 1].w}`);
 }
 
-/** Chỉ số token ngay sau đuôi tên bắt đầu sau họ ở `j` (tối đa 3 âm tiết, dừng ở từ dừng/dấu ngắt). Dùng chung với R11c. */
+/** Âm tiết tiếng Việt (dạng không dấu): phụ âm đầu + vần. Tên thuốc ngoại ("atorvastatin", "amlopin") không khớp. */
+const VIET_SYLLABLE = /^(?:ngh|ng|gh|gi|kh|nh|ph|th|tr|ch|qu|[bcdghklmnprstvx])?[aeiouy]{1,3}(?:ng|nh|ch|[cmnpt])?$/;
+export function isVietSyllable(w: string): boolean {
+  return VIET_SYLLABLE.test(foldVietnamese(w));
+}
+
+/**
+ * Từ đệm hay gặp. Tên Việt dài hơn 2 âm tiết hầu như luôn có từ đệm ở giữa ("thị", "văn", "minh"...); tên gọi ("tâm",
+ * "long", "hằng") đứng cuối, nên chữ ngay sau tên gọi không thuộc tên ("nguyễn thị tâm | dị ứng"). Không đưa vào đây tên
+ * gọi hay đứng cuối (tâm, long, tám, hằng, mai, nam, hà): thà để NER che bù đuôi tên còn hơn nuốt chữ lâm sàng.
+ */
+const TEN_DEM_LIST = [
+  "văn", "thị", "hữu", "đức", "công", "quang", "minh", "ngọc", "thanh", "thu", "kim", "hoàng", "quốc", "gia", "bảo", "xuân",
+  "hồng", "thùy", "thúy", "phương", "anh", "hải", "việt", "nhật", "hoài", "như", "bích", "cẩm", "kiều", "mỹ", "diệu",
+  "khánh", "đình", "trọng", "bá", "tiến", "mạnh", "duy", "trung", "tấn", "thế", "huy", "phúc", "đăng", "thái", "tuấn",
+  "ngân", "tường", "vĩnh", "mộng", "tố", "hoa",
+  // họ kép "Tôn Thất": "thất" đứng giữa như từ đệm ("tôn thất minh")
+  "thất",
+];
+const TEN_DEM: ReadonlySet<string> = new Set(TEN_DEM_LIST);
+const TEN_DEM_FOLD: ReadonlySet<string> = new Set(TEN_DEM_LIST.map(w => foldVietnamese(w)));
+/** Từ dừng vẫn là âm tiết tên khi đứng sau từ đệm ("ngọc anh", "gia bảo"). */
+const TEN_TRUNG_TU_DUNG: ReadonlySet<string> = new Set(["anh", "bảo", "bao"]);
+const laTenDem = (w: string) => TEN_DEM.has(w) || (/^[a-z]+$/.test(w) && TEN_DEM_FOLD.has(w));
+
+/**
+ * Chỉ số token ngay sau đuôi tên bắt đầu sau họ ở `j` (tối đa 3 âm tiết tiếng Việt, dừng ở từ dừng/dấu ngắt). Âm tiết thứ
+ * hai trở đi của đuôi chỉ được nhận khi âm tiết ngay trước là từ đệm. Dùng chung với R11c.
+ */
 export function nameTailEnd(toks: { w: string }[], j: number, joined: (a: number, b: number) => boolean): number {
   let k = j + 1;
-  while (k <= j + 3 && k < toks.length && joined(k - 1, k) && /^\p{L}+$/u.test(toks[k].w) && !STOP_SET.has(toks[k].w) && !(/^[a-z]+$/.test(toks[k].w) && STOP_FOLD.has(toks[k].w))) k++;
+  while (k <= j + 3 && k < toks.length && joined(k - 1, k) && /^\p{L}+$/u.test(toks[k].w) && isVietSyllable(toks[k].w)) {
+    const w = toks[k].w;
+    if (k >= j + 2 && !laTenDem(toks[k - 1].w)) break;
+    const tuDung = STOP_SET.has(w) || (/^[a-z]+$/.test(w) && STOP_FOLD.has(w));
+    // Chữ không dấu "thi" ngay sau họ là "thị", không phải "thì" ("nguyen thi tam").
+    if (tuDung && !(k >= j + 2 && TEN_TRUNG_TU_DUNG.has(w)) && !(k === j + 1 && w === "thi")) break;
+    k++;
+  }
   return k;
 }
 

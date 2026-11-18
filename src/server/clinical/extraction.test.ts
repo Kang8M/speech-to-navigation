@@ -172,7 +172,7 @@ test("persistence failure never reports a successful local run", async t => {
   await assert.rejects(extractClinical("x", { directory: blocked, provider: "mock", approvedTranscript: () => transcript }), /Không lưu/);
 });
 
-const deid = (consent: boolean) => ({ policy_version: "pii-auto-1", gate_passed: true, consent }) as const;
+const deid = (consent: boolean) => ({ policy_version: "pii-auto-2", gate_passed: true, consent }) as const;
 
 test("noCache: hai lần cùng input cho hai run_id khác nhau; không noCache dùng lại run cũ", async t => {
   const directory = temp(t);

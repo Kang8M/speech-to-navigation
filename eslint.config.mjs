@@ -49,6 +49,7 @@ const eslintConfig = defineConfig([
     // Local Python runtime, provisioning caches and model artifacts.
     ".venv-stt/**",
     ".venv-community/**",
+    ".venv-ner-train/**",
     ".gitnexus/**",
     ".superpowers/**",
     ".tmp/**",

@@ -7,7 +7,8 @@ import type { EncounterBridge } from "@/client/eform/encounter-bridge";
 import { checkClinicalPrivacy, extractClinicalDraft, recordingApi, type ClinicalResponse } from "@/client/clinical-api";
 import type { ClinicalExtraction, PrivacyCheckResult, SpeakerMode, TranscriptBinding } from "@/shared/clinical/api";
 import { privacyReviewRisks } from "@/shared/clinical/privacy";
-import { NHAN_CHE, RULES, TEN_LY_DO_CHAN, TEN_RULE, gioVN } from "@/shared/clinical/pii/nhan";
+import { ganVaiTroChoDoan, noiChu } from "@/shared/clinical/vai-tro-nguoi-noi";
+import { NHAN_CHE, RULES, TEN_LY_DO_CHAN, TEN_RULE, gioVN, nhanNer } from "@/shared/clinical/pii/nhan";
 import type { RecordingSession } from "@/shared/clinical/types";
 import type { InputMode } from "@/shared/metrics";
 
@@ -63,7 +64,19 @@ export function TroLyAi({ bridge, dirty, onDecided, onBatDau, onOpenTab, soChiDi
   const sequence = useRef(0);
   /** Các phiên bản nội dung đã phát hành mã kiểm tra; sửa chữ sau đó phải tăng phiên bản trước khi kiểm tra lại. */
   const usedRevisions = useRef(new Set<string>());
-  const appendRef = useRef<(chunk: string) => void>(() => {});
+  const appendRef = useRef<(chunk: string, sessionId: string) => void>(() => {});
+  /** Phiên ghi âm vừa nối chữ vào ô: cùng phiên thì nối bằng dấu cách để câu không bị ngắt dòng giữa chừng */
+  const lastMicSession = useRef<string | null>(null);
+  /** Bản sao để vẽ: ô đang nối tiếp chữ của một phiên ghi âm (chữ tạm nối bằng dấu cách) */
+  const [noiTiepMic, setNoiTiepMic] = useState(false);
+  /** Đoạn chữ của lần ghi âm đang chạy bắt đầu từ vị trí này trong ô nhập; dừng ghi thì đổi nhãn người nói trong đoạn đó */
+  const micBlock = useRef<{ sessionId: string; start: number } | null>(null);
+  const lyDoVaiTroRef = useRef("");
+  /** Người nói khớp giọng bác sĩ đã đăng ký ở lần ghi vừa dừng (STT backend báo khi chốt phiên) */
+  const giongBacSiRef = useRef<number | null>(null);
+  const [dangGhi, setDangGhi] = useState(false);
+  /** Kết quả tự phân vai bác sĩ/bệnh nhân của lần ghi gần nhất */
+  const [lyDoVaiTro, setLyDoVaiTro] = useState("");
   const encounterId = bridge?.response.record.id ?? null;
   const record = bridge?.response.record ?? null;
   const canWrite = record?.status === "dang_kham";
@@ -79,19 +92,51 @@ export function TroLyAi({ bridge, dirty, onDecided, onBatDau, onOpenTab, soChiDi
 
   function setInput(next: string) {
     invalidate();
+    lastMicSession.current = null;
+    setNoiTiepMic(false);
     setText(next);
   }
 
-  function appendInput(chunk: string) {
+  function appendInput(chunk: string, sessionId: string) {
     invalidate();
-    setText((current) => (current ? `${current}\n${chunk}` : chunk));
+    const cungLanGhi = lastMicSession.current === sessionId;
+    lastMicSession.current = sessionId;
+    setNoiTiepMic(true);
+    // Vị trí bắt đầu chỉ biết khi updater chạy; ghi một lần (React dev gọi updater hai lần, lần sau giữ nguyên).
+    const block = cungLanGhi ? null : { sessionId, start: -1 };
+    if (block) micBlock.current = block;
+    setText((current) => {
+      if (block && block.start < 0) block.start = current ? current.length + 1 : 0;
+      return noiChu(current, chunk, cungLanGhi);
+    });
+  }
+
+  /** Dừng ghi: đổi "Người nói N:" trong đoạn vừa ghi thành BS/BN theo nội dung; bác sĩ không phải chọn gì. */
+  function ketThucGhi() {
+    setDangGhi(false);
+    // Lấy đoạn ra ngoài updater: updater phải thuần (React dev gọi hai lần), không được xóa ref bên trong.
+    const block = micBlock.current;
+    const giongBacSi = giongBacSiRef.current;
+    micBlock.current = null;
+    giongBacSiRef.current = null;
+    setText((current) => {
+      if (!block || block.start < 0) { lyDoVaiTroRef.current = ""; return current; }
+      const { text: daGan, ketQua } = ganVaiTroChoDoan(current.slice(block.start), giongBacSi);
+      lyDoVaiTroRef.current = ketQua.lyDo;
+      return current.slice(0, block.start) + daGan;
+    });
+    // Hàng đợi state xử lý theo thứ tự khai báo hook: text (ở trên) chạy trước nên ref đã có lý do.
+    setLyDoVaiTro(() => lyDoVaiTroRef.current);
   }
   useEffect(() => { appendRef.current = appendInput; });
 
   // Chữ từ micro chỉ vào ô này khi binding thuộc đúng lượt khám đang mở.
   useEffect(() => {
     if (!bridge) return;
-    bridge.setTextSink((source, chunk) => { if (source.encounterId === encounterId) appendRef.current(chunk); });
+    // binding.encounterId là mã lịch hẹn (khóa mở lượt), không phải record.id: so theo phiên ghi âm thuộc hồ sơ đang mở.
+    bridge.setTextSink((source, chunk) => {
+      if (bridge.latest().record.recording_sessions.some((item) => item.id === source.recordingSessionId)) appendRef.current(chunk, source.recordingSessionId);
+    });
     return () => bridge.setTextSink(null);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [encounterId]);
@@ -166,18 +211,19 @@ export function TroLyAi({ bridge, dirty, onDecided, onBatDau, onOpenTab, soChiDi
         </fieldset>
         {canWrite && (
           <MicButton
-            onStart={() => { onBatDau("noi", false); }}
+            onStart={() => { setDangGhi(true); setLyDoVaiTro(""); onBatDau("noi", false); }}
             onInterim={setInterim}
+            onGiongBacSi={(speaker) => { giongBacSiRef.current = speaker; }}
             onText={(chunk, source) => { if (source) bridge.routeText(source, chunk); }}
             beforeStart={bridge.beforeStart}
             onCaptureReady={bridge.onCaptureReady}
             onCaptureFailed={bridge.onCaptureFailed}
             onStopRequest={() => { void bridge.stopAndSave().catch((cause) => setError(cause instanceof Error ? cause.message : "Không dừng được ghi âm.")); }}
-            onStop={() => { void bridge.stopAndSave().catch(() => undefined); }}
+            onStop={() => { ketThucGhi(); void bridge.stopAndSave().catch(() => undefined); }}
           />
         )}
-        <textarea aria-label="Nội dung buổi khám" rows={5} value={interim ? (text ? `${text}
-${interim}` : interim) : text} readOnly={Boolean(interim)} onChange={(event) => { setInput(event.target.value); onBatDau("go", false); }} placeholder="Ghi lời bệnh nhân và bác sĩ. Máy chủ che thông tin nhận dạng trước khi tạo bản nháp." className="w-full rounded-lg border border-ef-vien bg-white px-3 py-2 text-sm leading-6 text-ef-chu outline-none placeholder:text-ef-phu/80 focus:border-tim focus:ring-2 focus:ring-tim/20" />
+        <textarea aria-label="Nội dung buổi khám" rows={5} value={interim ? noiChu(text, interim, noiTiepMic) : text} readOnly={dangGhi || Boolean(interim)} onChange={(event) => { setInput(event.target.value); onBatDau("go", false); }} placeholder="Ghi lời bệnh nhân và bác sĩ. Máy chủ che thông tin nhận dạng trước khi tạo bản nháp." className="w-full rounded-lg border border-ef-vien bg-white px-3 py-2 text-sm leading-6 text-ef-chu outline-none placeholder:text-ef-phu/80 focus:border-tim focus:ring-2 focus:ring-tim/20" />
+        {lyDoVaiTro && <p role="status" className="text-xs text-ef-phu">Tự phân vai: {lyDoVaiTro}</p>}
         {hasPendingText && <p className="text-xs text-ef-phu">Nội dung này chưa được che và lưu. Tạo bản nháp, hoặc xóa trước khi chuyển lượt khám.</p>}
         {hoiThoai && <button type="button" className="text-xs font-medium text-tim underline-offset-2 hover:underline" onClick={() => { setInput(hoiThoai.map(({ ai, cau }) => `${ai}: ${cau}`).join("\n")); onBatDau("noi", true); }}>Nạp hội thoại mẫu</button>}
         <button type="button" className="text-xs font-medium text-tim underline-offset-2 hover:underline" onClick={() => { setInput(MAU_HOI_THOAI); onBatDau("noi", true); }}>Thử hội thoại tổng hợp</button>
@@ -196,6 +242,7 @@ ${interim}` : interim) : text} readOnly={Boolean(interim)} onChange={(event) => 
             <ul className="list-disc space-y-0.5 pl-4">{check.auto_masked.map((item, index) => <li key={index}>{TEN_LY_DO_CHAN[item.reason] ?? item.reason}{item.excerpt ? <>: <code className="break-all rounded bg-white px-1">{item.excerpt}</code></> : null}</li>)}</ul>
           </div>}
           <p className="text-xs text-ef-phu">{check.dong_y.trang_thai ? `Đồng ý AI: ✓ (lúc tiếp đón, ${gioVN(check.dong_y.luc)})` : "Đồng ý AI: ✗ — chỉ chạy bộ tách trên máy chủ"}</p>
+          <p className="text-xs text-ef-phu">{nhanNer(check.ner)}</p>
           {privacyReviewRisks(check.preview).includes("rare_disease_review") && <p role="status" className="text-xs text-ef-phu">Có nhắc bệnh hiếm: tuổi, giới, thời điểm và bệnh hiếm ghép lại vẫn có thể nhận ra người bệnh; hệ thống không tự xóa chẩn đoán.</p>}
         </section>}
         {error && <p role="alert" className="rounded-md bg-ef-do-nhat px-3 py-2 text-xs text-ef-do">{error}</p>}

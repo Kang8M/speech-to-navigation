@@ -3,7 +3,7 @@ import type { EformData } from "../eform/types";
 import type { ClinicalChangeSet } from "./changes";
 import type { TranscriptBinding } from "./recording";
 import type { EformSnapshot } from "./eform";
-import type { AiRoute, GateReason, PiiRule } from "./pii";
+import type { AiRoute, GateReason, NerTrangThai, PiiRule } from "./pii";
 
 export type { TranscriptBinding } from "./recording";
 export type { StartRecordingRequest, HeartbeatRecordingRequest, FinalizeRecordingRequest, UpdateRecordingContentRequest } from "./recording";
@@ -20,7 +20,7 @@ export interface PrivacyReviewRequest { text: string; mode: SpeakerMode; binding
 
 export type SpeakerMode = "conversation" | "dictation";
 /**
- * Kết quả che PII (pii-auto-1): R1–R8 che, R10 nhãn, R11 chốt chặn, R14 đồng ý. Chốt chặn thấy còn sót thì máy chủ tự che phần đó
+ * Kết quả che PII (pii-auto-2): R1–R8 che, R10 nhãn, R11 chốt chặn, R14 đồng ý. Chốt chặn thấy còn sót thì máy chủ tự che phần đó
  * (`auto_masked`) rồi kiểm lại. Chỉ khi tự che xong vẫn còn sót mới bị chặn: `ticket` là null và không gửi AI.
  */
 export interface PrivacyCheckResult {
@@ -34,6 +34,8 @@ export interface PrivacyCheckResult {
   /** Chốt chặn chạy lại trên bản đã tự che. `excerpt` có thể chứa phần còn sót: chỉ để hiện cho bác sĩ, không ghi đĩa hay log. */
   gate: { passed: boolean; reasons: { reason: GateReason; excerpt: string }[] };
   ai_route: AiRoute;
+  /** Lớp NER ở lượt này, không có nội dung: đã chạy / không chạy (chỉ rule) / tắt, và số đoạn NER đã che thêm. */
+  ner: { trang_thai: NerTrangThai; so_doan: number };
   dong_y: { trang_thai: boolean; luc: string | null };
   expires_at: string | null;
   binding: TranscriptBinding;

@@ -1,5 +1,5 @@
 import type { AiRoute, GateReason, GateResult } from "./gate";
-import type { PII_POLICY_VERSION, PiiRule } from "./types";
+import type { NerTrangThai, PII_POLICY_VERSION, PiiRule } from "./types";
 
 /** R13: nhật ký mỗi lượt gửi AI. Không chứa bản thô hay bản sạch, chỉ số đếm và dấu băm. */
 export interface PiiAuditEntry {
@@ -13,6 +13,8 @@ export interface PiiAuditEntry {
   /** Mã lý do R11 của phần còn sót đã được tự che trước khi qua chốt chặn (eForm). Không có trường này nghĩa là không phải tự che gì. */
   auto_masked?: GateReason[];
   ai_route: AiRoute;
+  /** Lớp NER ở lượt này. Không có trường này: nhật ký từ trước khi có NER. Không chứa nội dung. */
+  ner?: { trang_thai: NerTrangThai; model_sha256?: string; so_doan?: number };
   provider: string;
   model: string;
   /** Máy chủ băm sẵn bản sạch (node:crypto), module này không băm. */
@@ -31,6 +33,11 @@ export function buildAuditEntry(input: Omit<PiiAuditEntry, "at"> & { now: string
     gate_reasons: [...input.gate_reasons],
     ...(input.auto_masked ? { auto_masked: [...input.auto_masked] } : {}),
     ai_route: input.ai_route,
+    ...(input.ner ? { ner: {
+      trang_thai: input.ner.trang_thai,
+      ...(input.ner.model_sha256 !== undefined ? { model_sha256: input.ner.model_sha256 } : {}),
+      ...(input.ner.so_doan !== undefined ? { so_doan: input.ner.so_doan } : {}),
+    } } : {}),
     provider: input.provider,
     model: input.model,
     clean_sha256: input.clean_sha256,

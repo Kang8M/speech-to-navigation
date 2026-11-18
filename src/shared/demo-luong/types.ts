@@ -1,6 +1,6 @@
 import type { ClinicalExtraction } from "../clinical/api";
 import type { EformSnapshot } from "../clinical/eform";
-import type { AiRoute, GateReason, GateResult, PiiAuditEntry, PiiRule, PiiSpan } from "../clinical/pii";
+import type { AiRoute, GateReason, GateResult, NerTrangThai, PiiAuditEntry, PiiRule, PiiSpan } from "../clinical/pii";
 
 export type DemoSource = { kind: "kich_ban"; id: string; phien?: number } | { kind: "audio" };
 
@@ -44,7 +44,7 @@ export type DemoEvent =
   | { buoc: "stt"; trang_thai: "xong"; ms: number; du_lieu: { engine: string; text: string; audio_ms: number | null } }
   | { buoc: "ban_tho"; trang_thai: "xong"; ms: number; du_lieu: { raw: string; spans: PiiSpan[]; mode: "conversation" | "dictation" } }
   /** `auto_masked`: phần chốt chặn R11 thấy còn sót và đã tự che (đoạn chữ chỉ trong stream). `gate`: chốt chặn chạy lại sau khi tự che. */
-  | { buoc: "che"; trang_thai: "xong" | "bi_chan"; ms: number; du_lieu: { clean: string; counts: Record<PiiRule, number>; auto_masked: GateResult["reasons"]; gate: GateResult; ai_route: AiRoute; dong_y: { trang_thai: boolean; luc: string | null } } }
+  | { buoc: "che"; trang_thai: "xong" | "bi_chan"; ms: number; du_lieu: { clean: string; counts: Record<PiiRule, number>; auto_masked: GateResult["reasons"]; gate: GateResult; ai_route: AiRoute; dong_y: { trang_thai: boolean; luc: string | null }; ner: { trang_thai: NerTrangThai; so_doan: number } } }
   | { buoc: "ai"; trang_thai: "xong"; ms: number; du_lieu: { provider: string; model: string; prompt_version: string; payload_preview: string; extraction: ClinicalExtraction } }
   | { buoc: "luu"; trang_thai: "xong" | "loi"; ms: number; du_lieu: { phieu: DemoPhieu; file: string; sha256: string; audit: PiiAuditEntry } }
   | DemoErrorEvent;

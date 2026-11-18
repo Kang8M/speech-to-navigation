@@ -1,10 +1,52 @@
 # Trợ lý điền bệnh án TMH – Prototype
 
-**Luồng hiện tại (17/11/2026):** STT → máy chủ che PII tự động (R1–R14, chốt chặn R11) → AI tạo JSON phiếu khám và chỉ định → bác sĩ sửa, lưu, duyệt và in. **Kê đơn ngoài scope**, do bác sĩ làm riêng. Hướng dẫn đầy đủ: [docs/CLINICAL-WORKFLOW.md](docs/CLINICAL-WORKFLOW.md). Sơ đồ draw.io hai luồng chính (nói → phiếu khám, gõ tắt) và bước lọc dữ liệu nhạy cảm R1–R14: [docs/so-do/luong-chinh.drawio](docs/so-do/luong-chinh.drawio). Mở bằng app.diagrams.net hoặc draw.io desktop. eForm và `/demo-luong` cùng dùng bộ rule này.
+**Luồng hiện tại (17/11/2026):** STT → máy chủ che PII tự động (R1–R14, chốt chặn R11) → AI tạo JSON phiếu khám và chỉ định → bác sĩ sửa, lưu, duyệt và in. **Kê đơn ngoài scope**, do bác sĩ làm riêng. Hướng dẫn đầy đủ: [docs/CLINICAL-WORKFLOW.md](docs/CLINICAL-WORKFLOW.md). Sơ đồ draw.io hai luồng chính (nói → phiếu khám, gõ tắt) và bước lọc dữ liệu nhạy cảm R1–R14: [docs/so-do/luong-chinh.drawio](docs/so-do/luong-chinh.drawio). Mở bằng app.diagrams.net hoặc draw.io desktop. eForm và `/demo-luong` cùng gọi một hàm che `chePii` (`src/shared/clinical/pii/pipeline.ts`); `/stt` chỉ nhận dạng giọng nói, không che. Thử nhanh một câu hay một file transcript qua đúng hàm đó: `npm run thu-che-pii -- "câu cần thử"` hoặc `npm run thu-che-pii -- --file temp-1/x.txt`.
 
 ## Demo luồng dữ liệu (`/demo-luong`)
 
 Mở **[http://localhost:3000/demo-luong](http://localhost:3000/demo-luong)** để trình diễn trọn luồng: ① ghi âm (micro, file WAV hoặc kịch bản mẫu trong `data/demo-luong/kich-ban/`) → ② bản thô (tô đỏ, rê chuột thấy mã rule) → ③ bản đã che tự động (nhãn xanh, chốt chặn R11; còn sót thì tự che thêm rồi kiểm lại, xem kịch bản `ca-tu-che`) → ④ AI (mock) → ⑤ phiếu đọc lại từ kho để bác sĩ sửa và duyệt. Một phiếu có nhiều phiên ghi âm; "+ Phiếu khám mới" mở phiếu khác. Công tắc **Bác sĩ / Lãnh đạo | Kỹ thuật**: chế độ Kỹ thuật mở chi tiết từng bước (đếm theo rule, nguyên văn dữ liệu gửi AI, phiên bản rule/prompt/schema, JSON phiếu, dòng nhật ký). Bản thô chỉ nằm trong bộ nhớ trình duyệt; dữ liệu chạy lưu ở `data/demo-luong/` (gitignore), nút "Xóa dữ liệu demo" xóa sạch. Nguồn micro/WAV cần dịch vụ STT local (`npm run stt:start`).
+
+## Đăng ký giọng bác sĩ (`/giong-bac-si`)
+
+Mở **[http://localhost:3000/giong-bac-si](http://localhost:3000/giong-bac-si)** (mục "Giọng bác sĩ" trên thanh menu), bấm **Bắt đầu thu**, đọc đoạn mẫu khoảng 30 giây, bấm dừng. STT backend tạo đặc trưng giọng TitaNet và chỉ lưu dãy số đó ở `data/giong-bac-si/<mã bác sĩ>.json` (gitignore), không lưu âm thanh; nút "Xóa giọng đã đăng ký" xóa file. Mã bác sĩ do máy chủ xác định (actor demo `user_bs01`). Sau đó, mỗi lần ghi âm trên eForm, khi dừng máy so giọng Người nói 1/2 với giọng đã đăng ký (giống ≥ 0,6 và hơn giọng kia ≥ 0,15) để gắn BS/BN; chưa đăng ký hoặc không khớp rõ thì đoán theo nội dung lời nói. Cần `npm run stt:start`. Đặc trưng giọng là dữ liệu sinh trắc học: chỉ đăng ký giọng của chính mình. Chi tiết: [docs/STT.md](docs/STT.md) mục "Đăng ký giọng bác sĩ".
+
+## Lớp NER che PII (mặc định bật)
+
+Một mô hình PhoBERT-base fine-tune trên PhoNER_COVID19 chạy local, đứng sau bộ rule R1–R8, để bắt thêm tên người, địa danh, tổ chức mà rule bỏ sót. Lớp này chỉ được thêm đoạn che, không gỡ đoạn nào. Thiết kế: [2026-11-18-ner-phobert-design.md](docs/superpowers/plans/pending/2026-11-18-ner-phobert-design.md); plan: [2026-11-18-ner-phobert.md](docs/superpowers/plans/pending/2026-11-18-ner-phobert.md). Cần JDK (OpenJDK 21) và `JAVA_HOME` cho bộ tách từ VnCoreNLP (GPL-3.0).
+
+**Tải dữ liệu huấn luyện.** PhoNER_COVID19 của VinAI chỉ được dùng cho nghiên cứu hoặc giáo dục, không phân phối lại dưới mọi hình thức, và phải trích dẫn bài NAACL 2021 ("COVID-19 Named Entity Recognition for Vietnamese") khi công bố kết quả. Dự án là nghiên cứu (xác nhận ngày 18/11/2026). Lệnh dưới đây in điều khoản và chỉ tải khi có cờ đồng ý. Dữ liệu được ghim commit và mã băm, lưu ở `models/ner/phoner-covid19/` (gitignore), kèm `nguon.json`:
+
+```bash
+npm run ner:tai-du-lieu -- --dong-y-giay-phep
+```
+
+**Huấn luyện (một lần, trên CPU).** Môi trường riêng `.venv-ner-train` có torch bản CPU; `.venv-stt` không bao giờ có torch:
+
+```bash
+npm run ner:setup-train
+```
+
+```bash
+npm run ner:train -- --probe-steps 50
+```
+
+```bash
+npm run ner:train
+```
+
+Lệnh đầu tạo môi trường. Lệnh thứ hai đo thời gian dự kiến: trên Core Ultra 5 225H ra 1,79 giây/bước, 629 bước/epoch, nên 5 epoch mất khoảng 1,6 giờ, chưa tính đánh giá sau mỗi epoch. Lệnh thứ ba huấn luyện thật. Trong lúc huấn luyện:
+- cắm sạc, đóng bớt server để có khoảng 4 GB RAM trống;
+- không tắt máy, không khởi động lại, không gập nắp. Script tự chặn chế độ ngủ khi máy rảnh trong lúc chạy, nhưng chọn Sleep bằng tay thì máy vẫn ngủ.
+
+Checkpoint lưu sau mỗi epoch ở `models/ner/checkpoints/`. Bị ngắt thì chạy `npm run ner:train -- --resume`, chỉ mất tối đa một epoch.
+
+Kết quả nằm ở `models/ner/phobert-phoner/`: `model.int8.onnx` (khoảng 135 MB), `tokenizer.json`, `labels.json` và `meta.json` (F1, ngưỡng, sha256). Mô hình không được phát hành ra ngoài vì giấy phép PhoNER. Lần huấn luyện ngày 18/11/2026 mất 1 giờ 46 phút (5 epoch). F1 theo thực thể trên tập test là 0,956 với chữ gốc và 0,933 với bản viết thường kiểu STT. Ngưỡng điểm là 0,3.
+
+Hai điều chỉnh khi chuẩn bị dữ liệu:
+- PhoNER chỉ gắn nhãn `NAME` cho tên bệnh nhân. Script gắn lại `NAME` cho tên người đầy đủ (viết hoa mọi âm tiết, bắt đầu bằng họ trong `ho-viet.ts`).
+- Mỗi câu có thêm bản viết thường, bỏ dấu câu, được tách từ lại bằng VnCoreNLP cho giống chữ STT lúc chạy.
+
+**Bật, tắt NER.** NER bật mặc định từ 18/11/2026 (không đặt `PII_NER` cũng là bật); muốn tắt thì đặt `PII_NER=off` trong `.env.local`. Cần chạy STT (`npm run stt:start`; terminal phải có `JAVA_HOME`, nếu không `/health` vẫn báo `ner_ready` nhưng lời gọi đầu `/ner` sẽ lỗi và máy chủ chỉ che bằng rule); dịch vụ STT phục vụ `POST /ner` khi có mô hình ở `models/ner/phobert-phoner/` (`/health` báo `ner_ready`). Máy chủ Next gọi NER trước khi che (chờ tối đa `PII_NER_TIMEOUT_MS`, mặc định 2000 ms); STT không chạy, NER lỗi, quá giờ hay tắt thì che bằng rule như cũ và nhật ký R13 ghi `ner.trang_thai`. eForm và `/demo-luong` (chế độ Kỹ thuật) hiện một dòng "NER: đã chạy (n đoạn) / không chạy, chỉ dùng rule / tắt". Thử một câu: `npm run thu-che-pii -- --ner "câu"`.
 
 ## Thử nghiệm STT local từ P-018
 
@@ -31,7 +73,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-stt.ps1 -Backe
 
 Micro cần Chrome/Edge, localhost hoặc HTTPS và quyền micro. Phiên micro không có giới hạn thời gian: âm thanh được tách tại khoảng nghỉ hoặc tối đa mỗi 5 giây, trả text dần và nối theo thứ tự. Bấm “Kết thúc phiên” để dừng micro và nhận nốt các đoạn còn lại. File tải lên không giới hạn thời lượng/dung lượng ở ứng dụng, hỗ trợ WAV/MP3/M4A/WebM/Ogg/FLAC tùy bộ giải mã của trình duyệt. Trình duyệt đổi âm thanh sang WAV PCM16 mono 16 kHz trước khi gửi tới backend. Âm thanh và văn bản chỉ nằm trong bộ nhớ; không ghi lịch sử bản thu.
 
-Thêm thuật ngữ bằng cách sửa `config/stt-hotwords.json`, đặt danh sách trong `phrases` (xem ví dụ trong docs/STT.md). Danh sách áp dụng từ đoạn nhận dạng tiếp theo, không cần huấn luyện lại. Đã tích hợp phân biệt 2 giọng và gắn từ theo timestamp: nhãn Người nói 1/2 giữ trong phiên, chưa tự gán vai bác sĩ/bệnh nhân. Text tạm thời được sửa/ghép lại khi nhận thêm âm thanh, nên một lượt nói 8 giây bị gửi thành 5+3 giây vẫn hiển thị liền mạch.
+Thêm thuật ngữ bằng cách sửa `config/stt-hotwords.json`, đặt danh sách trong `phrases` (xem ví dụ trong docs/STT.md). Danh sách áp dụng từ đoạn nhận dạng tiếp theo, không cần huấn luyện lại. Đã tích hợp phân biệt 2 giọng và gắn từ theo timestamp: nhãn Người nói 1/2 giữ trong phiên. Trên eForm, dừng ghi thì nhãn tự đổi thành BS/BN (so giọng bác sĩ đã đăng ký ở `/giong-bac-si`, hoặc đoán theo nội dung lời nói). Text tạm thời được sửa/ghép lại khi nhận thêm âm thanh, nên một lượt nói 8 giây bị gửi thành 5+3 giây vẫn hiển thị liền mạch.
 
 File mẫu có sẵn tại `models/stt/zipformer-vi/test_wavs/` sau khi setup. Chi tiết nguồn code, API, kiểm thử, chạy thủ công và giới hạn: **[docs/STT.md](docs/STT.md)**.
 
@@ -106,6 +148,7 @@ Cuối cùng số đọc thành chữ được đổi sang chữ số khi đứn
 ```bash
 npm run tao-am-thanh-mau     # Windows: giọng máy đọc 11 ca thành data/giong-noi/<id>.tts.wav
 npm run eval-giong-noi       # thêm --chi-tiet để in từng câu, --nhan-lai để nhận dạng lại từ đầu
+npm run thu-che-pii -- "câu" # thử bộ che PII dùng chung (eForm, /demo-luong); --file đường/dẫn.txt để thử cả file
 ```
 
 Mỗi file `.wav` trong `data/giong-noi/` đi qua đúng luồng VAD của ứng dụng rồi được so với câu `input_noi` của ca cùng id. Script in cho chữ thô và chữ sau khi sửa: **WER** (tỉ lệ từ sai, so cả dấu, số đổi thành chữ ở hai phía), **Mã** (số mã dịch vụ, mã thuốc bộ tách quy tắc vẫn ra đúng so với khi tách câu gốc), **Liều** (số dòng thuốc có liều, số lần/ngày, số ngày trùng câu gốc), và **Sửa nhầm trên câu gốc** (bộ sửa chạy trên câu đúng mà đổi mất bao nhiêu từ, nên bằng 0). Chữ thô được lưu cạnh file âm thanh nên chỉnh bảng sửa rồi chạy lại chỉ mất vài giây. Cách tự ghi âm để đo bằng giọng thật: `data/giong-noi/README.md`.
@@ -221,6 +264,18 @@ npm run eval-mau -- --provider=gemini  # mức 2 gọi LLM thật, mỗi ca có 
 
 Chấm phiếu mẫu (`data/eform/phieu-mau.json`) so với `expected` của các ca có `mau_id` trong `data/cases/`, cùng cách chấm với `npm run eval` (phần chấm dùng chung ở `scripts/cham-diem.ts`). **Mức 1** là chỉ có mẫu, tức bác sĩ chỉ gõ tên mẫu. **Mức 2** là mẫu kèm câu chi tiết ngắn `input_mau` của ca (ví dụ `"vtg cấp trẻ em, tai P, 3n, sốt 38"`). Script in thêm số "không tính tiền sử", vì mẫu không điền tiền sử, ô đó bác sĩ Copy từ lần khám trước. Đây chỉ là **ước tính**: mẫu và đáp án đều do nhóm soạn, số thật phải đo khi bác sĩ thử.
 
+### Chấm bộ che PII (`npm run eval-pii`)
+
+Lệnh này chấm `chePii` trên hai nguồn:
+- 60 câu giả kiểu chữ STT trong `data/pii-eval/cau-stt.json` (viết thường, không dấu câu, không có hồ sơ). Mỗi câu ghi `phai_che` và `khong_duoc_che`. Bộ câu cần bác sĩ duyệt và bổ sung.
+- Các kịch bản `/demo-luong`, chấm theo `expected.phai_che` / `phai_giu`.
+
+Kết quả in ra gồm tỷ lệ bắt được, số che nhầm và độ trễ p50/p95. Không tốn phí, không gọi LLM. Thêm `--ner` để so thêm với rule cộng NER (cần STT chạy, có mô hình); thêm `--chi-tiet` để liệt kê mã câu còn sót. Mốc ngày 18/11/2026, chỉ rule: câu STT bắt được 11/37 (29,7%), che nhầm 2/73; kịch bản bắt được 13/13. Rule cộng NER: câu STT bắt được 24/37 (64,9%), che nhầm vẫn 2/73; kịch bản vẫn 13/13, 0/8; p95 khoảng 23 ms với câu STT và 100 ms với kịch bản (khi STT đã nạp mô hình; lời gọi đầu mất khoảng 1 giây).
+
+```bash
+npm run eval-pii -- --ner
+```
+
 ### Test (`npm test`)
 
 `npm test` chạy các file `src/**/*.test.ts` và `lib/**/*.test.ts` bằng `node:test` qua `tsx` (không cần thư viện test riêng, có cờ `--conditions=react-server` nên test được cả code `src/server`). Test được import `node:*` kể cả trong `src/shared` (`eslint.config.mjs` tắt luật import cho `*.test.ts`).
@@ -253,6 +308,7 @@ src/shared/eform/ rule của trang eForm: tóm tắt, gợi ý ICD10, mẫu câu
 src/shared/giong-noi/ sửa chữ sau nhận dạng giọng nói (sua-chu.ts), đọc số thành chữ để chấm (so.ts)
 scripts/eval.ts chấm điểm
 scripts/eval-giong-noi.ts đo nhận dạng giọng nói trên data/giong-noi/
+scripts/thu-che-pii.ts thử bộ che PII dùng chung chePii trên một câu hoặc file, chỉ in ra màn hình
 scripts/tao-am-thanh-mau.ts (+ tts-windows.ps1) giọng máy Windows đọc các ca thành file âm thanh mẫu
 scripts/cao-du-lieu.ts cào danh mục công khai về data/tham-khao/
 scripts/tai-model-giong-noi.ts tải model Zipformer và Silero VAD về models/

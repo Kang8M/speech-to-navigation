@@ -3,7 +3,7 @@ import { PII_POLICY_VERSION } from "./pii/types";
 export const DATA_POLICY_VERSION = "medical-data-use-2";
 export type DataLevel = "public" | "masked_internal" | "deidentified" | "restricted";
 /** Chỉ phía máy chủ, phải do chốt chặn R11 cấp; không bao giờ nhận từ body request. Bằng chứng bản đã qua chốt chặn PII tự động (chỉ luồng /demo-luong). Không chứng minh ẩn danh tuyệt đối. */
-export interface DeidentificationProof { policy_version: "pii-auto-1"; gate_passed: true; consent: boolean }
+export interface DeidentificationProof { policy_version: typeof PII_POLICY_VERSION; gate_passed: true; consent: boolean }
 export type AiDestination = "internal" | "external";
 
 /** Conservative local recognition; manual classification remains mandatory. */

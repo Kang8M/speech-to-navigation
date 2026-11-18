@@ -1,4 +1,4 @@
-import { HO_VIET } from "./ho-viet";
+import { HO_TRUNG_TU_THUONG, HO_VIET } from "./ho-viet";
 import { COMMON_HO_FOLD, foldVietnamese, isCommonHoPair, isHo, nameTailEnd } from "./redact";
 import type { KnownIdentifier } from "./types";
 
@@ -27,9 +27,11 @@ function vanBanCoDau(toks: Tok[]): boolean {
 }
 const laHo = (t: Tok, coDau: boolean) =>
   isHo(t.w) && (!coDau || !/^[a-z]+$/.test(t.w) || HO_CO_DAU.has(t.w) || COMMON_HO_FOLD.has(t.w));
+const DEM = new Set(["thị", "văn", "thi", "van"]);
+const laDem = (t: Tok, coDau: boolean) => (t.f === "thi" || t.f === "van") && (!coDau || DEM.has(t.w));
 
 /** Token nào nằm trong một lần xuất hiện bất kỳ của cụm allowlist (so không dấu). */
-function coveredByAllowlist(folded: string[], allow: ReadonlySet<string>): boolean[] {
+export function coveredByAllowlist(folded: string[], allow: ReadonlySet<string>): boolean[] {
   const covered = new Array<boolean>(folded.length).fill(false);
   for (const phrase of allow) {
     const p = phrase.split(" ").filter(Boolean);
@@ -93,10 +95,15 @@ function residualNames(text: string, allowlist: ReadonlySet<string>): { s: numbe
   const coDau = vanBanCoDau(toks);
   for (let j = 0; j < toks.length - 1; j++) {
     if (covered[j] || !laHo(toks[j], coDau) || isCommonHoPair(toks, j)) continue;
-    // "thị"/"văn" không dấu sau họ là đệm tên điển hình; "thi" trùng từ dừng "thì" nên bộ dò R2 bỏ qua, ở đây vẫn chặn.
-    const dem = j + 2 < toks.length && (toks[j + 1].f === "thi" || toks[j + 1].f === "van") && joined(j, j + 1) && joined(j + 1, j + 2);
+    // Sau số là danh từ đơn vị, không phải họ: "1 viên hạ sốt", "2 cao dán".
+    if (j > 0 && /^\d+$/.test(toks[j - 1].w) && joined(j - 1, j)) continue;
+    // "thị"/"văn" sau họ là đệm tên điển hình; "thi" không dấu trùng từ dừng "thì" nên bộ dò R2 bỏ qua, ở đây vẫn chặn.
+    // Văn bản có dấu thì "thì", "vấn"... không phải đệm ("lô thì anh").
+    const dem = j + 2 < toks.length && laDem(toks[j + 1], coDau) && joined(j, j + 1) && joined(j + 1, j + 2);
     const k = nameTailEnd(toks, j, joined);
-    if (k - j - 1 < 1 && !dem) continue;
+    // Họ trùng từ thường ("lại cho", "danh sách") cần dạng tên rõ hơn: có đệm hoặc ≥ 2 âm tiết sau họ.
+    const minTail = HO_TRUNG_TU_THUONG.has(toks[j].w) ? 2 : 1;
+    if (k - j - 1 < minTail && !dem) continue;
     const last = Math.max(k - 1, dem ? j + 2 : 0);
     found.push({ s: toks[j].s, e: toks[last].e });
     j = last;

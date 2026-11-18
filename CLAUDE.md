@@ -26,6 +26,7 @@ npm run tai-model-giong-noi  # tải Zipformer ~70 MB về models/stt/zipformer-
 npm run tao-am-thanh-mau     # Windows: giọng máy đọc 11 ca thành data/giong-noi/*.wav
 npm run tao-lich-su-clinic   # tạo lại 4 phiếu cũ giả (data/clinic/history) và ngữ cảnh LK-GIA-0458 cho dashboard
 npm run eval-giong-noi       # đo nhận dạng giọng nói + bộ sửa chữ (config/sua-chu-giong-noi.json)
+npm run thu-che-pii -- "câu" # thử bộ che PII dùng chung chePii (eForm, /demo-luong), --file để thử cả file
 ```
 
 `npm run eval -- --provider=anthropic|openai|gemini` gọi API thật và tốn phí: hỏi trước khi chạy.

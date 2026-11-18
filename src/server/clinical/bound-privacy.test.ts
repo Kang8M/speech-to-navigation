@@ -10,7 +10,7 @@ import { getDemoClinicalActor, resolveEncounterContext } from "./encounter-conte
 import { openEncounter } from "./service";
 import { ClinicalError, ClinicalRepository } from "./repository";
 import { PrivacyTickets } from "./privacy";
-import { checkRecordingPrivacy, requireRecordingContext } from "./bound-privacy";
+import { checkRecordingPrivacy, checkRecordingPrivacyWithNer, requireRecordingContext } from "./bound-privacy";
 import { readFileSync } from "node:fs";
 import { PatientsFixtureSchema } from "@/shared/clinic/schema";
 
@@ -75,4 +75,33 @@ test("check rejects fake ownership, a missing session and a stale content revisi
   store.update(record.id, record.revision, draft => { draft.recording_sessions[0].content_revision++; return draft; }, actor.doctorId, "2026-11-14T01:00:02Z");
   assert.throws(() => checkRecordingPrivacy(actor, { binding, text: "BS: Họng đỏ.", mode: "dictation" }, options), (e: unknown) => e instanceof ClinicalError && e.status === 409);
   assert.throws(() => checkRecordingPrivacy(actor, { binding, text: "BS: Họng đỏ.", mode: "dictation", consent: true }, options));
+});
+
+test("eForm: NER chạy thì che thêm tên rule bỏ sót và trả trạng thái ner", async () => {
+  const { store, actor, binding, tickets, audit } = setup();
+  const ner = async () => ({ trang_thai: "chay" as const, nguong: 0.5, model_sha256: "a".repeat(64),
+    spans: [[{ start: 8, end: 11, nhan: "NAME", diem: 0.9 }]] });
+  const r = await checkRecordingPrivacyWithNer(actor, { binding, text: "hôm qua lan đưa bé đi khám", mode: "conversation" }, { store, tickets, auditDirectory: audit, ner });
+  assert.equal(r.status, "passed");
+  assert.match(r.preview, /\[NGƯỜI_1\]/); assert.ok(!r.preview.includes("lan"));
+  assert.deepEqual(r.ner, { trang_thai: "chay", so_doan: 1 });
+  assert.deepEqual(tickets.pii(r.ticket!, binding).ner, { trang_thai: "chay", model_sha256: "a".repeat(64), so_doan: 1 });
+});
+
+test("eForm: NER không chạy thì bản che giống hệt chỉ dùng rule", async () => {
+  const { store, actor, binding, tickets, audit } = setup();
+  const text = "hôm qua đỗ quốc việt mua thuốc giúp";
+  const r = await checkRecordingPrivacyWithNer(actor, { binding, text, mode: "conversation" }, { store, tickets, auditDirectory: audit, ner: async () => ({ trang_thai: "khong_chay" }) });
+  const plain = checkRecordingPrivacy(actor, { binding, text, mode: "conversation" }, { store, tickets: new PrivacyTickets(), auditDirectory: audit });
+  assert.equal(r.preview, plain.preview);
+  assert.deepEqual(r.ner, { trang_thai: "khong_chay", so_doan: 0 });
+  assert.deepEqual(plain.ner, { trang_thai: "tat", so_doan: 0 });
+});
+
+test("eForm: lỗi đầu vào vẫn bị từ chối trước khi gọi NER", async () => {
+  const { store, actor, binding, tickets, audit } = setup();
+  let called = false;
+  const ner = async () => { called = true; return { trang_thai: "tat" as const }; };
+  await assert.rejects(checkRecordingPrivacyWithNer(actor, { binding, text: "", mode: "conversation" }, { store, tickets, auditDirectory: audit, ner }));
+  assert.equal(called, false);
 });

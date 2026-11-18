@@ -1,7 +1,10 @@
+export { chePii } from "./pipeline";
+export type { ChePiiNer, ChePiiResult } from "./pipeline";
+export { locNer, NER_SANG_NHAN } from "./ner";
 export { redactPii, foldVietnamese } from "./redact";
 export { HO_VIET } from "./ho-viet";
 export { PII_POLICY_VERSION } from "./types";
-export type { KnownIdentifier, PiiLabelKind, PiiRule, PiiSpan, RedactionResult } from "./types";
+export type { KnownIdentifier, NerChapNhan, NerKetQua, NerSpan, NerTrangThai, PiiLabelKind, PiiRule, PiiSpan, RedactionResult } from "./types";
 export { checkResidualPii, maskResidualPii, aiRouteFor } from "./gate";
 export type { AiRoute, GateReason, GateResult, ResidualMaskResult } from "./gate";
 export { DEFAULT_CLINICAL_ALLOWLIST } from "./gate";

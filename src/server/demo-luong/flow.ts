@@ -3,9 +3,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { createHash, randomUUID } from "node:crypto";
 import {
-  aiRouteFor, buildAuditEntry, checkResidualPii, maskResidualPii, PII_POLICY_VERSION, redactPii,
-  type GateResult, type KnownIdentifier, type PiiAuditEntry, type PiiRule, type PiiSpan,
+  aiRouteFor, buildAuditEntry, chePii, PII_POLICY_VERSION, type KnownIdentifier, type NerKetQua, type PiiAuditEntry,
 } from "@/shared/clinical/pii";
+import { goiNer } from "@/server/clinical/ner-client";
 import { applyAiDraft } from "@/shared/clinical/apply-ai";
 import { projectEform } from "@/shared/clinical/eform";
 import { parseTranscript } from "@/shared/clinical/schema";
@@ -30,6 +30,8 @@ export interface DemoFlowInput {
   transcribe?: (wav: Uint8Array) => Promise<{ text: string; engine: string; audio_ms: number | null }>;
   /** Chỉ dùng trong test: thêm giá trị định danh đã biết để dựng ca không tự che được. Route không truyền trường này. */
   extraKnown?: KnownIdentifier[];
+  /** Chỉ dùng trong test: thay lời gọi lớp NER local (mặc định `goiNer`, chỉ tắt khi `PII_NER=off`). */
+  ner?: (texts: readonly string[]) => Promise<NerKetQua>;
 }
 
 type Doan = Pick<KichBan["doan"][number], "vai_tro" | "text">;
@@ -40,22 +42,6 @@ function appendAudit(store: DemoStore, encounterId: string, entry: PiiAuditEntry
   const file = auditFile(store, encounterId);
   fs.mkdirSync(path.dirname(file), { recursive: true });
   fs.appendFileSync(file, JSON.stringify(entry) + "\n", "utf8");
-}
-
-/** Che từng đoạn riêng, cộng dồn vị trí span theo bản thô ghép bằng "\n". */
-function redactParts(parts: Doan[], known: ReturnType<typeof knownIdentifiersFor>["known"]) {
-  const spans: PiiSpan[] = [];
-  const counts = {} as Record<PiiRule, number>;
-  const clean: string[] = [];
-  let offset = 0;
-  for (const part of parts) {
-    const r = redactPii(part.text, known);
-    for (const span of r.spans) spans.push({ ...span, start: span.start + offset, end: span.end + offset });
-    for (const [rule, n] of Object.entries(r.counts) as [PiiRule, number][]) counts[rule] = (counts[rule] ?? 0) + n;
-    clean.push(r.clean);
-    offset += part.text.length + 1;
-  }
-  return { raw: parts.map(p => p.text).join("\n"), clean, spans, counts };
 }
 
 /**
@@ -97,23 +83,16 @@ export async function* runDemoFlow(store: DemoStore, input: DemoFlowInput, now: 
   const ids = knownIdentifiersFor(record.patient_id);
   const known = [...ids.known, ...(input.extraKnown ?? [])];
   const consent = ids.consent;
-  const red = redactParts(parts, known);
+  // Bộ che dùng chung với eForm (`chePii`): R1–R8 từng đoạn → chốt chặn R11 → tự che phần sót → kiểm lại.
+  const nerKq = await (input.ner ?? goiNer)(parts.map(p => p.text));
+  const red = chePii(parts.map(p => p.text), known, demoAllowlist(),
+    nerKq.trang_thai === "chay" ? { spans: nerKq.spans, nguong: nerKq.nguong } : undefined);
+  const ner = { trang_thai: nerKq.trang_thai, so_doan: red.ner_chap_nhan };
   yield { buoc: "ban_tho", trang_thai: "xong", ms: now() - t, du_lieu: { raw: red.raw, spans: red.spans, mode } };
 
-  // 3. Che + chốt chặn R11 (còn sót thì tự che từng đoạn rồi kiểm lại, giống eForm) + đồng ý R14.
+  // 3. Kết quả che + chốt chặn R11 + đồng ý R14.
   t = now();
-  const allow = demoAllowlist();
-  let gate = checkResidualPii(red.clean.join("\n"), known, allow);
-  const auto_masked: GateResult["reasons"] = [];
-  if (!gate.passed) {
-    red.clean = red.clean.map(part => {
-      const m = maskResidualPii(part, known, allow);
-      auto_masked.push(...m.masked);
-      return m.clean;
-    });
-    gate = checkResidualPii(red.clean.join("\n"), known, allow);
-  }
-  const clean = red.clean.join("\n");
+  const { gate, auto_masked, clean } = red;
   const autoReasons = [...new Set(auto_masked.map(r => r.reason))];
   const dong_y = { trang_thai: consentOverride ?? consent.trang_thai, luc: consent.luc };
   const ai_route = aiRouteFor(dong_y.trang_thai);
@@ -123,15 +102,16 @@ export async function* runDemoFlow(store: DemoStore, input: DemoFlowInput, now: 
     now: iso(), encounter_id: record.id, session_sequence: sequence, policy_version: PII_POLICY_VERSION, counts: red.counts,
     gate: gate.passed, gate_reasons: gate.reasons.map(r => r.reason), ...(autoReasons.length ? { auto_masked: autoReasons } : {}),
     ai_route, provider, model, clean_sha256: cleanDigest,
+    ner: nerKq.trang_thai === "chay" ? { trang_thai: "chay", model_sha256: nerKq.model_sha256, so_doan: red.ner_chap_nhan } : { trang_thai: nerKq.trang_thai },
   });
   if (!gate.passed) {
     // `excerpt` có thể chứa PII còn sót: chỉ gửi về màn hình, nhật ký chỉ giữ mã lý do.
     // Ghi nhật ký trước khi phát: người đọc stream dừng sớm cũng không làm mất dòng nhật ký.
     appendAudit(store, record.id, audit(NOT_CALLED, NOT_CALLED));
-    yield { buoc: "che", trang_thai: "bi_chan", ms: now() - t, du_lieu: { clean, counts: red.counts, auto_masked, gate, ai_route, dong_y } };
+    yield { buoc: "che", trang_thai: "bi_chan", ms: now() - t, du_lieu: { clean, counts: red.counts, auto_masked, gate, ai_route, dong_y, ner } };
     return;
   }
-  yield { buoc: "che", trang_thai: "xong", ms: now() - t, du_lieu: { clean, counts: red.counts, auto_masked, gate, ai_route, dong_y } };
+  yield { buoc: "che", trang_thai: "xong", ms: now() - t, du_lieu: { clean, counts: red.counts, auto_masked, gate, ai_route, dong_y, ner } };
 
   // 4. AI (mock) trên bản sạch.
   t = now();
@@ -143,7 +123,7 @@ export async function* runDemoFlow(store: DemoStore, input: DemoFlowInput, now: 
     context: { tuoi_thang: null, gioi_tinh: null, can_nang_kg: null },
     segments: parts.map((p, i) => ({
       id: `s${i + 1}`, sequence: i + 1, utterance_ref: null, speaker_id: null, vai_tro: mode === "dictation" ? "bac_si" : p.vai_tro,
-      nguon_vai_tro: "he_thong", start_ms: null, end_ms: null, text: red.clean[i], is_final: true,
+      nguon_vai_tro: "he_thong", start_ms: null, end_ms: null, text: red.parts[i], is_final: true,
     })),
     binding,
   });

@@ -14,17 +14,22 @@ from stt.diarization import LocalDiarizer, tokens_to_words, attribute_words
 from stt.community import CommunityDiarizer
 from stt.denoise import DeepFilterDenoiser
 from stt.diarized_sessions import SessionStore, SessionError
+from stt.voice_profiles import VoiceProfileError, VoiceProfileStore
+from stt.ner import LocalNer
+from stt.ner_api import create_ner_router
 
 logger = logging.getLogger(__name__)
 
 
-def create_app(engine=None, diarizer=None, vad=None, community=None, denoiser=None):
+def create_app(engine=None, diarizer=None, vad=None, community=None, denoiser=None, voices=None, ner=None):
     engine = engine if engine is not None else LocalEngine()
     diarizer = diarizer if diarizer is not None else LocalDiarizer()
     vad = vad if vad is not None else SileroVad()
     community = community if community is not None else CommunityDiarizer()
     denoiser = denoiser if denoiser is not None else DeepFilterDenoiser()
     sessions = SessionStore(engine, diarizer, vad=vad, denoiser=denoiser)
+    voices = voices if voices is not None else VoiceProfileStore()
+    ner = ner if ner is not None else LocalNer()
 
     def denoise_mode(request):
         mode = request.headers.get('x-stt-denoise', 'off')
@@ -40,23 +45,79 @@ def create_app(engine=None, diarizer=None, vad=None, community=None, denoiser=No
         sessions.sessions.clear()
 
     app = FastAPI(title='Vietnamese Zipformer STT', lifespan=lifespan)
+    app.include_router(create_ner_router(ner))
 
     @app.get('/health')
     def health():
-        return {**engine.status(), 'diarization_ready': diarizer.ready(), 'vad_ready': vad.ready(), 'community_ready': community.ready(), 'denoise_ready': denoiser.ready(), 'max_audio_seconds': None,
+        return {**engine.status(), 'diarization_ready': diarizer.ready(), 'vad_ready': vad.ready(), 'community_ready': community.ready(), 'denoise_ready': denoiser.ready(), 'ner_ready': ner.ready(), 'max_audio_seconds': None,
                 'max_audio_bytes': None}
 
     @app.post('/sessions')
     def create_session(request: Request):
         denoise = denoise_mode(request)
+        voice = None
+        if 'x-stt-voice' in request.headers:
+            try:
+                profile = voices.get(request.headers['x-stt-voice'])
+            except VoiceProfileError as error:
+                raise HTTPException(error.status, error.code) from None
+            voice = profile['vector'] if profile else None
         if denoise and not denoiser.ready():
             raise HTTPException(503, 'DENOISE_NOT_READY')
         if not diarizer.ready():
             raise HTTPException(503, 'DIARIZATION_MODEL_MISSING')
         try:
-            return sessions.create(denoise=denoise)
+            created = sessions.create(denoise=denoise, low_latency=request.headers.get('x-stt-latency') == 'low', voice=voice)
+            if 'x-stt-voice' in request.headers:
+                created['voice'] = 'loaded' if voice is not None else 'missing'
+            return created
         except SessionError as error:
             raise HTTPException(error.status, error.code) from None
+
+    @app.get('/voices/{doctor_id}')
+    def voice_status(doctor_id: str):
+        try:
+            return voices.status(doctor_id)
+        except VoiceProfileError as error:
+            raise HTTPException(error.status, error.code) from None
+
+    def enroll(doctor_id: str, audio):
+        if not diarizer.ready():
+            raise HTTPException(503, 'DIARIZATION_MODEL_MISSING')
+        if not engine.lock.acquire(blocking=False):
+            raise HTTPException(429, 'STT_BUSY')
+        try:
+            vector, seconds = diarizer.enrollment_embedding(audio.waveform)
+            return voices.save(doctor_id, vector, seconds)
+        except VoiceProfileError as error:
+            raise HTTPException(error.status, error.code) from None
+        finally:
+            engine.lock.release()
+
+    @app.post('/voices/{doctor_id}')
+    async def enroll_voice(doctor_id: str, request: Request):
+        try:
+            voices.status(doctor_id)
+        except VoiceProfileError as error:
+            raise HTTPException(error.status, error.code) from None
+        payload = bytearray()
+        async for chunk in request.stream():
+            payload.extend(chunk)
+        try:
+            audio = decode_canonical_wav(bytes(payload), mime_type=request.headers.get('content-type', ''))
+        except VoicePayloadTooLargeError as error:
+            raise HTTPException(413, error.reason_code) from None
+        except VoiceAudioValidationError as error:
+            raise HTTPException(400, error.reason_code) from None
+        return await run_in_threadpool(enroll, doctor_id, audio)
+
+    @app.delete('/voices/{doctor_id}')
+    def delete_voice(doctor_id: str):
+        try:
+            voices.delete(doctor_id)
+        except VoiceProfileError as error:
+            raise HTTPException(error.status, error.code) from None
+        return {'enrolled': False}
 
     @app.delete('/sessions/{key}')
     def close_session(key: str):

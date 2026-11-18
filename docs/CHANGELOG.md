@@ -2,6 +2,338 @@
 
 Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nhất ở trên cùng. Cách ghi xem `.claude/skills/ghi-tai-lieu/SKILL.md`.
 
+## 2026-11-18
+
+### Sửa R3 "đường" và R2 che lấn: hết che nhầm chữ lâm sàng
+- **Loại:** Sửa lỗi
+- **Thay đổi** (`src/shared/clinical/pii/redact.ts`, theo plan `docs/superpowers/plans/pending/2026-11-18-sua-r2-r3.md`):
+  - **R3 "đường".** "Đường" chỉ là tên đường khi có một trong các dấu hiệu sau:
+    - số nhà đứng trước ("số 12 đường lê lợi");
+    - dấu hiệu nơi chốn đứng ngay trước ("ở", "tại", "sống ở", "địa chỉ", "nhà em/tôi…");
+    - hoặc dạng "đường số 5".
+
+    Danh sách loại trừ cũ ("đái tháo", "tiểu", "huyết"…) giữ làm lớp chặn thứ hai (`DUONG_SRC`). "đái đường", "đường tiểu", "đường sinh dục", "trên đường đi học" không còn bị che. Câu thiếu dấu hiệu ("bé đi đường lê duẩn") để NER che.
+  - **Không che qua dòng mới.** `buildText` trước đây gộp mọi khoảng trắng, kể cả xuống dòng, thành một dấu cách, nên R3 che lan sang dòng sau ("đường láng\nngười"). Nay cụm khoảng trắng có xuống dòng được giữ là `\n`, và mọi biểu thức R3 dùng khoảng trắng cùng dòng. Hệ quả kèm theo: R2 nhận đầu dòng là đầu câu, như code vốn định.
+  - **R2 đuôi tên.** Từ âm tiết thứ hai sau họ, `nameTailEnd` chỉ nhận âm tiết mới khi âm tiết ngay trước là từ đệm (`TEN_DEM`: văn, thị, minh, ngọc, quốc, gia, thất…).
+    - Hết nuốt chữ lâm sàng: "nguyễn thị tâm ~~dị~~ ứng", "đinh văn long ~~hút~~ thuốc", "lê văn tám ~~hen~~", "hoàng thị mai ~~tiền~~ sử", "võ thị hằng ~~thai~~".
+    - "anh", "bảo" sau từ đệm vẫn là tên, nên "phạm ngọc anh thư" và "bùi gia bảo" được che đủ.
+    - Chữ không dấu "thi" ngay sau họ là "thị".
+    - Chốt chặn R11c dùng chung hàm này.
+  - **Cái giá đã biết.** Ở đầu câu, tên hai âm tiết theo sau là động từ ("trần nam hút thuốc") không còn được R2 che nhờ nuốt thêm chữ; NER che bù.
+  - `data/pii-eval/cau-stt.json` thêm 11 câu giả: `duong-01…06`, `ten-26…30`.
+- **Số đo `eval-pii`** (71 câu STT, 3 kịch bản):
+
+  | Chế độ | Bắt được trước | Bắt được sau | Che nhầm trước | Che nhầm sau |
+  | --- | --- | --- | --- | --- |
+  | Chỉ rule, câu STT | 18/44 | 18/44 | 9/84 | **0/84** |
+  | Rule cộng NER, câu STT | 31/44 | 31/44 | 9/84 | **0/84** |
+  | Kịch bản, cả hai chế độ | 13/13 | 13/13 | 0/8 | 0/8 |
+
+- **Lý do:**
+  - Người dùng báo tên bệnh có chữ "đường" bị hiểu thành địa danh; thiết kế R3 cách A đã được chọn.
+  - Người dùng yêu cầu sửa R2 che lấn sang chữ kế tiếp.
+  - GitNexus xếp `redactPii` và `nameTailEnd` mức HIGH: eForm `privacy.check`, `/demo-luong`, R11c.
+- **File:** `src/shared/clinical/pii/redact.ts`, `src/shared/clinical/pii/redact.test.ts`, `src/shared/clinical/pii/gate.test.ts`, `data/pii-eval/cau-stt.json`, `docs/superpowers/plans/pending/2026-11-18-sua-r2-r3.md`, `docs/superpowers/plans/pending/README.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:**
+  - 3 test mới đỏ trước khi sửa, đạt sau khi sửa: R3 cần dấu hiệu, R3 không lan dòng, R2 đuôi tên.
+  - `npm test` 409/410; test đỏ duy nhất `encounter-context.test.ts` có từ trước.
+  - `eslint src scripts` 0 lỗi; `tsc` sạch.
+  - Không chạy lại `eval --rule-only` để so điểm: bộ tách `src/server/ai` không dùng bộ che PII nên điểm không thể đổi.
+  - `detect-changes` mức critical, do nhánh còn lẫn thay đổi micro/STT chưa commit.
+
+### Thiết kế sửa R3: "đường" chỉ là tên đường khi có dấu hiệu nơi chốn
+- **Loại:** Tài liệu
+- **Thay đổi:** Thêm `docs/superpowers/plans/pending/2026-11-18-r3-duong-design.md`, bản thiết kế ngắn. Lỗi tên bệnh có chữ "đường" bị che thành `[ĐỊA_DANH]` là do rule R3, không do NER:
+  - R3 coi mọi "đường" là tên đường, rồi dựa vào danh sách loại trừ viết tay;
+  - R3 che lan sang dòng sau.
+
+  Người dùng chọn cách A: chỉ nhận "đường" khi có dấu hiệu nơi chốn ("ở", "tại", "nhà", số nhà…), và R3 không che qua dòng mới.
+- **Lý do:** Người dùng báo "đái tháo đường", "tiểu đường", "đường huyết" bị hiểu là địa danh. Thử 20 câu: NER không gán nhầm câu nào; R3 che sai "đái đường biến chứng thận" và "nhiễm trùng đường tiểu tái phát".
+- **File:** `docs/superpowers/plans/pending/2026-11-18-r3-duong-design.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** Chưa sửa code, chờ duyệt thiết kế.
+
+### Bật NER mặc định; NER không che đoạn chỉ có một chữ cái
+- **Loại:** Tính năng, sửa lỗi
+- **Thay đổi:**
+  - **Bật mặc định.** `goiNer` mặc định gọi NER, chỉ tắt khi đặt `PII_NER=off`; không đặt biến cũng tính là bật. `.env.example` đổi thành `PII_NER=on`. STT không chạy thì lượt đó vẫn che bằng rule, và trang hiện "NER: không chạy, chỉ dùng rule".
+  - **Cách ly test.** `flow.test.ts` đặt `PII_NER=off` ở đầu tệp, để test không gọi dịch vụ STT thật đang chạy trên máy. Test nào cần NER thì tự tiêm `ner`.
+  - **Sửa lỗi che "P.".** `locNer` bỏ đoạn có dưới 2 chữ cái hoặc chữ số; trước đây điều kiện là dưới 2 ký tự. Lỗi gặp khi quét NER trên ca mẫu gõ tắt: mô hình gán "P." (bên phải) là tên người, nên "khối u sau tai P." thành "tai [NGƯỜI_1]" và mất thông tin bên.
+  - README, `docs/STT.md`, `docs/CLINICAL-WORKFLOW.md` và `docs/DATA-USE-POLICY.md` ghi NER mặc định bật.
+- **Lý do:** Người dùng chọn bật NER mặc định sau khi xem số đo `eval-pii` (câu STT 29,7% → 64,9%, che nhầm không tăng). Lỗi "P." chỉ lộ ra khi quét toàn bộ dữ liệu giả có sẵn.
+- **File:** `src/server/clinical/ner-client.ts`, `src/server/clinical/ner-client.test.ts`, `src/server/demo-luong/flow.ts`, `src/server/demo-luong/flow.test.ts`, `src/shared/clinical/pii/ner.ts`, `src/shared/clinical/pii/ner.test.ts`, `.env.example`, `README.md`, `docs/STT.md`, `docs/CLINICAL-WORKFLOW.md`, `docs/DATA-USE-POLICY.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** Hai test mới đỏ trước khi sửa: "không đặt PII_NER thì mặc định bật NER" và "bỏ đoạn NER chỉ có một chữ cái kèm dấu câu". `thu-che-pii --ner` với "amidan P. sưng đỏ" không còn che "P.".
+
+### Task 10 NER: huấn luyện xong, đo rule cộng NER, sửa lệch dấu thanh, chính sách dữ liệu
+- **Loại:** Tính năng, sửa lỗi
+- **Thay đổi:**
+  - **Kết quả huấn luyện.** Chạy 17:51–19:39 (6383 giây, 5 epoch). `meta.json` ghi:
+    - F1 theo thực thể (4 loại dùng) trên test là 0,956 với chữ gốc và 0,933 với bản kiểu STT;
+    - ngưỡng 0,3, precision 0,937 trên dev kiểu STT;
+    - `model_sha256` `5c6608c8…`.
+  - **Sửa lỗi `/ner` trả 500.** RDRSegmenter đổi dấu thanh kiểu cũ sang kiểu mới ("hòa" → "hoà"), nên `word_offsets` báo từ không khớp văn bản. Câu bị lỗi là `noi-04` ("bệnh viện đa khoa hòa bình"); máy chủ đã rơi về chỉ dùng rule. Nay `word_offsets` so âm tiết bằng `_syllable_key`, bỏ qua chỗ đặt dấu thanh nhưng vẫn phân biệt dấu khác nhau.
+  - **Đo `eval-pii`** (STT đã nạp mô hình):
+
+    | Bộ | Chỉ rule | Rule cộng NER |
+    | --- | --- | --- |
+    | Câu STT, bắt được | 11/37 (29,7%) | 24/37 (64,9%) |
+    | Câu STT, che nhầm | 2/73 | 2/73 |
+    | Câu STT, p95 | 0,9 ms | 23 ms |
+    | Kịch bản, bắt được | 13/13 | 13/13 |
+    | Kịch bản, che nhầm | 0/8 | 0/8 |
+    | Kịch bản, p95 | 2 ms | 100 ms |
+
+    Gọi `/ner` thẳng: lần đầu 1,1 giây (nạp mô hình), sau đó 25–50 ms cho 3 câu.
+  - **Còn sót.** Tên một âm tiết đứng trơn ("thằng tuấn", "bác sĩ hùng") và tên đầy đủ của người nhà ("bố cháu đinh văn long"). Ở `/demo-luong` ca "tự che thêm", NER che "đỗ quốc việt" nhưng gán nhãn địa danh `[ĐỊA_DANH_1]` thay vì tên người: chữ vẫn được che, chỉ sai nhãn.
+  - **Điều kiện bật** (plan Task 10): đạt. Câu STT bắt được nhiều hơn, che nhầm không tăng, p95 dưới 2000 ms. Kịch bản đã 13/13 khi chỉ dùng rule nên không thể tăng; được tính là đạt vì không giảm. Mặc định **vẫn `PII_NER=off`**, chờ người dùng quyết.
+  - **Kiểm trình duyệt với `PII_NER=on`.** eForm che "nguyễn thị lan" thành `[NGƯỜI_1]` và hiện "NER: đã chạy (1 đoạn)"; lúc NER tắt chữ "lan" vẫn lộ. `/demo-luong` chế độ Kỹ thuật hiện "Lớp NER: NER: đã chạy (1 đoạn)". Thêm cấu hình `dev-ner` vào `.claude/launch.json` để mở server với `PII_NER=on`.
+  - **`docs/DATA-USE-POLICY.md`:**
+    - lên `pii-auto-2`;
+    - thêm mục "Dự án nghiên cứu, lớp NER và giấy phép": nghiên cứu từ 18/11/2026; điều khoản PhoNER_COVID19 và trích dẫn NAACL 2021; cấm phát hành dữ liệu và trọng số; PhoBERT MIT; VnCoreNLP GPL-3.0; NER chạy cục bộ, lỗi thì dùng rule; giới hạn đã đo.
+  - README và `docs/STT.md` thêm số đo, ghi chú cần `JAVA_HOME` khi chạy STT, và cách sửa lệch dấu thanh.
+- **Lý do:** Plan NER Task 4 bước 6, Task 5 bước 5, Task 8 bước 5 và Task 10.
+- **File:** `stt/ner_text.py`, `stt/tests/test_ner_text.py`, `.claude/launch.json`, `docs/DATA-USE-POLICY.md`, `docs/STT.md`, `README.md`, `docs/superpowers/plans/pending/README.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:**
+  - `pytest stt/tests` 130 đạt, có `test_word_offsets_accepts_moved_tone_mark` (đỏ trước khi sửa) và `test_word_offsets_still_rejects_other_tone`.
+  - `npm test` 403/404. Test đỏ duy nhất là `encounter-context.test.ts`, có từ trước, không liên quan.
+  - `eslint src lib scripts` 0 lỗi; `tsc --noEmit` sạch.
+  - `detect-changes --scope all` xếp mức critical (54 file, 146 luồng). Phần lớn luồng thuộc thay đổi micro/STT chưa commit có từ trước.
+
+### Huấn luyện NER tự giữ máy không ngủ; bắt đầu lần huấn luyện thật
+- **Loại:** Tính năng
+- **Thay đổi:**
+  - Trên Windows, `stt/ner_train.py` gọi `SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED)` ngay khi bắt đầu, để máy không tự ngủ trong lúc huấn luyện. Không đổi cài đặt nguồn; tự hết khi tiến trình kết thúc. Gập nắp hay chọn Sleep thì máy vẫn ngủ.
+  - Lần huấn luyện thật bắt đầu lúc 17:51 ngày 18/11, chạy như một tiến trình riêng: log ở `logs/ner-train.log` và `logs/ner-train.err.log`, PID ở `logs/ner-train.pid`. Lúc bắt đầu máy còn trống 6,4 GB RAM và đang cắm sạc.
+- **Lý do:** Người dùng cho phép huấn luyện. Chế độ giữ máy thức của app tự hết sau khoảng 5 phút phiên không hoạt động, còn huấn luyện mất khoảng 2 giờ.
+- **File:** `stt/ner_train.py`, `README.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** `pytest stt/tests/test_ner_train_prep.py` 5 đạt. Chưa có kết quả huấn luyện; F1 và ngưỡng sẽ ghi khi chạy xong.
+
+### Task 5 NER: endpoint `POST /ner` trong dịch vụ STT
+- **Loại:** Tính năng
+- **Thay đổi:**
+  - Mới `stt/ner.py`:
+    - `LocalNer` nạp mô hình ở lần gọi đầu; `ready()` chỉ kiểm file;
+    - `OnnxWordTagger` chạy PhoBERT bằng onnxruntime int8, chia cửa sổ theo từ, đổi id vượt vocab thành `<unk>`;
+    - các hàm `windows` và `stitch_windows`.
+  - Mới `stt/ner_api.py` (router `/ner`). `create_app` nhận thêm `ner=None` và `/health` thêm `ner_ready`.
+  - Vị trí trả về tính theo UTF-16 trên chuỗi NFC. Không log nội dung. `docs/STT.md` thêm mục "Lớp NER che PII".
+- **Lý do:** Plan NER, Task 5 (spec D7). GitNexus xếp `create_app` rủi ro LOW.
+- **File:** `stt/ner.py`, `stt/ner_api.py`, `stt/api.py`, `stt/tests/test_ner.py`, `docs/STT.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** `pytest stt/tests` 128 đạt, trong đó 7 test `/ner` mới: vị trí UTF-16 với emoji, chữ NFD, 503 kèm `ner_ready: false`, đầu vào sai trả 400, chuỗi rỗng, chia cửa sổ, thực thể vắt qua hai cửa sổ ra một đoạn. Với mô hình chạy thử nhỏ, `LocalNer` trong `.venv-stt` chạy được, gồm câu 600 từ, lần đầu mất 2,4 giây. Chưa kiểm với mô hình thật.
+
+### Task 9 NER: bộ đo `npm run eval-pii` và mốc của bộ rule
+- **Loại:** Tính năng
+- **Thay đổi:**
+  - Mới `data/pii-eval/cau-stt.json`: 60 câu **giả** kiểu chữ STT. Gồm 25 câu có tên đứng một mình hoặc không có từ chỉ người, 10 câu có địa danh hay nơi làm việc, 15 câu bẫy ("sốt cao", "hà hơi", "khám lại", "hội chứng ménière", "bệnh kawasaki"…) và 10 câu thường.
+  - Mới `src/shared/clinical/pii/danh-gia.ts`:
+    - `danhGiaMotCau` so theo ranh giới từ ở dạng gấp, nên "lan" trong "lan tỏa" không bị tính là đã che;
+    - `phanVi` tính p50/p95.
+  - Mới `scripts/eval-pii.ts` (`npm run eval-pii`, thêm `--ner`, `--chi-tiet`). Kịch bản `/demo-luong` chấm với hồ sơ giả và allowlist của trang đó.
+  - README thêm mục "Chấm bộ che PII".
+- **Lý do:** Plan NER, Task 9 (spec D12): thước đo là "tốt hơn rule trên chữ của dự án".
+- **File:** `data/pii-eval/cau-stt.json`, `src/shared/clinical/pii/danh-gia.ts`, `src/shared/clinical/pii/danh-gia.test.ts`, `scripts/eval-pii.ts`, `package.json`, `README.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** `danh-gia.test.ts` 3 đạt. `npm run eval-pii` với chỉ rule:
+
+  | Nguồn | Bắt được | Che nhầm | p50 / p95 |
+  |---|---|---|---|
+  | Câu STT giả | 11/37 (29,7%) | 2/73 | 0,3 / 1,0 ms |
+  | Kịch bản `/demo-luong` | 13/13 (100%) | 0/8 | 1,6 / 2,0 ms |
+
+- **Ảnh hưởng:** Đây là mốc để so khi bật NER (Task 10). Bộ câu cần bác sĩ duyệt và bổ sung.
+
+### Task 3–4 NER: xử lý văn bản và script huấn luyện PhoBERT (chưa huấn luyện thật)
+- **Loại:** Tính năng
+- **Thay đổi:**
+  - Mới `stt/ner_text.py`, gồm các hàm thuần dùng chung lúc huấn luyện và lúc chạy:
+    - `stt_style`, `word_offsets`, `to_utf16`, `bio_spans`;
+    - `relabel_full_names`: gắn lại `NAME` cho tên đầy đủ đang mang nhãn `O`, bỏ tên quốc gia như "Hàn_Quốc";
+    - `resegment`: tách từ lại bằng VnCoreNLP rồi chiếu nhãn sang từ mới;
+    - `load_ho_viet`: đọc thẳng `HO_VIET` từ `ho-viet.ts`, để TS và Python chung một danh sách họ.
+  - Mới `stt/ner_train.py` (chạy bằng `npm run ner:train`) và `scripts/setup-ner-train.ps1` (`npm run ner:setup-train`), cùng `stt/requirements-ner-train.txt` (torch CPU 2.15, transformers 5.23, seqeval, onnx, onnxruntime).
+  - Cách huấn luyện: fine-tune `vinai/phobert-base` trên bản gốc nối thêm bản STT; lưu checkpoint mỗi epoch, `--resume` chạy tiếp; `--probe-steps` đo thời gian dự kiến.
+  - Đầu ra: xuất ONNX rồi lượng tử hóa int8; chọn ngưỡng trên dev-stt (ngưỡng nhỏ nhất có precision từ 0,85 trở lên); ghi `meta.json`.
+  - Phát hiện `tokenizer.json` của `vinai/phobert-base` có 66.119 token, nhiều hơn `vocab_size` 64.001 của mô hình (lỗi "index out of range"). Script đổi các id vượt `vocab_size` thành `<unk>`, cả lúc huấn luyện lẫn lúc chạy. Đã đối chiếu: kết quả khớp `PhobertTokenizer` gốc trên cả 10.474 từ của PhoNER.
+  - README thêm mục "Huấn luyện".
+- **Lý do:** Plan NER, Task 3–4.
+- **File:** `stt/ner_text.py`, `stt/tests/test_ner_text.py`, `stt/ner_train.py`, `stt/tests/test_ner_train_prep.py`, `stt/requirements-ner-train.txt`, `scripts/setup-ner-train.ps1`, `stt/ner.py`, `package.json`, `README.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:**
+  - `pytest stt/tests`: 10 test `ner_text` và 5 test chuẩn bị dữ liệu đạt.
+  - Trên tập train: gắn lại được 186 tên; tách từ lại khớp 474/500 câu, câu không khớp giữ bản viết thường.
+  - Chạy thử nhỏ (64 câu, 1 epoch, 33 giây) ra đủ 4 file, `model.int8.onnx` 135 MB, sha256 hợp lệ. Mô hình này chạy được qua `LocalNer` trong `.venv-stt`, kể cả câu 600 từ phải chia cửa sổ.
+  - Đo 50 bước trên toàn bộ dữ liệu: 1,79 giây/bước, 629 bước/epoch, 5 epoch ≈ 1,6 giờ cộng thời gian đánh giá.
+  - **Chưa huấn luyện thật**: cần người dùng cho phép vì máy bận khoảng 2 giờ.
+
+### Task 8 NER: nối lớp NER vào eForm, `/demo-luong` và `thu-che-pii`
+- **Loại:** Tính năng
+- **Thay đổi:**
+  - **eForm:** route `/api/clinical/privacy` dùng `checkRecordingPrivacyWithNer`. Hàm này kiểm đầu vào, gọi `goiNer([text])`, rồi chuyển kết quả cho `checkRecordingPrivacy`; hàm đồng bộ cũ và các test của nó giữ nguyên. `PrivacyTickets.check` nhận `ner?`. Ticket giữ trạng thái NER cho nhật ký R13 lúc tạo bản nháp (`extract-recording.ts`) và lúc bị chặn. `PrivacyCheckResult` thêm `ner: { trang_thai, so_doan }`.
+  - **`/demo-luong`:** `runDemoFlow` gọi `goiNer` trước `chePii` (test truyền `input.ner`). Sự kiện `che` thêm `du_lieu.ner`, nhật ký có trường `ner`.
+  - **Giao diện:** hàm dùng chung `nhanNer` hiện một dòng "NER: đã chạy (n đoạn) / không chạy, chỉ dùng rule / tắt", dưới dòng đồng ý AI trong Trợ lý AI (eForm), và ở mục "Lớp NER" trong chi tiết bước ③ của `/demo-luong`.
+  - **`npm run thu-che-pii -- --ner "câu"`:** gọi NER (bật `PII_NER` cho lượt này) rồi in riêng các đoạn NER.
+  - README thêm mục "Bật NER". `docs/CLINICAL-WORKFLOW.md` ghi bước NER và đổi tên bộ che thành `pii-auto-2`.
+- **Lý do:** Plan NER, Task 8 (spec D9–D11).
+- **File:** `src/server/clinical/bound-privacy.ts`, `src/server/clinical/bound-privacy.test.ts`, `src/server/clinical/privacy.ts`, `src/server/clinical/extract-recording.ts`, `src/server/clinical/ner-client.ts`, `src/server/clinical/ner-client.test.ts`, `src/app/api/clinical/privacy/route.ts`, `src/shared/clinical/api.ts`, `src/server/demo-luong/flow.ts`, `src/server/demo-luong/flow.test.ts`, `src/shared/demo-luong/types.ts`, `src/shared/clinical/pii/nhan.ts`, `src/shared/clinical/pii/ner.test.ts`, `src/client/eform/TroLyAi.tsx`, `src/client/demo-luong/TechDetails.tsx`, `scripts/thu-che-pii.ts`, `README.md`, `docs/CLINICAL-WORKFLOW.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:**
+  - `npm test` 400/401 đạt; lỗi duy nhất là lỗi cũ `encounter-context.test.ts`. Có 3 test eForm và 2 test `/demo-luong` mới, cùng test `nhanNer`.
+  - `tsc --noEmit` sạch; `eslint src lib scripts` sạch; `npm run build` đạt.
+  - Trình duyệt với `PII_NER` tắt: `/demo-luong` ca chuẩn, chế độ Kỹ thuật, bước ③ hiện "Phiên bản rule pii-auto-2" và "Lớp NER: NER: tắt". eForm: gõ "BN: hôm qua lan đưa tôi đi khám, đau họng 3 ngày.", bấm che, thấy dòng "NER: tắt"; bản đã che vẫn còn "lan" (rule bỏ sót).
+  - `thu-che-pii --ner` khi STT không chạy in "NER: không chạy, chỉ dùng rule".
+  - Chưa kiểm khi NER bật vì chưa có mô hình thật.
+
+### Task 7 NER: client gọi `/ner`, nhật ký R13 có trường `ner`, phiên bản `pii-auto-2`
+- **Loại:** Tính năng
+- **Thay đổi:**
+  - Mới `src/server/clinical/ner-client.ts` với `goiNer(texts)`:
+    - `PII_NER` khác `on` thì trả `tat` và không gọi mạng.
+    - Có bật thì chuẩn hóa NFC rồi gọi `POST {NER_BACKEND_URL|STT_BACKEND_URL}/ner`, chờ tối đa `PII_NER_TIMEOUT_MS` (mặc định 2000).
+    - Lỗi, quá giờ, 503, phản hồi sai schema (zod) hay lệch số mảng đều trả `khong_chay`. Không log nội dung.
+  - Kiểu `NerTrangThai` và `NerKetQua` nằm trong `src/shared/clinical/pii/types.ts`.
+  - `PiiAuditEntry.ner?` gồm `{ trang_thai, model_sha256?, so_doan? }`. `buildAuditEntry` sao chép từng trường, không giữ trường lạ.
+  - `PII_POLICY_VERSION` đổi `pii-auto-1` → `pii-auto-2`. `DeidentificationProof.policy_version` dùng `typeof PII_POLICY_VERSION`. Sửa chuỗi phiên bản trong 5 file test và chú thích.
+  - `.env.example` thêm `PII_NER=off`, `PII_NER_TIMEOUT_MS=2000`, `NER_BACKEND_URL=`.
+- **Lý do:** Plan NER, Task 7 (spec D11): NER hỏng thì độ an toàn quay về đúng mức hiện nay, và nhật ký cho biết lượt nào thiếu lớp NER.
+- **File:** `src/server/clinical/ner-client.ts`, `src/server/clinical/ner-client.test.ts`, `src/shared/clinical/pii/types.ts`, `src/shared/clinical/pii/audit.ts`, `src/shared/clinical/pii/index.ts`, `src/shared/clinical/pii/nhan.ts`, `src/shared/clinical/pii/redact.ts`, `src/shared/clinical/data-policy.ts`, `src/shared/clinical/api.ts`, `src/server/clinical/extraction.ts`, `src/server/clinical/privacy.ts`, `src/shared/clinical/pii/redact.test.ts`, `src/server/clinical/privacy.test.ts`, `src/server/clinical/extract-recording.test.ts`, `src/server/clinical/extraction.test.ts`, `src/shared/clinical/data-policy.test.ts`, `.env.example`, `docs/CHANGELOG.md`
+- **Kiểm tra:** `ner-client.test.ts` 7 đạt. `npm test` 394/395 đạt, lỗi duy nhất là lỗi cũ `encounter-context.test.ts`. `npm run clinical:check` báo "Clinical types are stale" dù không file schema hay `types.ts` nào đổi, nên đây là lỗi có từ trước.
+- **Ảnh hưởng:** Bản chép lời và nhật ký mới ghi `pii-auto-2`; dữ liệu cũ (`pii-auto-1`) vẫn đọc được vì schema nhận chuỗi bất kỳ.
+
+### Task 6 NER: `chePii` nhận đoạn NER, chỉ thêm che không gỡ
+- **Loại:** Tính năng
+- **Thay đổi:**
+  - `chePii(input, known, allowlist, ner?)` nhận thêm tham số tùy chọn `{ spans, nguong }`. Mỗi phần văn bản có một mảng đoạn riêng; số mảng lệch với số phần văn bản thì bỏ qua NER. Kết quả thêm trường `ner_chap_nhan`.
+  - Mới `src/shared/clinical/pii/ner.ts`:
+    - `NER_SANG_NHAN` ánh xạ nhãn: NAME→R2 `NGƯỜI`, LOCATION→R3 `ĐỊA_DANH`, ORGANIZATION→R3 `NƠI_LÀM_VIỆC`, PATIENT_ID→R6 `MÃ_ĐỊNH_DANH`.
+    - `locNer` bỏ các đoạn: loại khác, điểm dưới ngưỡng, vị trí sai, ngắn hơn 2 ký tự, hoặc nằm trọn trong allowlist lâm sàng.
+  - `redactPii(raw, known, extra?)`: đoạn NER được thêm **sau** mọi rule, mang cờ `nguon: "ner"`. Phần chồng bị cắt, phần còn lại vẫn che (kể cả với R2). Đoạn NER cùng tên với R2 thì dùng chung số nhãn.
+  - `gate.ts` export `coveredByAllowlist`.
+  - `eslint.config.mjs` bỏ qua `.venv-ner-train/**`.
+- **Lý do:** Plan NER, Task 6. GitNexus xếp `redactPii` rủi ro HIGH (cả eForm lẫn `/demo-luong` dùng), nên chỉ thêm tham số tùy chọn; không truyền NER thì kết quả giống hệt cũ.
+- **File:** `src/shared/clinical/pii/ner.ts`, `src/shared/clinical/pii/ner.test.ts`, `src/shared/clinical/pii/redact.ts`, `src/shared/clinical/pii/pipeline.ts`, `src/shared/clinical/pii/types.ts`, `src/shared/clinical/pii/gate.ts`, `src/shared/clinical/pii/index.ts`, `eslint.config.mjs`, `docs/CHANGELOG.md`
+- **Kiểm tra:** `ner.test.ts` 8 đạt. `npm test` 387/388 đạt, lỗi duy nhất là lỗi cũ `encounter-context.test.ts`. `eslint src lib scripts` không lỗi. `npm run lint` toàn repo vẫn báo lỗi trong `.claude/worktrees/` (đã có từ trước, không thuộc thay đổi này).
+
+### Task 2 NER: lệnh tải PhoNER_COVID19 có xác nhận giấy phép
+- **Loại:** Dữ liệu
+- **Thay đổi:**
+  - Mới `stt/download_phoner.py`, chạy qua `npm run ner:tai-du-lieu -- --dong-y-giay-phep`. Script tải `{train,dev,test}_word.json` của PhoNER_COVID19, ghim commit `9af190a` và sha256, về `models/ner/phoner-covid19/` kèm `nguon.json`. Không có cờ đồng ý thì in điều khoản (nghiên cứu hoặc giáo dục, không phân phối lại, trích dẫn NAACL 2021) rồi thoát với mã 2.
+  - README thêm mục "Lớp NER che PII".
+- **Lý do:** Plan NER, Task 2. Giấy phép cấm phân phối lại nên dữ liệu không vào repo; người tải phải chủ động đồng ý điều khoản.
+- **File:** `stt/download_phoner.py`, `stt/tests/test_download_phoner.py`, `package.json`, `README.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** `pytest stt/tests/test_download_phoner.py` 3 đạt. Tải thật được 3 file (train 5027 câu, dev 2000, test 3000) và `nguon.json`. `npm run ner:tai-du-lieu` không có cờ thì in điều khoản.
+- **Ảnh hưởng:** Khi xem dữ liệu phát hiện nhãn `NAME` của PhoNER chỉ dành cho tên bệnh nhân (349 lần, đa số viết tắt kiểu "L.T.H."), còn ít nhất 112 tên đầy đủ của bác sĩ hay quan chức mang nhãn `O`. Task 4 sẽ gắn lại nhãn cho những tên này.
+
+### Task 1 NER: onnxruntime và bộ tách từ VnCoreNLP chạy chung `.venv-stt` được
+- **Loại:** Phụ thuộc
+- **Thay đổi:**
+  - `.venv-stt` thêm `onnxruntime==1.32.0`, `tokenizers==0.23.3`, `pyjnius==1.9.0` (kéo theo `flatbuffers`, `protobuf`). Không có torch.
+  - Mới `stt/ner_segment.py`: tải bộ tách từ RDRSegmenter của VnCoreNLP (jar + `vi-vocab` + `wordsegmenter.rdr`, ghim commit `62bbc58` và sha256) về `models/ner/vncorenlp/`, và `make_segmenter()` gọi VnCoreNLP qua pyjnius.
+  - Không dùng gói `py_vncorenlp` như plan ghi, vì hàm tải của nó gọi `wget` (Windows không có) và hàm khởi tạo đổi thư mục làm việc của cả tiến trình mà không trả lại.
+  - Mới `stt/ner_probe.py`: script thử một lần, đo RAM.
+  - `.gitignore` thêm `/models/ner/`, `/.venv-ner-train/`, `/.cache-ner/`.
+- **Lý do:** Plan NER (`docs/superpowers/plans/pending/2026-11-18-ner-phobert.md`), Task 1: phải biết các gói này có xung đột với `sherpa-onnx` không trước khi làm tiếp.
+- **File:** `stt/ner_segment.py`, `stt/ner_probe.py`, `stt/tests/test_ner_segment.py`, `stt/requirements.txt`, `stt/requirements-lock.txt`, `.gitignore`, `docs/CHANGELOG.md`
+- **Kiểm tra:**
+  - `python -m stt.ner_probe` cho kết quả **CHUNG_VENV**: không có xung đột DLL; Zipformer cho chữ giống hệt trước và sau khi nạp onnxruntime.
+  - RSS: Zipformer 213 MB; cộng bộ tách từ 284 MB; cộng onnxruntime 307 MB; NER tốn thêm khoảng 118 MB (chưa tính PhoBERT int8).
+  - Câu thử viết thường được tách thành `chị nguyễn_thị lan ở thủ_đức đau họng`: tên bị tách sai khi không có chữ hoa.
+  - `pytest stt/tests` 103 đạt (3 test mới).
+- **Ảnh hưởng:** Cần JDK và `JAVA_HOME` (đã cài OpenJDK 21). Vì bộ tách từ xử lý chữ thường kém, Task 4 sẽ tách từ lại bản viết thường của dữ liệu huấn luyện bằng chính RDRSegmenter.
+
+### Plan triển khai lớp NER PhoBERT (10 task, chưa làm)
+- **Loại:** Tài liệu
+- **Thay đổi:** Viết plan theo bản thiết kế đã duyệt. Thứ tự các task: thử xung đột `onnxruntime`/`py_vncorenlp` với `sherpa-onnx` → tải PhoNER có xác nhận giấy phép → hàm xử lý văn bản → huấn luyện và xuất ONNX → endpoint `/ner` → `chePii` nhận đoạn NER → client NER, nhật ký R13, `pii-auto-2` → nối eForm, `/demo-luong`, `thu-che-pii` → `npm run eval-pii` → đo và quyết định bật. Bảng plan chưa triển khai cập nhật trạng thái.
+- **Lý do:** Người dùng duyệt bản thiết kế và yêu cầu viết plan trước khi tích hợp. Phân tích GitNexus cho thấy `redactPii` và `buildAuditEntry` rủi ro HIGH, nên plan chỉ thêm tham số hoặc trường tùy chọn, và giữ nguyên `checkRecordingPrivacy` đồng bộ (thêm bản async riêng) để không phải sửa test cũ.
+- **File:** `docs/superpowers/plans/pending/2026-11-18-ner-phobert.md`, `docs/superpowers/plans/pending/README.md` (trạng thái cập nhật lại sau Task 9), `docs/CHANGELOG.md`
+- **Kiểm tra:** Chưa kiểm tra (tài liệu, chờ người dùng duyệt plan).
+
+### Cài Java để tách từ cho NER; thiết kế NER đổi sang PhoNER bản theo từ
+- **Loại:** Phụ thuộc
+- **Thay đổi:**
+  - Cài Microsoft OpenJDK 21 lên máy phát triển bằng `winget install --id Microsoft.OpenJDK.21`. Bộ cài tự đặt `JAVA_HOME` và PATH cho toàn máy. Repo không có file nào đổi vì việc cài này.
+  - Bản thiết kế NER đổi D2: huấn luyện trên PhoNER_COVID19 **bản theo từ**, tách từ bằng RDRSegmenter của VnCoreNLP (giấy phép GPL-3.0) cả lúc huấn luyện lẫn lúc chạy. Không tách được từ thì NER không chạy, bộ che dùng rule như hiện tại.
+  - D4 thêm: chạy thử khoảng 50 bước để in thời gian dự kiến, lưu checkpoint mỗi epoch để chạy tiếp được.
+  - Thêm rủi ro: RAM của máy ảo Java, chất lượng tách từ trên chữ STT, điều khoản GPL.
+- **Lý do:** Người dùng yêu cầu cài Java để dùng bộ tách từ, vì PhoBERT được huấn luyện sẵn trên văn bản đã tách từ.
+- **File:** `docs/superpowers/plans/pending/2026-11-18-ner-phobert-design.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** `java -version` chạy được, ra `openjdk version "21.0.13.0.2" 2026-10-22 LTS`. Chưa thử VnCoreNLP.
+- **Ảnh hưởng:** Terminal và Next dev đang mở phải mở lại mới thấy `java` trong PATH.
+
+### Thiết kế lớp NER PhoBERT + PhoNER_COVID19 cho bộ che PII (chưa triển khai)
+- **Loại:** Tài liệu
+- **Thay đổi:** Thêm bản thiết kế lớp NER chạy local, phía sau bộ rule R1–R8. Nội dung chính: fine-tune `vinai/phobert-base` trên PhoNER_COVID19 bản âm tiết, xuất ONNX int8, chạy qua endpoint `/ner` của dịch vụ `stt/`. NER chỉ được thêm đoạn che, không được gỡ đoạn rule đã che. Mặc định tắt (`PII_NER=off`) cho tới khi bộ đo `npm run eval-pii` cho thấy NER bắt được nhiều hơn mà không che nhầm thêm từ lâm sàng. Bảng plan chưa triển khai thêm một dòng.
+- **Lý do:** Bộ rule dò tên người yếu với chữ STT viết thường. Ngày 18/11 người dùng xác nhận với hội đồng dự án là nghiên cứu, không thương mại hóa, nên được dùng PhoNER_COVID19 (giấy phép chỉ cho nghiên cứu hoặc giáo dục, cấm phân phối lại).
+- **File:** `docs/superpowers/plans/pending/2026-11-18-ner-phobert-design.md`, `docs/superpowers/plans/pending/README.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** Chưa kiểm tra (chỉ là tài liệu, chờ người dùng duyệt rồi mới viết plan).
+
+### Đăng ký giọng bác sĩ (màn hình riêng `/giong-bac-si`) để eForm tự nhận giọng BS
+- **Loại:** Tính năng
+- **Thay đổi:**
+  - Màn hình mới `/giong-bac-si` (mục "Giọng bác sĩ" trên menu, tách khỏi eForm theo yêu cầu): xem trạng thái, thu đoạn đọc mẫu ~30 giây có thanh tiến độ, đăng ký lại, xóa.
+  - STT backend: `stt/voice_profiles.py` (lưu/xem/xóa vector giọng ở `data/giong-bac-si/`, so khớp), `LocalDiarizer.enrollment_embedding`, API `GET/POST/DELETE /voices/{mã}`; phiên tạo với `X-STT-Voice` thì khi chốt trả `voice_match`. `clean_speech` nhận `max_frames`.
+  - Next: route `src/app/api/stt/giong-bac-si/route.ts` và `src/app/api/stt/session/route.ts` lấy mã bác sĩ từ actor phía máy chủ; `proxySttVoice`, `proxySttSession(..., voiceId)`; `SpeakerSessionClient.create(..., soGiongBacSi)`; `src/client/api.ts` thêm `xemGiongBacSi`/`dangKyGiongBacSi`/`xoaGiongBacSi` kèm thông báo lỗi tiếng Việt; kiểu `GiongBacSiTrangThai`.
+  - eForm: `MicButton` có `onGiongBacSi`; `ganVaiTroChoDoan(doan, giongBacSi)` qua `ketHopGiongBacSi`: giọng khớp thì BS/BN theo giọng, mâu thuẫn với nội dung thì không gán, chưa đăng ký thì đoán theo nội dung như trước.
+  - Ghép chữ theo lượt: đoạn chưa rõ người nói dài hơn 2 từ (có thể người thứ ba) không còn bị gộp vào lượt trước (lỗi thấy khi thử file 3 giọng: lời người khác bị ghi thành BS).
+  - `.gitignore` thêm `/data/giong-bac-si`.
+- **Lý do:** cách 2 đã bàn với người dùng: bác sĩ đăng ký giọng một lần, eForm tự nhận giọng bác sĩ, không cần bấm chọn mỗi buổi khám.
+- **File:** `stt/voice_profiles.py`, `stt/diarization.py`, `stt/diarized_sessions.py`, `stt/api.py`, `stt/tests/test_voice_profiles.py`, `lib/stt/proxy.ts`, `lib/stt/speaker-client.ts`, `lib/stt/continuous.ts`, `src/app/api/stt/giong-bac-si/route.ts`, `src/app/api/stt/session/route.ts`, `src/app/giong-bac-si/page.tsx`, `src/client/giong-bac-si/DangKyGiong.tsx`, `src/client/chung/Header.tsx`, `src/client/chung/MicButton.tsx`, `src/client/chung/DenoisedMic.tsx`, `src/client/eform/TroLyAi.tsx`, `src/client/api.ts`, `src/shared/api.ts`, `src/shared/clinical/vai-tro-nguoi-noi.ts`, `src/shared/clinical/vai-tro-nguoi-noi.test.ts`, `.gitignore`, `README.md`, `docs/STT.md`
+- **Kiểm tra:** `pytest stt/tests` 100 đạt (4 test mới: lưu/xóa/mã sai, ngưỡng khớp, đăng ký rồi chốt phiên trả `voice_match`, lỗi đăng ký); `vai-tro-nguoi-noi.test.ts` 17 đạt; `npm test` 379 đạt, 1 lỗi có sẵn `encounter-context.test.ts`; `tsc`, `eslint` không lỗi. Thật với model: đăng ký bằng giọng máy đọc (ca-01) qua `/api/stt/giong-bac-si` → 25,5 giây lời nói; file hai giọng người thật bị từ chối `VOICE_ENROLL_MULTIPLE_SPEAKERS`; chốt phiên: ca-03 cùng giọng → người nói 1 (0,963), hai giọng người thật → không khớp (0,14/0,09), trộn người thật + giọng đã đăng ký → người nói 2 (0,951). Trình duyệt: màn hình `/giong-bac-si` hiển thị đúng; eForm với file trộn hiện "Tự phân vai: Nhận ra giọng bác sĩ đã đăng ký (người nói 2)" và gắn BS/BN. Đã xóa giọng thử sau khi kiểm tra. Chưa thử đăng ký và khám bằng giọng người thật.
+- **Ảnh hưởng:** cần khởi động lại STT backend (`npm run stt:start`). Next dev đang chạy vẫn render phía máy chủ thanh menu cũ (lỗi hydration ở trang mới) cho tới khi khởi động lại `npm run dev`. Vài từ ngay chỗ đổi người nói vẫn có thể bị bộ phân tách gán nhầm; bác sĩ thấy khi duyệt.
+
+### eForm: tự phân vai bác sĩ/bệnh nhân theo nội dung lời nói sau khi dừng ghi
+- **Loại:** Tính năng
+- **Thay đổi:**
+  - Mới `src/shared/clinical/vai-tro-nguoi-noi.ts`: chấm điểm lời của từng giọng (Người nói 1/2 từ bộ phân tách người nói) theo khoảng 220 cụm dấu hiệu lời bác sĩ và lời bệnh nhân, chỉ gán BS/BN khi đủ dấu hiệu và hai giọng chênh rõ; một giọng lẫn lời cả hai vai (máy chưa tách được) hoặc hơn hai giọng thì không gán. Chi tiết ngưỡng ở `docs/STT.md` mục "Tự gán vai bác sĩ/bệnh nhân theo nội dung".
+  - `DenoisedMic` đưa chữ vào ô theo lượt kèm nhãn tạm `Người nói N:` (từ lẻ chưa rõ người nói nối tiếp lượt đang nói); chữ tạm cũng hiện theo lượt.
+  - `TroLyAi`: ô nhập chỉ đọc khi đang ghi; dừng ghi thì đổi nhãn tạm trong đoạn vừa ghi thành `BS:`/`BN:` (hoặc bỏ nhãn nếu không chắc) và hiện dòng "Tự phân vai: …". Bác sĩ không phải bấm thêm gì.
+- **Lý do:** bác sĩ chỉ muốn bấm ghi và bấm dừng; ô nhập không có nhãn BS/BN nên ở chế độ Hội thoại mọi câu là "chưa rõ người nói", bản nháp không dùng được lời bác sĩ.
+- **File:** `src/shared/clinical/vai-tro-nguoi-noi.ts`, `src/shared/clinical/vai-tro-nguoi-noi.test.ts`, `src/client/chung/DenoisedMic.tsx`, `src/client/eform/TroLyAi.tsx`, `docs/STT.md`
+- **Kiểm tra:** `vai-tro-nguoi-noi.test.ts` 15 test đạt (6 hội thoại giả có nhãn theo cả hai chiều, 10 ca tự đọc, gộp nhầm một giọng, không đủ dấu hiệu, nhãn tạm). `npm test` 377 đạt, 1 lỗi có sẵn `encounter-context.test.ts`. `tsc`, `eslint` sạch. Trình duyệt (micro giả lập): `ca-03.tts.wav` một giọng → ô hiện `Người nói 1:` khi ghi, `BS:` sau khi dừng; `models/diarization/test-two-vi.wav` hai giọng người thật → hiện `Người nói 1/2` khi ghi, không gán vì thiếu dấu hiệu. Chưa thử hội thoại khám thật hai người.
+- **Ảnh hưởng:** phân tích ảnh hưởng GitNexus báo `TroLyAi` mức HIGH (nằm trên trang `/` và trang trình diễn); props không đổi. Lỗi tìm thấy khi thử: updater `setText` không được xóa ref bên trong vì React dev gọi updater hai lần.
+
+### Che PII: bớt bắt nhầm từ thường thành tên người (R11c); eForm và /demo-luong gọi chung một hàm `chePii`
+- **Loại:** Sửa lỗi
+- **Thay đổi:**
+  - Họ trùng từ thường (`HO_TRUNG_TU_THUONG` trong `ho-viet.ts`: lại, danh, mã, lô, hà, cao, hồ, lý, dương…): chốt chặn R11c chỉ coi là tên khi có đệm văn/thị hoặc ≥ 2 âm tiết sau họ. Trước đây "danh sách", "lại cho", "mã danh" bị che thành `[NGƯỜI_KHÁC]`.
+  - Đệm "thị"/"văn" của R11c: văn bản có dấu thì "thì" không còn bị coi là "thị" ("lô thì anh").
+  - Thêm hư từ, động từ thường vào danh sách từ dừng (cái, các, cho, đúng, cùng, để, đấy, xong, thứ, mình, làm, xem, lên, ra, vào, phải, vẫn, đều, theo, bằng, giúp, biết, nhiều, luôn, thôi, nếu, bệnh, thuốc), áp cho cả R2 và R11c. Dạng không dấu trùng tên (van, lam, bang, nhung, cung) vẫn không coi là từ dừng.
+  - Hàm mới `chePii` (`src/shared/clinical/pii/pipeline.ts`): che R1–R8 từng đoạn → chốt chặn R11 → tự che phần sót → kiểm lại. `PrivacyStore.check` (eForm) và `runDemoFlow` (/demo-luong) trước đây mỗi bên tự viết chuỗi này, nay cùng gọi `chePii`. `/stt` không che PII (chỉ nhận dạng), giữ nguyên.
+  - Lệnh mới `npm run thu-che-pii -- "câu"` (hoặc `--file đường/dẫn.txt`) chạy đúng `chePii` với allowlist của hai trang, in bản đã che, mục R1–R8, mục R11 tự che, có bị chặn không.
+- **Lý do:** thử /demo-luong bằng một file WAV khác: 10/11 mục R11c tự che là từ thường ("lại cái đấy hình", "danh sách", "mã danh đúng", "lô thì anh"…). Người dùng muốn mọi trang dùng chung một hàm lọc để dễ thử.
+- **File:** `src/shared/clinical/pii/ho-viet.ts`, `src/shared/clinical/pii/redact.ts`, `src/shared/clinical/pii/gate.ts`, `src/shared/clinical/pii/pipeline.ts`, `src/shared/clinical/pii/index.ts`, `src/shared/clinical/pii/gate.test.ts`, `src/shared/clinical/pii/pipeline.test.ts`, `src/server/demo-luong/flow.ts`, `src/server/clinical/privacy.ts`, `scripts/thu-che-pii.ts`, `package.json`, `README.md`, `CLAUDE.md`, `docs/CLINICAL-WORKFLOW.md`
+- **Kiểm tra:** thêm test 10 câu chứa đúng các cụm bị bắt nhầm (đều qua chốt chặn) và 4 tên thật có họ trùng từ thường (vẫn bị chặn); 2 test cho `chePii`. `npm test` 375/376 đạt (ca `encounter-context.test.ts` hỏng sẵn từ trước); `tsc --noEmit` sạch; `eslint` các file đã sửa sạch. `npm run thu-che-pii` trên câu mẫu: chỉ che "đường lê lợi" và "lại văn hùng". Chưa thử lại trên trình duyệt bằng file WAV.
+- **Ảnh hưởng:** tên người có họ trùng từ thường mà chỉ có 2 âm tiết và không có từ chỉ người đứng trước (vd. "gặp hà lan") không còn bị R11c bắt; có "anh/chị/bé…" đứng trước thì R2 vẫn che. Giữ `PII_POLICY_VERSION = "pii-auto-1"` vì chuỗi này nằm trong schema và dữ liệu đã duyệt; đổi số cần sửa schema riêng.
+
+### Che PII: không che nhầm "đái tháo đường", "cao còn…", "viên atorvastatin" trong lời kể STT liền mạch
+- **Loại:** Sửa lỗi
+- **Thay đổi:**
+  - R3 (`redact.ts`): "đường" không bị coi là tên đường phố khi đứng sau "tháo", "tiểu", "lượng", "hạ", "độ", "thử", "chỉ số", "bột", "men", "ngọt", hoặc đứng trước "type/tuýp/típ/thai kỳ". Trước đây "đái tháo **đường rối loạn mỡ** máu" thành `[ĐỊA_DANH_1]`.
+  - Đuôi tên người (`nameTailEnd`, dùng chung cho R2 và chốt chặn R11c) chỉ nhận âm tiết có cấu tạo tiếng Việt (`isVietSyllable`), nên tên thuốc ngoại như "atorvastatin", "amlopin" không thành đuôi tên. Trước đây "viên atorvastatin" (Viên là họ) bị che thành `[NGƯỜI_KHÁC]`.
+  - Thêm hư từ vào danh sách từ dừng: "còn", "chưa", "được", "những", "mỗi", "gì", "nào". Trước đây "hơi cao còn tiểu đường" (Cao là họ) bị che thành `[NGƯỜI_KHÁC]`.
+  - R11c (`gate.ts`): chữ trùng họ đứng ngay sau số ("1 viên", "2 cao") là danh từ đơn vị, không phải họ.
+- **Lý do:** thử /demo-luong bằng file WAV, câu tiền sử tim mạch đọc liền không dấu câu bị che nhầm tên bệnh và tên thuốc, AI mất thông tin lâm sàng. Bộ che dùng chung nên sửa một chỗ áp dụng cho cả /demo-luong và eForm (`src/server/clinical/privacy.ts`).
+- **File:** `src/shared/clinical/pii/redact.ts`, `src/shared/clinical/pii/gate.ts`, `src/shared/clinical/pii/redact.test.ts`, `src/shared/clinical/pii/gate.test.ts`
+- **Kiểm tra:** thêm 3 test (câu trong ảnh chụp đọc trọn qua bộ che và chốt chặn chỉ còn che `[TUỔI]`; địa chỉ "đường lê lợi", tên "cao văn lâm", "viên thị hà" vẫn bị che/chặn). `npm test` 359/360 đạt; ca hỏng `encounter-context.test.ts` đã hỏng sẵn trước thay đổi này. `eslint src/shared/clinical/pii/` sạch. Chưa thử lại trên trình duyệt bằng file WAV.
+- **Ảnh hưởng:** bản đã che giữ nguyên tên bệnh, tên thuốc ngoại nhiều hơn. Tên người có âm tiết không chuẩn tiếng Việt (vd. tên phiên âm nước ngoài sau họ Việt) sẽ không còn bị R2/R11c bắt theo đuôi.
+
+### eForm giọng nói: sửa chữ đã chốt bị mất, chữ hiện sớm hơn, dừng nhanh hơn
+- **Loại:** Sửa lỗi
+- **Thay đổi:**
+  - Sửa lỗi chữ nhận dạng đã chốt không bao giờ vào ô "Nội dung buổi khám" (khi dừng, chữ tạm biến mất dần): `TroLyAi` so `binding.encounterId` (mã lịch hẹn, vd. LK-…) với `record.id` (mã hồ sơ) nên luôn lệch và bỏ chữ. Nay so theo phiên ghi âm (`recordingSessionId`) thuộc hồ sơ đang mở.
+  - Chữ của cùng một lần ghi âm nối bằng dấu cách thay vì xuống dòng sau mỗi đoạn; lần ghi mới hoặc sau khi gõ tay thì xuống dòng.
+  - Đoạn âm thanh gửi đi tối đa 2,5 giây thay vì 5 giây (`openContinuousSession` có tùy chọn `segmentFrames`, `PcmSegmenter` nhận `maxFrames`; `/stt` giữ 5 giây).
+  - Phiên STT độ trễ thấp: header `X-STT-Latency: low` (eForm gửi qua `SpeakerSessionClient.create(..., lowLatency)`, proxy chuyển tiếp) cho cửa sổ nhận dạng lại 15 giây và chốt chữ cũ hơn 6 giây (mặc định vẫn 25 giây / 10 giây cho `/stt`). Đo trên trình duyệt với giọng máy 47 giây: mỗi đoạn xử lý ~2 giây (trước ~3 giây, chậm hơn thời gian nói nên ứ đọng), bấm Dừng tới khi xong ~3 giây (trước ~7 giây).
+- **Lý do:** bác sĩ thử giọng nói: không thấy chữ hiện khi đang nói, bấm dừng chờ lâu rồi chữ biến mất hoàn toàn.
+- **File:** `src/client/eform/TroLyAi.tsx`, `src/client/chung/DenoisedMic.tsx`, `lib/stt/session.ts`, `lib/stt/continuous.ts`, `lib/stt/speaker-client.ts`, `lib/stt/proxy.ts`, `stt/diarized_sessions.py`, `stt/api.py`, `stt/tests/test_diarized_sessions.py`, `docs/STT.md`
+- **Kiểm tra:** `pytest stt/tests` 96 đạt (thêm test phiên độ trễ thấp); `tsx --test lib/stt/*.test.ts` 21 đạt; `tsc`, `eslint` sạch. Trên trình duyệt: giả lập micro bằng `data/giong-noi/ca-01.tts.wav` (file tạm trong `public/`, đã xóa), chữ hiện trong ô sau ~4–5 giây rồi thêm dần mỗi ~2 giây, dừng xong chữ còn nguyên trong ô. Chưa thử bằng micro và giọng thật.
+- **Ảnh hưởng:** cần khởi động lại STT backend (`npm run stt:start`) để nhận code mới. Lần nhận dạng đầu sau khi khởi động lại chậm hơn (~7 giây) do nạp model.
+
+### eForm: thiết kế lại nút ghi âm, bỏ ô "Tôi đồng ý…" (mặc định đã đồng ý)
+- **Loại:** Giao diện
+- **Thay đổi:**
+  - Nút ghi âm của Trợ lý lâm sàng thành nút đặc màu tím: biểu tượng micro trong vòng tròn bên trái, hai dòng chữ "Bấm để nói" / "Chữ hiện dần trong ô bên dưới". Đang nghe thì chuyển đỏ, vòng tròn nhấp nháy, hiện "Đang nghe · m:ss" / "Bấm để dừng"; lúc mở micro và chốt câu cuối có vòng xoay. Kiểu và nội dung nút gom vào `src/client/chung/mic-ui.tsx` (`GIAO_DIEN_MIC`, `NoiDungMic`); `GiaoDienMic` bỏ khóa `nhan`.
+  - Bỏ ô "Tôi đồng ý xử lý âm thanh và nội dung y tế…" ở cả `MicButton` và `DenoisedMic`: coi như đã đồng ý, nút bấm được ngay (vẫn gửi `X-Clinical-Consent: true` khi mở phiên `/api/asr`).
+- **Lý do:** bác sĩ thấy nút cũ xấu và bị mờ vì chưa đánh dấu đồng ý; yêu cầu bỏ ô đồng ý.
+- **File:** `src/client/chung/mic-ui.tsx`, `src/client/chung/MicButton.tsx`, `src/client/chung/DenoisedMic.tsx`
+- **Kiểm tra:** `tsc --noEmit`, `eslint` các file sửa sạch; mở `/` trên trình duyệt (1440×900) thấy nút mới, không còn ô đồng ý. Chưa thử trạng thái đang nghe bằng micro thật.
+- **Ảnh hưởng:** không còn bước xác nhận đồng ý mỗi lần thu âm.
+
 ## 2026-11-17
 
 ### Sửa /stt dính chữ ở chỗ nối đoạn và /demo-luong che nhầm chữ STT

@@ -4,8 +4,8 @@ import type { SpeakerMode } from "@/shared/clinical/api";
 import type { Transcript } from "@/shared/clinical/types";
 import { parseTranscript } from "@/shared/clinical/schema";
 import {
-  aiRouteFor, checkResidualPii, maskResidualPii, PII_POLICY_VERSION, redactPii,
-  type AiRoute, type GateReason, type GateResult, type KnownIdentifier, type PiiRule,
+  aiRouteFor, chePii, PII_POLICY_VERSION,
+  type AiRoute, type GateReason, type GateResult, type KnownIdentifier, type NerKetQua, type NerTrangThai, type PiiAuditEntry, type PiiRule,
 } from "@/shared/clinical/pii";
 import { ClinicalError } from "./repository";
 
@@ -41,6 +41,7 @@ type Entry = {
   counts: Record<PiiRule, number>;
   autoMasked: GateReason[];
   aiRoute: AiRoute;
+  ner: NonNullable<PiiAuditEntry["ner"]>;
   binding?: PrivacyBinding;
 };
 
@@ -58,6 +59,8 @@ export interface PrivacyCheck {
   /** Kết quả chốt chặn chạy lại trên bản đã tự che. */
   gate: GateResult;
   ai_route: AiRoute;
+  /** Lớp NER ở lượt này (không có nội dung): đã chạy, không chạy (chỉ rule) hay tắt; số đoạn NER đã che thêm. */
+  ner: { trang_thai: NerTrangThai; so_doan: number };
   expires_at: string | null;
 }
 
@@ -66,6 +69,8 @@ export interface PrivacyCheckInput {
   allowlist: ReadonlySet<string>;
   consent: boolean;
   binding?: PrivacyBinding;
+  /** Kết quả gọi NER trên đúng văn bản sẽ che (đã trim). Không có: coi như NER tắt. */
+  ner?: NerKetQua;
 }
 
 /** Process-local, bounded bearer tickets. Only redacted text is retained; no disk or cloud I/O. */
@@ -98,40 +103,39 @@ export class PrivacyTickets {
   }
 
   /**
-   * Bộ pii-auto-1: che R1–R8 (nhãn R10) → chốt chặn R11; còn sót thì tự che phần sót rồi chạy lại R11 → tuyến AI theo R14.
+   * Bộ pii-auto-2: che R1–R8 (nhãn R10) → chốt chặn R11; còn sót thì tự che phần sót rồi chạy lại R11 → tuyến AI theo R14.
    * Chỉ bản sạch được giữ lại, và chỉ khi lượt chốt chặn cuối cùng qua.
    */
   check(text: string, mode: SpeakerMode, input: PrivacyCheckInput): PrivacyCheck {
     this.checkText(text);
     if (mode !== "conversation" && mode !== "dictation") throw new ClinicalError("Chế độ người nói không hợp lệ.", 400);
     if (hasRestrictedContent(text)) throw new ClinicalError("Dữ liệu cấp 3 không được đưa vào AI.", 403);
-    const redacted = redactPii(text.normalize("NFC"), input.known);
-    let clean = redacted.clean.trim();
+    // Bộ che dùng chung với /demo-luong (`chePii`).
+    const nerOn = input.ner?.trang_thai === "chay" ? input.ner : null;
+    const redacted = chePii(text.trim(), input.known, input.allowlist, nerOn ? { spans: nerOn.spans, nguong: nerOn.nguong } : undefined);
+    const ner: Entry["ner"] = nerOn
+      ? { trang_thai: "chay", model_sha256: nerOn.model_sha256, so_doan: redacted.ner_chap_nhan }
+      : { trang_thai: input.ner?.trang_thai ?? "tat" };
+    const clean = redacted.clean.trim();
     this.checkText(clean);
-    let gate = checkResidualPii(clean, input.known, input.allowlist);
-    let autoMasked: GateResult["reasons"] = [];
-    if (!gate.passed) {
-      const masked = maskResidualPii(clean, input.known, input.allowlist);
-      clean = masked.clean.trim();
-      autoMasked = masked.masked;
-      gate = checkResidualPii(clean, input.known, input.allowlist);
-    }
+    const { gate, auto_masked: autoMasked } = redacted;
     const aiRoute = aiRouteFor(input.consent);
-    const result = { preview: clean, counts: { ...redacted.counts }, auto_masked: autoMasked, gate, ai_route: aiRoute };
+    const result = { preview: clean, counts: { ...redacted.counts }, auto_masked: autoMasked, gate, ai_route: aiRoute,
+      ner: { trang_thai: ner.trang_thai, so_doan: ner.so_doan ?? 0 } };
     if (!gate.passed) return { ...result, status: "blocked", ticket: null, expires_at: null };
     const expires = this.now() + TTL_MS;
     const ticket = this.add({ preview: clean, mode, expires, transcriptId: randomUUID(), requestId: randomUUID(),
       processedAt: new Date(this.now()).toISOString(), consent: input.consent, counts: { ...redacted.counts },
-      autoMasked: autoMasked.map(item => item.reason), aiRoute,
+      autoMasked: autoMasked.map(item => item.reason), aiRoute, ner,
       ...(input.binding ? { binding: structuredClone(input.binding) } : {}) });
     return { ...result, status: "passed", ticket, expires_at: new Date(expires).toISOString() };
   }
 
   /** Dữ liệu cho bằng chứng khử định danh và nhật ký R13 của một ticket đã qua chốt chặn. */
-  pii(ticket: string, binding?: PrivacyBinding): { counts: Record<PiiRule, number>; auto_masked: GateReason[]; ai_route: AiRoute; consent: boolean; clean_sha256: string } {
+  pii(ticket: string, binding?: PrivacyBinding): { counts: Record<PiiRule, number>; auto_masked: GateReason[]; ai_route: AiRoute; consent: boolean; clean_sha256: string; ner: Entry["ner"] } {
     const entry = this.read(ticket);
     checkBinding(entry, binding);
-    return { counts: { ...entry.counts }, auto_masked: [...entry.autoMasked], ai_route: entry.aiRoute, consent: entry.consent,
+    return { counts: { ...entry.counts }, auto_masked: [...entry.autoMasked], ai_route: entry.aiRoute, consent: entry.consent, ner: { ...entry.ner },
       clean_sha256: createHash("sha256").update(entry.preview).digest("hex") };
   }
 

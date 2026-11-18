@@ -55,6 +55,10 @@ next-env.d.ts
 /.tmp/
 /models/stt/
 /models/diarization/
+# NER che PII: dữ liệu PhoNER_COVID19 (cấm phân phối lại), trọng số fine-tune, VnCoreNLP, môi trường huấn luyện
+/models/ner/
+/.venv-ner-train/
+/.cache-ner/
 /.cache-stt/
 /logs/
 __pycache__/
@@ -62,6 +66,8 @@ __pycache__/
 # âm thanh để đo nhận dạng giọng nói (tự sinh hoặc tự ghi, nặng)
 /data/giong-noi/*
 !/data/giong-noi/README.md
+# Đặc trưng giọng bác sĩ đã đăng ký (dữ liệu sinh trắc học): chỉ ở máy chạy prototype, không commit
+/data/giong-bac-si
 
 # đơn bác sĩ đã kê để gợi ý theo thói quen (tự sinh khi bấm Lưu)
 /data/thoi-quen/*

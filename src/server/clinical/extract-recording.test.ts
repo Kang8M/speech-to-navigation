@@ -67,7 +67,7 @@ test("extraction records provider mock and one passed audit line; env provider c
     const run = await extractForRecording(f.actor, f.ticket, f.binding, { store: f.store, tickets: f.tickets, runDirectory: f.runDirectory, auditDirectory: f.auditDirectory });
     assert.equal(run.provider, "mock");
     assert.deepEqual(run.binding, f.binding);
-    assert.equal(run.transcript.privacy.policy_version, "pii-auto-1");
+    assert.equal(run.transcript.privacy.policy_version, "pii-auto-2");
     const lines = f.readAudit();
     assert.equal(lines.length, 1);
     assert.equal(lines[0].gate, true);

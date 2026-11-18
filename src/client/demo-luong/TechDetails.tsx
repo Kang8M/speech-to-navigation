@@ -5,6 +5,7 @@ import { PII_POLICY_VERSION } from "@/shared/clinical/pii";
 import { isDemoError, type DemoPhieu, type DemoStep } from "@/shared/demo-luong/types";
 import { TH, TD } from "@/client/eform/fields";
 import { BUOC, RUI_RO_R2, RULES, TEN_LY_DO_CHAN, TEN_RULE, gioVN, tongDaChe, type SuKienLuot } from "./hien-thi";
+import { nhanNer } from "@/shared/clinical/pii/nhan";
 
 function Dong({ nhan, children }: { nhan: string; children: ReactNode }) {
   return (
@@ -102,6 +103,7 @@ export function TechDetails({ step, events, phieu }: { step: DemoStep; events: S
           )}
           <Dong nhan="Đồng ý AI (R14)">{d.dong_y.trang_thai ? "✓" : "✗"} lúc tiếp đón, {gioVN(d.dong_y.luc)}</Dong>
           <Dong nhan="Đường AI">{d.ai_route === "external_allowed" ? "external_allowed (được gửi AI ngoài sau R11)" : "local_only (chỉ chạy bộ tách local)"}</Dong>
+          <Dong nhan="Lớp NER">{nhanNer(d.ner)}</Dong>
           <Dong nhan="Thời gian">{e.ms} ms</Dong>
         </dl>
         <BangRule counts={d.counts} />

@@ -1,5 +1,5 @@
-// Nhãn hiển thị của bộ rule pii-auto-1, dùng chung eForm và /demo-luong (chỉ là chữ, không có logic che).
-import type { PiiRule } from "./types";
+// Nhãn hiển thị của bộ rule pii-auto-2, dùng chung eForm và /demo-luong (chỉ là chữ, không có logic che).
+import type { NerTrangThai, PiiRule } from "./types";
 
 export const RULES: PiiRule[] = ["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8"];
 
@@ -20,6 +20,12 @@ export const TEN_LY_DO_CHAN: Record<string, string> = {
   R11c_ten_rieng_con_sot: "R11c · còn cụm giống tên người",
   R11d_email_url: "R11d · còn email hoặc URL",
 };
+
+/** Một dòng trạng thái lớp NER cho eForm và /demo-luong. */
+export function nhanNer(ner: { trang_thai: NerTrangThai; so_doan: number }): string {
+  if (ner.trang_thai === "chay") return `NER: đã chạy (${ner.so_doan} đoạn)`;
+  return ner.trang_thai === "khong_chay" ? "NER: không chạy, chỉ dùng rule" : "NER: tắt";
+}
 
 /** Nhãn che trong bản sạch, ví dụ `[BỆNH_NHÂN]`, `[NGƯỜI_1]`. */
 export const NHAN_CHE = /\[[^\]\n]+\]/g;

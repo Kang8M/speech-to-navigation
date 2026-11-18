@@ -21,7 +21,7 @@ test("check masks known names, keeps clinical content and speaker labels, issues
   const p = ok(t, "bs: khám thấy họng đỏ.\nbn: đau họng.");
   const transcript = t.approved(p.ticket!);
   assert.deepEqual(transcript.segments.map(s => s.vai_tro), ["bac_si", "benh_nhan"]);
-  assert.equal(transcript.privacy.policy_version, "pii-auto-1");
+  assert.equal(transcript.privacy.policy_version, "pii-auto-2");
   assert.equal(transcript.privacy.trang_thai, "passed");
 });
 

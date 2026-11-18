@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { PII_POLICY_VERSION, redactPii, type KnownIdentifier } from "./index";
+import { chePii, PII_POLICY_VERSION, redactPii, type KnownIdentifier } from "./index";
 import { aiRouteFor, checkResidualPii, maskResidualPii } from "./gate";
 import { buildAuditEntry } from "./audit";
 
@@ -167,4 +167,48 @@ test("R13: trường lạ như raw không lọt vào nhật ký", () => {
   const e = buildAuditEntry(input) as unknown as Record<string, unknown>;
   assert.equal("raw" in e, false);
   assert.equal(JSON.stringify(e).includes("nguyen"), false);
+});
+
+test("R11c: chữ thường trùng họ trong câu bệnh sử STT không bị coi là tên ('cao còn', 'viên atorvastatin')", () => {
+  const cau = "mỡ máu cũng hơi cao còn tiểu đường thì chưa có anh đang uống những thuốc gì tôi uống amlopin 5 mg mỗi sáng với 1 viên atorvastatin 10 mg vào buổi tối";
+  assert.equal(checkResidualPii(cau, none, noAllow).passed, true, JSON.stringify(checkResidualPii(cau, none, noAllow).reasons));
+  for (const c of ["uống 1 viên paracetamol", "huyết áp cao còn đau đầu", "dùng viên amoxicillin"]) {
+    assert.equal(checkResidualPii(c, none, noAllow).passed, true, c);
+  }
+  // tên thật vẫn chặn
+  for (const c of ["gặp cao văn lâm ở chợ", "đi cùng viên thị hà"]) assert.equal(checkResidualPii(c, none, noAllow).passed, false, c);
+});
+
+test("trọn câu bệnh sử STT liền mạch: không che nhầm bệnh, thuốc; vẫn che tuổi", () => {
+  const raw = "tiền sử tăng huyết áp đái tháo đường rối loạn mỡ máu hay bệnh tim mạch nào khác không tôi bị tăng huyết áp khoảng 5 năm rồi mỡ máu cũng hơi cao còn tiểu đường thì chưa có anh đang uống những thuốc gì tôi uống amlopin 5 mg mỗi sáng với 1 viên atorvastatin 10 mg vào buổi tối bố tôi từng bị nhồi máu cơ tim lúc 60 tuổi";
+  const r = redactPii(raw, none);
+  const g = checkResidualPii(r.clean, none, noAllow);
+  assert.equal(g.passed, true, JSON.stringify(g.reasons));
+  assert.equal(r.clean, raw.replace("60 tuổi", "[TUỔI]"));
+});
+
+test("R11c: từ thường trùng họ (lại, danh, mã, lô, hà) trong lời nói liền mạch không bị coi là tên", () => {
+  for (const c of [
+    "bác sĩ xem lại cái đấy hình như chưa đúng",
+    "anh in lại cái đơn xong đưa tôi",
+    "chị gửi lại cho tôi kết quả",
+    "kê lại đúng liều như cũ",
+    "tôi xem trong danh sách thuốc",
+    "ghi lại các thứ để mai khám",
+    "kiểm tra mã danh đúng chưa",
+    "uống hết một lô thì anh quay lại",
+    "hai vợ chồng đi lại cùng nhau",
+    "đi đâu cũng lại cùng anh",
+  ]) assert.equal(checkResidualPii(c, none, noAllow).passed, true, `${c}: ${JSON.stringify(checkResidualPii(c, none, noAllow).reasons)}`);
+  // tên thật có họ trùng từ thường vẫn chặn khi đủ dạng tên (có đệm hoặc ≥ 2 âm tiết sau họ)
+  for (const c of ["gặp lại văn hùng ở chợ", "đi với hà thị lan", "chị mã ngọc ánh gọi", "danh thị mỹ đưa đến"]) {
+    assert.equal(checkResidualPii(c, none, noAllow).passed, false, c);
+  }
+});
+
+test("R11c dùng chung đuôi tên với R2: tên ba âm tiết có từ đệm vẫn được che đủ", () => {
+  const r = chePii("hôm qua đỗ quốc việt mua thuốc giúp", [], new Set());
+  assert.equal(r.clean.includes("quốc"), false, r.clean);
+  assert.equal(r.clean.includes("việt"), false, r.clean);
+  assert.equal(r.clean.includes("mua thuốc giúp"), true, r.clean);
 });

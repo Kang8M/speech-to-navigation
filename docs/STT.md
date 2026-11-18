@@ -46,6 +46,7 @@ Trình duyệt thu PCM liên tục bằng AudioWorklet hoặc đọc file → x�
 | `POST /api/stt` | Nhận raw WAV với `Content-Type: audio/wav`, trả JSON |
 | `GET http://127.0.0.1:8765/health` | Trạng thái artifact, revision, model đã nạp hay chưa |
 | `POST http://127.0.0.1:8765/transcribe` | Cùng hợp đồng WAV, dùng khi kiểm tra backend trực tiếp |
+| `POST http://127.0.0.1:8765/ner` | Lớp NER che PII (2026-11-18): nhận `{"texts": [chuỗi]}` (tối đa 50 chuỗi, mỗi chuỗi tối đa 50.000 ký tự), trả `{model_sha256, nguong, ket_qua}`; xem mục "Lớp NER che PII" |
 
 Kết quả STT cơ bản gồm `transcript`, `language`, `model_id`, `configured_revision`, `resolved_revision`, `inference_ms`, `audio_ms`, `no_speech`. Model không cung cấp confidence nên `confidence=null`. Không tự thay bằng Web Speech hoặc transcript giả.
 
@@ -162,7 +163,7 @@ Kiểm tra cục bộ: mẫu `test_wavs/1.wav` có khoảng lời nói; một gi
 
 ### Gán người nói thận trọng hơn (2026-11-13)
 
-Giữ model segmentation và TitaNet hiện có, chạy CPU cục bộ. Hồ sơ giọng trong phiên được cập nhật bằng trung bình vector chuẩn hóa chỉ khi khớp đủ mạnh và có khoảng cách với ứng viên còn lại; bằng chứng mơ hồ không cập nhật hồ sơ. Các cửa sổ cuốn có thể chứa lại cùng audio nên số quan sát không phải số mẫu độc lập. Hai local cluster cùng hoạt động không được ép về cùng một ID; fragment nối tiếp vẫn có thể cùng người. Hiện vẫn hỗ trợ tối đa hai ID trong phiên; chưa tự gán vai trò bác sĩ/bệnh nhân.
+Giữ model segmentation và TitaNet hiện có, chạy CPU cục bộ. Hồ sơ giọng trong phiên được cập nhật bằng trung bình vector chuẩn hóa chỉ khi khớp đủ mạnh và có khoảng cách với ứng viên còn lại; bằng chứng mơ hồ không cập nhật hồ sơ. Các cửa sổ cuốn có thể chứa lại cùng audio nên số quan sát không phải số mẫu độc lập. Hai local cluster cùng hoạt động không được ép về cùng một ID; fragment nối tiếp vẫn có thể cùng người. Hiện vẫn hỗ trợ tối đa hai ID trong phiên. Vai trò bác sĩ/bệnh nhân được gán sau, theo nội dung lời nói (mục dưới).
 
 Embedding lấy từ phần không chồng giọng của các lượt, giữ phần sạch thay vì bỏ toàn bộ lượt chỉ vì một đoạn nhỏ bị chồng. Vẫn cần tối thiểu0.8 giây đoạn sạch và tối đa6 giây cho mỗi embedding; câu trả lời quá ngắn có thể chưa rõ người nói.
 
@@ -170,13 +171,29 @@ Gán từ bỏ fallback tìm giọng gần nhất450ms. Do timestamp Zipformer l
 
 Kiểm chứng gồm test profile, ranh giới, khoảng trống, chồng giọng một phần và rollback khi lỗi; smoke model thật giữ ID cho mẫu5+3 giây và đúng thứ tự A/B/A. Chưa có nhãn thủ công cho file Tim mạch nên chưa báo DER hay phần trăm cải thiện. Các đoạn chưa rõ có thể tăng để giảm gán nhầm. Không thêm Community-1 và không gửi audio bên ngoài.
 
+### Tự gán vai bác sĩ/bệnh nhân theo nội dung (2026-11-18, eForm)
+
+Bác sĩ chỉ bấm ghi và bấm dừng. Lúc ghi, ô "Nội dung buổi khám" hiện chữ theo lượt với nhãn tạm `Người nói 1:` / `Người nói 2:` (từ lẻ chưa rõ người nói nối tiếp lượt đang nói). Khi dừng, `src/shared/clinical/vai-tro-nguoi-noi.ts` gộp lời của từng giọng trong cả lần ghi rồi chấm điểm theo hai bộ dấu hiệu (khoảng 220 cụm từ): lời bác sĩ (chẩn đoán, chỉ định, kê đơn, liều dùng, thuật ngữ khám như màng nhĩ/niêm mạc/cuốn mũi, câu hỏi bệnh, hướng dẫn khi khám) và lời bệnh nhân (gọi "bác sĩ", kể bệnh ngôi thứ nhất, mốc thời gian kiểu kể chuyện, tự mua thuốc, hỏi "có sao không", câu đáp "dạ/vâng/ạ"). Mỗi cụm tính tối đa hai lần.
+
+Chỉ gán khi chắc: giọng bác sĩ phải có ít nhất 9 điểm lời bác sĩ (khoảng ba dấu hiệu mạnh), hai giọng chênh nhau ít nhất 8 điểm, và giọng bác sĩ không chứa lời bệnh nhân quá 50% điểm lời bác sĩ. Chỉ có một giọng thì gán BS (bác sĩ tự đọc) khi lời bệnh nhân không quá 25%; có nhiều lời của cả hai vai thì coi là máy chưa tách được hai người và không gán. Hơn hai giọng cũng không gán. Gán được thì nhãn tạm đổi thành `BS:` / `BN:` (đúng định dạng bước che thông tin đọc vai trò); không gán thì bỏ nhãn tạm, các lượt là "chưa rõ người nói" như trước. Dưới ô nhập hiện một dòng "Tự phân vai: …" nêu lý do.
+
+Đã kiểm tra trên 6 hội thoại giả có nhãn (đổi Người nói 1/2 theo cả hai chiều), 10 ca bác sĩ tự đọc trong `data/cases/`, chữ ASR thật của một hội thoại bị gộp thành một giọng, và trên trình duyệt với file một giọng (đổi thành `BS:`) và file hai giọng người thật không phải y khoa (không gán). Chưa đo trên hội thoại khám thật hai người; giọng máy đọc tiếng Việt chỉ có một nên chưa tạo được hội thoại tổng hợp hai giọng mà máy tách được.
+
+### Đăng ký giọng bác sĩ (2026-11-18)
+
+Màn hình riêng `/giong-bac-si` (không nằm trong eForm). Bác sĩ đọc đoạn mẫu khoảng 30 giây; trình duyệt gửi WAV 16 kHz tới `POST /api/stt/giong-bac-si`, route Next lấy mã bác sĩ từ actor phía máy chủ (client không chọn được) rồi chuyển tới `POST /voices/{mã}` của STT backend. Backend chạy segmentation, lấy giọng nói nhiều nhất, từ chối nếu giọng khác chiếm quá 30% thời lượng (`VOICE_ENROLL_MULTIPLE_SPEAKERS`) hoặc chưa đủ 8 giây lời nói (`VOICE_ENROLL_TOO_SHORT`), rồi lấy trung bình embedding TitaNet từng khúc 6 giây (`LocalDiarizer.enrollment_embedding`). `stt/voice_profiles.py` chỉ lưu vector đã chuẩn hóa ở `data/giong-bac-si/<mã>.json` (đổi bằng `VOICE_PROFILE_DIR`); không lưu âm thanh. `GET`/`DELETE` cùng đường dẫn để xem và xóa.
+
+eForm tạo phiên với `X-STT-Voice: bac-si`; route `/api/stt/session` đổi thành mã bác sĩ của máy chủ. Khi chốt phiên (`/sessions/{id}/finalize`) backend so vector đã đăng ký với hồ sơ giọng Người nói 1/2 của phiên và trả `voice_match: { speaker, scores }`; chỉ chọn khi giống ≥ 0,6 và hơn giọng kia ≥ 0,15. Đo trên TitaNet-Small: hai đoạn cùng giọng 0,82–0,95, giọng khác nhau tối đa 0,54; thử thật: giọng đã đăng ký 0,95–0,96, giọng người khác 0,09–0,14. Ở eForm, giọng khớp thì gắn BS cho giọng đó và BN cho giọng còn lại, kể cả khi lời nói ít dấu hiệu chuyên môn; nếu nội dung lại chắc chắn chỉ ra giọng đó là bệnh nhân thì coi là mâu thuẫn và không gán (`ketHopGiongBacSi`).
+
+Khi ghép chữ theo lượt, từ chưa rõ người nói chỉ được nối vào lượt đang nói nếu là từ lẻ (tối đa 2 từ) hoặc kẹp giữa hai đoạn của cùng người; đoạn chưa rõ dài hơn (có thể là người thứ ba, ví dụ người nhà, vì phiên chỉ nhớ hai giọng) thành dòng riêng không nhãn, không bị gộp vào lời bác sĩ.
+
 ### DeepFilterNet3 local tùy chọn (2026-11-13)
 
 Cài bằng `npm run stt:denoise:setup`. Script dùng môi trường `.venv-stt`, cài SciPy để resample và tải executable Rust CPU Windows x86_64 từ [release chính thức v0.5.6](https://github.com/Rikorose/DeepFilterNet/releases/tag/v0.5.6). Trọng số DFN3 nằm trong executable; không cần thêm PyTorch/CUDA. SHA-256 được pin và kiểm tra trong `stt/download_denoise.py`: `75e11fa16445f560cb6b021521ddb89e89270d13b83089705d98776f58fd7915`. Có thể chỉ định executable bằng `DENOISE_EXECUTABLE`. Cài đặt cần mạng; nhận dạng và khử nhiễu chạy local.
 
-Mặc định **tắt**. Tại `/stt`, chọn DeepFilterNet3 trước khi tải file hoặc mở micro; trong màn khám, bật lựa chọn khử nhiễu và đồng ý xử lý nội bộ cho từng lần thu. Header `X-STT-Denoise: off|deepfilternet3` truyền lựa chọn cho file hoặc lúc tạo session. Session giữ mode tới khi đóng; gửi mode khác trả `409 DENOISE_MODE_CONFLICT`. Mode không hợp lệ trả `400 DENOISE_MODE_INVALID`; runtime thiếu hoặc xử lý lỗi trả `503 DENOISE_*`, không tự chuyển sang audio gốc.
+Tại `/stt` mặc định **tắt**: chọn DeepFilterNet3 trước khi tải file hoặc mở micro. Trên eForm (Trợ lý lâm sàng) khử nhiễu luôn bật, không có ô chọn hay ô đồng ý. Header `X-STT-Denoise: off|deepfilternet3` truyền lựa chọn cho file hoặc lúc tạo session. Session giữ mode tới khi đóng; gửi mode khác trả `409 DENOISE_MODE_CONFLICT`. Mode không hợp lệ trả `400 DENOISE_MODE_INVALID`; runtime thiếu hoặc xử lý lỗi trả `503 DENOISE_*`, không tự chuyển sang audio gốc.
 
-Audio được resample 16 kHz → 48 kHz, bù độ trễ native bằng padding và `--compensate-delay`, rồi trở về đúng số mẫu 16 kHz. VAD/Zipformer nhận audio đã khử nhiễu, còn ONNX diarization và Community-1 luôn nhận audio gốc. Community-1 vẫn chạy tuần tự sau khi giải phóng recognizer. Micro xử lý lại cửa sổ tối đa 25 giây, chưa phải streaming từng frame; retry cùng chunk trả kết quả cache, không khử nhiễu/lưu trùng. Lỗi không cập nhật sequence, audio hoặc hồ sơ giọng của session.
+Audio được resample 16 kHz → 48 kHz, bù độ trễ native bằng padding và `--compensate-delay`, rồi trở về đúng số mẫu 16 kHz. VAD/Zipformer nhận audio đã khử nhiễu, còn ONNX diarization và Community-1 luôn nhận audio gốc. Community-1 vẫn chạy tuần tự sau khi giải phóng recognizer. Mỗi chunk micro chỉ được khử nhiễu một lần (kèm 1 giây âm thanh gốc liền trước làm ngữ cảnh), session giữ bộ đệm đã khử nhiễu; Zipformer nhận dạng lại cửa sổ tối đa 25 giây, chưa phải streaming từng frame. Session tạo với `X-STT-Latency: low` (eForm dùng) có cửa sổ 15 giây và chốt chữ cũ hơn 6 giây thay vì 10 giây, để mỗi đoạn xử lý nhanh hơn thời gian nói; retry cùng chunk trả kết quả cache, không khử nhiễu/lưu trùng. Lỗi không cập nhật sequence, audio hoặc hồ sơ giọng của session.
 
 File dài được chia khối 25 giây, thêm tối đa một giây ngữ cảnh mỗi phía để giảm gián đoạn ở chỗ nối. Không thêm giới hạn upload. WAV tạm chỉ tồn tại local trong lúc native xử lý và được xóa cả khi thành công, timeout hay lỗi thông thường; crash hệ điều hành có thể để lại file tạm. Dữ liệu audio và transcript không được gửi ra cloud. Khử nhiễu không phục hồi lời đã mất hoặc tách độc lập hai người nói chồng nhau.
 
@@ -189,3 +206,25 @@ Kiểm chứng trên máy hiện tại: 94 test Python và 129 test TypeScript �
 | 51 giây | 5.339 giây | 0.105 | 53.62 MiB |
 
 Peak RAM được đọc bằng Windows `GetProcessMemoryInfo` trên từng process native; đây không phải tổng RAM của Python, STT hoặc Community-1. Mẫu 51 giây gọi native ba lần, gồm ngữ cảnh ở chỗ nối. Đây là một lượt đo trên máy hiện tại, không bảo đảm tốc độ cho mọi máy. Smoke chỉ chứng minh runtime local hoạt động; chưa có transcript chuẩn để tính WER hoặc khẳng định độ chính xác tăng. Chưa kiểm thử tự động vòng đời micro bằng trình duyệt thật. Backend được giữ tắt sau kiểm chứng.
+
+### Lớp NER che PII (`POST /ner`, 2026-11-18)
+
+Cùng tiến trình STT, nhưng không dính tới nhận dạng giọng nói. Máy chủ Next gọi endpoint này trước khi che PII, mặc định bật, trừ khi `PII_NER=off` (`src/server/clinical/ner-client.ts`).
+
+**Cách chạy:** `stt/ner.py` tách từ bằng VnCoreNLP RDRSegmenter (Java, qua pyjnius, `stt/ner_segment.py`, GPL-3.0). Sau đó PhoBERT-base đã fine-tune trên PhoNER_COVID19 gắn nhãn, chạy bằng onnxruntime int8 từ `models/ner/phobert-phoner/`.
+- RDRSegmenter đổi dấu thanh kiểu cũ sang kiểu mới ("hòa" → "hoà"); `word_offsets` so âm tiết bỏ qua chỗ đặt dấu nên vị trí vẫn khớp văn bản gốc.
+- Câu dài được chia cửa sổ theo từ, có chồng lấn. Từ nằm trong vùng chồng lấn lấy dự đoán từ cửa sổ mà nó nằm xa mép hơn.
+- id token vượt `vocab_size` của mô hình được đổi thành `<unk>`, vì `tokenizer.json` của `vinai/phobert-base` dài hơn vocab của mô hình.
+
+**Định dạng kết quả:** mỗi văn bản trả một mảng `{start, end, nhan, diem}`. Vị trí tính theo đơn vị UTF-16 trên chuỗi NFC (khớp chỉ số chuỗi JS). `nhan` là loại PhoNER (`NAME`, `LOCATION`, `ORGANIZATION`, `PATIENT_ID`, `DATE`…). Phía Next chỉ giữ 4 loại đầu và lọc theo `nguong`.
+
+**Lỗi:**
+- Đầu vào sai trả `400/NER_INPUT_INVALID`.
+- Thiếu mô hình, Java hay bộ tách từ trả `503/NER_NOT_READY`; khi đó `/health` báo `ner_ready: false` nhưng STT vẫn chạy bình thường.
+- Mô hình được nạp ở lần gọi đầu (khởi động JVM và onnxruntime). Đo ngày 18/11 với mô hình thật: lần đầu 1,1 giây, các lần sau 25–50 ms cho 3 câu.
+
+**Riêng tư:** không log nội dung văn bản.
+
+**Bộ nhớ:** đo ngày 18/11, bộ tách từ cộng onnxruntime tốn thêm khoảng 118 MB ngoài Zipformer, chưa tính mô hình PhoBERT int8 (135 MB trên đĩa).
+
+Cách tải dữ liệu, huấn luyện và bật NER: README mục "Lớp NER che PII".

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { assertLocalDemoRequest, ClinicalError } from "@/server/clinical/repository";
-import { checkRecordingPrivacy, recordingBindingSchema } from "@/server/clinical/bound-privacy";
+import { checkRecordingPrivacyWithNer, recordingBindingSchema } from "@/server/clinical/bound-privacy";
 import { getDemoClinicalActor } from "@/server/clinical/encounter-context";
 
 export const runtime = "nodejs";
@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     const body = await request.text();
     if (Buffer.byteLength(body) > 400_000) throw new ClinicalError("Yêu cầu quá lớn.", 413);
     const { text: content, mode, binding } = input.parse(JSON.parse(body));
-    const result = checkRecordingPrivacy(getDemoClinicalActor(), { text: content, mode, binding });
+    const result = await checkRecordingPrivacyWithNer(getDemoClinicalActor(), { text: content, mode, binding });
     return Response.json(result, { headers });
   } catch (error) {
     // Never echo input, Zod issues, provider errors, or raw transcript to responses/logs.

@@ -10,6 +10,9 @@ import { loadKichBan } from "./kich-ban";
 import { approveDemoPhieu, createDemoPhieu, demoStore, readDemoPhieu, saveDoctorEdit, type DemoStore } from "./store";
 import { runDemoFlow, type DemoFlowInput } from "./flow";
 
+// NER mặc định bật; test luồng không được gọi dịch vụ STT thật trên máy. Test nào cần NER thì tiêm `ner`.
+process.env.PII_NER = "off";
+
 const parent = fs.mkdtempSync(path.join(os.tmpdir(), "demo-luong-flow-"));
 let storeCount = 0;
 const newStore = () => demoStore(path.join(parent, `s${++storeCount}`));
@@ -226,4 +229,29 @@ test("không rò bản thô: không file nào trong kho chứa chuỗi phải ch
     const content = foldVietnamese(fs.readFileSync(file, "utf8"));
     for (const s of secrets) assert.equal(content.includes(s), false, `${path.relative(parent, file)} chứa "${s}"`);
   }
+});
+
+test("demo-luong: NER không chạy thì nhật ký ghi ner khong_chay, không có nội dung; PII_NER=off thì tắt", async () => {
+  const store = newStore();
+  const p = createDemoPhieu(store, "GIA-000123");
+  const events = await run(store, { encounterId: p.encounter_id, source: kb("ca-chuan", 1), ner: async () => ({ trang_thai: "khong_chay" }) });
+  assert.deepEqual(pick(events, "che").du_lieu.ner, { trang_thai: "khong_chay", so_doan: 0 });
+  const line = fs.readFileSync(path.join(store.root, "audit", `${p.encounter_id}.ndjson`), "utf8").trim();
+  assert.deepEqual(JSON.parse(line).ner, { trang_thai: "khong_chay" });
+  for (const s of loadKichBan("ca-chuan").expected.phai_che) assert.equal(foldVietnamese(line).includes(foldVietnamese(s)), false);
+  const plain = await run(store, { encounterId: p.encounter_id, source: kb("ca-chuan", 2) });
+  assert.deepEqual(pick(plain, "che").du_lieu.ner, { trang_thai: "tat", so_doan: 0 });
+});
+
+test("demo-luong: NER chạy thì che thêm và nhật ký ghi số đoạn", async () => {
+  const store = newStore();
+  const p = createDemoPhieu(store, "GIA-000123");
+  const ner = async (input: readonly string[]) => ({ trang_thai: "chay" as const, nguong: 0.5, model_sha256: "b".repeat(64),
+    spans: input.map((t, i) => (i === 0 ? [{ start: 0, end: Math.min(2, t.length), nhan: "NAME", diem: 0.9 }] : [])) });
+  const events = await run(store, { encounterId: p.encounter_id, source: kb("ca-chuan", 1), ner });
+  const che = pick(events, "che");
+  assert.equal(che.du_lieu.ner.trang_thai, "chay");
+  const line = JSON.parse(fs.readFileSync(path.join(store.root, "audit", `${p.encounter_id}.ndjson`), "utf8").trim());
+  assert.equal(line.ner.trang_thai, "chay"); assert.equal(line.ner.model_sha256, "b".repeat(64));
+  assert.equal(line.ner.so_doan, che.du_lieu.ner.so_doan);
 });

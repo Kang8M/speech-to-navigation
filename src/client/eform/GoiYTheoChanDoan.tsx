@@ -4,7 +4,7 @@ import { useState, type ReactNode } from "react";
 import { useEform } from "@/client/eform/EformContext";
 import { BTN_AI, BTN_OUTLINE, SourceBadge } from "@/client/eform/fields";
 import { splitCodes } from "@/client/eform/IcdField";
-import type { MauGoiY } from "@/shared/eform/goi-y";
+import { khoaDong as khoa, type MauGoiY } from "@/shared/eform/goi-y";
 import { ghepGoiY, hayKe, soLanDaKe } from "@/shared/eform/thoi-quen";
 import type { Nguon } from "@/shared/eform/types";
 
@@ -30,12 +30,11 @@ interface Props<T extends Dong> {
   phuTro?: (mau: MauGoiY) => ReactNode;
 }
 
-const khoa = (row: Dong) => row.ma || row.ten.toLowerCase();
-
 /**
  * Gợi ý theo mã ICD10 đang chọn trên phiếu khám. Không tự thêm gì: bác sĩ tích chọn rồi bấm Thêm.
  * Bác sĩ đã từng Lưu đơn cho cùng chẩn đoán chính thì nhóm "Đơn anh/chị đã kê" đứng đầu, chỉ tích sẵn dòng
- * hay kê; khi đó bộ mẫu chung không tích sẵn dòng nào.
+ * hay kê; khi đó bộ mẫu chung không tích sẵn dòng nào. Dòng tùy chọn của bộ mẫu (thuốc thay thế, xét nghiệm khi cần)
+ * không bao giờ tích sẵn.
  * Giao diện gọn: chưa có mã hay chưa có gợi ý thì không hiện gì; có thì một dòng tên các mục tích sẵn và nút Thêm,
  * muốn bỏ bớt thì bấm "Chọn từng mục" để mở danh sách đủ.
  */
@@ -61,8 +60,9 @@ export function GoiYTheoChanDoan<T extends Dong>({ rows, lay, moTa, canhBao, onA
       daGap.add(k);
       const loi = canhBao?.(row) ?? null;
       const id = `${mau.id}:${i}`;
-      const macDinh = !loi && (mau.cuaToi ? hayKe(mau, row) : !coThoiQuen);
-      return { id, row, trung, loi, chon: !trung && (tich[id] ?? macDinh) };
+      const tuyChon = Boolean(mau.tuyChon?.includes(k));
+      const macDinh = !loi && !tuyChon && (mau.cuaToi ? hayKe(mau, row) : !coThoiQuen);
+      return { id, row, trung, loi, tuyChon, chon: !trung && (tich[id] ?? macDinh) };
     }),
   }));
   const daChon = danhSach.flatMap((g) => g.dong.filter((d) => d.chon).map((d) => d.row));
@@ -77,8 +77,10 @@ export function GoiYTheoChanDoan<T extends Dong>({ rows, lay, moTa, canhBao, onA
 
   if (gon && !moRong) {
     // Dòng bị bỏ tích vì cảnh báo (trùng dị ứng) vẫn phải hiện tên và lý do, không được lặng lẽ biến mất
-    const biBo = danhSach.flatMap((g) => g.dong.filter((d) => d.loi && !d.trung));
-    if (daChon.length === 0 && biBo.length === 0) return null;
+    const biBo = danhSach.flatMap((g) => g.dong.filter((d) => d.loi && !d.trung && !d.tuyChon));
+    // Mục chưa tích (tùy chọn, bộ mẫu chung khi đã có đơn quen) chỉ thấy khi mở danh sách: đếm để bác sĩ biết còn gì
+    const soConLai = danhSach.flatMap((g) => g.dong.filter((d) => !d.trung && !d.chon && !d.loi)).length;
+    if (daChon.length === 0 && biBo.length === 0 && soConLai === 0) return null;
     const maGoiY = [...new Set(nhom.map((g) => g.ma))].join(", ");
     return (
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-lg border border-tim-vien bg-tim-nhat/60 px-3 py-2">
@@ -97,7 +99,7 @@ export function GoiYTheoChanDoan<T extends Dong>({ rows, lay, moTa, canhBao, onA
           </button>
         )}
         <button type="button" className="text-xs font-medium text-tim underline-offset-2 hover:underline" onClick={() => setMoRong(true)}>
-          Chọn từng mục
+          {soConLai > 0 ? `Chọn từng mục (còn ${soConLai} mục)` : "Chọn từng mục"}
         </button>
       </div>
     );
@@ -145,7 +147,7 @@ export function GoiYTheoChanDoan<T extends Dong>({ rows, lay, moTa, canhBao, onA
               </div>
               {dong.length === 0 && <p className="text-xs text-ef-phu">Bộ mẫu không có mục nào ở phần này.</p>}
               <ul className="space-y-1">
-                {dong.map(({ id, row, trung, loi, chon }) => (
+                {dong.map(({ id, row, trung, loi, tuyChon, chon }) => (
                   <li key={id}>
                     <label className={`flex items-start gap-2 ${trung ? "opacity-60" : "cursor-pointer"}`}>
                       <input
@@ -163,6 +165,7 @@ export function GoiYTheoChanDoan<T extends Dong>({ rows, lay, moTa, canhBao, onA
                           </span>
                         )}
                         {mau.cuaToi && <span className="ml-1 text-xs font-semibold text-tim">· kê {soLanDaKe(mau, row)}</span>}
+                        {tuyChon && <span className="ml-1 text-xs text-ef-phu">· tùy chọn</span>}
                         {moTa && moTa(row) && <span className="block text-xs text-ef-phu">{moTa(row)}</span>}
                         {trung && <span className="block text-xs text-ef-phu">{trung}</span>}
                         {loi && (

@@ -4,6 +4,18 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-18
 
+### Gợi ý chỉ định và đơn thuốc theo chẩn đoán: từ 12 lên 57 bộ, khớp theo tiền tố ICD, thêm dòng tùy chọn
+- **Loại:** Dữ liệu, Tính năng, Giao diện
+- **Thay đổi:**
+  - `data/eform/goi-y-theo-chan-doan.json` viết lại: 57 bộ giả (trước 12), 137 dòng chỉ định, 179 dòng thuốc, phủ mã ICD của cả 83 phiếu mẫu (tai ngoài, tai giữa, tiền đình, nghe kém, mũi xoang, họng amidan VA, thanh quản, dị vật, u bã đậu…). Chỉ dùng thuốc, dịch vụ có trong danh mục. Sinh bằng script tạm, không đưa vào repo.
+  - `icd` của bộ mẫu nhận tiền tố: `H66` khớp H66.0, H66.9; `S02.2` khớp S02.20 (`khopMaIcd` trong `src/shared/eform/goi-y.ts`). Trước đây phải đúng từng mã, nên J01.0 (viêm xoang hàm cấp) không ra gợi ý dù có bộ J01.9.
+  - Dòng `tuy_chon: true`: hiện nhãn "· tùy chọn", không bao giờ tích sẵn. Dùng cho liều trẻ em, kháng sinh thay thế khi dị ứng Penicillin, xét nghiệm, chụp phim khi cần. `MauGoiY.tuyChon` giữ khóa các dòng này; `khoaDong` dùng chung cho `GoiYTheoChanDoan.tsx` và `thoi-quen.ts`.
+  - Giao diện gọn: nút "Chọn từng mục (còn M mục)" đếm số mục chưa tích; dòng gợi ý vẫn hiện khi không còn mục tích sẵn nhưng còn mục chưa tích. Thuốc tùy chọn trùng dị ứng không hiện chữ đỏ ở dòng gọn.
+- **Lý do:** Người dùng muốn thêm nhiều gợi ý cho chỉ định và đơn thuốc. Thêm thẳng vào danh sách tích sẵn sẽ làm đơn có hai kháng sinh, nên tách dòng tùy chọn. Khi thử trên Chrome, tài khoản `user_bs01` có đơn quen H66.0 nên bộ mẫu chung không tích sẵn gì, và giao diện gọn ẩn hẳn dòng gợi ý; đã sửa để vẫn hiện số mục còn lại. Cũng phát hiện Natri clorid vừa là dòng chính vừa là dòng tùy chọn trong cùng bộ (cùng mã nên dòng chính bị gắn "tùy chọn"); đã bỏ dòng trùng và thêm test chặn.
+- **File:** `data/eform/goi-y-theo-chan-doan.json`, `src/shared/eform/goi-y.ts`, `src/shared/eform/goi-y.test.ts` (mới), `src/shared/eform/thoi-quen.ts`, `src/client/eform/GoiYTheoChanDoan.tsx`, `src/server/du-lieu/goi-y.test.ts` (mới), `README.md`
+- **Kiểm tra:** 2 test `goi-y.test.ts` (khớp tiền tố, chọn bộ theo thứ tự mã) và 6 test dữ liệu `src/server/du-lieu/goi-y.test.ts` (id không trùng, mỗi bộ có chỉ định, mọi dòng khớp chắc danh mục, tiền tố ICD có thật, không mã nào khớp hai bộ, mọi phiếu mẫu có bộ gợi ý, không trùng mã trong một bộ). `npm test` 105/105, `npm run lint`, `npx tsc --noEmit` sạch. Chrome trên `/` (ca giả dị ứng Penicillin): gọi "mẫu viêm xoang hàm cấp" → tab Chỉ định hiện "Bộ mẫu cho J01.0 … còn 2 mục"; tab Đơn thuốc hiện "Bộ mẫu cho J01.0: Mometason xịt mũi, Paracetamol · Thêm 2 · Chọn từng mục (còn 4 mục)", mở ra thấy Clarithromycin, Cefuroxim, Xylometazolin, Natri clorid nhãn tùy chọn, Augmentin và Amoxicillin cảnh báo dị ứng. Không có lỗi console. Không đụng bộ tách hay khớp danh mục nên không chạy eval.
+- **Ảnh hưởng:** Mã ICD trước đây không có gợi ý giờ có (ví dụ J01.0, H66.9, H60.3). Bộ `viem-amidan` cũ (J03.9, J35.0, J36) tách thành viêm amidan cấp, amidan mạn, áp xe quanh amidan; `trao-nguoc` không còn ăn J31.2 (chuyển sang viêm họng mạn). Liều vẫn là dữ liệu giả, chưa được bác sĩ duyệt.
+
 ### Phiếu mẫu theo bệnh: từ 39 lên 83 mẫu
 - **Loại:** Dữ liệu
 - **Thay đổi:** Thêm 44 mẫu giả vào `data/eform/phieu-mau.json`, cùng dạng mẫu cũ (8 ô phiếu khám, khám bộ phận khác, chỉ định, đơn thuốc; chỗ riêng của bệnh nhân viết `[phải|trái|2 bên]`, `[số]`):

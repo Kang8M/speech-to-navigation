@@ -2,7 +2,7 @@
 // Server lưu ở data/thoi-quen/<tài khoản>.json (src/server/du-lieu/thoi-quen.ts); ở đây chỉ gom và xếp.
 import type { CatalogItem } from "../types";
 import type { DongChiDinh, DongThuoc } from "./dien-phieu";
-import { chonBoMau, type MauGoiY } from "./goi-y";
+import { chonBoMau, khoaDong as khoa, type MauGoiY } from "./goi-y";
 
 type CotChiDinh = Pick<DongChiDinh, "ma" | "ten" | "so_luong" | "ghi_chu">;
 type CotThuoc = Pick<
@@ -31,7 +31,6 @@ export function chiGiuCot<T extends object, K extends keyof T>(row: T, cot: K[])
   return Object.fromEntries(cot.map((k) => [k, row[k]])) as Pick<T, K>;
 }
 
-const khoa = (row: { ma: string; ten: string }) => row.ma || row.ten.toLowerCase();
 
 /** Gom các dòng qua nhiều lần kê: đếm số lần, lấy liều của lần gần nhất, xếp dòng hay kê lên trước */
 function gom<T extends { ma: string; ten: string }>(cacLan: T[][]): { dong: T[]; soLan: Map<string, number> } {

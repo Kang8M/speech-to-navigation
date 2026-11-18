@@ -1,8 +1,10 @@
 // Kiểm tra dữ liệu data/eform/phieu-mau.json: mỗi mẫu tra được mã ICD10, mọi chỉ định và thuốc khớp chắc danh mục.
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { maIcdTheoTen } from "@/shared/eform/icd";
 import { normalizeVi } from "@/shared/normalize";
 import type { Values } from "@/shared/types";
+import { loadIcd10 } from "./danh-muc";
 import { loadPhieuMau, loadPhieuMauGoc, timMauGoc } from "./phieu-mau";
 
 const SO_MAU_TOI_THIEU = 30;
@@ -78,6 +80,25 @@ test("mẫu điền đủ ô khác: ghi chú kết quả, có PT/TT, đã xử l
     for (const o of Object.keys(mau.o_khac ?? {})) if (!(o in hopLe)) loi.push(`${mau.id} › o_khac.${o} không phải ô eForm được điền`);
   }
   assert.deepEqual(loi, []);
+});
+
+test("chẩn đoán kèm theo: mỗi tên (ngăn bằng ;) đúng tên một mã ICD10, khác mã chẩn đoán chính", () => {
+  const icd10 = loadIcd10();
+  const loi: string[] = [];
+  let coKem = 0;
+  for (const mau of goc) {
+    const kem = String((mau.nhap.phieu_kham as Values).chan_doan_kem ?? "").trim();
+    if (!kem) continue;
+    coKem++;
+    const chinh = maIcdTheoTen(mau.icd_ten, icd10);
+    for (const ten of kem.split(";")) {
+      const ma = maIcdTheoTen(ten, icd10);
+      if (!ma) loi.push(`${mau.id}: "${ten.trim()}" không phải tên mã ICD10`);
+      else if (ma === chinh) loi.push(`${mau.id}: kèm theo trùng chẩn đoán chính ${ma}`);
+    }
+  }
+  assert.deepEqual(loi, []);
+  assert.ok(coKem >= goc.length - 1, `mới ${coKem}/${goc.length} mẫu có chẩn đoán kèm theo`);
 });
 
 test("tên gọi không trùng giữa các mẫu", () => {

@@ -34,6 +34,22 @@ test("icd truyền vào thay cho goiYIcd", () => {
   assert.deepEqual(kq.truong.icd_ban_dau, { value: "H66.0", nguon: "xem" });
 });
 
+test("chẩn đoán kèm theo đúng tên mã ICD thì lấy đúng mã, kể cả tên có dấu phẩy; bỏ mã trùng chẩn đoán chính", () => {
+  const icd10 = [
+    { ma: "H66.0", ten: "Viêm tai giữa có mủ cấp tính" },
+    { ma: "J02.9", ten: "Viêm họng cấp tính, không xác định" },
+    { ma: "J00", ten: "Viêm mũi họng cấp tính [cảm thường]" },
+  ];
+  const data = { ...DATA, icd10 } as unknown as EformData;
+  const kq = dienPhieu(
+    nhap({ chan_doan_kem: "Viêm họng cấp tính, không xác định; Viêm mũi họng cấp tính [cảm thường]; Viêm tai giữa có mủ cấp tính" }),
+    {},
+    data,
+    getTu({ icd_ra_vien: { value: "H66.0", nguon: "bs" } }),
+  );
+  assert.deepEqual(kq.truong.icd_kem_theo, { value: "J02.9,J00", nguon: "xem" });
+});
+
 test("chỗ trống làm ô thành 'xem'", () => {
   const kq = dienPhieu(nhap({ benh_su: "Đau tai [phải|trái] 3 ngày", loi_dan: "Giữ khô tai" }), {}, DATA, getTu({}));
   assert.equal(kq.truong.benh_su?.nguon, "xem");

@@ -23,6 +23,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Sốt [số] độ.",
           "kham_chuyen_khoa": "Màng nhĩ [phải|trái|2 bên] đỏ, phồng, mất nón sáng. Ống tai sạch. Mũi có dịch nhầy, họng đỏ nhẹ.",
           "chan_doan_chinh": "Viêm tai giữa cấp tai [phải|trái|2 bên]",
+          "chan_doan_kem": "Viêm mũi họng cấp tính [cảm thường]",
           "huong_dieu_tri": "Điều trị nội khoa ngoại trú",
           "loi_dan": "Giữ khô tai, không ngoáy tai. Quay lại ngay nếu sốt cao, đau tai tăng, chảy mủ tai.",
           "hen_tai_kham": "Sau 7 ngày"
@@ -79,6 +80,7 @@
           "kham_toan_than": "Trẻ tỉnh, sốt [số] độ. Cân nặng [số] kg.",
           "kham_chuyen_khoa": "Màng nhĩ [phải|trái|2 bên] đỏ, phồng, mất nón sáng. Mũi có dịch nhầy.",
           "chan_doan_chinh": "Viêm tai giữa cấp tai [phải|trái|2 bên]",
+          "chan_doan_kem": "Phì đại khối mô lympho ở vòm họng [VA]",
           "huong_dieu_tri": "Điều trị nội khoa ngoại trú",
           "loi_dan": "Rửa mũi cho trẻ hằng ngày. Quay lại ngay nếu sốt cao, li bì, chảy mủ tai.",
           "hen_tai_kham": "Sau 7 ngày"
@@ -141,6 +143,7 @@
           "kham_toan_than": "Tỉnh, sốt nhẹ.",
           "kham_chuyen_khoa": "Ống tai [phải|trái|2 bên] có mủ vàng, màng nhĩ thủng trung tâm. Tai còn lại bình thường. Mũi họng bình thường.",
           "chan_doan_chinh": "Đợt cấp viêm tai giữa mạn tính có mủ tai [phải|trái|2 bên]",
+          "chan_doan_kem": "Thủng màng nhĩ trung tâm; Giảm thính lực dẫn truyền, không xác định",
           "huong_dieu_tri": "Điều trị nội khoa, làm sạch tai",
           "loi_dan": "Giữ khô tai, không tự ngoáy tai, không bơi. Cân nhắc phẫu thuật khi tai khô.",
           "hen_tai_kham": "Sau 7 ngày"
@@ -200,6 +203,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Ống tai ngoài [phải|trái|2 bên] phù nề, đỏ, có dịch. Ấn nắp bình tai đau. Màng nhĩ khó quan sát.",
           "chan_doan_chinh": "Viêm tai ngoài cấp tai [phải|trái|2 bên]",
+          "chan_doan_kem": "Đau tai",
           "huong_dieu_tri": "Điều trị nội khoa, làm sạch ống tai",
           "loi_dan": "Giữ khô tai, không ngoáy tai, tránh nước vào tai.",
           "hen_tai_kham": "Sau 5 ngày"
@@ -255,6 +259,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Ống tai [phải|trái|2 bên] có nút ráy bít kín, không quan sát được màng nhĩ. Mũi họng bình thường.",
           "chan_doan_chinh": "Nút ráy tai [phải|trái|2 bên]",
+          "chan_doan_kem": "Giảm thính lực dẫn truyền, không xác định",
           "huong_dieu_tri": "Lấy ráy tai tại phòng khám",
           "loi_dan": "Không dùng tăm bông ngoáy sâu trong tai.",
           "hen_tai_kham": "Khi có bất thường"
@@ -292,6 +297,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Dị vật ở ống tai ngoài [phải|trái|2 bên], ống tai không rách. Tai còn lại bình thường.",
           "chan_doan_chinh": "Dị vật ống tai [phải|trái|2 bên]",
+          "chan_doan_kem": "Viêm tai ngoài, không xác định",
           "huong_dieu_tri": "Lấy dị vật tại phòng khám",
           "loi_dan": "Không tự ngoáy tai. Quay lại nếu đau tai, chảy dịch hoặc nghe kém.",
           "hen_tai_kham": "Khi có bất thường"
@@ -328,6 +334,7 @@
           "kham_toan_than": "Tỉnh, huyết áp [số] mmHg.",
           "kham_chuyen_khoa": "Ống tai sạch, màng nhĩ 2 bên bình thường. Mũi họng không có gì đặc biệt.",
           "chan_doan_chinh": "Ù tai, nghe kém [phải|trái|2 bên]",
+          "chan_doan_kem": "Giảm thính lực thần kinh giác quan, không xác định",
           "huong_dieu_tri": "Điều trị nội khoa, chờ kết quả thính lực",
           "loi_dan": "Tránh nơi ồn, hạn chế cà phê, rượu bia.",
           "hen_tai_kham": "Sau 1 tháng"
@@ -387,6 +394,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Niêm mạc mũi phù nề, sung huyết, có mủ khe giữa [phải|trái|2 bên]. Họng bình thường. Tai bình thường.",
           "chan_doan_chinh": "Viêm mũi xoang cấp",
+          "chan_doan_kem": "Viêm mũi họng cấp tính [cảm thường]",
           "huong_dieu_tri": "Điều trị nội khoa",
           "loi_dan": "Rửa mũi đều, không xì mũi mạnh. Quay lại nếu sốt cao, sưng nề quanh mắt.",
           "hen_tai_kham": "Sau 7 ngày"
@@ -450,6 +458,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Niêm mạc mũi nhợt, phù nề, cuốn dưới to [phải|trái|2 bên], dịch trong. Họng bình thường.",
           "chan_doan_chinh": "Viêm mũi dị ứng",
+          "chan_doan_kem": "Phì đại [quá phát] cuốn mũi",
           "huong_dieu_tri": "Điều trị nội khoa, tránh dị nguyên",
           "loi_dan": "Tránh bụi, lông thú, khói thuốc. Đeo khẩu trang khi ra ngoài.",
           "hen_tai_kham": "Sau 2 tuần"
@@ -511,6 +520,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Sốt [số] độ.",
           "kham_chuyen_khoa": "Họng đỏ, thành sau họng có xuất tiết, amidan không to. Tai mũi bình thường.",
           "chan_doan_chinh": "Viêm họng cấp",
+          "chan_doan_kem": "Viêm mũi họng cấp tính [cảm thường]",
           "huong_dieu_tri": "Điều trị nội khoa",
           "loi_dan": "Uống nhiều nước ấm, súc họng nước muối ấm. Quay lại nếu sốt quá 3 ngày hoặc khó nuốt tăng.",
           "hen_tai_kham": "Sau 7 ngày nếu không đỡ"
@@ -563,6 +573,7 @@
           "kham_toan_than": "Tỉnh, sốt [số] độ. Hạch dưới hàm [phải|trái|2 bên].",
           "kham_chuyen_khoa": "Amidan 2 bên to, sung huyết, có mủ ở hốc. Tai mũi bình thường.",
           "chan_doan_chinh": "Viêm amidan cấp",
+          "chan_doan_kem": "Viêm họng cấp tính, không xác định",
           "huong_dieu_tri": "Điều trị nội khoa",
           "loi_dan": "Ăn mềm, uống nhiều nước. Viêm tái phát nhiều lần thì cân nhắc cắt amidan.",
           "hen_tai_kham": "Sau 7 ngày"
@@ -627,6 +638,7 @@
           "kham_toan_than": "Trẻ tỉnh, không sốt. Cân nặng [số] kg.",
           "kham_chuyen_khoa": "Mũi có dịch xanh, VA quá phát có mủ bám. Màng nhĩ 2 bên bình thường.",
           "chan_doan_chinh": "Viêm VA",
+          "chan_doan_kem": "Viêm tai giữa tiết dịch cấp tính",
           "huong_dieu_tri": "Điều trị nội khoa, theo dõi",
           "loi_dan": "Vệ sinh mũi cho trẻ trước khi ngủ.",
           "hen_tai_kham": "Sau 10 ngày"
@@ -691,6 +703,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "2 dây thanh phù nề, sung huyết, khép chưa kín. Tai mũi bình thường.",
           "chan_doan_chinh": "Viêm thanh quản cấp",
+          "chan_doan_kem": "Viêm họng cấp tính, không xác định",
           "huong_dieu_tri": "Điều trị nội khoa, nghỉ giọng",
           "loi_dan": "Hạn chế nói to, nói nhiều. Uống đủ nước, không hút thuốc.",
           "hen_tai_kham": "Sau 2 tuần"
@@ -744,6 +757,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Sụn phễu đỏ, phù nề vùng liên phễu. Dây thanh di động tốt. Tai mũi bình thường.",
           "chan_doan_chinh": "Trào ngược dạ dày thực quản",
+          "chan_doan_kem": "Viêm thanh quản mạn tính",
           "huong_dieu_tri": "Điều trị nội khoa, thay đổi lối sống",
           "loi_dan": "Không ăn no trước khi ngủ 3 giờ, kê cao đầu giường, hạn chế cà phê, rượu bia, đồ chua cay.",
           "hen_tai_kham": "Sau 4 tuần"
@@ -788,6 +802,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Ống tai ngoài [phải|trái|2 bên] có khối sưng đỏ, có ngòi mủ, ấn nắp bình tai đau. Màng nhĩ không quan sát rõ.",
           "chan_doan_chinh": "Nhọt ống tai [phải|trái|2 bên]",
+          "chan_doan_kem": "Đau tai",
           "huong_dieu_tri": "Trích nhọt, điều trị nội khoa",
           "loi_dan": "Không ngoáy tai, giữ khô tai.",
           "hen_tai_kham": "Sau 5 ngày"
@@ -844,6 +859,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Ống tai [phải|trái|2 bên] có mảng nấm trắng xám bám thành ống tai, da ống tai nề đỏ. Màng nhĩ nguyên vẹn.",
           "chan_doan_chinh": "Nấm ống tai [phải|trái|2 bên]",
+          "chan_doan_kem": "Giảm thính lực dẫn truyền, không xác định",
           "huong_dieu_tri": "Làm sạch ống tai, điều trị tại chỗ",
           "loi_dan": "Không ngoáy tai, giữ khô tai, không tự nhỏ thuốc khác.",
           "hen_tai_kham": "Sau 7 ngày"
@@ -890,6 +906,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Màng nhĩ [phải|trái|2 bên] đục, lõm, có mức dịch sau màng nhĩ. Mũi có dịch nhầy.",
           "chan_doan_chinh": "Viêm tai giữa ứ dịch tai [phải|trái|2 bên]",
+          "chan_doan_kem": "Viêm mũi họng cấp tính [cảm thường]",
           "huong_dieu_tri": "Điều trị nội khoa, theo dõi",
           "loi_dan": "Rửa mũi hằng ngày, tránh xì mũi mạnh.",
           "hen_tai_kham": "Sau 2 tuần"
@@ -948,6 +965,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Màng nhĩ [phải|trái|2 bên] lõm, kém di động. Niêm mạc mũi nề, cuốn dưới to.",
           "chan_doan_chinh": "Tắc vòi tai [phải|trái|2 bên]",
+          "chan_doan_kem": "Viêm mũi dị ứng, không xác định",
           "huong_dieu_tri": "Điều trị nội khoa",
           "loi_dan": "Tập nghiệm pháp Valsalva nhẹ, rửa mũi hằng ngày.",
           "hen_tai_kham": "Sau 2 tuần"
@@ -1003,6 +1021,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Màng nhĩ [phải|trái|2 bên] thủng nhỏ, bờ không đều, có ít máu khô. Không chảy dịch. Tai còn lại bình thường.",
           "chan_doan_chinh": "Thủng màng nhĩ [phải|trái|2 bên]",
+          "chan_doan_kem": "Giảm thính lực dẫn truyền, không xác định",
           "huong_dieu_tri": "Theo dõi, giữ khô tai",
           "loi_dan": "Không nhỏ thuốc tai, không để nước vào tai, không xì mũi mạnh.",
           "hen_tai_kham": "Sau 2 tuần"
@@ -1050,6 +1069,7 @@
           "kham_toan_than": "Tỉnh, huyết áp [số] mmHg. Không dấu hiệu thần kinh khu trú.",
           "kham_chuyen_khoa": "Ống tai sạch, màng nhĩ 2 bên bình thường. Nghiệm pháp tư thế dương tính bên [phải|trái|2 bên].",
           "chan_doan_chinh": "Chóng mặt tư thế kịch phát lành tính",
+          "chan_doan_kem": "Hoa mắt và/hoặc chóng mặt",
           "huong_dieu_tri": "Nghiệm pháp đặt lại sỏi tai, điều trị nội khoa",
           "loi_dan": "Đứng dậy từ từ, tránh cúi ngửa đột ngột. Quay lại ngay nếu yếu tay chân, nói khó.",
           "hen_tai_kham": "Sau 1 tuần"
@@ -1097,6 +1117,7 @@
           "kham_toan_than": "Tỉnh, huyết áp [số] mmHg.",
           "kham_chuyen_khoa": "Ống tai sạch, màng nhĩ 2 bên bình thường. Mũi họng bình thường.",
           "chan_doan_chinh": "Bệnh Ménière tai [phải|trái|2 bên]",
+          "chan_doan_kem": "Ù tai; Giảm thính lực thần kinh giác quan, không xác định",
           "huong_dieu_tri": "Điều trị nội khoa, theo dõi thính lực",
           "loi_dan": "Ăn nhạt, hạn chế cà phê, rượu bia, ngủ đủ giấc.",
           "hen_tai_kham": "Sau 1 tháng"
@@ -1153,6 +1174,7 @@
           "kham_toan_than": "Tỉnh, có rung giật nhãn cầu. Không dấu hiệu thần kinh khu trú.",
           "kham_chuyen_khoa": "Ống tai sạch, màng nhĩ 2 bên bình thường. Mũi họng bình thường.",
           "chan_doan_chinh": "Viêm dây thần kinh tiền đình",
+          "chan_doan_kem": "Hoa mắt và/hoặc chóng mặt",
           "huong_dieu_tri": "Điều trị nội khoa",
           "loi_dan": "Nằm nghỉ khi chóng mặt, tập vận động sớm khi đỡ. Quay lại ngay nếu yếu tay chân, nói khó.",
           "hen_tai_kham": "Sau 1 tuần"
@@ -1206,6 +1228,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Ống tai sạch, màng nhĩ 2 bên bình thường. Mũi họng bình thường.",
           "chan_doan_chinh": "Điếc đột ngột tai [phải|trái|2 bên]",
+          "chan_doan_kem": "Ù tai",
           "huong_dieu_tri": "Điều trị nội khoa sớm, theo dõi thính lực",
           "loi_dan": "Nghỉ ngơi, tránh tiếng ồn. Quay lại ngay nếu chóng mặt nhiều.",
           "hen_tai_kham": "Sau 1 tuần"
@@ -1264,6 +1287,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Ống tai sạch, màng nhĩ 2 bên bình thường. Mũi họng không có gì đặc biệt.",
           "chan_doan_chinh": "Nghe kém tuổi già 2 tai",
+          "chan_doan_kem": "Ù tai",
           "huong_dieu_tri": "Tư vấn máy trợ thính, theo dõi thính lực",
           "loi_dan": "Tránh tiếng ồn, kiểm tra thính lực định kỳ.",
           "hen_tai_kham": "Sau 6 tháng"
@@ -1310,6 +1334,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Sốt [số] độ.",
           "kham_chuyen_khoa": "Niêm mạc mũi nề đỏ, dịch trong. Họng đỏ nhẹ, amidan không to. Màng nhĩ 2 bên bình thường.",
           "chan_doan_chinh": "Viêm mũi họng cấp",
+          "chan_doan_kem": "Viêm thanh quản cấp tính",
           "huong_dieu_tri": "Điều trị triệu chứng",
           "loi_dan": "Nghỉ ngơi, uống nhiều nước, rửa mũi. Quay lại nếu sốt quá 3 ngày, đau tai, khó thở.",
           "hen_tai_kham": "Khi có bất thường"
@@ -1371,6 +1396,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Niêm mạc mũi phù nề, có mủ khe giữa [phải|trái|2 bên], cuốn giữa thoái hóa. Họng có dịch chảy từ vòm.",
           "chan_doan_chinh": "Viêm mũi xoang mạn",
+          "chan_doan_kem": "Vẹo vách ngăn mũi",
           "huong_dieu_tri": "Điều trị nội khoa, chụp CT xoang đánh giá",
           "loi_dan": "Rửa mũi hằng ngày, tránh khói bụi. Cân nhắc phẫu thuật nếu điều trị nội khoa không đỡ.",
           "hen_tai_kham": "Sau 2 tuần"
@@ -1433,6 +1459,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Khối polyp nhẵn, màu trắng xám ở khe giữa [phải|trái|2 bên], chạm không chảy máu.",
           "chan_doan_chinh": "Polyp mũi [phải|trái|2 bên]",
+          "chan_doan_kem": "Viêm xoang mạn tính, không xác định",
           "huong_dieu_tri": "Điều trị nội khoa, cân nhắc phẫu thuật nội soi",
           "loi_dan": "Rửa mũi hằng ngày, dùng thuốc xịt đều.",
           "hen_tai_kham": "Sau 2 tuần"
@@ -1488,6 +1515,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Vách ngăn vẹo hình chữ C sang [phải|trái|2 bên], cuốn dưới bên đối diện quá phát.",
           "chan_doan_chinh": "Vẹo vách ngăn mũi",
+          "chan_doan_kem": "Phì đại [quá phát] cuốn mũi",
           "huong_dieu_tri": "Điều trị nội khoa, tư vấn phẫu thuật chỉnh hình vách ngăn",
           "loi_dan": "Rửa mũi hằng ngày.",
           "hen_tai_kham": "Sau 1 tháng"
@@ -1532,6 +1560,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Cuốn dưới 2 bên quá phát, niêm mạc nề, co kém với thuốc co mạch.",
           "chan_doan_chinh": "Quá phát cuốn mũi",
+          "chan_doan_kem": "Viêm mũi dị ứng, không xác định",
           "huong_dieu_tri": "Điều trị nội khoa, cân nhắc thủ thuật thu nhỏ cuốn",
           "loi_dan": "Không dùng thuốc nhỏ mũi co mạch kéo dài.",
           "hen_tai_kham": "Sau 1 tháng"
@@ -1584,6 +1613,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Tiền đình mũi [phải|trái|2 bên] có khối sưng đỏ, có ngòi mủ. Hốc mũi bình thường.",
           "chan_doan_chinh": "Nhọt tiền đình mũi [phải|trái|2 bên]",
+          "chan_doan_kem": "Viêm mũi mạn tính",
           "huong_dieu_tri": "Điều trị nội khoa",
           "loi_dan": "Không nặn, không ngoáy mũi. Quay lại ngay nếu sưng lan lên mắt, sốt cao.",
           "hen_tai_kham": "Sau 5 ngày"
@@ -1637,6 +1667,7 @@
           "kham_toan_than": "Tỉnh, huyết áp [số] mmHg. Da niêm mạc hồng.",
           "kham_chuyen_khoa": "Điểm mạch điểm Kisselbach [phải|trái|2 bên] giãn, còn vết máu khô. Không thấy khối bất thường.",
           "chan_doan_chinh": "Chảy máu mũi [phải|trái|2 bên]",
+          "chan_doan_kem": "Viêm mũi mạn tính",
           "huong_dieu_tri": "Cầm máu tại chỗ, điều trị nội khoa",
           "loi_dan": "Không ngoáy mũi, tránh xì mạnh. Khi chảy máu thì cúi đầu, bóp chặt cánh mũi 10 phút.",
           "hen_tai_kham": "Sau 1 tuần"
@@ -1684,6 +1715,7 @@
           "kham_toan_than": "Trẻ tỉnh, không sốt, không khó thở.",
           "kham_chuyen_khoa": "Dị vật ở hốc mũi [phải|trái|2 bên], niêm mạc nề nhẹ. Họng bình thường.",
           "chan_doan_chinh": "Dị vật mũi [phải|trái|2 bên]",
+          "chan_doan_kem": "Viêm mũi mạn tính",
           "huong_dieu_tri": "Lấy dị vật tại phòng khám",
           "loi_dan": "Không tự lấy dị vật. Quay lại nếu chảy máu, chảy mũi hôi.",
           "hen_tai_kham": "Khi có bất thường"
@@ -1721,6 +1753,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Niêm mạc họng đỏ sẫm, thành sau họng nhiều tổ chức hạt. Amidan không to.",
           "chan_doan_chinh": "Viêm họng mạn",
+          "chan_doan_kem": "Bệnh trào ngược dạ dày - thực quản không kèm viêm thực quản",
           "huong_dieu_tri": "Điều trị nội khoa, đốt họng hạt",
           "loi_dan": "Súc họng nước muối, uống đủ nước, hạn chế rượu bia, thuốc lá, đồ cay.",
           "hen_tai_kham": "Sau 2 tuần"
@@ -1768,6 +1801,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Amidan 2 bên to, hốc có chất bã đậu, trụ trước đỏ. Hạch dưới hàm nhỏ.",
           "chan_doan_chinh": "Viêm amidan mạn",
+          "chan_doan_kem": "Viêm họng mạn tính",
           "huong_dieu_tri": "Điều trị nội khoa, tư vấn cắt amidan",
           "loi_dan": "Súc họng nước muối, ăn mềm. Tái khám để hẹn phẫu thuật nếu viêm tái phát nhiều.",
           "hen_tai_kham": "Sau 2 tuần"
@@ -1815,6 +1849,7 @@
           "kham_toan_than": "Tỉnh, sốt [số] độ, hơi thở hôi.",
           "kham_chuyen_khoa": "Khít hàm, trụ trước amidan [phải|trái|2 bên] phồng đỏ, lưỡi gà bị đẩy lệch.",
           "chan_doan_chinh": "Áp xe quanh amidan [phải|trái|2 bên]",
+          "chan_doan_kem": "Viêm amydan cấp tính, không xác định",
           "huong_dieu_tri": "Trích rạch tháo mủ, điều trị nội khoa",
           "loi_dan": "Ăn lỏng, súc họng nước muối. Quay lại ngay nếu khó thở, không nuốt được.",
           "hen_tai_kham": "Sau 3 ngày"
@@ -1883,6 +1918,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "2 dây thanh dày, sung huyết, bờ tự do không đều, khép chưa kín. Sụn phễu đỏ.",
           "chan_doan_chinh": "Viêm thanh quản mạn",
+          "chan_doan_kem": "Bệnh trào ngược dạ dày - thực quản không kèm viêm thực quản",
           "huong_dieu_tri": "Điều trị nội khoa, nghỉ giọng",
           "loi_dan": "Hạn chế nói to, nói nhiều, không hút thuốc. Tái khám nội soi nếu còn khàn.",
           "hen_tai_kham": "Sau 1 tháng"
@@ -1936,6 +1972,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Hạt xơ nhỏ đối xứng ở 1/3 trước và giữa 2 dây thanh, khép thanh môn hình đồng hồ cát.",
           "chan_doan_chinh": "Hạt xơ dây thanh",
+          "chan_doan_kem": "Rối loạn phát âm",
           "huong_dieu_tri": "Nghỉ giọng, luyện giọng",
           "loi_dan": "Nghỉ giọng 2 tuần, uống đủ nước, tránh nói to, la hét.",
           "hen_tai_kham": "Sau 1 tháng"
@@ -1969,6 +2006,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Khối polyp nhẵn, có cuống ở bờ tự do dây thanh [phải|trái|2 bên], dây thanh di động tốt.",
           "chan_doan_chinh": "Polyp dây thanh [phải|trái|2 bên]",
+          "chan_doan_kem": "Rối loạn phát âm",
           "huong_dieu_tri": "Tư vấn phẫu thuật nội soi cắt polyp",
           "loi_dan": "Nghỉ giọng, không hút thuốc.",
           "hen_tai_kham": "Sau 2 tuần"
@@ -2003,6 +2041,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Dị vật xương nhỏ cắm ở amidan [phải|trái|2 bên], niêm mạc quanh đỏ nhẹ.",
           "chan_doan_chinh": "Hóc xương họng",
+          "chan_doan_kem": "Đau họng",
           "huong_dieu_tri": "Lấy dị vật tại phòng khám",
           "loi_dan": "Ăn mềm 1–2 ngày. Quay lại ngay nếu đau tăng, sốt, khó nuốt.",
           "hen_tai_kham": "Khi có bất thường"
@@ -2040,6 +2079,7 @@
           "kham_toan_than": "Tỉnh, sốt [số] độ. Thể trạng mệt.",
           "kham_chuyen_khoa": "Vùng sau tai [phải|trái] sưng nề, ấn đau, rãnh sau tai mờ. Ống tai có mủ, màng nhĩ phồng, đỏ. Mũi họng bình thường.",
           "chan_doan_chinh": "Viêm xương chũm cấp tai [phải|trái]",
+          "chan_doan_kem": "Viêm tai giữa có mủ cấp tính",
           "huong_dieu_tri": "Chuyển nhập viện điều trị kháng sinh đường tĩnh mạch, chụp CT xương thái dương",
           "loi_dan": "Nhập viện ngay. Quay lại cấp cứu nếu đau đầu, nôn, co giật, méo miệng.",
           "hen_tai_kham": "Theo hướng dẫn nội trú"
@@ -2093,6 +2133,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Tai [phải|trái]: thủng màng nhĩ vùng thượng nhĩ, có vảy trắng như bã đậu, mủ thối. Mũi họng bình thường.",
           "chan_doan_chinh": "Viêm tai giữa mạn có cholesteatoma tai [phải|trái]",
+          "chan_doan_kem": "Giảm thính lực dẫn truyền, không xác định",
           "huong_dieu_tri": "Làm sạch tai, chụp CT xương thái dương, tư vấn phẫu thuật",
           "loi_dan": "Giữ khô tai, không để nước vào tai. Cholesteatoma cần phẫu thuật, quay lại ngay nếu đau đầu, chóng mặt, méo miệng.",
           "hen_tai_kham": "Sau 2 tuần, mang kết quả CT"
@@ -2155,6 +2196,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Màng nhĩ [phải|trái|2 bên] có mảng vôi trắng, di động kém, không thủng. Ống tai sạch.",
           "chan_doan_chinh": "Xơ nhĩ tai [phải|trái|2 bên]",
+          "chan_doan_kem": "Giảm thính lực dẫn truyền, không xác định",
           "huong_dieu_tri": "Đo thính lực, tư vấn máy trợ thính hoặc phẫu thuật",
           "loi_dan": "Tránh tiếng ồn lớn. Tái khám khi nghe kém tăng.",
           "hen_tai_kham": "Sau 1 tháng"
@@ -2194,6 +2236,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Ống tai [phải|trái|2 bên] sạch, màng nhĩ nguyên vẹn, nón sáng rõ. Âm thoa: Rinne âm tai [phải|trái].",
           "chan_doan_chinh": "Xốp xơ tai [phải|trái|2 bên]",
+          "chan_doan_kem": "Ù tai",
           "huong_dieu_tri": "Đo thính lực, phản xạ cơ bàn đạp; tư vấn phẫu thuật hoặc máy trợ thính",
           "loi_dan": "Bệnh tiến triển chậm, cần đo thính lực định kỳ. Tái khám mang kết quả đo.",
           "hen_tai_kham": "Sau 2 tuần"
@@ -2237,6 +2280,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Tai [phải|trái]: màng nhĩ có bọng nước xuất huyết, ống tai có ít dịch máu. Mũi có dịch nhầy.",
           "chan_doan_chinh": "Viêm màng nhĩ cấp tai [phải|trái]",
+          "chan_doan_kem": "Đau tai",
           "huong_dieu_tri": "Điều trị nội khoa ngoại trú, giảm đau",
           "loi_dan": "Giữ khô tai, không ngoáy tai. Quay lại nếu nghe kém tăng, chóng mặt.",
           "hen_tai_kham": "Sau 7 ngày"
@@ -2292,6 +2336,7 @@
           "kham_toan_than": "Tỉnh, sốt nhẹ.",
           "kham_chuyen_khoa": "Vành tai [phải|trái] sưng đỏ, nóng, ấn đau, dái tai không sưng. Ống tai sạch, màng nhĩ bình thường.",
           "chan_doan_chinh": "Viêm sụn vành tai [phải|trái]",
+          "chan_doan_kem": "Đau tai",
           "huong_dieu_tri": "Điều trị kháng sinh, theo dõi áp xe",
           "loi_dan": "Tháo khuyên tai. Không nằm đè lên tai bệnh. Quay lại ngay nếu sưng tăng, phập phều, sốt cao.",
           "hen_tai_kham": "Sau 3 ngày"
@@ -2357,6 +2402,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Cửa tai và ống tai [phải|trái] có chùm mụn nước trên nền da đỏ. Màng nhĩ nguyên vẹn. Không liệt mặt.",
           "chan_doan_chinh": "Zona tai [phải|trái]",
+          "chan_doan_kem": "Đau tai",
           "huong_dieu_tri": "Điều trị nội khoa, phối hợp da liễu, theo dõi liệt mặt",
           "loi_dan": "Không chọc vỡ mụn nước. Quay lại ngay nếu méo miệng, nhắm mắt không kín, nghe kém, chóng mặt.",
           "hen_tai_kham": "Sau 5 ngày"
@@ -2404,6 +2450,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Ống tai 2 bên sạch, màng nhĩ 2 bên nguyên vẹn, nón sáng rõ. Mũi họng bình thường.",
           "chan_doan_chinh": "Nghe kém tiếp nhận 2 tai do tiếng ồn",
+          "chan_doan_kem": "Ù tai",
           "huong_dieu_tri": "Đo thính lực, tư vấn bảo vệ tai",
           "loi_dan": "Đeo nút tai chống ồn khi làm việc. Không nghe tai nghe âm lượng lớn. Đo thính lực định kỳ 6 tháng.",
           "hen_tai_kham": "Sau 6 tháng"
@@ -2454,6 +2501,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Ống tai 2 bên sạch, màng nhĩ 2 bên nguyên vẹn, nón sáng rõ. Mũi họng bình thường.",
           "chan_doan_chinh": "Khám kiểm tra thính lực",
+          "chan_doan_kem": "Giảm thính lực, không xác định",
           "huong_dieu_tri": "Đo thính lực, đọc kết quả",
           "loi_dan": "Bảo vệ tai khỏi tiếng ồn. Khám lại nếu nghe kém, ù tai.",
           "hen_tai_kham": "Sau 1 năm"
@@ -2491,6 +2539,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Ống tai [phải|trái|2 bên] sạch, không loét do khuôn tai. Màng nhĩ nguyên vẹn.",
           "chan_doan_chinh": "Nghe kém tiếp nhận tai [phải|trái|2 bên], đang đeo máy trợ thính",
+          "chan_doan_kem": "Giảm thính lực ở người cao tuổi [lão thính]",
           "huong_dieu_tri": "Đo lại thính lực, chỉnh máy theo kết quả",
           "loi_dan": "Vệ sinh máy và khuôn tai hằng ngày, tháo máy khi tắm. Đo thính lực định kỳ 6 tháng.",
           "hen_tai_kham": "Sau 6 tháng"
@@ -2528,6 +2577,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Màng nhĩ [phải|trái|2 bên] mờ đục, lõm, có dịch sau màng nhĩ. Vòm thông thoáng.",
           "chan_doan_chinh": "Viêm tai giữa ứ dịch mạn tai [phải|trái|2 bên]",
+          "chan_doan_kem": "Phì đại khối mô lympho ở vòm họng [VA]",
           "huong_dieu_tri": "Đo thính lực, nhĩ lượng, tư vấn đặt ống thông khí màng nhĩ",
           "loi_dan": "Không để nước vào tai. Tập thông vòi tai. Tái khám mang kết quả đo.",
           "hen_tai_kham": "Sau 2 tuần"
@@ -2580,6 +2630,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Tai [phải|trái]: ống tai còn ít vảy khô, mảnh vá liền tốt, không thủng lại. Vết mổ khô.",
           "chan_doan_chinh": "Sau vá nhĩ tai [phải|trái]",
+          "chan_doan_kem": "Viêm tai giữa có mủ mạn tính khác",
           "huong_dieu_tri": "Làm sạch ống tai, theo dõi",
           "loi_dan": "Giữ khô tai, không xì mũi mạnh, không đi máy bay, không bơi trong 6 tuần.",
           "hen_tai_kham": "Sau 1 tháng"
@@ -2617,6 +2668,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Ống tai [phải|trái] sạch, màng nhĩ bình thường. Ấn khớp thái dương hàm [phải|trái] đau. Họng, amidan bình thường.",
           "chan_doan_chinh": "Đau tai [phải|trái] do khớp thái dương hàm",
+          "chan_doan_kem": "Viêm họng mạn tính",
           "huong_dieu_tri": "Điều trị giảm đau, phối hợp răng hàm mặt",
           "loi_dan": "Ăn mềm, tránh nhai đồ cứng, không há miệng quá to. Khám răng hàm mặt.",
           "hen_tai_kham": "Sau 1 tuần"
@@ -2665,6 +2717,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt. Không có dấu hiệu thần kinh khu trú khác.",
           "kham_chuyen_khoa": "Liệt mặt ngoại biên [phải|trái], dấu hiệu Charles Bell dương tính. Ống tai sạch, không có mụn nước, màng nhĩ bình thường.",
           "chan_doan_chinh": "Liệt mặt ngoại biên [phải|trái]",
+          "chan_doan_kem": "Đau tai",
           "huong_dieu_tri": "Điều trị nội khoa sớm, phối hợp vật lý trị liệu, đo thính lực",
           "loi_dan": "Nhỏ nước mắt nhân tạo, băng che mắt khi ngủ. Tập cơ mặt trước gương hằng ngày.",
           "hen_tai_kham": "Sau 1 tuần"
@@ -2724,6 +2777,7 @@
           "kham_toan_than": "Tỉnh, huyết áp [số] mmHg. Không có dấu hiệu thần kinh khu trú.",
           "kham_chuyen_khoa": "Ống tai 2 bên sạch, màng nhĩ bình thường. Không rung giật nhãn cầu tự phát. Romberg nghiêng.",
           "chan_doan_chinh": "Rối loạn tiền đình ngoại biên",
+          "chan_doan_kem": "Hoa mắt và/hoặc chóng mặt",
           "huong_dieu_tri": "Điều trị nội khoa, tập phục hồi tiền đình",
           "loi_dan": "Đứng dậy từ từ, tránh quay đầu đột ngột. Không lái xe khi còn chóng mặt. Quay lại ngay nếu đau đầu dữ dội, nói ngọng, yếu tay chân.",
           "hen_tai_kham": "Sau 2 tuần"
@@ -2780,6 +2834,7 @@
           "kham_toan_than": "Tỉnh, sốt nhẹ.",
           "kham_chuyen_khoa": "Khe giữa [phải|trái] có mủ đặc, niêm mạc nề đỏ. Ấn điểm xoang hàm [phải|trái] đau. Họng có dịch mủ thành sau.",
           "chan_doan_chinh": "Viêm xoang hàm cấp [phải|trái]",
+          "chan_doan_kem": "Viêm mũi họng cấp tính [cảm thường]",
           "huong_dieu_tri": "Điều trị nội khoa, khám răng hàm mặt",
           "loi_dan": "Rửa mũi nước muối 2 lần mỗi ngày. Khám răng hàm mặt điều trị răng nguyên nhân.",
           "hen_tai_kham": "Sau 10 ngày"
@@ -2844,6 +2899,7 @@
           "kham_toan_than": "Tỉnh, sốt nhẹ.",
           "kham_chuyen_khoa": "Khe giữa [phải|trái|2 bên] có mủ, niêm mạc nề đỏ. Ấn điểm xoang trán [phải|trái] đau. Mắt không sưng nề, vận nhãn bình thường.",
           "chan_doan_chinh": "Viêm xoang trán cấp",
+          "chan_doan_kem": "Viêm mũi họng cấp tính [cảm thường]",
           "huong_dieu_tri": "Điều trị nội khoa, chụp CT xoang nếu không đỡ",
           "loi_dan": "Rửa mũi nước muối hằng ngày. Quay lại ngay nếu sưng nề quanh mắt, nhìn mờ, đau đầu dữ dội.",
           "hen_tai_kham": "Sau 10 ngày"
@@ -2909,6 +2965,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Niêm mạc mũi đỏ sẫm, cuốn dưới 2 bên nề, co tốt với thuốc. Khe giữa sạch.",
           "chan_doan_chinh": "Viêm mũi vận mạch",
+          "chan_doan_kem": "Phì đại [quá phát] cuốn mũi",
           "huong_dieu_tri": "Điều trị nội khoa, tránh yếu tố kích thích",
           "loi_dan": "Giữ ấm mũi, đeo khẩu trang khi trời lạnh. Tránh mùi mạnh, khói thuốc. Không dùng thuốc co mạch kéo dài.",
           "hen_tai_kham": "Sau 1 tháng"
@@ -2962,6 +3019,7 @@
           "kham_toan_than": "Trẻ tỉnh, chơi ngoan. Không sốt.",
           "kham_chuyen_khoa": "Niêm mạc mũi nhợt, cuốn dưới 2 bên nề, dịch trong. Họng bình thường. Màng nhĩ 2 bên bình thường.",
           "chan_doan_chinh": "Viêm mũi dị ứng",
+          "chan_doan_kem": "Phì đại khối mô lympho ở vòm họng [VA]",
           "huong_dieu_tri": "Điều trị nội khoa, tránh dị nguyên",
           "loi_dan": "Giữ ấm, tránh bụi, lông thú. Vệ sinh mũi cho trẻ hằng ngày.",
           "hen_tai_kham": "Sau 2 tuần"
@@ -3013,6 +3071,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Niêm mạc mũi nề, cuốn dưới 2 bên quá phát, co kém, dịch nhầy sàn mũi. Khe giữa sạch.",
           "chan_doan_chinh": "Viêm mũi mạn",
+          "chan_doan_kem": "Phì đại [quá phát] cuốn mũi",
           "huong_dieu_tri": "Điều trị nội khoa, ngừng thuốc co mạch, tư vấn đốt cuốn nếu không đỡ",
           "loi_dan": "Ngừng thuốc nhỏ mũi co mạch. Rửa mũi nước muối hằng ngày. Tránh khói bụi.",
           "hen_tai_kham": "Sau 1 tháng"
@@ -3066,6 +3125,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Tháp mũi sưng nề, lệch [phải|trái], ấn đau, lạo xạo. Hốc mũi có máu khô, không tụ máu vách ngăn.",
           "chan_doan_chinh": "Gãy xương chính mũi",
+          "chan_doan_kem": "Chảy máu cam",
           "huong_dieu_tri": "Chụp phim, nắn chỉnh xương chính mũi khi hết nề",
           "loi_dan": "Chườm lạnh 2 ngày đầu. Không xì mũi mạnh, tránh va chạm vào mũi. Quay lại ngay nếu chảy máu nhiều.",
           "hen_tai_kham": "Sau 5 ngày"
@@ -3122,6 +3182,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Niêm mạc mũi hồng, khe khứu sạch, khe giữa 2 bên sạch. Không thấy khối bất thường.",
           "chan_doan_chinh": "Mất khứu giác sau nhiễm virus",
+          "chan_doan_kem": "Viêm xoang mạn tính, không xác định",
           "huong_dieu_tri": "Tập phục hồi khứu giác, điều trị nội khoa",
           "loi_dan": "Tập ngửi 4 mùi quen mỗi ngày 2 lần, mỗi mùi 20 giây. Cẩn thận khi dùng bếp ga.",
           "hen_tai_kham": "Sau 1 tháng"
@@ -3175,6 +3236,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Khe giữa [phải|trái] sạch, niêm mạc hồng. Không thấy polyp.",
           "chan_doan_chinh": "Nang xoang hàm [phải|trái]",
+          "chan_doan_kem": "Viêm xoang mạn tính, không xác định",
           "huong_dieu_tri": "Chụp CT xoang, theo dõi hoặc tư vấn phẫu thuật nội soi",
           "loi_dan": "Nang nhỏ không triệu chứng chỉ cần theo dõi. Tái khám mang phim CT.",
           "hen_tai_kham": "Sau 1 tháng"
@@ -3211,6 +3273,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Niêm mạc mũi nề, khe giữa 2 bên có mủ nhầy đặc, thoái hóa polyp nhỏ. Họng có dịch nhầy thành sau.",
           "chan_doan_chinh": "Viêm đa xoang mạn",
+          "chan_doan_kem": "Polyp mũi, không xác định",
           "huong_dieu_tri": "Điều trị nội khoa tối đa, chụp CT xoang, tư vấn phẫu thuật nội soi mũi xoang",
           "loi_dan": "Rửa mũi nước muối 2 lần mỗi ngày, xịt thuốc đều đặn. Tái khám mang phim CT.",
           "hen_tai_kham": "Sau 3 tuần"
@@ -3279,6 +3342,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Hốc mũi 2 bên còn vảy, giả mạc, dịch nhầy; lỗ thông xoang thông thoáng; không dính.",
           "chan_doan_chinh": "Sau phẫu thuật nội soi mũi xoang",
+          "chan_doan_kem": "Viêm mũi dị ứng, không xác định",
           "huong_dieu_tri": "Làm sạch hốc mũi, điều trị nội khoa sau mổ",
           "loi_dan": "Rửa mũi nước muối 3 lần mỗi ngày. Không xì mũi mạnh, không cúi gắng sức. Quay lại ngay nếu chảy máu mũi nhiều.",
           "hen_tai_kham": "Sau 2 tuần"
@@ -3335,6 +3399,7 @@
           "kham_toan_than": "Tỉnh, huyết áp [số] mmHg. Da niêm mạc hồng.",
           "kham_chuyen_khoa": "Hốc mũi [phải|trái] có máu đông, điểm chảy máu vùng sau. Họng có máu chảy xuống thành sau.",
           "chan_doan_chinh": "Chảy máu mũi [phải|trái], tăng huyết áp",
+          "chan_doan_kem": "Viêm mũi mạn tính",
           "huong_dieu_tri": "Cầm máu, nhét bấc mũi, kiểm soát huyết áp, phối hợp tim mạch",
           "loi_dan": "Uống thuốc huyết áp đều. Nằm đầu cao, không xì mũi. Rút bấc sau 48 giờ. Quay lại ngay nếu chảy máu lại.",
           "hen_tai_kham": "Sau 2 ngày"
@@ -3382,6 +3447,7 @@
           "kham_toan_than": "Tỉnh, sốt [số] độ. Hạch góc hàm 2 bên sưng đau.",
           "kham_chuyen_khoa": "Họng đỏ, amidan 2 bên sưng to, có mủ trắng trong khe. Mũi bình thường.",
           "chan_doan_chinh": "Viêm họng do liên cầu",
+          "chan_doan_kem": "Viêm amydan do liên cầu khuẩn [Streptococcus]",
           "huong_dieu_tri": "Điều trị kháng sinh đủ 10 ngày",
           "loi_dan": "Uống kháng sinh đủ 10 ngày dù đã hết sốt. Súc họng nước muối ấm, ăn mềm. Quay lại nếu đau tăng một bên, khó há miệng.",
           "hen_tai_kham": "Sau 10 ngày"
@@ -3438,6 +3504,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Amidan 2 bên to độ 3, chạm lưỡi gà, không có mủ. Vòm thông thoáng.",
           "chan_doan_chinh": "Quá phát amidan",
+          "chan_doan_kem": "Viêm amydan mạn tính",
           "huong_dieu_tri": "Tư vấn cắt amidan, làm xét nghiệm tiền phẫu",
           "loi_dan": "Nằm nghiêng khi ngủ. Tái khám mang kết quả xét nghiệm để hẹn mổ.",
           "hen_tai_kham": "Sau 2 tuần"
@@ -3475,6 +3542,7 @@
           "kham_toan_than": "Trẻ tỉnh, chơi ngoan. Không sốt.",
           "kham_chuyen_khoa": "Amidan 2 bên to độ 3. VA quá phát che 3/4 cửa mũi sau. Màng nhĩ 2 bên lõm nhẹ.",
           "chan_doan_chinh": "Quá phát VA và amidan",
+          "chan_doan_kem": "Viêm tai giữa tiết dịch mạn tính",
           "huong_dieu_tri": "Tư vấn nạo VA, cắt amidan",
           "loi_dan": "Vệ sinh mũi cho trẻ hằng ngày. Theo dõi ngừng thở khi ngủ. Tái khám để hẹn phẫu thuật.",
           "hen_tai_kham": "Sau 2 tuần"
@@ -3524,6 +3592,7 @@
           "kham_toan_than": "Tỉnh, sốt [số] độ. Thể trạng mệt.",
           "kham_chuyen_khoa": "Thành sau họng phồng, đẩy lồi ra trước, ấn mềm. Hạch cổ sưng đau.",
           "chan_doan_chinh": "Áp xe thành sau họng",
+          "chan_doan_kem": "Khó nuốt",
           "huong_dieu_tri": "Chuyển nhập viện, chụp phim, chích rạch dẫn lưu",
           "loi_dan": "Nhập viện ngay. Quay lại cấp cứu nếu khó thở, thở rít, không nuốt được nước.",
           "hen_tai_kham": "Theo hướng dẫn nội trú"
@@ -3574,6 +3643,7 @@
           "kham_toan_than": "Trẻ tỉnh, sốt nhẹ. Thở rít khi khóc, không rút lõm lồng ngực, SpO2 [số]%.",
           "kham_chuyen_khoa": "Họng đỏ nhẹ. Mũi có dịch trong.",
           "chan_doan_chinh": "Viêm thanh quản cấp gây rít ở trẻ em",
+          "chan_doan_kem": "Thở rít",
           "huong_dieu_tri": "Điều trị nội khoa, theo dõi suy hô hấp",
           "loi_dan": "Cho trẻ uống đủ nước, giữ trẻ bình tĩnh. Quay lại cấp cứu ngay nếu thở rít khi nằm yên, rút lõm ngực, tím tái.",
           "hen_tai_kham": "Sau 2 ngày"
@@ -3627,6 +3697,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Dây thanh [phải|trái] cố định ở tư thế cạnh đường giữa, khép không kín khi phát âm. Không thấy khối u.",
           "chan_doan_chinh": "Liệt dây thanh [phải|trái]",
+          "chan_doan_kem": "Rối loạn phát âm",
           "huong_dieu_tri": "Nội soi thanh quản, tìm nguyên nhân, tập phát âm",
           "loi_dan": "Uống chậm, nuốt từng ngụm nhỏ. Quay lại ngay nếu khó thở, thở rít.",
           "hen_tai_kham": "Sau 1 tháng"
@@ -3661,6 +3732,7 @@
           "kham_toan_than": "Tỉnh, sốt [số] độ. Phổi không ran.",
           "kham_chuyen_khoa": "Niêm mạc mũi nề đỏ, dịch trong. Họng đỏ, amidan không mủ. Màng nhĩ 2 bên bình thường.",
           "chan_doan_chinh": "Nhiễm trùng đường hô hấp trên cấp",
+          "chan_doan_kem": "Viêm họng cấp tính, không xác định",
           "huong_dieu_tri": "Điều trị triệu chứng ngoại trú",
           "loi_dan": "Nghỉ ngơi, uống nhiều nước ấm. Rửa mũi nước muối. Quay lại nếu sốt trên 3 ngày, khó thở, đau tai.",
           "hen_tai_kham": "Khi cần"
@@ -3721,6 +3793,7 @@
           "kham_toan_than": "Tỉnh, sốt nhẹ.",
           "kham_chuyen_khoa": "Họng đỏ, thành sau có hạt. Thanh quản niêm mạc đỏ, 2 dây thanh nề, di động tốt.",
           "chan_doan_chinh": "Viêm họng thanh quản cấp",
+          "chan_doan_kem": "Viêm mũi họng cấp tính [cảm thường]",
           "huong_dieu_tri": "Điều trị nội khoa, nghỉ giọng",
           "loi_dan": "Nghỉ giọng, không nói to. Uống nước ấm. Quay lại ngay nếu khó thở.",
           "hen_tai_kham": "Sau 1 tuần"
@@ -3782,6 +3855,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Họng niêm mạc hồng, amidan nhỏ. Hạ họng, thanh quản không thấy tổn thương. Cổ không sờ thấy khối.",
           "chan_doan_chinh": "Loạn cảm họng",
+          "chan_doan_kem": "Bệnh trào ngược dạ dày - thực quản không kèm viêm thực quản",
           "huong_dieu_tri": "Nội soi loại trừ tổn thương, điều trị trào ngược thử",
           "loi_dan": "Ăn bữa nhỏ, không nằm ngay sau ăn. Quay lại nếu nuốt nghẹn, sút cân, khàn tiếng.",
           "hen_tai_kham": "Sau 1 tháng"
@@ -3826,6 +3900,7 @@
           "kham_toan_than": "Tỉnh, không sốt. Không khó thở.",
           "kham_chuyen_khoa": "Họng, hạ họng không thấy dị vật, ứ đọng nước bọt hố lê. Ấn cạnh cổ đau.",
           "chan_doan_chinh": "Dị vật thực quản",
+          "chan_doan_kem": "Khó nuốt",
           "huong_dieu_tri": "Chuyển soi thực quản lấy dị vật",
           "loi_dan": "Nhịn ăn uống chờ soi. Không tự nuốt cơm, rau để đẩy dị vật.",
           "hen_tai_kham": "Theo hướng dẫn"
@@ -3894,6 +3969,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Lỗ rò trước bình tai [phải|trái], vùng quanh sưng đỏ, ấn đau, có ít dịch. Ống tai, màng nhĩ bình thường.",
           "chan_doan_chinh": "Rò luân nhĩ [phải|trái] bội nhiễm",
+          "chan_doan_kem": "Viêm mô tế bào tai ngoài",
           "huong_dieu_tri": "Điều trị kháng sinh, phẫu thuật bóc đường rò khi hết viêm",
           "loi_dan": "Không nặn lỗ rò. Giữ vệ sinh. Quay lại để hẹn phẫu thuật khi hết sưng.",
           "hen_tai_kham": "Sau 1 tuần"
@@ -3946,6 +4022,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Niêm mạc mũi nề, dịch nhầy sàn mũi. Thành sau họng có dịch nhầy, nhiều hạt lympho.",
           "chan_doan_chinh": "Viêm mũi họng mạn",
+          "chan_doan_kem": "Bệnh trào ngược dạ dày - thực quản không kèm viêm thực quản",
           "huong_dieu_tri": "Điều trị nội khoa, vệ sinh mũi họng",
           "loi_dan": "Rửa mũi, súc họng nước muối hằng ngày. Tránh đồ lạnh, khói bụi.",
           "hen_tai_kham": "Sau 3 tuần"
@@ -4007,6 +4084,7 @@
           "kham_toan_than": "Trẻ tỉnh, sốt [số] độ. Hạch góc hàm sưng.",
           "kham_chuyen_khoa": "Amidan 2 bên sưng đỏ, có chấm mủ trắng. Màng nhĩ 2 bên bình thường.",
           "chan_doan_chinh": "Viêm amidan cấp",
+          "chan_doan_kem": "Viêm mũi họng cấp tính [cảm thường]",
           "huong_dieu_tri": "Điều trị kháng sinh ngoại trú",
           "loi_dan": "Cho trẻ ăn lỏng, mềm, uống nhiều nước. Uống thuốc đủ ngày. Quay lại nếu trẻ sốt cao co giật, li bì, khó thở.",
           "hen_tai_kham": "Sau 7 ngày"
@@ -4063,6 +4141,7 @@
           "kham_toan_than": "Trẻ tỉnh, sốt nhẹ. Phổi không ran.",
           "kham_chuyen_khoa": "Hốc mũi 2 bên nhiều mủ nhầy xanh, niêm mạc nề đỏ. Họng có dịch mủ thành sau. Màng nhĩ 2 bên bình thường.",
           "chan_doan_chinh": "Viêm mũi xoang cấp",
+          "chan_doan_kem": "Phì đại khối mô lympho ở vòm họng [VA]",
           "huong_dieu_tri": "Hút rửa mũi, điều trị nội khoa ngoại trú",
           "loi_dan": "Vệ sinh mũi, hút mũi cho trẻ hằng ngày. Quay lại ngay nếu sưng nề quanh mắt, sốt cao, li bì.",
           "hen_tai_kham": "Sau 7 ngày"
@@ -4126,6 +4205,7 @@
           "kham_toan_than": "Trẻ tỉnh, sốt nhẹ. Phổi không ran.",
           "kham_chuyen_khoa": "Họng đỏ, amidan không mủ. Mũi dịch trong. Màng nhĩ 2 bên bình thường.",
           "chan_doan_chinh": "Viêm họng cấp",
+          "chan_doan_kem": "Viêm mũi họng cấp tính [cảm thường]",
           "huong_dieu_tri": "Điều trị triệu chứng ngoại trú",
           "loi_dan": "Cho trẻ uống nhiều nước, vệ sinh mũi. Quay lại nếu sốt trên 3 ngày, khó thở, đau tai.",
           "hen_tai_kham": "Khi cần"
@@ -4178,6 +4258,7 @@
           "kham_toan_than": "Tỉnh, tiếp xúc tốt. Không sốt.",
           "kham_chuyen_khoa": "Hố amidan 2 bên có giả mạc trắng, không chảy máu, không sưng nề.",
           "chan_doan_chinh": "Sau cắt amidan",
+          "chan_doan_kem": "Đau họng",
           "huong_dieu_tri": "Theo dõi, giảm đau",
           "loi_dan": "Ăn mềm, nguội, uống nhiều nước trong 2 tuần. Không ăn đồ cứng, cay nóng. Quay lại ngay nếu chảy máu họng.",
           "hen_tai_kham": "Sau 1 tuần"
@@ -4230,6 +4311,7 @@
           "kham_toan_than": "Trẻ tỉnh, chơi ngoan. Không sốt.",
           "kham_chuyen_khoa": "Vòm thông thoáng, còn ít giả mạc. Mũi dịch nhầy ít. Màng nhĩ 2 bên bình thường.",
           "chan_doan_chinh": "Sau nạo VA",
+          "chan_doan_kem": "Viêm tai giữa tiết dịch mạn tính",
           "huong_dieu_tri": "Theo dõi, vệ sinh mũi",
           "loi_dan": "Vệ sinh mũi cho trẻ hằng ngày. Ăn mềm, nguội trong 1 tuần. Quay lại ngay nếu chảy máu mũi, họng.",
           "hen_tai_kham": "Sau 2 tuần"

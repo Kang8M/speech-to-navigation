@@ -4,6 +4,16 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-18
 
+### Phiếu mẫu có chẩn đoán kèm theo
+- **Loại:** Dữ liệu, Tính năng
+- **Thay đổi:**
+  - `data/eform/phieu-mau.json`: 82/83 mẫu thêm `phieu_kham.chan_doan_kem`, ghi đúng tên mã trong `data/tham-khao/icd10-tmh.json`, nhiều tên ngăn bằng `;`. Ví dụ viêm tai giữa cấp kèm viêm mũi họng cấp; viêm tai giữa mạn đợt cấp kèm thủng màng nhĩ trung tâm và giảm thính lực dẫn truyền; viêm thanh quản mạn kèm trào ngược. Mẫu u bã đậu không có bệnh TMH đi kèm hợp lý nên để trống. Sinh bằng script tạm, dữ liệu giả.
+  - `dien-phieu.ts`: chẩn đoán kèm theo tách theo `;`, mỗi phần đúng tên mã thì lấy mã đó (tên ICD có dấu phẩy nên không tách theo phẩy trước), không thì tách phẩy và gợi ý theo từ khóa như cũ. Bỏ mã trùng chẩn đoán ra viện.
+- **Lý do:** Người dùng yêu cầu mẫu có chẩn đoán kèm theo.
+- **File:** `data/eform/phieu-mau.json`, `src/shared/eform/dien-phieu.ts`, `src/shared/eform/dien-phieu.test.ts`, `src/server/du-lieu/phieu-mau.test.ts`, `README.md`
+- **Kiểm tra:** `npm test` 111/111 (thêm test tên kèm theo là tên mã thật, khác chẩn đoán chính; test tra tên có dấu phẩy). Lint, tsc sạch. Chrome: "mẫu viêm tai giữa mạn đợt cấp" ra H72.0, H90.2 ở kèm theo, tô vàng.
+- **Ảnh hưởng:** `npm run eval-mau` giảm: mức 1 67,9% → 66,9%, mức 2 71,9% → 70,9%. Ô `chan_doan_kem` từ 5 Thiếu thành 5 Sai + 5 Thừa, vì đáp án các ca là bệnh nền của từng người (tăng huyết áp, đái tháo đường, viêm mũi dị ứng, trào ngược), mẫu theo bệnh không đoán được. Không sửa mẫu cho khớp đáp án để tránh chỉnh theo bài thi.
+
 ### Phiếu mẫu điền đủ các ô của phiếu khám
 - **Loại:** Tính năng, Dữ liệu
 - **Thay đổi:**

@@ -2,7 +2,7 @@
 // Mã ICD10 không lấy từ LLM: code chấm điểm từ khóa gán mã và luôn đánh dấu "cần xem lại".
 import type { MatchResult, RowMatches } from "../match";
 import type { CatalogItem, Draft, FieldValue, Values } from "../types";
-import { goiYIcd } from "./icd";
+import { goiYIcd, maIcdTheoTen } from "./icd";
 import { demChoTrong } from "./mau-cau";
 import type { EformData, Nguon, Truong } from "./types";
 
@@ -165,10 +165,12 @@ export function dienPhieu(
   const kemTheo = chu(pk.chan_doan_kem);
   if (kemTheo) {
     const daChon = [truong.icd_ra_vien?.value ?? get("icd_ra_vien").value];
+    // Mỗi chẩn đoán ngăn bằng ";": đúng tên một mã (phiếu mẫu ghi tên ICD, tên có thể chứa dấu phẩy) thì lấy mã đó,
+    // không thì tách tiếp theo dấu phẩy và gợi ý mã theo từ khóa
     const ma = kemTheo
-      .split(/[,;]/)
-      .map((y) => goiYIcd(y, data.icd10, data.quyTac, daChon)[0]?.item.ma)
-      .filter((m): m is string => Boolean(m));
+      .split(";")
+      .flatMap((y) => maIcdTheoTen(y, data.icd10) || y.split(",").map((z) => goiYIcd(z, data.icd10, data.quyTac, daChon)[0]?.item.ma))
+      .filter((m): m is string => Boolean(m) && !daChon.includes(m));
     dat("icd_kem_theo", "Chẩn đoán kèm theo (ICD10)", [...new Set(ma)].join(","), "xem");
   }
 

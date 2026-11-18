@@ -10,6 +10,12 @@
       ],
       "icd_ten": "Viêm tai giữa có mủ cấp tính",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi tai, đo nhĩ lượng.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Đau tai [phải|trái|2 bên], sốt",
@@ -60,6 +66,12 @@
       ],
       "icd_ten": "Viêm tai giữa có mủ cấp tính",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi tai mũi họng.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Đau tai [phải|trái|2 bên], sốt",
@@ -116,6 +128,12 @@
       ],
       "icd_ten": "Viêm tai giữa có mủ mạn tính khác",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi tai, đo thính lực đơn âm.",
+        "co_pttt": "Có",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Chảy mủ tai [phải|trái|2 bên], đau tai",
@@ -169,6 +187,12 @@
       ],
       "icd_ten": "Viêm tai ngoài khác do nhiễm trùng",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi tai.",
+        "co_pttt": "Có",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Đau tai [phải|trái|2 bên]",
@@ -218,6 +242,12 @@
       ],
       "icd_ten": "Nút ráy tai",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi tai.",
+        "co_pttt": "Có",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Đỡ, giảm"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Ù tai, nghe kém tai [phải|trái|2 bên]",
@@ -249,6 +279,12 @@
       ],
       "icd_ten": "Dị vật ở tai",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi tai.",
+        "co_pttt": "Có",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Đỡ, giảm"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Dị vật tai [phải|trái|2 bên]",
@@ -279,6 +315,12 @@
       ],
       "icd_ten": "Ù tai",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả đo thính lực đơn âm, đo nhĩ lượng, nội soi tai.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Ù tai, nghe kém",
@@ -332,6 +374,12 @@
       ],
       "icd_ten": "Viêm xoang cấp tính, không xác định",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi mũi xoang, X-quang Blondeau.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Ngạt mũi, chảy mũi đặc, đau vùng mặt",
@@ -389,6 +437,12 @@
       ],
       "icd_ten": "Viêm mũi dị ứng, không xác định",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi mũi xoang.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Hắt hơi, ngứa mũi, chảy mũi trong",
@@ -444,6 +498,12 @@
       ],
       "icd_ten": "Viêm họng cấp tính, không xác định",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả test nhanh liên cầu họng.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Đau họng, nuốt đau",
@@ -490,6 +550,12 @@
       ],
       "icd_ten": "Viêm amydan cấp tính, không xác định",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả công thức máu, CRP.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Đau họng, sốt cao",
@@ -548,6 +614,12 @@
       ],
       "icd_ten": "Phì đại khối mô lympho ở vòm họng [VA]",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi tai mũi họng.",
+        "co_pttt": "Có",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Ngạt mũi, ngủ ngáy",
@@ -606,6 +678,12 @@
       ],
       "icd_ten": "Viêm thanh quản cấp tính",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi họng thanh quản.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Khàn tiếng",
@@ -653,6 +731,12 @@
       ],
       "icd_ten": "Bệnh trào ngược dạ dày - thực quản không kèm viêm thực quản",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi họng thanh quản.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Vướng họng, ợ nóng",
@@ -691,6 +775,12 @@
       ],
       "icd_ten": "Áp xe tai ngoài",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi tai.",
+        "co_pttt": "Có",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Đỡ, giảm"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Đau tai [phải|trái|2 bên] dữ dội",
@@ -741,6 +831,12 @@
       ],
       "icd_ten": "Viêm tai ngoài do nhiễm nấm",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi tai.",
+        "co_pttt": "Có",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Ngứa tai, ù tai [phải|trái|2 bên]",
@@ -781,6 +877,12 @@
       ],
       "icd_ten": "Viêm tai giữa tiết dịch cấp tính",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi tai, đo nhĩ lượng, đo thính lực đơn âm.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Ù tai, nghe kém [phải|trái|2 bên]",
@@ -833,6 +935,12 @@
       ],
       "icd_ten": "Tắc vòi tai [vòi Eustache, vòi nhĩ]",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi tai mũi họng, đo nhĩ lượng.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Đầy tai, ù tai [phải|trái|2 bên]",
@@ -882,6 +990,12 @@
       ],
       "icd_ten": "Thủng màng nhĩ, không xác định",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi tai, đo thính lực đơn âm.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Đau tai, nghe kém tai [phải|trái|2 bên]",
@@ -923,6 +1037,12 @@
       ],
       "icd_ten": "Chóng mặt kịch phát lành tính",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi tai, đo thính lực đơn âm.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Chóng mặt khi thay đổi tư thế",
@@ -964,6 +1084,12 @@
       ],
       "icd_ten": "Bệnh Ménière",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả đo thính lực đơn âm, đo nhĩ lượng.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Chóng mặt, ù tai, nghe kém [phải|trái|2 bên]",
@@ -1014,6 +1140,12 @@
       ],
       "icd_ten": "Viêm dây thần kinh tiền đình",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả đo thính lực đơn âm.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Chóng mặt liên tục",
@@ -1061,6 +1193,12 @@
       ],
       "icd_ten": "Giảm thính lực đột ngột vô căn",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả đo thính lực đơn âm, đo nhĩ lượng, đo ABR.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Nghe kém đột ngột tai [phải|trái|2 bên]",
@@ -1113,6 +1251,12 @@
       ],
       "icd_ten": "Giảm thính lực ở người cao tuổi [lão thính]",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả đo thính lực đơn âm, đo nhĩ lượng.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Nghe kém 2 tai",
@@ -1153,6 +1297,12 @@
       ],
       "icd_ten": "Viêm mũi họng cấp tính [cảm thường]",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi tai mũi họng.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Sổ mũi, đau họng, sốt nhẹ",
@@ -1208,6 +1358,12 @@
       ],
       "icd_ten": "Viêm xoang mạn tính, không xác định",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi mũi xoang, CT xoang.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Ngạt mũi, chảy mũi kéo dài",
@@ -1264,6 +1420,12 @@
       ],
       "icd_ten": "Polyp mũi, không xác định",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi mũi xoang, CT xoang.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Ngạt mũi tăng dần, giảm ngửi",
@@ -1313,6 +1475,12 @@
       ],
       "icd_ten": "Vẹo vách ngăn mũi",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi mũi xoang.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Ngạt mũi [phải|trái|2 bên] kéo dài",
@@ -1351,6 +1519,12 @@
       ],
       "icd_ten": "Phì đại [quá phát] cuốn mũi",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi mũi xoang.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Ngạt mũi 2 bên",
@@ -1397,6 +1571,12 @@
       ],
       "icd_ten": "Áp xe, nhọt và/hoặc nhọt tiền đình mũi",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi mũi xoang.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Đau, sưng cửa mũi [phải|trái|2 bên]",
@@ -1444,6 +1624,12 @@
       ],
       "icd_ten": "Chảy máu cam",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi mũi xoang, công thức máu.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Chảy máu mũi [phải|trái|2 bên]",
@@ -1485,6 +1671,12 @@
       ],
       "icd_ten": "Dị vật trong lỗ mũi",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi mũi xoang.",
+        "co_pttt": "Có",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Đỡ, giảm"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Dị vật mũi [phải|trái|2 bên]",
@@ -1516,6 +1708,12 @@
       ],
       "icd_ten": "Viêm họng mạn tính",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi họng thanh quản.",
+        "co_pttt": "Có",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Vướng họng, hắng giọng",
@@ -1557,6 +1755,12 @@
       ],
       "icd_ten": "Viêm amydan mạn tính",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi họng thanh quản, công thức máu.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Đau họng tái phát",
@@ -1598,6 +1802,12 @@
       ],
       "icd_ten": "Áp xe quanh amydan",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả công thức máu, CRP.",
+        "co_pttt": "Có",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Đỡ, giảm"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Đau họng dữ dội, khó há miệng",
@@ -1660,6 +1870,12 @@
       ],
       "icd_ten": "Viêm thanh quản mạn tính",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi họng thanh quản.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Khàn tiếng kéo dài",
@@ -1707,6 +1923,12 @@
       ],
       "icd_ten": "Hạt xơ dây thanh",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi họng thanh quản.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Không",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Khàn tiếng",
@@ -1734,6 +1956,12 @@
       ],
       "icd_ten": "Polyp của dây thanh âm và/hoặc thanh quản",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi họng thanh quản.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Không",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Khàn tiếng kéo dài",
@@ -1762,6 +1990,12 @@
       ],
       "icd_ten": "Dị vật trong họng",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi họng thanh quản.",
+        "co_pttt": "Có",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Đỡ, giảm"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Hóc xương",
@@ -1793,6 +2027,12 @@
       ],
       "icd_ten": "Viêm xương chũm cấp tính",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi tai, CT xương thái dương, công thức máu, CRP.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Sưng đau sau tai [phải|trái], sốt",
@@ -1840,6 +2080,12 @@
       ],
       "icd_ten": "Viêm tai giữa có Cholesteatoma",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi tai, đo thính lực đơn âm, CT xương thái dương.",
+        "co_pttt": "Có",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Chảy mủ tai [phải|trái] mùi hôi",
@@ -1896,6 +2142,12 @@
       ],
       "icd_ten": "Xơ hoá màng nhĩ và niêm mạc tai giữa",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi tai, đo thính lực đơn âm, đo nhĩ lượng.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Không",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Nghe kém tai [phải|trái|2 bên]",
@@ -1929,6 +2181,12 @@
       ],
       "icd_ten": "Xốp xơ tai, không xác định",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi tai, đo thính lực đơn âm, đo nhĩ lượng, đo phản xạ cơ bàn đạp.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Không",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Nghe kém tai [phải|trái|2 bên] tăng dần",
@@ -1966,6 +2224,12 @@
       ],
       "icd_ten": "Viêm màng nhĩ cấp tính",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi tai, đo thính lực đơn âm.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Đau tai [phải|trái] dữ dội",
@@ -2015,6 +2279,12 @@
       ],
       "icd_ten": "Viêm màng sụn tai ngoài",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi tai, công thức máu.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Sưng đỏ, đau vành tai [phải|trái]",
@@ -2074,6 +2344,12 @@
       ],
       "icd_ten": "Viêm tai ngoài do virus phân loại mục khác",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi tai, đo thính lực đơn âm.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Đau rát tai [phải|trái], nổi mụn nước",
@@ -2115,6 +2391,12 @@
       ],
       "icd_ten": "Ảnh hưởng của tiếng ồn lên tai trong",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi tai, đo thính lực đơn âm, đo nhĩ lượng.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Nghe kém, ù tai",
@@ -2159,6 +2441,12 @@
       ],
       "icd_ten": "Khám tai và/hoặc kiểm tra thính lực",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi tai, đo thính lực đơn âm.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Không",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Khám kiểm tra thính lực định kỳ",
@@ -2190,6 +2478,12 @@
       ],
       "icd_ten": "Điều chỉnh thiết bị trợ thính",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi tai, đo thính lực đơn âm.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Không",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Khám chỉnh máy trợ thính",
@@ -2221,6 +2515,12 @@
       ],
       "icd_ten": "Viêm tai giữa tiết dịch mạn tính",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi tai, nội soi tai mũi họng, đo thính lực đơn âm, đo nhĩ lượng.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Nghe kém, đầy tai [phải|trái|2 bên]",
@@ -2267,6 +2567,12 @@
       ],
       "icd_ten": "Thủng màng nhĩ trung tâm",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi tai.",
+        "co_pttt": "Có",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Tái khám sau phẫu thuật vá nhĩ",
@@ -2298,6 +2604,12 @@
       ],
       "icd_ten": "Đau tai",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi tai, nội soi tai mũi họng.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Đau tai [phải|trái]",
@@ -2340,6 +2652,12 @@
       ],
       "icd_ten": "Liệt Bell",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi tai, đo thính lực đơn âm, đo phản xạ cơ bàn đạp.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Méo miệng, mắt [phải|trái] nhắm không kín",
@@ -2393,6 +2711,12 @@
       ],
       "icd_ten": "Rối loạn chức năng tiền đình, không xác định",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi tai, đo thính lực đơn âm.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Chóng mặt, mất thăng bằng",
@@ -2443,6 +2767,12 @@
       ],
       "icd_ten": "Viêm xoang hàm cấp tính",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi mũi xoang, X-quang Blondeau.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Đau nhức má [phải|trái], chảy mũi hôi",
@@ -2501,6 +2831,12 @@
       ],
       "icd_ten": "Viêm xoang trán cấp tính",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi mũi xoang, CT xoang.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Đau nhức vùng trán, ngạt mũi",
@@ -2560,6 +2896,12 @@
       ],
       "icd_ten": "Viêm mũi vận mạch",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi mũi xoang.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Ngạt mũi, chảy mũi trong khi thay đổi nhiệt độ",
@@ -2607,6 +2949,12 @@
       ],
       "icd_ten": "Viêm mũi dị ứng khác",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Không có ban ngoài da.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi tai mũi họng.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Trẻ hắt hơi, chảy mũi trong, ngứa mũi",
@@ -2652,6 +3000,12 @@
       ],
       "icd_ten": "Viêm mũi mạn tính",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi mũi xoang.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Ngạt mũi, chảy mũi kéo dài",
@@ -2699,6 +3053,12 @@
       ],
       "icd_ten": "Gãy xương chính mũi, gãy kín",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi mũi xoang, CT xoang.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Sưng đau mũi sau chấn thương",
@@ -2749,6 +3109,12 @@
       ],
       "icd_ten": "Mất khứu giác",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi mũi xoang.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Mất ngửi",
@@ -2796,6 +3162,12 @@
       ],
       "icd_ten": "U nang và/hoặc nang nhầy của mũi và/hoặc xoang mũi",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi mũi xoang, CT xoang.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Không",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Nặng mặt [phải|trái], chảy mũi xuống họng",
@@ -2826,6 +3198,12 @@
       ],
       "icd_ten": "Viêm đa xoang mạn tính",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi mũi xoang, CT xoang.",
+        "co_pttt": "Có",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Ngạt mũi, chảy mũi đặc kéo dài, giảm ngửi",
@@ -2888,6 +3266,12 @@
       ],
       "icd_ten": "Viêm xoang mạn tính, không xác định",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi mũi xoang.",
+        "co_pttt": "Có",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Tái khám sau phẫu thuật nội soi mũi xoang",
@@ -2938,6 +3322,12 @@
       ],
       "icd_ten": "Chảy máu cam",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi mũi xoang, công thức máu.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Chảy máu mũi [phải|trái]",
@@ -2979,6 +3369,12 @@
       ],
       "icd_ten": "Viêm họng do liên cầu khuẩn [Streptococcus]",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả test nhanh liên cầu họng, nội soi họng thanh quản.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Đau họng, sốt cao",
@@ -3029,6 +3425,12 @@
       ],
       "icd_ten": "Phì đại amydan",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi họng thanh quản, công thức máu.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Không",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Ngủ ngáy, nuốt vướng",
@@ -3060,6 +3462,12 @@
       ],
       "icd_ten": "Phì đại amydan kèm phì đại khối mô lympho ở vòm họng [VA]",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Không có ban ngoài da.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi tai mũi họng, đo nhĩ lượng, công thức máu.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Trẻ ngủ ngáy, thở miệng",
@@ -3103,6 +3511,12 @@
       ],
       "icd_ten": "Áp xe sau họng và/hoặc áp xe cận họng",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi họng thanh quản, công thức máu, CRP.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Sốt cao, nuốt đau, cứng cổ",
@@ -3147,6 +3561,12 @@
       ],
       "icd_ten": "Viêm thanh quản tắc nghẽn cấp tính [yết hầu]",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Không có ban ngoài da.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi họng thanh quản.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Trẻ ho ông ổng, khàn tiếng, thở rít",
@@ -3194,6 +3614,12 @@
       ],
       "icd_ten": "Liệt dây thanh âm và/hoặc thanh quản",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi họng thanh quản.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Không",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Khàn tiếng, nói hụt hơi",
@@ -3222,6 +3648,12 @@
       ],
       "icd_ten": "Nhiễm trùng đường hô hấp trên cấp tính, không xác định",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi tai mũi họng.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Sốt, ho, chảy mũi, đau họng",
@@ -3276,6 +3708,12 @@
       ],
       "icd_ten": "Viêm họng - thanh quản cấp tính",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi họng thanh quản.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Đau họng, khàn tiếng, ho",
@@ -3331,6 +3769,12 @@
       ],
       "icd_ten": "Bệnh khác của họng",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi họng thanh quản.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Vướng họng",
@@ -3369,6 +3813,12 @@
       ],
       "icd_ten": "Dị vật trong thực quản",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi họng thanh quản.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Không",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Nuốt đau sau hóc",
@@ -3397,6 +3847,12 @@
       ],
       "icd_ten": "Kén ở nang lông/tuyến bã",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Không chỉ định cận lâm sàng.",
+        "co_pttt": "Có",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Đỡ, giảm"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Khối dưới da vùng đầu mặt cổ",
@@ -3425,6 +3881,12 @@
       ],
       "icd_ten": "Di tật rò và/hoặc nang luân nhĩ",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi tai.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Sưng đau trước tai [phải|trái]",
@@ -3471,6 +3933,12 @@
       ],
       "icd_ten": "Viêm mũi họng mạn tính",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi tai mũi họng.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Chảy mũi xuống họng, khịt khạc",
@@ -3526,6 +3994,12 @@
       ],
       "icd_ten": "Viêm amydan cấp tính, không xác định",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Không có ban ngoài da.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả test nhanh liên cầu họng, nội soi tai mũi họng.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Trẻ sốt, đau họng, bỏ ăn",
@@ -3576,6 +4050,12 @@
       ],
       "icd_ten": "Viêm xoang cấp tính, không xác định",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Không có ban ngoài da.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi tai mũi họng.",
+        "co_pttt": "Có",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Trẻ chảy mũi xanh, ho",
@@ -3633,6 +4113,12 @@
       ],
       "icd_ten": "Viêm họng cấp tính, không xác định",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Không có ban ngoài da.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi tai mũi họng.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Trẻ sốt, ho, đau họng",
@@ -3679,6 +4165,12 @@
       ],
       "icd_ten": "Viêm amydan mạn tính",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Chưa phát hiện bất thường cơ quan khác.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi họng thanh quản.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Tái khám sau cắt amidan",
@@ -3725,6 +4217,12 @@
       ],
       "icd_ten": "Phì đại khối mô lympho ở vòm họng [VA]",
       "kham_khac": "Tim đều, phổi không ran. Bụng mềm. Không có ban ngoài da.",
+      "o_khac": {
+        "ghi_chu_kq": "Chờ kết quả nội soi tai mũi họng.",
+        "co_pttt": "Không",
+        "da_xu_ly": "Có",
+        "tinh_trang_ra_vien": "Chưa thay đổi"
+      },
       "nhap": {
         "phieu_kham": {
           "ly_do_kham": "Tái khám sau nạo VA",

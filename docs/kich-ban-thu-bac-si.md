@@ -35,7 +35,7 @@ Làm lần lượt. Mỗi bài xong thì Lưu rồi F5.
 **Bài 1. Gọi mẫu đúng bệnh của bệnh nhân, chỉ gõ tên.**
 1. Mở Trợ lý (F2), gõ `vtg mạn`, Enter.
 2. Xem dòng báo ở thanh dưới đáy: "Đã điền theo mẫu Viêm tai giữa mạn đợt cấp … Bỏ qua 2 ô đã có chữ.", kèm nút "Xem N ô vàng".
-3. Tab Phiếu khám: sửa 3 chỗ vàng `[phải|trái|2 bên]` (khám chuyên khoa, mô tả chẩn đoán ban đầu, mô tả chẩn đoán ra viện) thành `phải`. Bấm ✓ Đúng ở mã ICD10 nếu đúng. Tiền sử thì bấm Copy từ lần khám trước.
+3. Tab Phiếu khám: sửa chỗ vàng `[phải|trái|2 bên]` ở khám chuyên khoa thành `phải`. Bấm ✓ Đúng ở mã ICD10 nếu đúng. Tiền sử, dị ứng mẫu tự chép từ lần khám trước (nền xám), xem lại là được.
 4. Tab Chỉ định dịch vụ và tab Đơn thuốc: xem các dòng mẫu đã thêm, bỏ hoặc sửa theo ý anh/chị.
 5. Lưu.
 
@@ -52,7 +52,7 @@ Làm lần lượt. Mỗi bài xong thì Lưu rồi F5.
 **Bài 4. Thuốc trùng dị ứng.**
 1. F5. Gõ `mẫu viêm tai giữa cấp`, Enter.
 2. Tab Đơn thuốc: dòng **Augmentin** có cảnh báo đỏ, vì bệnh nhân dị ứng Penicillin. Bấm **Bỏ** ở dòng đó. Nếu muốn kê thuốc khác thì dùng ô **Tìm thuốc**.
-3. Tab Phiếu khám: sửa 4 chỗ vàng (sốt `[số]` độ, màng nhĩ, hai ô mô tả chẩn đoán). Lưu.
+3. Tab Phiếu khám: sửa 2 chỗ vàng (sốt `[số]` độ, màng nhĩ). Lưu.
 
 **Bài 5. Ô anh/chị đã gõ thì mẫu không ghi đè.**
 1. F5. Ở tab Phiếu khám, gõ vào ô **Hướng điều trị**: `Theo dõi, hẹn nội soi lại`.
@@ -124,11 +124,11 @@ Kiểm tra trên ca giả ngày 2026-11-12. Mã ICD10 luôn hiện vàng. Ô Lý
 
 | Bài | Bác sĩ nhập | Mẫu | ICD10 | Chỗ vàng chờ điền | Chỉ định | Thuốc |
 |---|---|---|---|---|---|---|
-| 1 | `vtg mạn` | Viêm tai giữa mạn đợt cấp | H66.3 | 3: khám chuyên khoa, 2 ô mô tả chẩn đoán (bên tai) | Nội soi tai; Đo thính lực đơn âm; Làm sạch ống tai, hút dịch tai | Ciprofloxacin nhỏ tai; Paracetamol 500 mg |
+| 1 | `vtg mạn` | Viêm tai giữa mạn đợt cấp | H66.3 | 1: khám chuyên khoa (bên tai) | Nội soi tai; Đo thính lực đơn âm; Làm sạch ống tai, hút dịch tai | Ciprofloxacin nhỏ tai; Paracetamol 500 mg |
 | 2 | `vtg mạn, tai P, 4n` | như bài 1 | H66.3 | 0 (bên tai đã thành "phải") | như bài 1 | như bài 1 |
 | 3 | bấm gợi ý "Viêm mũi dị ứng" | Viêm mũi dị ứng | J30.4 | 1: cuốn dưới to (bên) | Nội soi mũi xoang | Fexofenadin; Mometason xịt mũi; Natri clorid 0,9% |
-| 4 | `mẫu viêm tai giữa cấp` | Viêm tai giữa cấp | H66.0 | 4: sốt [số] độ, màng nhĩ, 2 ô mô tả chẩn đoán | Nội soi tai; Đo nhĩ lượng | **Augmentin (cảnh báo đỏ dị ứng)**; Paracetamol 500 mg |
-| 5 | gõ Hướng điều trị trước, rồi `mẫu viêm tai ngoài` | Viêm tai ngoài | H60.3 | 3: khám chuyên khoa, 2 ô mô tả chẩn đoán | Nội soi tai; Làm sạch ống tai, hút dịch tai | Ofloxacin nhỏ tai; Ibuprofen 400 mg |
+| 4 | `mẫu viêm tai giữa cấp` | Viêm tai giữa cấp | H66.0 | 2: sốt [số] độ, màng nhĩ | Nội soi tai; Đo nhĩ lượng | **Augmentin (cảnh báo đỏ dị ứng)**; Paracetamol 500 mg |
+| 5 | gõ Hướng điều trị trước, rồi `mẫu viêm tai ngoài` | Viêm tai ngoài | H60.3 | 1: khám chuyên khoa | Nội soi tai; Làm sạch ống tai, hút dịch tai | Ofloxacin nhỏ tai; Ibuprofen 400 mg |
 | 6 | `mẫu viêm họng cấp` → Hoàn tác → `mẫu viêm amidan cấp` | Viêm amidan cấp | J03.9 | 1 ô có 2 chỗ: sốt [số] độ, hạch dưới hàm (bên) | Tổng phân tích tế bào máu ngoại vi; Định lượng CRP | Cefuroxim 500 mg; Paracetamol 500 mg; Alpha Choay |
 | 7 | nói "mẫu viêm họng cấp" | Viêm họng cấp | J02.9 | 1: sốt [số] độ | Test nhanh liên cầu họng | Paracetamol 500 mg; Alpha Choay |
 | 8 | đoạn u bã đậu | không có mẫu, AI tách cả đoạn | L72.1 (gợi ý theo từ khóa) | tùy LLM | Cắt u bã đậu vùng đầu mặt cổ | Cefixim 200 mg |

@@ -103,9 +103,7 @@ function trangThaiDau(data: EformData, kichBan?: KichBan) {
   const fields = initFields(data.ca.gia_tri);
   const td = data.trinhDien;
   if (td && (kichBan === 2 || kichBan === 3)) {
-    const ten = data.icd10.find((item) => item.ma === td.icd)?.ten ?? "";
     fields.icd_ra_vien = { value: td.icd, nguon: "bs" };
-    fields.mo_ta_ra_vien = { value: ten, nguon: "bs" };
   }
   if (td && kichBan === 1) {
     const kq = td.phieuMau;
@@ -230,7 +228,7 @@ export function EformScreen({ data, kichBan, giaoDien = "gon", goiYTab = true }:
     const maGoTat = goTat?.daDung ?? [];
     // Mẫu và gõ tắt chỉ điền ô còn trống, giống bác sĩ tự gõ tắt vào ô
     const kq = mau || maGoTat.length > 0
-      ? dienPhieu(result.draft, result.matches, data, api.get, { chiOTrong: true, icd: mau && icdTheoMau(mau, result.draft) })
+      ? dienPhieu(result.draft, result.matches, data, api.get, { chiOTrong: true, icd: mau && icdTheoMau(mau, result.draft), oKhac: mau?.oKhac, chepLichSu: Boolean(mau) })
       : dienPhieu(result.draft, result.matches, data, api.get);
     const khamKhac = goTat?.cacO.kham_khac ?? mau?.khamKhac;
     if (khamKhac) {

@@ -4,6 +4,30 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-18
 
+### Phiếu mẫu điền đủ các ô của phiếu khám
+- **Loại:** Tính năng, Dữ liệu
+- **Thay đổi:**
+  - `data/eform/phieu-mau.json`: cả 83 mẫu có thêm `o_khac` gồm Ghi chú kết quả ("Chờ kết quả nội soi tai, đo nhĩ lượng."), Có phẫu thuật/thủ thuật, Đã xử lý, Tình trạng ra viện. Sinh bằng script tạm theo chỉ định của mẫu: có thủ thuật (lấy dị vật, làm sạch ống tai, trích rạch, đốt họng hạt…) thì Có PT/TT; có thuốc hoặc thủ thuật thì Đã xử lý; lấy dị vật, trích rạch thì "Đỡ, giảm", còn lại "Chưa thay đổi".
+  - `dien-phieu.ts`: tùy chọn `oKhac` điền các ô trên; `chepLichSu` chép tiền sử bản thân, gia đình, dị ứng mới nhất từ lần khám trước vào ô còn trống, nguồn "cu" (nền xám). Không có lịch sử dị ứng thì để trống. Ô chọn mặc định "Không" (Có PT/TT, Đã xử lý, Tình trạng ra viện) được mẫu đổi, trừ khi bác sĩ đã chọn.
+  - `phieu-mau.ts` (shared, server): kiểu `o_khac`/`oKhac`. `EformScreen.tsx` truyền hai tùy chọn khi gọi mẫu.
+  - `scripts/eval-mau.ts`: sửa câu ghi chú về tiền sử.
+- **Lý do:** Người dùng yêu cầu gọi mẫu thì Trợ lý phải điền đủ mọi trường. Trước đây mẫu bỏ trống tiền sử, dị ứng, ghi chú kết quả và 3 ô chọn cuối phiếu.
+- **File:** `data/eform/phieu-mau.json`, `src/shared/eform/dien-phieu.ts`, `src/shared/eform/dien-phieu.test.ts`, `src/shared/eform/phieu-mau.ts`, `src/shared/eform/phieu-mau.test.ts`, `src/shared/eform/goi-y-tab.test.ts`, `src/server/du-lieu/phieu-mau.ts`, `src/server/du-lieu/phieu-mau.test.ts`, `src/client/eform/EformScreen.tsx`, `scripts/eval-mau.ts`, `README.md`, `docs/kich-ban-thu-bac-si.md`
+- **Kiểm tra:** `npm test` 109/109 (thêm test o_khac hợp lệ cho mọi mẫu, điền o_khac, chép lịch sử không đè ô đã có), `npm run lint`, `npx tsc --noEmit` sạch. Chrome localhost:3000: gõ "mẫu viêm tai giữa cấp" → 14 ô, chỉ còn trống Chẩn đoán kèm theo và 2 ô ghi chẩn đoán khi không có mã.
+- **Ảnh hưởng:** Chẩn đoán kèm theo vẫn để trống vì phụ thuộc từng bệnh nhân. Giá trị các ô mới là dữ liệu giả, chưa được bác sĩ duyệt.
+
+### Bỏ nhãn "Mô tả chẩn đoán ban đầu/ra viện", chỉ còn ô chữ dùng khi không tìm được mã
+- **Loại:** Giao diện, Sửa lỗi
+- **Thay đổi:**
+  - `IcdField.tsx`: bỏ dòng nhãn "Mô tả chẩn đoán …", ô chữ nằm ngay dưới ô mã ICD10, chữ mờ "Không tìm được mã thì ghi chẩn đoán ở đây". Khóa dữ liệu `mo_ta_ban_dau`, `mo_ta_ra_vien` giữ nguyên (bản in vẫn lấy ô này khi không có mã).
+  - `dien-phieu.ts`: AI chỉ điền ô chữ khi không gán được mã ICD10; có mã thì chỉ điền mã. Trước đây điền cả hai.
+  - `EformScreen.tsx`: kịch bản trình diễn 2, 3 không chép tên bệnh vào ô chữ nữa.
+  - `fields.tsx` (`useNguCanh`): ngữ cảnh xếp gợi ý Tab thêm tên bệnh của các mã ICD đang chọn, vì ô chữ giờ thường trống mà nhóm thư viện, phiếu mẫu vẫn cần tên bệnh để khớp từ khóa.
+- **Lý do:** Phiếu khám EMR thật không có mục mô tả chẩn đoán; ô đó chỉ để bác sĩ ghi khi không tìm được mã (người dùng chỉ ra).
+- **File:** `src/client/eform/IcdField.tsx`, `src/shared/eform/dien-phieu.ts`, `src/client/eform/EformScreen.tsx`, `src/client/eform/fields.tsx`, `README.md`, `docs/kich-ban-thu-bac-si.md`
+- **Kiểm tra:** `npm test` 105/105, `npm run lint`, `npx tsc --noEmit` sạch; `npm run eval-mau` không đổi (chấm bản nháp, không chấm ô eForm). Mở localhost:3000 trên Chrome: không còn chữ "Mô tả chẩn đoán", ô chữ hiện dưới mã với chữ mờ.
+- **Ảnh hưởng:** Gọi phiếu mẫu có chẩn đoán `[phải|trái|2 bên]` giờ ít chỗ vàng hơn (không còn 2 ô mô tả); kịch bản thử bác sĩ đã sửa số chỗ vàng. Bên tai/mũi chỉ còn ghi ở khám chuyên khoa.
+
 ### Gợi ý chỉ định và đơn thuốc theo chẩn đoán: từ 12 lên 57 bộ, khớp theo tiền tố ICD, thêm dòng tùy chọn
 - **Loại:** Dữ liệu, Tính năng, Giao diện
 - **Thay đổi:**

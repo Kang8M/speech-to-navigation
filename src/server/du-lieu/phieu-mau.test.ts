@@ -61,6 +61,25 @@ test("đủ 8 ô phiếu khám, khám bộ phận khác và ít nhất 1 chỉ �
   assert.deepEqual(loi, []);
 });
 
+test("mẫu điền đủ ô khác: ghi chú kết quả, có PT/TT, đã xử lý, tình trạng ra viện với giá trị hợp lệ", () => {
+  const hopLe: Record<string, string[] | null> = {
+    ghi_chu_kq: null,
+    co_pttt: ["Có", "Không"],
+    da_xu_ly: ["Có", "Không"],
+    tinh_trang_ra_vien: ["Khỏi", "Đỡ, giảm", "Chưa thay đổi", "Nặng hơn", "Khác"],
+  };
+  const loi: string[] = [];
+  for (const mau of goc) {
+    for (const [o, giaTri] of Object.entries(hopLe)) {
+      const v = mau.o_khac?.[o]?.trim() ?? "";
+      if (!v) loi.push(`${mau.id} thiếu o_khac.${o}`);
+      else if (giaTri && !giaTri.includes(v)) loi.push(`${mau.id} › ${o}: "${v}" không có trong lựa chọn`);
+    }
+    for (const o of Object.keys(mau.o_khac ?? {})) if (!(o in hopLe)) loi.push(`${mau.id} › o_khac.${o} không phải ô eForm được điền`);
+  }
+  assert.deepEqual(loi, []);
+});
+
 test("tên gọi không trùng giữa các mẫu", () => {
   const cuaAi = new Map<string, string>();
   const trung: string[] = [];

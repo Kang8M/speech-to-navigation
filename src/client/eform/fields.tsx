@@ -105,12 +105,16 @@ interface TextBoxProps {
   children?: ReactNode;
 }
 
-/** Ngữ cảnh xếp gợi ý: lý do khám, mô tả và mã chẩn đoán đang có trên phiếu */
+/** Ngữ cảnh xếp gợi ý: lý do khám, mã chẩn đoán kèm tên bệnh, chẩn đoán ghi bằng chữ (khi không có mã) */
 function useNguCanh(): NguCanh {
-  const { get } = useEform();
-  const text = ["ly_do", "mo_ta_ban_dau", "mo_ta_ra_vien"].map((id) => get(id).value).join(". ");
+  const { data, get } = useEform();
+  const chu = ["ly_do", "mo_ta_ban_dau", "mo_ta_ra_vien"].map((id) => get(id).value).join(". ");
   const icd = ["icd_ban_dau", "icd_ra_vien", "icd_kem_theo"].map((id) => get(id).value).join(",");
-  return useMemo(() => ({ text, icd: icd.split(/[,;\s]+/).filter(Boolean) }), [text, icd]);
+  return useMemo(() => {
+    const ma = icd.split(/[,;\s]+/).filter(Boolean);
+    const ten = ma.map((m) => data.icd10.find((item) => item.ma === m)?.ten ?? "").filter(Boolean);
+    return { text: [chu, ...ten].join(". "), icd: ma };
+  }, [chu, icd, data.icd10]);
 }
 
 export function TextBox({ id, label, rows = 2, bcyt, actions, children }: TextBoxProps) {

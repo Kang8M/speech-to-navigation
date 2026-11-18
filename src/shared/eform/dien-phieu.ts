@@ -90,14 +90,34 @@ function nguonDong(match: MatchResult | undefined): Nguon {
   return !match || match.status === "khop" ? "ai" : "xem";
 }
 
-/** Ô chọn Có/Không mặc định "Không" chưa phải chữ ai gõ: phiếu mẫu vẫn được điền, trừ khi bác sĩ đã chọn */
-const O_CHON_MAC_DINH = new Set(["hen_tai_kham"]);
+/** Ô chọn có sẵn giá trị mặc định ("Không") chưa phải chữ ai gõ: phiếu mẫu vẫn được điền, trừ khi bác sĩ đã chọn */
+const O_CHON_MAC_DINH = new Set(["hen_tai_kham", "co_pttt", "da_xu_ly", "tinh_trang_ra_vien"]);
+
+/** Nhãn các ô phiếu mẫu điền thẳng (o_khac), schema LLM không có */
+const NHAN_O_KHAC: Record<string, string> = {
+  ghi_chu_kq: "Ghi chú kết quả",
+  co_pttt: "Có phẫu thuật/thủ thuật",
+  da_xu_ly: "Đã xử lý (thuốc, chăm sóc)",
+  tinh_trang_ra_vien: "Tình trạng ra viện",
+};
+
+/** Ngày "dd/mm/yyyy" thành số so sánh được */
+const soNgay = (ngay: string) => Number(ngay.split("/").reverse().join("")) || 0;
+
+/** Dòng lịch sử mới nhất */
+function moiNhat<T extends { ngay: string }>(rows: T[]): T | undefined {
+  return [...rows].sort((a, b) => soNgay(b.ngay) - soNgay(a.ngay))[0];
+}
 
 export interface TuyChonDien {
   /** Phiếu mẫu: chỉ điền ô còn trống, ô đã có chữ (kể cả dữ liệu cũ, AI điền trước) giữ nguyên */
   chiOTrong?: boolean;
   /** Mã ICD10 đã tra sẵn (phiếu mẫu), dùng thay cho gợi ý theo từ khóa */
   icd?: string;
+  /** Phiếu mẫu: các ô schema LLM không có (o_khac), khóa là id ô eForm */
+  oKhac?: Record<string, string>;
+  /** Phiếu mẫu: tiền sử, dị ứng còn trống thì chép từ lần khám gần nhất (dữ liệu cũ, không phải AI đoán) */
+  chepLichSu?: boolean;
 }
 
 export function dienPhieu(
@@ -132,10 +152,14 @@ export function dienPhieu(
   const chanDoan = chu(pk.chan_doan_chinh);
   if (chanDoan) {
     const ma = tuyChon.icd || (goiYIcd(chanDoan, data.icd10, data.quyTac)[0]?.item.ma ?? "");
-    dat("mo_ta_ban_dau", "Mô tả chẩn đoán ban đầu", chanDoan, "ai");
-    dat("icd_ban_dau", "Chẩn đoán ban đầu (ICD10)", ma, "xem");
-    dat("mo_ta_ra_vien", "Mô tả chẩn đoán ra viện", chanDoan, "ai");
-    dat("icd_ra_vien", "Chẩn đoán ra viện (ICD10)", ma, "xem");
+    // Ô ghi chẩn đoán bằng chữ chỉ dùng khi không tìm được mã, có mã thì để trống như phiếu thật
+    if (ma) {
+      dat("icd_ban_dau", "Chẩn đoán ban đầu (ICD10)", ma, "xem");
+      dat("icd_ra_vien", "Chẩn đoán ra viện (ICD10)", ma, "xem");
+    } else {
+      dat("mo_ta_ban_dau", "Chẩn đoán ban đầu (không có mã)", chanDoan, "ai");
+      dat("mo_ta_ra_vien", "Chẩn đoán ra viện (không có mã)", chanDoan, "ai");
+    }
   }
 
   const kemTheo = chu(pk.chan_doan_kem);
@@ -146,6 +170,21 @@ export function dienPhieu(
       .map((y) => goiYIcd(y, data.icd10, data.quyTac, daChon)[0]?.item.ma)
       .filter((m): m is string => Boolean(m));
     dat("icd_kem_theo", "Chẩn đoán kèm theo (ICD10)", [...new Set(ma)].join(","), "xem");
+  }
+
+  for (const [id, value] of Object.entries(tuyChon.oKhac ?? {})) dat(id, NHAN_O_KHAC[id] ?? id, value, "ai");
+
+  if (tuyChon.chepLichSu) {
+    const ls = data.ca.lich_su;
+    dat("tien_su_ban_than", "Tiền sử bản thân", moiNhat(ls.tien_su_ban_than)?.noi_dung ?? "", "cu");
+    dat("tien_su_gia_dinh", "Tiền sử gia đình", moiNhat(ls.tien_su_gia_dinh)?.noi_dung ?? "", "cu");
+    // Chỉ chép khi lần trước có ghi dị ứng; không có lịch sử thì để trống, không tự chọn "Không"
+    const diUng = moiNhat(ls.di_ung);
+    if (diUng && !get("di_ung").value) {
+      dat("di_ung", "Tiền sử dị ứng", "Có", "cu");
+      dat("di_ung_loai", "Loại dị ứng", diUng.loai, "cu");
+      dat("di_ung_mo_ta", "Mô tả dị ứng", diUng.thong_tin, "cu");
+    }
   }
 
   const hen = chu(pk.hen_tai_kham);

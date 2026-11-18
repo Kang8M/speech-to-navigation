@@ -248,6 +248,7 @@ function DanhGiaChung() {
         label="Chẩn đoán kèm theo"
         loaiTru={[get("icd_ban_dau").value, get("icd_ra_vien").value].filter(Boolean)}
       />
+      {get("icd_kem_theo").value && <RadioField id="giai_doan_kem_theo" label="Giai đoạn chẩn đoán kèm" options={["Ban đầu", "Ra viện", "Chưa rõ"]} />}
       <RadioField id="da_xu_ly" label="Đã xử lý (thuốc, chăm sóc)" options={CO_KHONG} />
     </Section>
   );

@@ -1,0 +1,88 @@
+{
+  "id": "ca-chuan",
+  "ten": "Ca chuẩn: đủ loại thông tin định danh, qua chốt chặn",
+  "benh_nhan_id": "GIA-000123",
+  "mode": "conversation",
+  "doan": [
+    {
+      "vai_tro": "bac_si",
+      "text": "chào chị hôm nay chị khám vì sao",
+      "phien": 1
+    },
+    {
+      "vai_tro": "benh_nhan",
+      "text": "tôi bị chảy dịch tai phải đau 3 ngày nay",
+      "phien": 1
+    },
+    {
+      "vai_tro": "bac_si",
+      "text": "cho tôi hỏi tên đầy đủ và số điện thoại ạ",
+      "phien": 1
+    },
+    {
+      "vai_tro": "benh_nhan",
+      "text": "tôi tên là nguyễn thị giả số điện thoại 0900000123 nhà ở số 12 đường mẫu phường giả quận thử",
+      "phien": 1
+    },
+    {
+      "vai_tro": "nguoi_nha",
+      "text": "tôi là chồng chị ấy tên trần văn phụ đưa chị đi khám",
+      "phien": 1
+    },
+    {
+      "vai_tro": "benh_nhan",
+      "text": "ngày sinh 10/03/1978 căn cước 000000123456 quốc tịch việt nam",
+      "phien": 1
+    },
+    {
+      "vai_tro": "benh_nhan",
+      "text": "mẹ tôi có tiền sử viêm mũi dị ứng",
+      "phien": 1
+    },
+    {
+      "vai_tro": "bac_si",
+      "text": "đã dùng thuốc gì chưa",
+      "phien": 1
+    },
+    {
+      "vai_tro": "benh_nhan",
+      "text": "tôi đã uống amoxicillin 500 mg ngày 2 lần ở tai phải đỡ ít",
+      "phien": 1
+    },
+    {
+      "vai_tro": "bac_si",
+      "text": "khám thấy tai trái bình thường màng nhĩ phải có lỗ thủng",
+      "phien": 2
+    },
+    {
+      "vai_tro": "bac_si",
+      "text": "chỉ định nội soi tai mũi họng",
+      "phien": 2
+    },
+    {
+      "vai_tro": "bac_si",
+      "text": "thuốc nhỏ ofloxacin tai phải ngày 2 lần",
+      "phien": 2
+    }
+  ],
+  "expected": {
+    "phai_che": [
+      "nguyễn thị giả",
+      "0900000123",
+      "số 12 đường mẫu",
+      "trần văn phụ",
+      "10/03/1978",
+      "000000123456",
+      "việt nam",
+      "phường giả",
+      "quận thử"
+    ],
+    "phai_giu": [
+      "amoxicillin 500 mg ngày 2 lần",
+      "tai phải",
+      "3 ngày nay",
+      "tiền sử viêm mũi dị ứng"
+    ],
+    "bi_chan": false
+  }
+}

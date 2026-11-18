@@ -2,6 +2,34 @@
 
 Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nhất ở trên cùng. Cách ghi xem `.claude/skills/ghi-tai-lieu/SKILL.md`.
 
+## 2026-11-18
+
+### Phiếu mẫu theo bệnh: từ 39 lên 83 mẫu
+- **Loại:** Dữ liệu
+- **Thay đổi:** Thêm 44 mẫu giả vào `data/eform/phieu-mau.json`, cùng dạng mẫu cũ (8 ô phiếu khám, khám bộ phận khác, chỉ định, đơn thuốc; chỗ riêng của bệnh nhân viết `[phải|trái|2 bên]`, `[số]`):
+  - Tai (16): viêm xương chũm cấp, viêm tai giữa cholesteatoma, viêm tai giữa ứ dịch mạn, xơ nhĩ, xốp xơ tai, viêm màng nhĩ cấp, viêm sụn vành tai, zona tai, rò luân nhĩ, đau tai phản xạ, nghe kém do tiếng ồn, khám thính lực định kỳ, chỉnh máy trợ thính, tái khám sau vá nhĩ, rối loạn tiền đình, liệt mặt ngoại biên.
+  - Mũi xoang (14): viêm xoang hàm cấp, viêm xoang trán cấp, viêm đa xoang mạn, nang xoang hàm, viêm mũi mạn, viêm mũi vận mạch, viêm mũi dị ứng trẻ em, viêm mũi xoang cấp trẻ em, mất khứu giác, gãy xương chính mũi, chảy máu mũi tăng huyết áp, tái khám sau mổ xoang, quá phát VA và amidan, tái khám sau nạo VA.
+  - Họng, thanh quản (13): viêm họng cấp trẻ em, viêm họng liên cầu, nhiễm trùng hô hấp trên, viêm mũi họng mạn, viêm amidan cấp trẻ em, quá phát amidan, tái khám sau cắt amidan, áp xe thành sau họng, viêm họng thanh quản cấp, viêm thanh quản rít trẻ em, liệt dây thanh, loạn cảm họng, dị vật thực quản.
+  - Khác (1): u bã đậu.
+  - Mỗi mẫu có tên và 1–3 cách gọi tắt riêng, không trùng mẫu cũ. Tên là tên bệnh chứ không phải triệu chứng đơn lẻ, vì tên mẫu đứng đầu câu sẽ gọi mẫu thay cho AI tách.
+  - Chỉ dùng thuốc và dịch vụ có trong danh mục bệnh viện (`data/catalog/`), liều minh họa. Phụ lục `docs/kich-ban-thu-bac-si.md` thêm các mẫu mới (39 → 83).
+- **Lý do:** Người dùng muốn càng nhiều mẫu càng tốt để bác sĩ thử thấy phủ được nhiều ca. Mẫu cũ thiếu bệnh trẻ em, tái khám sau mổ, khám định kỳ, cấp cứu cần chuyển viện.
+- **File:** `data/eform/phieu-mau.json`, `docs/kich-ban-thu-bac-si.md`, `README.md`
+- **Kiểm tra:** `src/server/du-lieu/phieu-mau.test.ts` pass với 83 mẫu: mọi mẫu tra được mã ICD10 từ `icd_ten`, mọi chỉ định và thuốc khớp chắc danh mục, đủ ô, tên gọi không trùng. `npm test` 97/97, `npm run lint` sạch. `npm run eval-mau` không đổi (mức 1: 67,9%, mức 2: 71,9%; 10 ca có mẫu vẫn gọi đúng mẫu cũ). `npm run eval -- --rule-only` không đổi. Chrome: bong bóng gõ "mẫu viêm xoang hàm cấp", Enter → "Đã điền theo mẫu Viêm xoang hàm cấp: 11 ô, 2 chỉ định, 3 thuốc. Bỏ qua 2 ô đã có chữ.", chỗ chọn bên tô vàng.
+- **Ảnh hưởng:** Danh sách gợi ý tên mẫu khi gõ dở dài hơn (vẫn tối đa 5). Mẫu và liều là dữ liệu giả, chưa được bác sĩ duyệt. Câu trong mẫu mới cũng vào chữ mờ Tab theo nguồn "phiếu mẫu".
+
+### Thư viện câu cho chữ mờ Tab: từ 11 câu lên khoảng 800 câu, chia theo nhóm bệnh
+- **Loại:** Dữ liệu, Tính năng
+- **Thay đổi:**
+  - `data/eform/thu-vien.json` đổi dạng thành `{ chung, nhom }`. `chung` có câu cho cả 11 ô chữ tự do của phiếu (lý do khám, tiền sử bản thân, tiền sử gia đình, mô tả dị ứng, bệnh sử, khám toàn thân, khám chuyên khoa, khám bộ phận khác, ghi chú kết quả, hướng điều trị, lời dặn). `nhom` có 21 nhóm bệnh TMH, mỗi nhóm có `icd` (tiền tố mã), `tu_khoa` và câu theo ô. Tổng 803 câu (113 chung, 690 theo nhóm); trước đây 11 câu cho 4 ô. Câu khám chuyên khoa ghi mỗi dòng một bộ phận ("Tai phải: …", "Mũi: …"), có đủ biến thể phải/trái/hai bên.
+  - `src/shared/eform/goi-y-tab.ts`: thêm kiểu `ThuVien`, `NhomThuVien`. Nhóm khớp phiếu khi mã ICD có tiền tố của nhóm (điểm 10) hoặc lý do khám, mô tả chẩn đoán có tên nhóm, từ khóa (mỗi cụm 1 điểm); nhóm điểm cao đứng trước. Câu nhóm khớp xếp sau phiếu mẫu đúng bệnh, trước câu chung; nhóm không khớp chỉ hiện khi bác sĩ gõ đầu câu.
+  - Hai quy tắc mới để kho lớn vẫn gợi ý đúng chỗ: câu ghi phải/trái ngược với bên trong lý do khám, chẩn đoán bị xếp như câu bệnh khác (không hiện ở ô trống; câu chỉ ghi "hai bên" không tính lệch); ô khám xuống dòng không gợi ý thêm dòng cho bộ phận đã có dòng ("Tai phải: …" đã có thì bỏ "Tai: bình thường").
+  - `cauThuVien` cho nút "Mở thư viện tham khảo" ở giao diện cũ: hiện câu nhóm khớp trước, câu chung sau.
+- **Lý do:** Người dùng muốn ô nào cũng có gợi ý và gợi ý gần ý bác sĩ, để buổi thử với bác sĩ thấy vừa ý. Bác sĩ đang bận, chưa cung cấp được câu của mình, nên nhóm tự soạn thật nhiều câu để phủ các ca hay gặp. Câu của chính bác sĩ (gõ tắt, lời dặn đã kê) vẫn đứng trên câu thư viện. Thử trên trình duyệt thấy ca "đau tai phải, chảy mủ tai phải" ra câu viêm tai ngoài trước vì nhóm đó đứng đầu file, nên thêm điểm theo số từ khóa khớp.
+- **File:** `data/eform/thu-vien.json`, `src/shared/eform/goi-y-tab.ts`, `src/shared/eform/goi-y-tab.test.ts`, `src/shared/eform/types.ts`, `src/server/du-lieu/eform.ts`, `src/server/du-lieu/thu-vien.test.ts` (mới), `src/client/eform/fields.tsx`, `README.md`
+- **Kiểm tra:** 6 test mới trong `goi-y-tab.test.ts` (nhóm theo lý do khám và tiền tố ICD, lệch bên, câu "hai bên", bộ phận đã khám, nhóm khớp nhiều từ khóa đứng trước) và 3 test dữ liệu trong `thu-vien.test.ts` (ô có thật, không có `[ ]`, không trùng, tiền tố ICD có trong danh mục). `npm test` 97/97 pass, `npm run lint`, `npx tsc --noEmit` sạch. Chrome trên `/` (ca giả đau tai phải, chảy mủ tai phải): ô Khám chuyên khoa trống hiện câu gõ tắt của `user_bs01` trước, xuống dòng thì gợi ý Mũi chứ không gợi ý Tai lần nữa; gõ "Tai ph" ra "Tai phải: ống tai sạch, màng nhĩ đỏ, phồng, mất nón sáng."; ô Hướng điều trị trống hiện câu hướng điều trị bệnh tai. Không có lỗi console. Không đụng bộ tách hay khớp danh mục nên không chạy eval.
+- **Ảnh hưởng:** Bác sĩ thấy chữ mờ ở mọi ô chữ, kể cả tiền sử, ghi chú kết quả, mô tả dị ứng. Toàn bộ câu là dữ liệu giả do nhóm soạn, chưa được bác sĩ duyệt; ô trống vẫn có thể hiện câu kết quả khám "bình thường", bác sĩ phải bấm Tab mới nhận.
+
 ## 2026-11-17
 
 ### Nhật ký thực địa 10/11, 16/11, 17/11 đưa vào docs

@@ -1,21 +1,1251 @@
 {
-  "kham_toan_than": [
-    "Tỉnh táo, tiếp xúc tốt.",
-    "Da, niêm mạc hồng.",
-    "Hạch ngoại vi không sờ thấy.",
-    "Tim đều, phổi không ran."
-  ],
-  "kham_khac": [
-    "Chưa ghi nhận bất thường ở các bộ phận khác."
-  ],
-  "huong_dieu_tri": [
-    "Điều trị ngoại trú.",
-    "Điều trị nội khoa, đánh giá lại sau đợt điều trị.",
-    "Chỉ định thăm dò thêm, hẹn đọc kết quả."
-  ],
-  "loi_dan": [
-    "Dùng thuốc theo đơn, không tự ý ngừng thuốc.",
-    "Giữ khô tai, tránh để nước vào tai.",
-    "Tái khám ngay nếu sốt cao, đau tăng hoặc chóng mặt."
+  "_ghi_chu": "Thư viện câu cho chữ mờ Tab và nút Mở thư viện tham khảo. Dữ liệu giả do nhóm soạn theo kiến thức lâm sàng chung, chưa được bác sĩ duyệt. 'chung' gợi ý cho mọi ca; 'nhom' chỉ gợi ý ở ô trống khi mã ICD bắt đầu bằng một tiền tố trong 'icd' hoặc lý do khám, mô tả chẩn đoán có tên nhóm hay một từ khóa, nhóm khác chỉ hiện khi bác sĩ gõ đầu câu. Khóa trong 'cau' là id ô trên eForm (ly_do, tien_su_ban_than, tien_su_gia_dinh, di_ung_mo_ta, benh_su, kham_toan_than, kham_chuyen_khoa, kham_khac, ghi_chu_kq, huong_dieu_tri, loi_dan). Không viết chỗ trống [ ], câu có [ ] bị bỏ. Ô khám chuyên khoa ghi mỗi dòng một bộ phận, mở đầu bằng 'Bộ phận:' để không gợi ý hai dòng cho cùng bộ phận. Kiểm tra bằng npm test.",
+  "chung": {
+    "ly_do": [
+      "Khám kiểm tra tai mũi họng",
+      "Tái khám theo hẹn",
+      "Tái khám sau điều trị",
+      "Khám lại sau phẫu thuật",
+      "Khám sức khỏe định kỳ"
+    ],
+    "tien_su_ban_than": [
+      "Khỏe mạnh, chưa phát hiện bệnh lý.",
+      "Chưa phát hiện bệnh lý nội, ngoại khoa.",
+      "Tăng huyết áp, đang điều trị thường xuyên.",
+      "Tăng huyết áp, điều trị không đều.",
+      "Đái tháo đường type 2, đang dùng thuốc.",
+      "Rối loạn mỡ máu, đang dùng thuốc.",
+      "Hen phế quản, đang dùng thuốc xịt dự phòng.",
+      "Viêm dạ dày.",
+      "Trào ngược dạ dày thực quản.",
+      "Bệnh tim mạch, đang dùng thuốc chống đông.",
+      "Đang dùng thuốc chống kết tập tiểu cầu.",
+      "Bệnh tuyến giáp, đang điều trị.",
+      "Viêm gan B, đang theo dõi.",
+      "Chưa phẫu thuật gì.",
+      "Hút thuốc lá nhiều năm.",
+      "Uống rượu bia thường xuyên.",
+      "Đang mang thai.",
+      "Đang cho con bú.",
+      "Trẻ sinh đủ tháng, phát triển bình thường.",
+      "Tiêm chủng đầy đủ theo lịch."
+    ],
+    "tien_su_gia_dinh": [
+      "Chưa phát hiện bệnh lý liên quan.",
+      "Không có ai mắc bệnh tương tự.",
+      "Bố tăng huyết áp.",
+      "Mẹ đái tháo đường.",
+      "Gia đình có người nghe kém.",
+      "Gia đình có người viêm mũi dị ứng, hen phế quản.",
+      "Gia đình có người bị ung thư vòm họng.",
+      "Trong nhà có người đang ho, sốt."
+    ],
+    "di_ung_mo_ta": [
+      "Chưa rõ tên thuốc, nổi mẩn ngứa sau dùng kháng sinh.",
+      "Dị ứng Penicillin: nổi mẩn ngứa toàn thân.",
+      "Dị ứng Amoxicillin: nổi mề đay.",
+      "Dị ứng Cephalosporin: nổi mẩn đỏ.",
+      "Dị ứng Aspirin, thuốc giảm đau chống viêm: khó thở, phù môi.",
+      "Dị ứng Sulfamid: nổi ban.",
+      "Dị ứng hải sản: nổi mẩn ngứa.",
+      "Dị ứng bụi nhà, phấn hoa: hắt hơi, ngứa mũi.",
+      "Dị ứng thuốc tê: chóng mặt, tim đập nhanh.",
+      "Dị ứng băng dính y tế: đỏ da."
+    ],
+    "benh_su": [
+      "Bệnh diễn biến vài ngày nay.",
+      "Bệnh diễn biến khoảng 1 tuần nay.",
+      "Bệnh diễn biến nhiều tháng nay, tăng dần.",
+      "Bệnh tái phát nhiều lần.",
+      "Khởi phát sau đợt cảm cúm.",
+      "Khởi phát đột ngột.",
+      "Đã tự mua thuốc uống tại nhà nhưng không đỡ.",
+      "Đã khám và điều trị tại cơ sở y tế khác, đỡ ít.",
+      "Đã dùng kháng sinh không rõ loại.",
+      "Chưa điều trị gì.",
+      "Không sốt.",
+      "Sốt nhẹ về chiều.",
+      "Không ho.",
+      "Không khó thở.",
+      "Ăn uống, ngủ bình thường.",
+      "Mệt mỏi, ăn kém.",
+      "Đại tiểu tiện bình thường.",
+      "Hiện tại còn đau.",
+      "Vào viện khám."
+    ],
+    "kham_toan_than": [
+      "Tỉnh táo, tiếp xúc tốt.",
+      "Da, niêm mạc hồng.",
+      "Hạch ngoại vi không sờ thấy.",
+      "Tim đều, phổi không ran.",
+      "Không sốt.",
+      "Thể trạng trung bình.",
+      "Mạch, huyết áp trong giới hạn bình thường.",
+      "Không phù, không xuất huyết dưới da.",
+      "Thể trạng gầy.",
+      "Thể trạng béo."
+    ],
+    "kham_chuyen_khoa": [
+      "Tai: ống tai hai bên sạch, màng nhĩ hai bên nguyên vẹn, nón sáng rõ.",
+      "Mũi: niêm mạc hồng, cuốn mũi không phù nề, khe giữa sạch, vách ngăn thẳng.",
+      "Vòm: thông thoáng, không thấy khối.",
+      "Họng: niêm mạc hồng, amidan hai bên không to, không có giả mạc.",
+      "Thanh quản: hai dây thanh di động tốt, khép kín khi phát âm.",
+      "Cổ: không sờ thấy hạch, tuyến giáp không to.",
+      "Tai: bình thường.",
+      "Mũi: bình thường.",
+      "Vòm: bình thường.",
+      "Họng: bình thường.",
+      "Thanh quản: bình thường.",
+      "Cổ: mềm, không sờ thấy khối."
+    ],
+    "kham_khac": [
+      "Chưa ghi nhận bất thường ở các bộ phận khác.",
+      "Tim đều, phổi không ran.",
+      "Bụng mềm, không chướng.",
+      "Chưa phát hiện bất thường cơ quan khác.",
+      "Không có dấu hiệu thần kinh khu trú.",
+      "Da không nổi ban."
+    ],
+    "ghi_chu_kq": [
+      "Chưa có kết quả, hẹn đọc sau.",
+      "Kết quả trong giới hạn bình thường.",
+      "Công thức máu: bạch cầu tăng nhẹ, ưu thế trung tính.",
+      "Công thức máu trong giới hạn bình thường.",
+      "Nội soi tai mũi họng: không thấy tổn thương bất thường.",
+      "Đã xem kết quả, giải thích cho người bệnh."
+    ],
+    "huong_dieu_tri": [
+      "Điều trị ngoại trú.",
+      "Điều trị nội khoa ngoại trú.",
+      "Điều trị nội khoa, đánh giá lại sau đợt điều trị.",
+      "Chỉ định thăm dò thêm, hẹn đọc kết quả.",
+      "Theo dõi, tái khám sau 1 tuần.",
+      "Theo dõi, tái khám khi có bất thường.",
+      "Chuyển nhập viện điều trị.",
+      "Tư vấn phẫu thuật, người bệnh xin suy nghĩ thêm.",
+      "Hội chẩn chuyên khoa liên quan."
+    ],
+    "loi_dan": [
+      "Dùng thuốc theo đơn, không tự ý ngừng thuốc.",
+      "Uống đủ nước, nghỉ ngơi hợp lý.",
+      "Ăn uống đủ chất, tránh đồ cay nóng.",
+      "Tái khám ngay nếu sốt cao, đau tăng hoặc khó thở.",
+      "Tái khám theo hẹn, mang theo đơn thuốc cũ.",
+      "Mang theo kết quả xét nghiệm khi tái khám.",
+      "Không hút thuốc lá, hạn chế rượu bia.",
+      "Tránh khói bụi, đeo khẩu trang khi ra ngoài."
+    ]
+  },
+  "nhom": [
+    {
+      "id": "viem-tai-ngoai",
+      "ten": "Viêm tai ngoài",
+      "icd": ["H60"],
+      "tu_khoa": ["đau tai", "ngứa tai", "nhọt ống tai", "nấm ống tai", "nấm tai", "sưng ống tai", "vtn"],
+      "cau": {
+        "ly_do": [
+          "Đau tai phải",
+          "Đau tai trái",
+          "Đau tai hai bên",
+          "Ngứa tai phải",
+          "Ngứa tai trái",
+          "Ngứa tai hai bên",
+          "Đau tai, ngứa tai",
+          "Sưng đau ống tai phải",
+          "Sưng đau ống tai trái"
+        ],
+        "benh_su": [
+          "Đau tai tăng khi nhai, khi kéo vành tai.",
+          "Ngứa tai nhiều, hay ngoáy tai.",
+          "Trước đó có đi bơi.",
+          "Trước đó có ngoáy tai bằng tăm bông.",
+          "Chảy dịch tai ít, không hôi.",
+          "Chảy dịch tai màu trắng đục, có vảy.",
+          "Cảm giác đầy tai, nghe kém nhẹ.",
+          "Không chóng mặt.",
+          "Không chảy mủ tai.",
+          "Không sốt."
+        ],
+        "tien_su_ban_than": [
+          "Viêm tai ngoài tái phát nhiều lần.",
+          "Hay đi bơi.",
+          "Thường dùng tai nghe nhét tai."
+        ],
+        "kham_chuyen_khoa": [
+          "Tai phải: ống tai sưng nề, đỏ, ấn bình tai đau, màng nhĩ khó quan sát.",
+          "Tai trái: ống tai sưng nề, đỏ, ấn bình tai đau, màng nhĩ khó quan sát.",
+          "Tai phải: ống tai có nhọt, đỏ, căng, chưa vỡ mủ.",
+          "Tai trái: ống tai có nhọt, đỏ, căng, chưa vỡ mủ.",
+          "Tai phải: ống tai có mảng nấm trắng, sợi đen, màng nhĩ nguyên vẹn.",
+          "Tai trái: ống tai có mảng nấm trắng, sợi đen, màng nhĩ nguyên vẹn.",
+          "Tai hai bên: ống tai nề đỏ, có dịch ít, màng nhĩ nguyên vẹn."
+        ],
+        "huong_dieu_tri": [
+          "Làm thuốc tai, điều trị nội khoa ngoại trú.",
+          "Lau rửa ống tai, nhỏ thuốc tai.",
+          "Lau sạch nấm ống tai, nhỏ thuốc kháng nấm.",
+          "Chích nhọt ống tai khi nhọt mềm."
+        ],
+        "loi_dan": [
+          "Giữ khô tai, tránh để nước vào tai.",
+          "Không ngoáy tai, không dùng tăm bông.",
+          "Không đi bơi trong thời gian điều trị.",
+          "Nhỏ thuốc tai đúng cách: nằm nghiêng, nhỏ thuốc rồi giữ nguyên 5 phút.",
+          "Tạm ngừng dùng tai nghe nhét tai.",
+          "Tái khám ngay nếu sưng đau lan ra vành tai, sốt."
+        ]
+      }
+    },
+    {
+      "id": "ray-di-vat-tai",
+      "ten": "Nút ráy tai, dị vật tai",
+      "icd": ["H61", "T16"],
+      "tu_khoa": ["ráy tai", "nút ráy", "dị vật tai", "dị vật ống tai", "côn trùng", "bí tai"],
+      "cau": {
+        "ly_do": [
+          "Bí tai phải",
+          "Bí tai trái",
+          "Bí tai hai bên",
+          "Nghe kém do ráy tai",
+          "Dị vật tai phải",
+          "Dị vật tai trái",
+          "Côn trùng chui vào tai",
+          "Lấy ráy tai"
+        ],
+        "benh_su": [
+          "Bí tai, nghe kém sau khi tắm gội.",
+          "Cảm giác đầy tai, ù tai.",
+          "Không đau tai, không chảy dịch.",
+          "Côn trùng chui vào tai, đau, kêu rào rào trong tai.",
+          "Trẻ tự nhét dị vật vào tai, người nhà phát hiện.",
+          "Đã tự lấy tại nhà nhưng không ra.",
+          "Không chảy máu tai."
+        ],
+        "kham_chuyen_khoa": [
+          "Tai phải: nút ráy cứng bít kín ống tai.",
+          "Tai trái: nút ráy cứng bít kín ống tai.",
+          "Tai hai bên: nút ráy bít ống tai.",
+          "Tai phải: sau lấy ráy ống tai sạch, màng nhĩ nguyên vẹn.",
+          "Tai trái: sau lấy ráy ống tai sạch, màng nhĩ nguyên vẹn.",
+          "Tai phải: dị vật nằm ở đoạn ngoài ống tai, ống tai không tổn thương.",
+          "Tai trái: dị vật nằm ở đoạn ngoài ống tai, ống tai không tổn thương.",
+          "Tai phải: côn trùng nằm trong ống tai, ống tai xước nhẹ.",
+          "Tai trái: côn trùng nằm trong ống tai, ống tai xước nhẹ."
+        ],
+        "huong_dieu_tri": [
+          "Làm mềm ráy, lấy ráy tai.",
+          "Đã lấy ráy tai, ống tai sạch.",
+          "Nhỏ thuốc làm mềm ráy, hẹn lấy ráy sau 3 ngày.",
+          "Đã gắp dị vật tai, kiểm tra ống tai và màng nhĩ.",
+          "Đã lấy côn trùng ra khỏi ống tai."
+        ],
+        "loi_dan": [
+          "Không ngoáy tai, không dùng tăm bông.",
+          "Không tự lấy ráy tai bằng vật cứng.",
+          "Nhỏ thuốc làm mềm ráy theo hướng dẫn trước khi quay lại lấy ráy.",
+          "Để vật nhỏ xa tầm tay trẻ.",
+          "Tái khám nếu đau tai, chảy dịch tai."
+        ]
+      }
+    },
+    {
+      "id": "viem-tai-giua-cap",
+      "ten": "Viêm tai giữa cấp",
+      "icd": ["H65.0", "H65.1", "H66.0", "H66.4", "H66.9", "H67"],
+      "tu_khoa": ["đau tai", "viêm tai giữa", "vtg cấp", "vtgc", "chảy mủ tai", "trẻ quấy khóc"],
+      "cau": {
+        "ly_do": [
+          "Đau tai phải, sốt",
+          "Đau tai trái, sốt",
+          "Đau tai hai bên, sốt",
+          "Đau tai phải",
+          "Đau tai trái",
+          "Chảy mủ tai phải",
+          "Chảy mủ tai trái",
+          "Trẻ quấy khóc, hay dụi tai",
+          "Sốt, đau tai sau viêm mũi họng"
+        ],
+        "benh_su": [
+          "Trước đó sổ mũi, ngạt mũi vài ngày.",
+          "Đau tai nhói, tăng về đêm.",
+          "Sốt cao, đã dùng thuốc hạ sốt.",
+          "Sốt nhẹ.",
+          "Trẻ quấy khóc, bỏ bú, hay dụi tai.",
+          "Chảy mủ tai từ hôm qua, sau khi chảy mủ đỡ đau.",
+          "Nghe kém, ù tai.",
+          "Không chảy tai.",
+          "Không chóng mặt.",
+          "Không nôn, không co giật."
+        ],
+        "tien_su_ban_than": [
+          "Viêm tai giữa cấp tái phát nhiều lần.",
+          "Viêm VA tái phát.",
+          "Trẻ đi nhà trẻ."
+        ],
+        "kham_toan_than": [
+          "Sốt nhẹ.",
+          "Sốt cao.",
+          "Trẻ tỉnh, quấy khóc.",
+          "Không có dấu hiệu màng não."
+        ],
+        "kham_chuyen_khoa": [
+          "Tai phải: ống tai sạch, màng nhĩ đỏ, phồng, mất nón sáng.",
+          "Tai trái: ống tai sạch, màng nhĩ đỏ, phồng, mất nón sáng.",
+          "Tai hai bên: màng nhĩ đỏ, phồng, mất nón sáng.",
+          "Tai phải: ống tai có mủ, màng nhĩ thủng nhỏ, mủ đập theo mạch.",
+          "Tai trái: ống tai có mủ, màng nhĩ thủng nhỏ, mủ đập theo mạch.",
+          "Tai phải: màng nhĩ sung huyết, nón sáng mờ.",
+          "Tai trái: màng nhĩ sung huyết, nón sáng mờ.",
+          "Mũi: niêm mạc nề đỏ, có dịch nhầy.",
+          "Vòm: có dịch nhầy.",
+          "Họng: niêm mạc đỏ nhẹ."
+        ],
+        "ghi_chu_kq": [
+          "Nhĩ lượng đồ type B tai phải.",
+          "Nhĩ lượng đồ type B tai trái.",
+          "Nhĩ lượng đồ type B hai bên."
+        ],
+        "huong_dieu_tri": [
+          "Điều trị nội khoa ngoại trú, kháng sinh, hạ sốt giảm đau.",
+          "Làm thuốc tai, hút mủ tai.",
+          "Theo dõi, tái khám sau 7 ngày kiểm tra màng nhĩ.",
+          "Chích rạch màng nhĩ dẫn lưu mủ."
+        ],
+        "loi_dan": [
+          "Giữ khô tai, không ngoáy tai.",
+          "Không để nước vào tai khi tắm gội.",
+          "Uống kháng sinh đủ ngày, không tự ý ngừng thuốc.",
+          "Vệ sinh mũi bằng nước muối sinh lý hằng ngày.",
+          "Lau sạch mủ ở cửa tai, không nhét bông sâu vào tai.",
+          "Quay lại ngay nếu sốt cao, đau tai tăng, chảy mủ tai.",
+          "Quay lại ngay nếu đau đầu, nôn, sưng sau tai, méo miệng.",
+          "Hạ sốt khi sốt trên 38,5 độ."
+        ]
+      }
+    },
+    {
+      "id": "viem-tai-giua-man",
+      "ten": "Viêm tai giữa mạn",
+      "icd": ["H66.1", "H66.2", "H66.3", "H70", "H71", "H72", "H73", "H74"],
+      "tu_khoa": ["viêm tai giữa mạn", "vtg mạn", "chảy mủ tai", "thủng màng nhĩ", "thủng nhĩ", "cholesteatoma", "chảy tai"],
+      "cau": {
+        "ly_do": [
+          "Chảy mủ tai phải",
+          "Chảy mủ tai trái",
+          "Chảy mủ tai hai bên",
+          "Chảy tai tái phát",
+          "Nghe kém, chảy tai",
+          "Thủng màng nhĩ phải",
+          "Thủng màng nhĩ trái",
+          "Đau tai sau chấn thương"
+        ],
+        "benh_su": [
+          "Chảy mủ tai từng đợt nhiều năm nay.",
+          "Đợt này chảy mủ tai tăng sau viêm mũi họng.",
+          "Mủ đặc, có mùi hôi.",
+          "Mủ nhầy, không hôi.",
+          "Nghe kém tăng dần.",
+          "Bị tát vào tai, sau đó đau tai, ù tai.",
+          "Ngoáy tai bằng tăm bông, sau đó đau tai, chảy ít máu.",
+          "Không chóng mặt.",
+          "Không đau đầu, không méo miệng."
+        ],
+        "tien_su_ban_than": [
+          "Viêm tai giữa mạn nhiều năm, chảy tai từng đợt.",
+          "Đã phẫu thuật tai.",
+          "Đã vá nhĩ."
+        ],
+        "kham_chuyen_khoa": [
+          "Tai phải: ống tai có mủ, màng nhĩ thủng trung tâm, niêm mạc hòm nhĩ nề.",
+          "Tai trái: ống tai có mủ, màng nhĩ thủng trung tâm, niêm mạc hòm nhĩ nề.",
+          "Tai phải: màng nhĩ thủng rộng, hòm nhĩ khô.",
+          "Tai trái: màng nhĩ thủng rộng, hòm nhĩ khô.",
+          "Tai phải: màng nhĩ thủng sát xương, có vảy trắng, mủ thối.",
+          "Tai trái: màng nhĩ thủng sát xương, có vảy trắng, mủ thối.",
+          "Tai phải: màng nhĩ thủng hình khe, bờ có máu khô.",
+          "Tai trái: màng nhĩ thủng hình khe, bờ có máu khô.",
+          "Tai hai bên: màng nhĩ thủng trung tâm, có mủ nhầy."
+        ],
+        "ghi_chu_kq": [
+          "Thính lực đồ: nghe kém dẫn truyền tai phải.",
+          "Thính lực đồ: nghe kém dẫn truyền tai trái.",
+          "Thính lực đồ: nghe kém hỗn hợp tai phải.",
+          "Thính lực đồ: nghe kém hỗn hợp tai trái.",
+          "Phim CT xương thái dương: mờ hòm nhĩ, sào bào.",
+          "Cấy mủ tai: đang chờ kết quả."
+        ],
+        "huong_dieu_tri": [
+          "Làm thuốc tai, điều trị nội khoa ngoại trú.",
+          "Hút mủ tai, nhỏ thuốc tai.",
+          "Theo dõi, màng nhĩ thủng do chấn thương thường tự liền.",
+          "Tư vấn phẫu thuật vá nhĩ khi tai khô.",
+          "Chỉ định chụp CT xương thái dương, đo thính lực.",
+          "Tư vấn phẫu thuật tiệt căn xương chũm."
+        ],
+        "loi_dan": [
+          "Giữ khô tai, tránh để nước vào tai.",
+          "Không ngoáy tai, không nhỏ thuốc tự mua.",
+          "Không đi bơi, không lặn.",
+          "Khi tắm gội nút tai bằng bông có thấm dầu.",
+          "Không xì mũi mạnh.",
+          "Quay lại ngay nếu chóng mặt, đau đầu, sốt, méo miệng."
+        ]
+      }
+    },
+    {
+      "id": "u-dich-voi-tai",
+      "ten": "Viêm tai giữa ứ dịch, tắc vòi tai",
+      "icd": ["H65.2", "H65.3", "H65.4", "H65.9", "H68", "H69"],
+      "tu_khoa": ["ù tai", "đầy tai", "tắc vòi", "tắc vòi tai", "ứ dịch", "vtg ứ dịch", "nghe kém"],
+      "cau": {
+        "ly_do": [
+          "Ù tai phải",
+          "Ù tai trái",
+          "Ù tai hai bên",
+          "Đầy tai, nghe kém",
+          "Ù tai sau đi máy bay",
+          "Trẻ nghe kém, gọi hay không nghe"
+        ],
+        "benh_su": [
+          "Cảm giác đầy tai, nghe như có nước trong tai.",
+          "Ù tai tăng khi nuốt, ngáp.",
+          "Ù tai sau đợt viêm mũi họng.",
+          "Ù tai sau đi máy bay.",
+          "Nghe tiếng mình vọng trong tai.",
+          "Không đau tai, không chảy tai.",
+          "Trẻ xem tivi để to tiếng, gọi hay không nghe."
+        ],
+        "kham_chuyen_khoa": [
+          "Tai phải: màng nhĩ lõm, nón sáng ngắn.",
+          "Tai trái: màng nhĩ lõm, nón sáng ngắn.",
+          "Tai hai bên: màng nhĩ lõm, nón sáng ngắn.",
+          "Tai phải: màng nhĩ mờ, có mức dịch sau màng nhĩ.",
+          "Tai trái: màng nhĩ mờ, có mức dịch sau màng nhĩ.",
+          "Tai hai bên: màng nhĩ mờ, có dịch sau màng nhĩ.",
+          "Vòm: lỗ vòi tai nề, có dịch nhầy.",
+          "Vòm: VA quá phát che lấp lỗ vòi."
+        ],
+        "ghi_chu_kq": [
+          "Nhĩ lượng đồ type C tai phải.",
+          "Nhĩ lượng đồ type C tai trái.",
+          "Nhĩ lượng đồ type C hai bên.",
+          "Nhĩ lượng đồ type B hai bên.",
+          "Thính lực đồ: nghe kém dẫn truyền nhẹ."
+        ],
+        "huong_dieu_tri": [
+          "Điều trị nội khoa, tập thông vòi tai.",
+          "Điều trị viêm mũi họng kèm theo.",
+          "Theo dõi, đo lại nhĩ lượng sau 4 tuần.",
+          "Tư vấn đặt ống thông khí màng nhĩ nếu không đỡ."
+        ],
+        "loi_dan": [
+          "Tập thông vòi tai: ngậm miệng, bịt mũi, thổi nhẹ.",
+          "Nhai kẹo cao su, nuốt nhiều khi máy bay cất cánh, hạ cánh.",
+          "Vệ sinh mũi bằng nước muối sinh lý hằng ngày.",
+          "Không xì mũi mạnh, xì từng bên.",
+          "Tái khám sau 4 tuần đo lại nhĩ lượng."
+        ]
+      }
+    },
+    {
+      "id": "nghe-kem",
+      "ten": "Nghe kém, ù tai",
+      "icd": ["H83.3", "H90", "H91", "H93.1", "H93.2"],
+      "tu_khoa": ["nghe kém", "điếc", "điếc đột ngột", "ù tai", "tiếng ve kêu", "lão thính", "nghe kém tuổi già"],
+      "cau": {
+        "ly_do": [
+          "Nghe kém tai phải",
+          "Nghe kém tai trái",
+          "Nghe kém hai tai",
+          "Nghe kém đột ngột tai phải",
+          "Nghe kém đột ngột tai trái",
+          "Ù tai như tiếng ve kêu",
+          "Nghe kém tăng dần",
+          "Kiểm tra thính lực"
+        ],
+        "benh_su": [
+          "Sáng ngủ dậy đột ngột nghe kém tai phải.",
+          "Sáng ngủ dậy đột ngột nghe kém tai trái.",
+          "Nghe kém tăng dần nhiều năm, khó nghe khi nói chuyện nơi đông người.",
+          "Ù tai liên tục như tiếng ve kêu, tăng về đêm.",
+          "Ù tai từng lúc, mất ngủ.",
+          "Làm việc trong môi trường tiếng ồn nhiều năm.",
+          "Nghe kém sau khi nghe tiếng nổ lớn.",
+          "Kèm chóng mặt.",
+          "Không chóng mặt.",
+          "Không đau tai, không chảy tai."
+        ],
+        "tien_su_ban_than": [
+          "Làm việc trong môi trường tiếng ồn.",
+          "Đang đeo máy trợ thính.",
+          "Từng dùng thuốc kháng sinh nhóm aminoglycosid."
+        ],
+        "kham_chuyen_khoa": [
+          "Tai: ống tai hai bên sạch, màng nhĩ hai bên nguyên vẹn, nón sáng rõ.",
+          "Âm thoa: Weber lệch trái, Rinne dương hai bên.",
+          "Âm thoa: Weber lệch phải, Rinne dương hai bên.",
+          "Âm thoa: Weber giữa, Rinne dương hai bên.",
+          "Âm thoa: Weber lệch phải, Rinne âm tai phải.",
+          "Âm thoa: Weber lệch trái, Rinne âm tai trái."
+        ],
+        "ghi_chu_kq": [
+          "Thính lực đồ: nghe kém tiếp nhận tai phải mức độ nặng.",
+          "Thính lực đồ: nghe kém tiếp nhận tai trái mức độ nặng.",
+          "Thính lực đồ: nghe kém tiếp nhận hai bên mức độ nhẹ, giảm nhiều ở tần số cao.",
+          "Thính lực đồ: nghe kém tiếp nhận hai bên mức độ vừa.",
+          "Thính lực đồ: khuyết hình chữ V tại 4000 Hz hai bên.",
+          "Nhĩ lượng đồ type A hai bên.",
+          "Chỉ định chụp MRI góc cầu tiểu não."
+        ],
+        "huong_dieu_tri": [
+          "Điều trị nội khoa, tái khám đo lại thính lực sau 1 tuần.",
+          "Chuyển nhập viện điều trị điếc đột ngột.",
+          "Tư vấn đeo máy trợ thính.",
+          "Chỉ định đo thính lực, nhĩ lượng.",
+          "Theo dõi, đo thính lực định kỳ 6 tháng."
+        ],
+        "loi_dan": [
+          "Tránh tiếng ồn lớn, dùng nút tai chống ồn khi làm việc.",
+          "Không nghe tai nghe âm lượng lớn kéo dài.",
+          "Nghỉ ngơi, tránh căng thẳng, ngủ đủ giấc.",
+          "Hạn chế cà phê, rượu bia, thuốc lá.",
+          "Quay lại ngay nếu nghe kém tăng, chóng mặt, méo miệng.",
+          "Điếc đột ngột là cấp cứu, cần điều trị càng sớm càng tốt."
+        ]
+      }
+    },
+    {
+      "id": "chong-mat",
+      "ten": "Chóng mặt",
+      "icd": ["H81", "H82", "R42"],
+      "tu_khoa": ["chóng mặt", "choáng váng", "hoa mắt", "tiền đình", "bppv", "ménière", "meniere"],
+      "cau": {
+        "ly_do": [
+          "Chóng mặt",
+          "Chóng mặt khi thay đổi tư thế",
+          "Chóng mặt, buồn nôn",
+          "Chóng mặt, ù tai",
+          "Choáng váng, mất thăng bằng"
+        ],
+        "benh_su": [
+          "Chóng mặt quay khi nằm xuống, trở mình, ngẩng đầu, mỗi cơn dưới 1 phút.",
+          "Chóng mặt quay liên tục, buồn nôn, nôn nhiều.",
+          "Chóng mặt từng cơn kéo dài vài giờ, kèm ù tai, đầy tai, nghe kém.",
+          "Chóng mặt sau đợt cảm cúm.",
+          "Kèm buồn nôn, nôn.",
+          "Không nghe kém, không ù tai.",
+          "Không đau đầu, không yếu tay chân, không nói ngọng.",
+          "Không mất ý thức.",
+          "Đã từng có cơn tương tự."
+        ],
+        "tien_su_ban_than": [
+          "Đã từng chóng mặt tư thế.",
+          "Thoái hóa đốt sống cổ.",
+          "Đau nửa đầu."
+        ],
+        "kham_toan_than": [
+          "Huyết áp bình thường.",
+          "Không có dấu hiệu thần kinh khu trú.",
+          "Đi lại loạng choạng."
+        ],
+        "kham_chuyen_khoa": [
+          "Tiền đình: nghiệm pháp Dix-Hallpike dương tính bên phải.",
+          "Tiền đình: nghiệm pháp Dix-Hallpike dương tính bên trái.",
+          "Tiền đình: nghiệm pháp Dix-Hallpike âm tính hai bên.",
+          "Tiền đình: rung giật nhãn cầu tự phát hướng ngang, không đổi hướng.",
+          "Tiền đình: Romberg nghiêng về một bên.",
+          "Tiền đình: không có rung giật nhãn cầu tự phát."
+        ],
+        "ghi_chu_kq": [
+          "Thính lực đồ: nghe kém tiếp nhận tần số thấp tai phải.",
+          "Thính lực đồ: nghe kém tiếp nhận tần số thấp tai trái.",
+          "Thính lực đồ trong giới hạn bình thường."
+        ],
+        "huong_dieu_tri": [
+          "Làm nghiệm pháp Epley tại phòng khám.",
+          "Điều trị nội khoa, hướng dẫn tập phục hồi tiền đình.",
+          "Chỉ định đo thính lực, đánh giá tiền đình.",
+          "Hội chẩn thần kinh loại trừ nguyên nhân trung ương.",
+          "Chuyển nhập viện theo dõi."
+        ],
+        "loi_dan": [
+          "Đứng dậy từ từ, tránh quay đầu đột ngột.",
+          "Kê cao gối khi ngủ trong 2 ngày đầu.",
+          "Không lái xe, không làm việc trên cao khi còn chóng mặt.",
+          "Tập bài tập tiền đình tại nhà theo hướng dẫn.",
+          "Ăn nhạt, hạn chế cà phê, rượu bia.",
+          "Quay lại ngay nếu đau đầu dữ dội, yếu tay chân, nói ngọng, nhìn đôi."
+        ]
+      }
+    },
+    {
+      "id": "liet-mat",
+      "ten": "Liệt mặt ngoại biên",
+      "icd": ["G51"],
+      "tu_khoa": ["liệt mặt", "méo miệng", "liệt dây vii", "liệt dây 7"],
+      "cau": {
+        "ly_do": ["Méo miệng", "Liệt mặt bên phải", "Liệt mặt bên trái"],
+        "benh_su": [
+          "Sáng ngủ dậy thấy méo miệng, nhắm mắt không kín.",
+          "Ăn uống rơi vãi, nước chảy khóe miệng.",
+          "Trước đó có đau sau tai.",
+          "Không yếu tay chân, không nói ngọng."
+        ],
+        "kham_chuyen_khoa": [
+          "Mặt: liệt mặt ngoại biên bên phải, dấu hiệu Charles Bell dương tính.",
+          "Mặt: liệt mặt ngoại biên bên trái, dấu hiệu Charles Bell dương tính.",
+          "Tai: ống tai sạch, không có mụn nước vành tai."
+        ],
+        "huong_dieu_tri": ["Điều trị nội khoa, phối hợp vật lý trị liệu.", "Hội chẩn thần kinh."],
+        "loi_dan": [
+          "Nhỏ nước mắt nhân tạo, đeo kính khi ra ngoài.",
+          "Băng che mắt khi ngủ.",
+          "Tập cơ mặt trước gương hằng ngày."
+        ]
+      }
+    },
+    {
+      "id": "mui-xoang-cap",
+      "ten": "Viêm mũi xoang cấp",
+      "icd": ["J00", "J01", "J06"],
+      "tu_khoa": ["ngạt mũi", "chảy mũi", "sổ mũi", "viêm xoang", "viêm mũi xoang cấp", "vmx", "vmxc", "cảm cúm", "đau nhức mặt", "viêm mũi họng"],
+      "cau": {
+        "ly_do": [
+          "Ngạt mũi, chảy mũi",
+          "Ngạt mũi, chảy mũi, đau đầu",
+          "Chảy mũi xanh",
+          "Chảy mũi vàng đặc",
+          "Đau nhức vùng mặt",
+          "Sổ mũi, đau họng, sốt nhẹ",
+          "Ho, chảy mũi"
+        ],
+        "benh_su": [
+          "Ngạt mũi hai bên, chảy mũi trong, sau chuyển đặc.",
+          "Chảy mũi vàng xanh, khịt khạc ra đờm.",
+          "Đau nhức vùng má, trán, tăng khi cúi.",
+          "Giảm ngửi.",
+          "Ho về đêm do dịch chảy xuống họng.",
+          "Sốt nhẹ.",
+          "Không sốt.",
+          "Không sưng nề quanh mắt, không nhìn mờ.",
+          "Đã dùng thuốc nhỏ mũi tự mua."
+        ],
+        "tien_su_ban_than": [
+          "Viêm mũi xoang tái phát.",
+          "Viêm mũi dị ứng."
+        ],
+        "kham_chuyen_khoa": [
+          "Mũi: niêm mạc nề đỏ, cuốn dưới quá phát, khe giữa hai bên có mủ nhầy.",
+          "Mũi: niêm mạc nề đỏ, khe giữa phải có mủ.",
+          "Mũi: niêm mạc nề đỏ, khe giữa trái có mủ.",
+          "Mũi: niêm mạc nề đỏ, có dịch nhầy trong.",
+          "Vòm: có dịch nhầy mủ chảy xuống.",
+          "Họng: thành sau họng có dịch nhầy mủ chảy xuống.",
+          "Họng: niêm mạc đỏ, thành sau có hạt."
+        ],
+        "ghi_chu_kq": [
+          "Nội soi mũi: khe giữa hai bên có mủ.",
+          "Phim CT xoang: mờ xoang hàm hai bên.",
+          "Phim CT xoang: mờ xoang hàm, sàng bên phải.",
+          "Phim CT xoang: mờ xoang hàm, sàng bên trái."
+        ],
+        "huong_dieu_tri": [
+          "Điều trị nội khoa ngoại trú.",
+          "Hút rửa mũi, khí dung mũi.",
+          "Điều trị nội khoa 10 đến 14 ngày, đánh giá lại.",
+          "Chỉ định nội soi mũi, chụp CT xoang nếu không đỡ."
+        ],
+        "loi_dan": [
+          "Rửa mũi bằng nước muối sinh lý 2 đến 3 lần mỗi ngày.",
+          "Xì mũi nhẹ từng bên, không xì mạnh.",
+          "Uống nhiều nước ấm, nghỉ ngơi.",
+          "Không dùng thuốc co mạch nhỏ mũi quá 5 ngày.",
+          "Giữ ấm cổ, mũi khi trời lạnh.",
+          "Quay lại ngay nếu sưng nề quanh mắt, nhìn mờ, đau đầu dữ dội, sốt cao."
+        ]
+      }
+    },
+    {
+      "id": "mui-xoang-man",
+      "ten": "Viêm mũi xoang mạn",
+      "icd": ["J32", "J33", "J34"],
+      "tu_khoa": ["viêm xoang mạn", "viêm mũi xoang mạn", "vmx mạn", "polyp mũi", "vẹo vách ngăn", "lệch vách ngăn", "quá phát cuốn mũi", "ngạt mũi kéo dài", "giảm ngửi", "nhọt mũi"],
+      "cau": {
+        "ly_do": [
+          "Ngạt mũi kéo dài",
+          "Ngạt mũi một bên",
+          "Ngạt mũi bên phải",
+          "Ngạt mũi bên trái",
+          "Chảy mũi sau kéo dài",
+          "Giảm ngửi, mất ngửi",
+          "Khám lại sau phẫu thuật mũi xoang"
+        ],
+        "benh_su": [
+          "Ngạt mũi hai bên kéo dài nhiều tháng, tăng dần.",
+          "Ngạt mũi luân phiên hai bên.",
+          "Ngạt mũi bên phải thường xuyên.",
+          "Ngạt mũi bên trái thường xuyên.",
+          "Chảy dịch nhầy xuống họng, hay khịt khạc.",
+          "Giảm ngửi từ lâu.",
+          "Nặng đầu, đau âm ỉ vùng trán.",
+          "Ngủ ngáy, thở miệng khi ngủ.",
+          "Đã điều trị nhiều đợt nhưng hay tái phát.",
+          "Đã dùng thuốc xịt mũi kéo dài."
+        ],
+        "tien_su_ban_than": [
+          "Viêm mũi xoang mạn nhiều năm.",
+          "Đã phẫu thuật nội soi mũi xoang.",
+          "Hen phế quản, dị ứng Aspirin.",
+          "Chấn thương mũi cũ."
+        ],
+        "kham_chuyen_khoa": [
+          "Mũi: niêm mạc nhợt, phù nề, khe giữa hai bên có dịch nhầy đặc.",
+          "Mũi: khe giữa hai bên có polyp mọng, trắng nhợt.",
+          "Mũi: khe giữa phải có polyp mọng, trắng nhợt.",
+          "Mũi: khe giữa trái có polyp mọng, trắng nhợt.",
+          "Mũi: vách ngăn vẹo phải, có gai vách ngăn.",
+          "Mũi: vách ngăn vẹo trái, có gai vách ngăn.",
+          "Mũi: cuốn dưới hai bên quá phát, đặt thuốc co kém.",
+          "Mũi: sau mổ hốc mũi thông thoáng, còn ít vảy khô.",
+          "Họng: thành sau họng có dịch nhầy chảy xuống."
+        ],
+        "ghi_chu_kq": [
+          "Phim CT xoang: mờ toàn bộ các xoang hai bên.",
+          "Phim CT xoang: mờ xoang hàm, sàng hai bên, phức hợp lỗ ngách bít tắc.",
+          "Phim CT xoang: vách ngăn vẹo, quá phát cuốn dưới hai bên.",
+          "Nội soi mũi: polyp độ 2 hai bên."
+        ],
+        "huong_dieu_tri": [
+          "Điều trị nội khoa, xịt corticoid mũi kéo dài.",
+          "Chỉ định chụp CT xoang, nội soi mũi.",
+          "Tư vấn phẫu thuật nội soi mũi xoang.",
+          "Tư vấn phẫu thuật chỉnh hình vách ngăn.",
+          "Tư vấn đốt cuốn mũi.",
+          "Làm sạch hốc mũi sau mổ, hẹn tái khám."
+        ],
+        "loi_dan": [
+          "Rửa mũi bằng nước muối sinh lý hằng ngày.",
+          "Xịt thuốc mũi đều đặn, hướng đầu xịt ra phía ngoài.",
+          "Không tự ý dùng thuốc co mạch kéo dài.",
+          "Tránh khói bụi, khói thuốc lá.",
+          "Sau mổ không xì mũi mạnh, không cúi gắng sức trong 2 tuần.",
+          "Quay lại ngay nếu chảy máu mũi nhiều sau mổ."
+        ]
+      }
+    },
+    {
+      "id": "viem-mui-di-ung",
+      "ten": "Viêm mũi dị ứng",
+      "icd": ["J30", "J31.0"],
+      "tu_khoa": ["hắt hơi", "ngứa mũi", "viêm mũi dị ứng", "vmdu", "vmdư", "chảy mũi trong", "dị ứng thời tiết"],
+      "cau": {
+        "ly_do": [
+          "Hắt hơi, chảy mũi trong",
+          "Ngứa mũi, hắt hơi từng tràng",
+          "Ngạt mũi, hắt hơi buổi sáng",
+          "Chảy mũi khi thay đổi thời tiết"
+        ],
+        "benh_su": [
+          "Hắt hơi từng tràng, chảy mũi trong như nước, ngứa mũi.",
+          "Triệu chứng nặng hơn vào buổi sáng sớm, khi thay đổi thời tiết.",
+          "Tăng khi tiếp xúc bụi nhà, lông chó mèo.",
+          "Ngứa mắt, chảy nước mắt.",
+          "Ngạt mũi hai bên, ngủ kém.",
+          "Bệnh tái phát nhiều năm, hay vào mùa lạnh.",
+          "Không sốt, không chảy mũi đặc."
+        ],
+        "tien_su_ban_than": [
+          "Viêm mũi dị ứng nhiều năm.",
+          "Hen phế quản.",
+          "Viêm da cơ địa.",
+          "Viêm kết mạc dị ứng."
+        ],
+        "tien_su_gia_dinh": [
+          "Gia đình có người viêm mũi dị ứng, hen phế quản."
+        ],
+        "kham_chuyen_khoa": [
+          "Mũi: niêm mạc nhợt, phù nề, cuốn dưới hai bên quá phát, nhiều dịch trong.",
+          "Mũi: niêm mạc nhợt màu, có dịch trong, đặt thuốc co tốt.",
+          "Mũi: niêm mạc tím nhạt, cuốn dưới nề, khe giữa sạch.",
+          "Họng: niêm mạc hồng, thành sau có ít dịch trong."
+        ],
+        "ghi_chu_kq": [
+          "Test lẩy da: dương tính với mạt bụi nhà.",
+          "Công thức máu: bạch cầu ái toan tăng nhẹ."
+        ],
+        "huong_dieu_tri": [
+          "Điều trị nội khoa, xịt corticoid mũi, kháng histamin.",
+          "Tư vấn tránh dị nguyên.",
+          "Điều trị duy trì, tái khám sau 1 tháng.",
+          "Chỉ định làm test dị nguyên."
+        ],
+        "loi_dan": [
+          "Tránh bụi nhà, lông chó mèo, phấn hoa.",
+          "Giặt chăn ga, gối thường xuyên bằng nước nóng.",
+          "Giữ ấm khi thay đổi thời tiết.",
+          "Rửa mũi bằng nước muối sinh lý hằng ngày.",
+          "Xịt thuốc mũi đều đặn kể cả khi đã đỡ.",
+          "Đeo khẩu trang khi ra đường, khi dọn nhà."
+        ]
+      }
+    },
+    {
+      "id": "chay-mau-mui",
+      "ten": "Chảy máu mũi",
+      "icd": ["R04.0", "S02.2"],
+      "tu_khoa": ["chảy máu mũi", "chảy máu cam", "cmm", "chấn thương mũi", "gãy xương chính mũi", "dị vật mũi"],
+      "cau": {
+        "ly_do": [
+          "Chảy máu mũi bên phải",
+          "Chảy máu mũi bên trái",
+          "Chảy máu mũi hai bên",
+          "Chảy máu mũi tái phát",
+          "Chấn thương mũi",
+          "Dị vật mũi"
+        ],
+        "benh_su": [
+          "Chảy máu mũi tự nhiên, lượng ít, tự cầm sau ép mũi.",
+          "Chảy máu mũi nhiều, phải nhét bông cầm máu.",
+          "Chảy máu mũi tái phát nhiều lần trong tháng.",
+          "Hay ngoáy mũi.",
+          "Đang dùng thuốc chống đông.",
+          "Bị va đập vào mũi, sau đó chảy máu, sưng đau mũi.",
+          "Trẻ tự nhét dị vật vào mũi, chảy mũi hôi một bên.",
+          "Không chảy máu chỗ khác.",
+          "Không choáng, không vã mồ hôi."
+        ],
+        "kham_toan_than": [
+          "Huyết áp cao.",
+          "Da, niêm mạc hồng, không có dấu hiệu mất máu.",
+          "Da hơi nhợt."
+        ],
+        "kham_chuyen_khoa": [
+          "Mũi: điểm mạch điểm Kisselbach bên phải giãn, có máu đông.",
+          "Mũi: điểm mạch điểm Kisselbach bên trái giãn, có máu đông.",
+          "Mũi: hốc mũi có máu đông, hiện không còn chảy máu.",
+          "Mũi: tháp mũi sưng nề, lệch, ấn đau.",
+          "Mũi: hốc mũi phải có dị vật, niêm mạc nề, dịch hôi.",
+          "Mũi: hốc mũi trái có dị vật, niêm mạc nề, dịch hôi.",
+          "Mũi: không thấy tụ máu vách ngăn."
+        ],
+        "ghi_chu_kq": [
+          "Công thức máu, đông máu cơ bản trong giới hạn bình thường.",
+          "Phim X quang xương chính mũi: gãy xương chính mũi, di lệch ít."
+        ],
+        "huong_dieu_tri": [
+          "Đốt điểm chảy máu, theo dõi.",
+          "Nhét bấc mũi cầm máu, hẹn rút bấc sau 48 giờ.",
+          "Kiểm soát huyết áp, phối hợp nội khoa.",
+          "Nắn chỉnh xương chính mũi.",
+          "Đã gắp dị vật mũi."
+        ],
+        "loi_dan": [
+          "Khi chảy máu: ngồi cúi đầu về trước, bóp chặt hai cánh mũi 10 phút.",
+          "Không ngoáy mũi, không xì mũi mạnh.",
+          "Tránh ăn uống đồ nóng, tránh gắng sức trong vài ngày.",
+          "Bôi mỡ làm ẩm niêm mạc mũi.",
+          "Theo dõi huyết áp hằng ngày.",
+          "Quay lại ngay nếu chảy máu nhiều không cầm, choáng váng."
+        ]
+      }
+    },
+    {
+      "id": "hong-amidan-cap",
+      "ten": "Viêm họng, viêm amidan cấp",
+      "icd": ["J02", "J03"],
+      "tu_khoa": ["đau họng", "nuốt đau", "viêm họng", "viêm họng cấp", "vhc", "viêm amidan", "viêm amidan cấp", "viêm amydan"],
+      "cau": {
+        "ly_do": [
+          "Đau họng",
+          "Đau họng, sốt",
+          "Đau họng, nuốt đau",
+          "Đau họng, ho",
+          "Sốt, nuốt vướng"
+        ],
+        "benh_su": [
+          "Đau họng, nuốt đau tăng dần.",
+          "Đau lan lên tai khi nuốt.",
+          "Sốt cao, rét run.",
+          "Sốt nhẹ.",
+          "Ho khan, có ít đờm.",
+          "Khàn tiếng nhẹ.",
+          "Mệt mỏi, ăn kém.",
+          "Không khó thở, không khít hàm.",
+          "Không sốt."
+        ],
+        "tien_su_ban_than": [
+          "Viêm amidan tái phát nhiều lần trong năm.",
+          "Viêm họng tái phát."
+        ],
+        "kham_toan_than": [
+          "Sốt nhẹ.",
+          "Sốt cao.",
+          "Hạch góc hàm hai bên sưng, ấn đau."
+        ],
+        "kham_chuyen_khoa": [
+          "Họng: niêm mạc đỏ, xung huyết, thành sau có hạt.",
+          "Họng: amidan hai bên sưng to, đỏ, có mủ trắng trong khe.",
+          "Họng: amidan hai bên to độ 2, đỏ, có giả mạc trắng dễ bóc.",
+          "Họng: amidan hai bên sưng đỏ, không có mủ.",
+          "Họng: trụ trước, trụ sau đỏ, lưỡi gà không lệch.",
+          "Cổ: hạch góc hàm hai bên sưng, ấn đau."
+        ],
+        "ghi_chu_kq": [
+          "Test nhanh liên cầu: âm tính.",
+          "Test nhanh liên cầu: dương tính.",
+          "Công thức máu: bạch cầu tăng, ưu thế trung tính."
+        ],
+        "huong_dieu_tri": [
+          "Điều trị nội khoa ngoại trú.",
+          "Điều trị nội khoa, kháng sinh, giảm đau.",
+          "Điều trị triệu chứng, không cần kháng sinh.",
+          "Khí dung họng."
+        ],
+        "loi_dan": [
+          "Súc họng nước muối ấm nhiều lần trong ngày.",
+          "Ăn thức ăn mềm, nguội, uống nhiều nước.",
+          "Uống kháng sinh đủ ngày, không tự ý ngừng thuốc.",
+          "Hạn chế nói to, nghỉ ngơi.",
+          "Tránh đồ uống lạnh, đồ cay nóng.",
+          "Quay lại ngay nếu đau tăng một bên, há miệng hạn chế, khó thở, sốt cao không hạ."
+        ]
+      }
+    },
+    {
+      "id": "ap-xe-quanh-amidan",
+      "ten": "Áp xe quanh amidan",
+      "icd": ["J36", "J39.0", "J39.1"],
+      "tu_khoa": ["áp xe", "áp xe amidan", "áp xe quanh amidan", "khít hàm", "há miệng hạn chế"],
+      "cau": {
+        "ly_do": [
+          "Đau họng dữ dội một bên",
+          "Nuốt đau, há miệng hạn chế",
+          "Sốt, đau họng, khít hàm"
+        ],
+        "benh_su": [
+          "Đau họng tăng dần, đau dữ dội bên phải, lan lên tai.",
+          "Đau họng tăng dần, đau dữ dội bên trái, lan lên tai.",
+          "Không nuốt được, chảy nước dãi.",
+          "Há miệng hạn chế, nói giọng ngậm hạt thị.",
+          "Sốt cao.",
+          "Đã dùng kháng sinh vài ngày không đỡ."
+        ],
+        "kham_chuyen_khoa": [
+          "Họng: màn hầu bên phải phồng, đẩy lưỡi gà lệch sang trái.",
+          "Họng: màn hầu bên trái phồng, đẩy lưỡi gà lệch sang phải.",
+          "Họng: khít hàm, há miệng khoảng 2 cm.",
+          "Cổ: hạch góc hàm bên phải sưng đau.",
+          "Cổ: hạch góc hàm bên trái sưng đau."
+        ],
+        "huong_dieu_tri": [
+          "Chọc hút, chích rạch dẫn lưu áp xe.",
+          "Chuyển nhập viện điều trị kháng sinh đường tĩnh mạch.",
+          "Tư vấn cắt amidan sau khi ổn định 4 đến 6 tuần."
+        ],
+        "loi_dan": [
+          "Súc họng nước muối ấm sau ăn.",
+          "Ăn lỏng, mềm, nguội.",
+          "Quay lại ngay nếu khó thở, sưng cổ, không nuốt được nước."
+        ]
+      }
+    },
+    {
+      "id": "hong-amidan-man",
+      "ten": "Viêm họng, viêm amidan mạn",
+      "icd": ["J31.1", "J31.2", "J35.0", "J35.1", "J35.8", "J35.9"],
+      "tu_khoa": ["viêm họng mạn", "vh mạn", "viêm họng hạt", "viêm amidan mạn", "amidan mạn", "vướng họng", "hơi thở hôi", "khạc đờm"],
+      "cau": {
+        "ly_do": [
+          "Vướng họng kéo dài",
+          "Đau rát họng tái phát",
+          "Ho khan kéo dài",
+          "Hơi thở hôi",
+          "Khám tư vấn cắt amidan"
+        ],
+        "benh_su": [
+          "Vướng họng, ngứa họng, hay đằng hắng nhiều tháng nay.",
+          "Ho khan, ngứa họng về sáng.",
+          "Hay khạc ra chất bã trắng, hơi thở hôi.",
+          "Viêm họng tái phát nhiều đợt trong năm.",
+          "Viêm amidan trên 5 lần trong năm qua.",
+          "Không sút cân, không nuốt nghẹn.",
+          "Không sốt."
+        ],
+        "tien_su_ban_than": [
+          "Viêm amidan tái phát nhiều lần trong năm.",
+          "Hút thuốc lá nhiều năm.",
+          "Trào ngược dạ dày thực quản."
+        ],
+        "kham_chuyen_khoa": [
+          "Họng: niêm mạc đỏ sẫm, thành sau nhiều hạt lympho.",
+          "Họng: niêm mạc khô, mỏng.",
+          "Họng: amidan hai bên to độ 2, bề mặt lổn nhổn, khe có chất bã.",
+          "Họng: amidan hai bên to độ 3, xơ teo, có chất bã đậu.",
+          "Họng: amidan hai bên nhỏ, xơ teo.",
+          "Họng: amidan hai bên to độ 3, chạm lưỡi gà."
+        ],
+        "ghi_chu_kq": [
+          "Công thức máu, đông máu cơ bản chuẩn bị phẫu thuật trong giới hạn bình thường."
+        ],
+        "huong_dieu_tri": [
+          "Điều trị nội khoa, súc họng, điều chỉnh lối sống.",
+          "Tư vấn phẫu thuật cắt amidan, làm xét nghiệm tiền phẫu.",
+          "Điều trị trào ngược kèm theo."
+        ],
+        "loi_dan": [
+          "Súc họng nước muối ấm hằng ngày.",
+          "Không hút thuốc lá, hạn chế rượu bia.",
+          "Uống đủ nước, hạn chế đồ uống lạnh.",
+          "Hạn chế đằng hắng, nuốt nước khi ngứa họng.",
+          "Đánh răng, vệ sinh răng miệng sau ăn."
+        ]
+      }
+    },
+    {
+      "id": "va-tre-em",
+      "ten": "Viêm VA trẻ em",
+      "icd": ["J35.2", "J35.3"],
+      "tu_khoa": ["viêm va", "va quá phát", "ngủ ngáy", "thở miệng", "trẻ ngạt mũi"],
+      "cau": {
+        "ly_do": [
+          "Trẻ ngạt mũi, chảy mũi kéo dài",
+          "Trẻ ngủ ngáy, thở miệng",
+          "Trẻ chảy mũi xanh tái phát"
+        ],
+        "benh_su": [
+          "Trẻ ngạt mũi, chảy mũi tái phát nhiều lần.",
+          "Ngủ ngáy, thở bằng miệng, hay giật mình.",
+          "Có lúc ngừng thở khi ngủ.",
+          "Hay bị viêm tai giữa kèm theo.",
+          "Sốt nhẹ.",
+          "Không sốt."
+        ],
+        "tien_su_ban_than": [
+          "Trẻ sinh đủ tháng, phát triển bình thường.",
+          "Viêm VA tái phát.",
+          "Viêm tai giữa tái phát."
+        ],
+        "kham_chuyen_khoa": [
+          "Mũi: hốc mũi hai bên có dịch nhầy mủ.",
+          "Vòm: VA quá phát, che lấp khoảng 2/3 cửa mũi sau.",
+          "Vòm: VA quá phát, có dịch mủ phủ.",
+          "Họng: thành sau họng có dịch mủ chảy xuống."
+        ],
+        "ghi_chu_kq": [
+          "Nội soi vòm: VA quá phát độ 3.",
+          "Nhĩ lượng đồ type B hai bên."
+        ],
+        "huong_dieu_tri": [
+          "Điều trị nội khoa, hút rửa mũi.",
+          "Tư vấn nạo VA."
+        ],
+        "loi_dan": [
+          "Vệ sinh mũi cho trẻ bằng nước muối sinh lý hằng ngày.",
+          "Hút mũi cho trẻ nhỏ trước khi bú, trước khi ngủ.",
+          "Giữ ấm cổ, ngực, gan bàn chân cho trẻ.",
+          "Cho trẻ uống đủ nước.",
+          "Quay lại ngay nếu trẻ sốt cao, khó thở, đau tai."
+        ]
+      }
+    },
+    {
+      "id": "thanh-quan",
+      "ten": "Bệnh thanh quản",
+      "icd": ["J04", "J05", "J37", "J38", "R49"],
+      "tu_khoa": ["khàn tiếng", "mất tiếng", "viêm thanh quản", "vtq", "hạt xơ dây thanh", "polyp dây thanh", "nói khó"],
+      "cau": {
+        "ly_do": [
+          "Khàn tiếng",
+          "Khàn tiếng kéo dài",
+          "Mất tiếng",
+          "Khàn tiếng, ho",
+          "Nói nhanh mệt"
+        ],
+        "benh_su": [
+          "Khàn tiếng sau đợt viêm họng, nói nhiều.",
+          "Khàn tiếng tăng dần nhiều tháng nay.",
+          "Khàn tiếng thất thường, nặng hơn về chiều.",
+          "Nói nhanh mệt, phải gắng sức khi nói.",
+          "Nghề nghiệp sử dụng giọng nhiều.",
+          "Ho khan.",
+          "Không khó thở, không nuốt nghẹn.",
+          "Không sút cân."
+        ],
+        "tien_su_ban_than": [
+          "Nghề nghiệp sử dụng giọng nhiều.",
+          "Hút thuốc lá nhiều năm.",
+          "Trào ngược dạ dày thực quản."
+        ],
+        "kham_chuyen_khoa": [
+          "Thanh quản: niêm mạc đỏ, hai dây thanh nề, di động tốt.",
+          "Thanh quản: hạt xơ 1/3 trước và 1/3 giữa hai dây thanh, khép không kín.",
+          "Thanh quản: polyp dây thanh phải, có cuống, di động theo nhịp thở.",
+          "Thanh quản: polyp dây thanh trái, có cuống, di động theo nhịp thở.",
+          "Thanh quản: hai dây thanh dày, nề, có dịch nhầy bám.",
+          "Thanh quản: sụn phễu hai bên nề đỏ.",
+          "Thanh quản: dây thanh phải hạn chế di động.",
+          "Thanh quản: dây thanh trái hạn chế di động."
+        ],
+        "ghi_chu_kq": [
+          "Nội soi thanh quản: hạt xơ dây thanh hai bên.",
+          "Nội soi thanh quản: polyp dây thanh.",
+          "Nội soi thanh quản: viêm thanh quản, không thấy khối u."
+        ],
+        "huong_dieu_tri": [
+          "Điều trị nội khoa, nghỉ giọng.",
+          "Hướng dẫn luyện giọng, tái khám sau 1 tháng.",
+          "Tư vấn phẫu thuật vi phẫu thanh quản.",
+          "Chỉ định nội soi thanh quản, sinh thiết nếu cần."
+        ],
+        "loi_dan": [
+          "Nghỉ giọng, hạn chế nói to, không nói thì thầm.",
+          "Uống đủ nước, tránh đồ uống lạnh.",
+          "Không hút thuốc lá, tránh khói bụi.",
+          "Không đằng hắng, không la hét.",
+          "Quay lại ngay nếu khó thở, thở rít."
+        ]
+      }
+    },
+    {
+      "id": "trao-nguoc",
+      "ten": "Trào ngược họng thanh quản",
+      "icd": ["K21"],
+      "tu_khoa": ["trào ngược", "trào ngược họng thanh quản", "lpr", "ợ chua", "nóng rát họng", "ợ hơi"],
+      "cau": {
+        "ly_do": [
+          "Vướng họng, ợ chua",
+          "Nóng rát họng",
+          "Ho khan kéo dài, đằng hắng nhiều"
+        ],
+        "benh_su": [
+          "Vướng họng như có cục, hay đằng hắng.",
+          "Ợ hơi, ợ chua, nóng rát sau xương ức.",
+          "Đắng miệng buổi sáng.",
+          "Triệu chứng tăng sau ăn no, khi nằm.",
+          "Khàn tiếng nhẹ buổi sáng.",
+          "Không nuốt nghẹn, không sút cân."
+        ],
+        "tien_su_ban_than": [
+          "Viêm dạ dày.",
+          "Trào ngược dạ dày thực quản."
+        ],
+        "kham_chuyen_khoa": [
+          "Thanh quản: sụn phễu hai bên nề đỏ, mép sau dày.",
+          "Thanh quản: niêm mạc liên phễu dày, hai dây thanh di động tốt.",
+          "Họng: niêm mạc đỏ, có nhầy bám thành sau."
+        ],
+        "huong_dieu_tri": [
+          "Điều trị nội khoa thuốc chống trào ngược 4 đến 8 tuần.",
+          "Điều chỉnh chế độ ăn, lối sống.",
+          "Phối hợp chuyên khoa tiêu hóa."
+        ],
+        "loi_dan": [
+          "Ăn bữa nhỏ, không ăn no trước khi ngủ.",
+          "Không nằm ngay sau ăn, nên nằm sau ăn 2 đến 3 giờ.",
+          "Kê cao đầu giường khi ngủ.",
+          "Hạn chế cà phê, rượu bia, đồ chua, cay, nhiều dầu mỡ.",
+          "Uống thuốc trước ăn sáng 30 phút."
+        ]
+      }
+    },
+    {
+      "id": "di-vat-hong",
+      "ten": "Dị vật họng, hóc xương",
+      "icd": ["T17", "T18.0", "T18.1"],
+      "tu_khoa": ["hóc xương", "hóc xương cá", "dị vật họng", "nuốt vướng", "dị vật đường thở"],
+      "cau": {
+        "ly_do": [
+          "Hóc xương cá",
+          "Hóc xương gà",
+          "Nuốt vướng sau ăn",
+          "Dị vật họng"
+        ],
+        "benh_su": [
+          "Sau ăn cá thấy vướng, đau nhói họng khi nuốt.",
+          "Đã nuốt cơm, uống nước nhưng không đỡ.",
+          "Đau khu trú bên phải.",
+          "Đau khu trú bên trái.",
+          "Không khó thở, không ho sặc.",
+          "Không nôn ra máu."
+        ],
+        "kham_chuyen_khoa": [
+          "Họng: dị vật xương cá cắm ở amidan phải.",
+          "Họng: dị vật xương cá cắm ở amidan trái.",
+          "Họng: dị vật xương cá ở đáy lưỡi bên phải.",
+          "Họng: dị vật xương cá ở đáy lưỡi bên trái.",
+          "Họng: niêm mạc xước, không thấy dị vật.",
+          "Họng: không thấy dị vật, hố lưỡi thanh thiệt hai bên sạch."
+        ],
+        "ghi_chu_kq": [
+          "Nội soi họng thanh quản: không thấy dị vật.",
+          "Phim X quang cổ nghiêng: không thấy hình cản quang."
+        ],
+        "huong_dieu_tri": [
+          "Đã gắp dị vật, kiểm tra không còn dị vật.",
+          "Không thấy dị vật, theo dõi, điều trị viêm.",
+          "Chỉ định nội soi thực quản nếu còn đau."
+        ],
+        "loi_dan": [
+          "Ăn mềm, nguội trong 2 đến 3 ngày.",
+          "Không tự nuốt cơm, nuốt rau để đẩy dị vật.",
+          "Quay lại ngay nếu đau tăng, sốt, khó thở, sưng cổ, không nuốt được."
+        ]
+      }
+    },
+    {
+      "id": "ngu-ngay",
+      "ten": "Ngủ ngáy, ngừng thở khi ngủ",
+      "icd": ["R06"],
+      "tu_khoa": ["ngủ ngáy", "ngừng thở khi ngủ"],
+      "cau": {
+        "ly_do": ["Ngủ ngáy", "Ngủ ngáy, ngừng thở khi ngủ"],
+        "benh_su": [
+          "Ngủ ngáy to nhiều năm, người nhà phát hiện có lúc ngừng thở.",
+          "Ngủ dậy mệt, buồn ngủ ban ngày.",
+          "Đau đầu buổi sáng.",
+          "Tăng cân nhiều năm gần đây."
+        ],
+        "kham_chuyen_khoa": [
+          "Họng: màn hầu thấp, lưỡi gà dài, amidan hai bên to độ 2.",
+          "Mũi: vách ngăn vẹo, cuốn dưới quá phát."
+        ],
+        "huong_dieu_tri": ["Chỉ định đo đa ký giấc ngủ.", "Tư vấn giảm cân, điều chỉnh tư thế ngủ."],
+        "loi_dan": [
+          "Nằm nghiêng khi ngủ.",
+          "Giảm cân, tập thể dục đều đặn.",
+          "Không uống rượu bia, không dùng thuốc ngủ trước khi ngủ."
+        ]
+      }
+    },
+    {
+      "id": "u-ba-dau",
+      "ten": "U bã đậu, khối vùng tai mũi họng",
+      "icd": ["L72", "D10", "D14", "Q18"],
+      "tu_khoa": ["u bã đậu", "khối", "nổi cục", "rò luân nhĩ", "khối vùng cổ"],
+      "cau": {
+        "ly_do": ["Nổi cục sau tai", "Khối vùng cổ", "Sưng đau trước tai", "Rò trước tai chảy dịch"],
+        "benh_su": [
+          "Phát hiện khối nhỏ vài tháng nay, lớn dần.",
+          "Khối không đau, thỉnh thoảng sưng đỏ, chảy dịch bã.",
+          "Lỗ rò trước tai chảy dịch từng đợt.",
+          "Không sốt, không sút cân."
+        ],
+        "kham_chuyen_khoa": [
+          "Tai: khối sau tai phải kích thước khoảng 1 cm, mềm, di động, có lỗ ở giữa.",
+          "Tai: khối sau tai trái kích thước khoảng 1 cm, mềm, di động, có lỗ ở giữa.",
+          "Tai: lỗ rò trước bình tai phải, không sưng đỏ.",
+          "Tai: lỗ rò trước bình tai trái, không sưng đỏ.",
+          "Cổ: khối vùng cổ mềm, di động, không dính da, không đau."
+        ],
+        "ghi_chu_kq": ["Siêu âm phần mềm: khối dịch dưới da, ranh giới rõ.", "Siêu âm vùng cổ: chưa thấy hạch bất thường."],
+        "huong_dieu_tri": [
+          "Tư vấn phẫu thuật cắt bỏ khối.",
+          "Điều trị viêm, hẹn phẫu thuật khi ổn định.",
+          "Chỉ định siêu âm vùng cổ, theo dõi."
+        ],
+        "loi_dan": ["Không nặn khối.", "Giữ vệ sinh vùng da quanh khối.", "Quay lại nếu khối sưng đỏ, đau, chảy mủ."]
+      }
+    }
   ]
 }

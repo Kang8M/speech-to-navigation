@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, type KeyboardEvent, type ReactNode } from "react";
 import { useEform } from "@/client/eform/EformContext";
-import { khoCau, maGoTatCuaO, nhanGoiY, O_XUONG_DONG, timGoiYTab, type NguCanh } from "@/shared/eform/goi-y-tab";
+import { cauThuVien, khoCau, maGoTatCuaO, nhanGoiY, O_XUONG_DONG, timGoiYTab, type NguCanh } from "@/shared/eform/goi-y-tab";
 import type { Nguon } from "@/shared/eform/types";
 
 // Kiểu nút và ô nhập dùng chung cho cả trang eForm
@@ -242,7 +242,8 @@ export function ReadonlyItem({ label, value }: { label: string; value: string })
 /** Nút thư viện mẫu câu tĩnh: bấm một mẫu để thêm vào cuối ô. Giao diện gọn bỏ nút, câu thư viện đã nằm trong chữ mờ Tab */
 export function ThuVienButton({ id }: { id: string }) {
   const { data, append, gon } = useEform();
-  const items = data.thuVien[id] ?? [];
+  const nguCanh = useNguCanh();
+  const items = useMemo(() => cauThuVien(id, data.thuVien, nguCanh), [id, data.thuVien, nguCanh]);
   if (gon) return null;
   return (
     <details className="relative">

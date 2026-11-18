@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { GoTat } from "./go-tat";
-import { khoCau, maGoTatCuaO, nhanGoiY, timGoiYTab, type CauGoiY, type NguonCau } from "./goi-y-tab";
+import { cauThuVien, khoCau, maGoTatCuaO, nhanGoiY, timGoiYTab, type CauGoiY, type NguonCau } from "./goi-y-tab";
 import type { PhieuMau } from "./phieu-mau";
 
 function mau(id: string, ten: string, icd: string, phieuKham: Record<string, string>, khamKhac = ""): PhieuMau {
@@ -36,7 +36,7 @@ const NGUON: NguonCau = {
       ly_do_kham: "Đau họng [số] ngày",
     }),
   ],
-  thuVien: { loi_dan: ["Dùng thuốc theo đơn, không tự ý ngừng thuốc."] },
+  thuVien: { chung: { loi_dan: ["Dùng thuốc theo đơn, không tự ý ngừng thuốc."] }, nhom: [] },
 };
 
 test("kho câu: câu của bác sĩ đứng đầu, phiếu mẫu đúng bệnh trước bệnh khác, bỏ câu còn chỗ trống", () => {
@@ -94,11 +94,73 @@ test("chữ cuối là mã gõ tắt của ô thì gợi ý bung mã; mã của 
 
 test("ô trống chỉ gợi ý câu đủ chắc: câu của bệnh khác chỉ hiện khi bác sĩ đã gõ đầu câu", () => {
   // Ca đau tai chưa có mã ICD: "Súc họng nước muối ấm." chỉ có ở mẫu viêm họng (bệnh khác)
-  const kho = khoCau("loi_dan", { ...NGUON, goTat: [], thuVien: {} }, { text: "Đau tai phải", icd: [] });
+  const kho = khoCau("loi_dan", { ...NGUON, goTat: [], thuVien: { chung: {}, nhom: [] } }, { text: "Đau tai phải", icd: [] });
   assert.equal(kho.find((item) => item.cau === "Súc họng nước muối ấm.")?.chac, false);
   assert.equal(timGoiYTab("", kho, new Map(), false), null);
   assert.equal(timGoiYTab("suc h", kho, new Map(), false)?.chen, "Súc họng nước muối ấm.");
   // Có mã đúng bệnh thì câu của mẫu đó đủ chắc
-  const dungBenh = khoCau("loi_dan", { ...NGUON, goTat: [], thuVien: {} }, { text: "", icd: ["J02.9"] });
+  const dungBenh = khoCau("loi_dan", { ...NGUON, goTat: [], thuVien: { chung: {}, nhom: [] } }, { text: "", icd: ["J02.9"] });
   assert.equal(timGoiYTab("", dungBenh, new Map(), false)?.chen, "Uống thuốc đúng giờ.");
+});
+
+test("thư viện theo nhóm bệnh: nhóm nhận ra từ lý do khám hay tiền tố ICD đứng trên câu chung, nhóm khác chỉ hiện khi gõ đầu câu", () => {
+  const thuVien = {
+    chung: { benh_su: ["Chưa điều trị gì."] },
+    nhom: [
+      { id: "tai", ten: "Viêm tai giữa", icd: ["H66"], tu_khoa: ["đau tai"], cau: { benh_su: ["Không chảy mủ tai."] } },
+      { id: "hong", ten: "Viêm họng", icd: ["J02"], tu_khoa: ["đau họng"], cau: { benh_su: ["Nuốt đau tăng khi ăn."] } },
+    ],
+  };
+  const nguon = { ...NGUON, goTat: [], phieuMau: [], thuVien };
+  const theoLyDo = khoCau("benh_su", nguon, { text: "Đau tai phải", icd: [] });
+  assert.deepEqual(theoLyDo, [
+    { cau: "Không chảy mủ tai.", chac: true },
+    { cau: "Chưa điều trị gì.", chac: true },
+    { cau: "Nuốt đau tăng khi ăn.", chac: false },
+  ]);
+  assert.equal(khoCau("benh_su", nguon, { text: "", icd: ["J02.9"] })[0].cau, "Nuốt đau tăng khi ăn.");
+  // Ô trống không gợi ý câu của nhóm khác; gõ đầu câu thì vẫn ra
+  const khongNguCanh = khoCau("benh_su", nguon, { text: "", icd: [] });
+  assert.equal(timGoiYTab("", khongNguCanh, new Map(), false)?.chen, "Chưa điều trị gì.");
+  assert.equal(timGoiYTab("nuot", khongNguCanh, new Map(), false)?.chen, "Nuốt đau tăng khi ăn.");
+  assert.deepEqual(cauThuVien("benh_su", thuVien, { text: "Đau họng", icd: [] }), ["Nuốt đau tăng khi ăn.", "Chưa điều trị gì."]);
+});
+
+test("câu ghi bên ngược với bên trên phiếu thì không gợi ý ở ô trống, gõ đầu câu vẫn ra", () => {
+  const thuVien = {
+    chung: {},
+    nhom: [
+      {
+        id: "tai",
+        ten: "Viêm tai giữa",
+        icd: [],
+        tu_khoa: ["đau tai"],
+        cau: { kham_chuyen_khoa: ["Tai phải: màng nhĩ đỏ, phồng.", "Tai trái: màng nhĩ đỏ, phồng."] },
+      },
+    ],
+  };
+  const kho = khoCau("kham_chuyen_khoa", { ...NGUON, goTat: [], phieuMau: [], thuVien }, { text: "Đau tai trái.", icd: [] });
+  assert.equal(timGoiYTab("", kho, new Map(), true)?.chen, "Tai trái: màng nhĩ đỏ, phồng.");
+  assert.equal(timGoiYTab("Tai ph", kho, new Map(), true)?.chen, "Tai phải: màng nhĩ đỏ, phồng.");
+});
+
+test("ô khám: bộ phận đã có dòng thì không gợi ý dòng khác cho bộ phận đó", () => {
+  const kho = chac("Tai: ống tai sạch, màng nhĩ sáng.", "Mũi: niêm mạc hồng.");
+  assert.equal(timGoiYTab("Tai phải: màng nhĩ đỏ.\n", kho, new Map(), true)?.chen, "Mũi: niêm mạc hồng.");
+  // Ô không xuống dòng (lời dặn…) không áp quy tắc này
+  assert.equal(timGoiYTab("Tai phải: màng nhĩ đỏ. ", kho, new Map(), false)?.chen, "Tai: ống tai sạch, màng nhĩ sáng.");
+});
+
+test("câu khám bình thường ghi hai bên vẫn gợi ý ở ca một bên", () => {
+  const thuVien = { chung: { kham_chuyen_khoa: ["Họng: amidan hai bên không to."] }, nhom: [] };
+  const kho = khoCau("kham_chuyen_khoa", { ...NGUON, goTat: [], phieuMau: [], thuVien }, { text: "Đau tai phải", icd: [] });
+  assert.deepEqual(kho, [{ cau: "Họng: amidan hai bên không to.", chac: true }]);
+});
+
+test("nhiều nhóm cùng khớp: nhóm khớp nhiều từ khóa hơn, hoặc khớp mã ICD, đứng trước", () => {
+  const nhom = (id: string, icd: string[], tu_khoa: string[]) => ({ id, ten: id, icd, tu_khoa, cau: { benh_su: [`Câu ${id}.`] } });
+  const thuVien = { chung: {}, nhom: [nhom("ngoai", ["H60"], ["đau tai"]), nhom("giua", ["H66"], ["đau tai", "chảy mủ tai"])] };
+  const nguon = { ...NGUON, goTat: [], phieuMau: [], thuVien };
+  assert.equal(khoCau("benh_su", nguon, { text: "Đau tai phải, chảy mủ tai phải", icd: [] })[0].cau, "Câu giua.");
+  assert.equal(khoCau("benh_su", nguon, { text: "Đau tai phải, chảy mủ tai phải", icd: ["H60.3"] })[0].cau, "Câu ngoai.");
 });

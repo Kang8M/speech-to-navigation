@@ -1,6 +1,6 @@
 # Kịch bản thử với bác sĩ
 
-Tài liệu cho một buổi thử Trợ lý AI điền phiếu với bác sĩ TMH. **Phần 1** in ra đưa bác sĩ làm theo. **Phần 2** dành cho người điều phối, có kết quả đúng của từng bài để đối chiếu. **Phụ lục** là danh sách 39 mẫu và cách gọi tắt, in kèm Phần 1.
+Tài liệu cho một buổi thử Trợ lý AI điền phiếu với bác sĩ TMH. **Phần 1** in ra đưa bác sĩ làm theo. **Phần 2** dành cho người điều phối, có kết quả đúng của từng bài để đối chiếu. **Phụ lục** là danh sách 83 mẫu và cách gọi tắt, in kèm Phần 1.
 
 > **Chỉ dùng thông tin bịa.** Bác sĩ không nói tên, tuổi, PID hay bệnh sử của bệnh nhân thật, kể cả khi đang kể lại một ca quen.
 
@@ -192,7 +192,7 @@ Hỏi về việc đã xảy ra, không hỏi bác sĩ có thích không:
 
 ---
 
-## Phụ lục. 39 mẫu và cách gọi tắt
+## Phụ lục. 83 mẫu và cách gọi tắt
 
 Gõ tên đầy đủ hoặc một cách gọi tắt, có dấu hay không dấu đều được (ví dụ `viem tai giua cap`). Có thể thêm "mẫu" phía trước.
 
@@ -217,6 +217,22 @@ Gõ tên đầy đủ hoặc một cách gọi tắt, có dấu hay không dấu
 | Chóng mặt tư thế kịch phát lành tính | `chóng mặt tư thế`, `bppv` |
 | Bệnh Ménière | `meniere`, `hội chứng meniere` |
 | Viêm dây thần kinh tiền đình | `viêm tk tiền đình`, `viêm thần kinh tiền đình` |
+| Viêm xương chũm cấp | `xương chũm cấp`, `vxc cấp` |
+| Viêm tai giữa cholesteatoma | `cholesteatoma`, `vtg cholesteatoma` |
+| Viêm tai giữa ứ dịch mạn | `vtg ứ dịch mạn`, `vtg tiết dịch mạn` |
+| Xơ nhĩ | `xơ hóa màng nhĩ`, `xơ màng nhĩ` |
+| Xốp xơ tai | `otosclerosis` |
+| Viêm màng nhĩ cấp | `viêm màng nhĩ bọng`, `viêm màng nhĩ` |
+| Viêm sụn vành tai | `viêm màng sụn vành tai`, `viêm sụn tai` |
+| Zona tai | `zona hạch gối`, `herpes zoster tai` |
+| Rò luân nhĩ | `rò trước tai`, `nang rò luân nhĩ` |
+| Đau tai phản xạ | `đau tai do răng`, `đau tai do khớp thái dương hàm` |
+| Nghe kém do tiếng ồn | `điếc nghề nghiệp`, `nghe kém nghề nghiệp` |
+| Khám thính lực định kỳ | `kiểm tra thính lực`, `khám tai định kỳ` |
+| Chỉnh máy trợ thính | `máy trợ thính`, `điều chỉnh máy trợ thính` |
+| Tái khám sau vá nhĩ | `hậu phẫu vá nhĩ`, `sau vá nhĩ` |
+| Rối loạn tiền đình | `rltđ`, `rối loạn tiền đình ngoại biên` |
+| Liệt mặt ngoại biên | `liệt bell`, `liệt dây vii`, `liệt dây 7` |
 
 **Mũi**
 
@@ -233,6 +249,20 @@ Gõ tên đầy đủ hoặc một cách gọi tắt, có dấu hay không dấu
 | Chảy máu mũi | `chảy máu cam`, `cmm` |
 | Dị vật mũi | `dị vật hốc mũi`, `dv mũi` |
 | Viêm VA trẻ em | `viêm va`, `va quá phát` |
+| Viêm xoang hàm cấp | `xoang hàm cấp`, `viêm xoang hàm do răng` |
+| Viêm xoang trán cấp | `xoang trán cấp` |
+| Viêm đa xoang mạn | `đa xoang mạn` |
+| Nang xoang hàm | `u nang xoang`, `nang nhầy xoang` |
+| Viêm mũi mạn | `viêm mũi mạn tính` |
+| Viêm mũi vận mạch | `vmvm`, `viêm mũi không dị ứng` |
+| Viêm mũi dị ứng trẻ em | `vmdu trẻ em`, `vmdư trẻ em` |
+| Viêm mũi xoang cấp trẻ em | `vmx cấp trẻ em`, `viêm xoang trẻ em` |
+| Mất khứu giác | `mất ngửi`, `rối loạn khứu giác` |
+| Gãy xương chính mũi | `gãy mũi`, `chấn thương mũi` |
+| Chảy máu mũi tăng huyết áp | `chảy máu mũi do huyết áp`, `cmm tha` |
+| Tái khám sau mổ xoang | `hậu phẫu xoang`, `sau mổ nội soi mũi xoang` |
+| Quá phát VA và amidan | `va amidan quá phát`, `phì đại va amidan` |
+| Tái khám sau nạo VA | `hậu phẫu va`, `sau nạo va` |
 
 **Họng, thanh quản**
 
@@ -249,3 +279,22 @@ Gõ tên đầy đủ hoặc một cách gọi tắt, có dấu hay không dấu
 | Polyp dây thanh | `polyp thanh quản` |
 | Trào ngược họng thanh quản | `trào ngược họng thanh quản`, `lpr` |
 | Hóc xương | `hóc xương cá`, `dị vật họng` |
+| Viêm họng cấp trẻ em | `vh cấp trẻ em` |
+| Viêm họng liên cầu | `viêm họng do liên cầu`, `vh liên cầu` |
+| Nhiễm trùng hô hấp trên | `nkhht`, `viêm đường hô hấp trên` |
+| Viêm mũi họng mạn | `vmh mạn` |
+| Viêm amidan cấp trẻ em | `amidan cấp trẻ em` |
+| Quá phát amidan | `phì đại amidan`, `amidan quá phát` |
+| Tái khám sau cắt amidan | `hậu phẫu amidan`, `sau cắt amidan` |
+| Áp xe thành sau họng | `áp xe sau họng`, `áp xe cận họng` |
+| Viêm họng thanh quản cấp | `vhtq cấp` |
+| Viêm thanh quản rít trẻ em | `croup`, `viêm thanh quản hạ thanh môn` |
+| Liệt dây thanh | `liệt dây thanh âm`, `liệt thanh quản` |
+| Loạn cảm họng | `cảm giác vướng họng`, `nuốt vướng chức năng` |
+| Dị vật thực quản | `hóc dị vật thực quản`, `dv thực quản` |
+
+**Khác**
+
+| Mẫu | Gọi tắt |
+|---|---|
+| U bã đậu | `u bã đậu sau tai`, `kén bã` |

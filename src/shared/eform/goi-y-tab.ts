@@ -7,11 +7,28 @@ import type { GoTat } from "./go-tat";
 import type { PhieuMau } from "./phieu-mau";
 import type { DonDaKe } from "./thoi-quen";
 
+/** Một nhóm bệnh trong thư viện câu: nhận ra khi mã ICD bắt đầu bằng một tiền tố, hoặc lý do khám, chẩn đoán có từ khóa */
+export interface NhomThuVien {
+  id: string;
+  ten: string;
+  /** Tiền tố mã ICD10: "H66" khớp H66.0, H66.1… */
+  icd: string[];
+  tu_khoa: string[];
+  /** id ô trên eForm → câu */
+  cau: Record<string, string[]>;
+}
+
+/** Thư viện câu (data/eform/thu-vien.json): câu chung cho mọi ca và câu theo nhóm bệnh */
+export interface ThuVien {
+  chung: Record<string, string[]>;
+  nhom: NhomThuVien[];
+}
+
 export interface NguonCau {
   goTat: GoTat[];
   thoiQuen: DonDaKe[];
   phieuMau: PhieuMau[];
-  thuVien: Record<string, string[]>;
+  thuVien: ThuVien;
 }
 
 /** Một câu trong kho gợi ý. `chac`: đủ chắc để gợi ý cả khi ô còn trống (không phải câu của bệnh khác) */
@@ -29,9 +46,10 @@ export interface NguCanh {
 
 /**
  * Điểm theo nguồn: câu của chính bác sĩ trước (gõ tắt, lời dặn đã kê cho đúng chẩn đoán), rồi phiếu mẫu đúng bệnh,
- * thư viện chung, cuối cùng là câu của bệnh khác (phiếu mẫu, lời dặn đã kê cho chẩn đoán khác)
+ * thư viện theo nhóm bệnh đúng, thư viện chung, cuối cùng là câu của bệnh khác (phiếu mẫu, nhóm thư viện,
+ * lời dặn đã kê cho chẩn đoán khác)
  */
-const DIEM = { goTat: 3, thoiQuen: 3, mauDungBenh: 2.5, thuVien: 1.5, benhKhac: 1 };
+const DIEM = { goTat: 3, thoiQuen: 3, mauDungBenh: 2.5, nhomDungBenh: 2, thuVien: 1.5, benhKhac: 1 };
 /** Câu gặp ở nhiều nguồn hay nhiều mẫu là câu quen, cộng thêm mỗi lần lặp */
 const DIEM_LAP = 0.25;
 /** Số ký tự tối thiểu (bỏ dấu cách) trước khi gợi ý tiếp câu đang gõ */
@@ -52,12 +70,37 @@ function tachCau(text: string): string[] {
     .filter(Boolean);
 }
 
+/** Ngữ cảnh có nguyên cụm `ten` (so không dấu, trọn từ) */
+function coCum(ngucanhChuan: string, ten: string): boolean {
+  const chuan = normalizeVi(ten);
+  return chuan.length >= 3 && ` ${ngucanhChuan} `.includes(` ${chuan} `);
+}
+
 function mauDungBenh(mau: PhieuMau, nguCanh: NguCanh, ngucanhChuan: string): boolean {
   if (mau.icd && nguCanh.icd.includes(mau.icd)) return true;
-  return [mau.ten, ...mau.bi_danh].some((ten) => {
-    const chuan = normalizeVi(ten);
-    return chuan.length >= 3 && ` ${ngucanhChuan} `.includes(` ${chuan} `);
-  });
+  return [mau.ten, ...mau.bi_danh].some((ten) => coCum(ngucanhChuan, ten));
+}
+
+/** Độ khớp của nhóm với phiếu: khớp mã ICD tính 10, mỗi tên hay từ khóa có trong lý do khám, chẩn đoán tính 1; 0 là không khớp */
+function diemNhom(nhom: NhomThuVien, nguCanh: NguCanh, ngucanhChuan: string): number {
+  const icd = nguCanh.icd.some((ma) => nhom.icd.some((tienTo) => ma.startsWith(tienTo))) ? 10 : 0;
+  return icd + [nhom.ten, ...nhom.tu_khoa].filter((ten) => coCum(ngucanhChuan, ten)).length;
+}
+
+/** Nhóm khớp phiếu, nhóm khớp nhiều hơn đứng trước ("chảy mủ tai" đưa viêm tai giữa lên trên viêm tai ngoài) */
+function nhomDungBenh(thuVien: ThuVien, nguCanh: NguCanh, ngucanhChuan: string): NhomThuVien[] {
+  return thuVien.nhom
+    .map((nhom) => ({ nhom, diem: diemNhom(nhom, nguCanh, ngucanhChuan) }))
+    .filter((item) => item.diem > 0)
+    .sort((a, b) => b.diem - a.diem)
+    .map((item) => item.nhom);
+}
+
+/** Câu thư viện cho một ô, nhóm đúng bệnh trước câu chung; nút "Mở thư viện tham khảo" ở giao diện cũ dùng */
+export function cauThuVien(id: string, thuVien: ThuVien, nguCanh: NguCanh): string[] {
+  const ngucanhChuan = normalizeVi(nguCanh.text);
+  const nhom = nhomDungBenh(thuVien, nguCanh, ngucanhChuan).flatMap((item) => item.cau[id] ?? []);
+  return [...new Set([...nhom, ...(thuVien.chung[id] ?? [])])];
 }
 
 /**
@@ -99,11 +142,49 @@ export function khoCau(id: string, nguon: NguonCau, nguCanh: NguCanh): CauGoiY[]
     if (id === "kham_khac") tachCau(mau.khamKhac).forEach((cau) => them(cau, d));
   }
 
-  for (const cau of nguon.thuVien[id] ?? []) them(cau.trim(), DIEM.thuVien);
+  const nhomDung = new Set(nhomDungBenh(nguon.thuVien, nguCanh, ngucanhChuan));
+  for (const nhom of nhomDung) for (const cau of nhom.cau[id] ?? []) them(cau.trim(), DIEM.nhomDungBenh);
+  for (const cau of nguon.thuVien.chung[id] ?? []) them(cau.trim(), DIEM.thuVien);
+  for (const nhom of nguon.thuVien.nhom) {
+    if (!nhomDung.has(nhom)) for (const cau of nhom.cau[id] ?? []) them(cau.trim(), DIEM.benhKhac);
+  }
 
+  // Câu ghi bên khác bên đang có trên phiếu (lý do khám "đau tai trái", câu "Tai phải: …") xếp như câu bệnh khác
+  const benPhieu = benCua(ngucanhChuan);
+  const diemCuoi = (item: { cau: string; diem: number }) =>
+    benPhieu.size && lechBen(benCua(normalizeVi(item.cau)), benPhieu) ? Math.min(item.diem, DIEM.benhKhac) : item.diem;
   return [...diem.values()]
+    .map((item) => ({ ...item, diem: diemCuoi(item) }))
     .sort((a, b) => b.diem + DIEM_LAP * (b.lan - 1) - (a.diem + DIEM_LAP * (a.lan - 1)) || a.thuTu - b.thuTu)
     .map((item) => ({ cau: item.cau, chac: item.diem > DIEM.benhKhac }));
+}
+
+/** Bên ghi trong chữ đã chuẩn hóa không dấu: phải, trái, hai bên */
+function benCua(chuan: string): Set<string> {
+  const ben = new Set<string>();
+  const chu = ` ${chuan.replace(/[.,;/+%]/g, " ")} `;
+  if (chu.includes(" phai ")) ben.add("phai");
+  if (chu.includes(" trai ")) ben.add("trai");
+  if (chu.includes(" hai ben ") || chu.includes(" 2 ben ")) ben.add("hai ben");
+  return ben;
+}
+
+/** Câu ghi phải hoặc trái mà phiếu không có bên đó. Câu chỉ ghi "hai bên" (thường là câu khám bình thường) không tính lệch */
+function lechBen(benCau: Set<string>, benPhieu: Set<string>): boolean {
+  const ben = [...benCau].filter((item) => item !== "hai ben");
+  return ben.length > 0 && !ben.some((item) => benPhieu.has(item));
+}
+
+/** Bộ phận ghi ở đầu dòng khám ("Tai phải: …" → "tai") */
+function boPhan(dong: string): string | null {
+  const muc = dong.trim().match(/^([^:\n]{1,20}):/)?.[1];
+  return muc ? normalizeVi(muc).split(" ")[0] || null : null;
+}
+
+/** Ô khám đã có dòng cho bộ phận của câu này, ví dụ đã ghi "Tai phải: …" thì không gợi ý "Tai: bình thường" */
+function daKhamBoPhan(value: string, cau: string): boolean {
+  const bp = boPhan(cau);
+  return bp !== null && value.split("\n").some((dong) => boPhan(dong) === bp);
 }
 
 /** Mã gõ tắt dùng được trong ô: mã của chính ô đó và từ ngắn (o = tu). Mã trùng thì dòng đầu thắng, như khi bung cả câu */
@@ -147,7 +228,7 @@ function tiepCau(value: string, start: number, kho: CauGoiY[], giuChuThuong: boo
 /**
  * Gợi ý cho ô đang có giá trị `value`, con trỏ ở cuối ô.
  * 1. Chữ cuối là mã gõ tắt: gợi ý bung mã.
- * 2. Ô trống hoặc vừa hết câu: gợi ý câu đủ chắc tiếp theo chưa có trong ô.
+ * 2. Ô trống hoặc vừa hết câu: gợi ý câu đủ chắc tiếp theo chưa có trong ô; ô khám bỏ câu của bộ phận đã có dòng.
  * 3. Đang gõ dở một câu (hoặc vế sau dấu phẩy): gợi ý câu bắt đầu như vậy, so khớp không dấu nên gõ "ong tai" vẫn ra "Ống tai".
  */
 export function timGoiYTab(value: string, kho: CauGoiY[], maGoTat: Map<string, GoTat>, xuongDong: boolean): GoiYTab | null {
@@ -161,7 +242,7 @@ export function timGoiYTab(value: string, kho: CauGoiY[], maGoTat: Map<string, G
   while (start < value.length && /\s/.test(value[start])) start++;
 
   if (start === value.length) {
-    const cau = kho.find((item) => item.chac && !daCo(value, item.cau))?.cau;
+    const cau = kho.find((item) => item.chac && !daCo(value, item.cau) && !(xuongDong && daKhamBoPhan(value, item.cau)))?.cau;
     if (!cau) return null;
     const noi = value.trim() === "" || /\s$/.test(value) ? "" : xuongDong ? "\n" : " ";
     const tu = value.trim() === "" ? 0 : value.length;

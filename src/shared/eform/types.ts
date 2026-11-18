@@ -6,6 +6,7 @@ import type { GoTat } from "./go-tat";
 import type { DonDaKe } from "./thoi-quen";
 import type { KetQuaDien } from "./dien-phieu";
 import type { PhieuMau } from "./phieu-mau";
+import type { ThuVien } from "./goi-y-tab";
 
 /** cu: dữ liệu có sẵn; ai: AI thêm; xem: AI thêm nhưng chưa chắc, bác sĩ cần xem lại;
  * sua: dữ liệu cũ hoặc AI đã bị bác sĩ sửa; bs: bác sĩ tự nhập */
@@ -132,7 +133,7 @@ export interface QuyTacAi {
 export interface EformData {
   ca: CaGia;
   icd10: Icd10[];
-  thuVien: Record<string, string[]>;
+  thuVien: ThuVien;
   tuyChon: TuyChon;
   quyTac: QuyTacAi;
   mauCau: MauCauData;

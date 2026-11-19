@@ -10,7 +10,11 @@ import fs from "node:fs";
 import path from "node:path";
 import { OfflineRecognizer, Vad } from "sherpa-onnx-node";
 import { ASR_MAX_SECONDS, ASR_SAMPLE_RATE, type AsrKetQua } from "@/shared/api";
-import { MODEL_GIONG_NOI, VAD_GIONG_NOI } from "@/shared/model-giong-noi";
+import { chuanHoaCau } from "@/shared/giong-noi/chuan-hoa-cau";
+import { MODEL_GIONG_NOI, type TenModelGiongNoi, VAD_GIONG_NOI } from "@/shared/model-giong-noi";
+
+/** Tạm cố định Zipformer, bước sau sẽ đọc từ biến môi trường */
+const MODEL_DANG_DUNG: TenModelGiongNoi = "zipformer";
 
 // Model Zipformer ~70 MB, dùng chung thư mục với trang /stt (xem src/shared/model-giong-noi.ts)
 const GOC = /*turbopackIgnore: true*/ process.cwd();
@@ -71,12 +75,6 @@ function decode(samples: Float32Array): string {
   return r.getResult(stream).text.trim();
 }
 
-/** Model trả chữ in hoa, không dấu câu: đổi sang chữ thường và viết hoa chữ đầu */
-function chuThuong(text: string): string {
-  const lower = text.toLocaleLowerCase("vi");
-  return lower.charAt(0).toLocaleUpperCase("vi") + lower.slice(1);
-}
-
 class PhienNhanDang {
   private vad = new Vad(
     {
@@ -117,8 +115,8 @@ class PhienNhanDang {
     const chot: string[] = [];
     while (!this.vad.isEmpty()) {
       const doan = this.vad.front(false);
-      const text = decode(doan.samples);
-      if (text) chot.push(`${chuThuong(text)}.`);
+      const text = chuanHoaCau(decode(doan.samples), MODEL_DANG_DUNG, true);
+      if (text) chot.push(text);
       // Bỏ phần âm thanh đã chốt khỏi bộ đệm chữ tạm
       const ketThuc = doan.start + doan.samples.length;
       if (ketThuc > this.batDau) {
@@ -158,7 +156,7 @@ class PhienNhanDang {
     if (!this.vad.isDetected()) this.tam = "";
     else if (this.tong - this.tamLuc >= INTERIM_STEP) {
       this.tamLuc = this.tong;
-      this.tam = chuThuong(decode(this.conLai));
+      this.tam = chuanHoaCau(decode(this.conLai), MODEL_DANG_DUNG, false);
     }
     return { chot, tam: this.tam };
   }

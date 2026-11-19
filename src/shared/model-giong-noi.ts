@@ -2,6 +2,9 @@
 // `npm run tai-model-giong-noi`. Khớp với stt/model_artifacts.py: đổi model thì sửa cả hai nơi.
 // Gốc: zzasdf/viet_iter3_pseudo_label (~70 nghìn giờ dữ liệu), bản int8 của sherpa-onnx, encoder ~70 MB.
 
+/** Tên model nhận dạng giọng nói: Zipformer (mặc định) hoặc Rumble-2-Flash (thử nghiệm so sánh) */
+export type TenModelGiongNoi = "zipformer" | "rumble";
+
 export const MODEL_GIONG_NOI = {
   id: "csukuangfj/sherpa-onnx-zipformer-vi-int8-2025-04-20",
   revision: "b2745a435379992ad3f299635468db0c34918e1e",

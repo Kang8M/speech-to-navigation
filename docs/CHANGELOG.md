@@ -4,6 +4,13 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-19
 
+### Tách chuẩn hóa câu nhận dạng theo model (Task 1)
+- **Loại:** Refactor, Kiểm thử
+- **Thay đổi:** Thêm `chuanHoaCau(text, model, chot)` trong `src/shared/giong-noi/chuan-hoa-cau.ts` thay cho hàm `chuThuong` trong `src/server/ai/asr.ts`. Zipformer: hạ hết về chữ thường rồi viết hoa đầu câu (như cũ). Rumble: giữ hoa thường và dấu câu, bỏ tiền tố `language <Tên>` và `<asr_text>` nếu có. Chữ chốt thêm dấu chấm cuối nếu chưa có `.?!…`; câu không còn chữ hay số thì trả rỗng và không đẩy vào danh sách chốt. Chữ tạm không thêm dấu. Thêm kiểu `TenModelGiongNoi = "zipformer" | "rumble"` trong `src/shared/model-giong-noi.ts`. `asr.ts` tạm cố định `"zipformer"`, chưa đọc biến môi trường.
+- **Lý do:** Rumble-2-Flash trả câu đã có hoa thường và dấu câu, nên không thể dùng chung một cách chuẩn hóa với Zipformer. Tách theo model để so sánh hai model mà không làm lệch Zipformer.
+- **File:** `src/shared/giong-noi/chuan-hoa-cau.ts`, `src/shared/giong-noi/chuan-hoa-cau.test.ts`, `src/shared/model-giong-noi.ts`, `src/server/ai/asr.ts`, `docs/CHANGELOG.md`
+- **Kiểm tra:** Test mới 5/5 đạt (đỏ trước khi có module, xanh sau). `npm test`: 415 test, 414 đạt; 1 test lỗi có sẵn trước thay đổi (`encounter-context.test.ts`, "server contexts replace complete patient data…", 5 !== 4), không liên quan. `npm run lint`: không có lỗi mới, tổng 475 lỗi như trước; file đã sửa sạch. `npm run eval-giong-noi -- --nhan-lai`: WER Tổng Zipformer 17,4% trước và sau thay đổi (không đổi).
+
 ### Spike Task 0: Rumble-2-Flash chạy được qua sherpa-onnx-node
 - **Loại:** Thử nghiệm, Tài liệu
 - **Thay đổi:** Thêm script tạm `scripts/thu-rumble.ts` nạp model Rumble-2-Flash (INT8, revision ghim trong plan) bằng `sherpa-onnx-node` với `qwen3Asr`, ép tiếng Việt, đo tốc độ theo số luồng. Điền mục "Kết quả spike" trong plan: cấu hình Node đúng, `stream.setOption("language", "Vietnamese")` là cách ép ngôn ngữ duy nhất có tác dụng, âm thanh phải cắt đoạn khoảng 15-20 s vì `maxTotalLen` 512, RTF 0,29 / 0,18 / 0,20 ở 2 / 4 / 6 luồng, RAM khoảng 1,5 GB, SHA-256 ba file tokenizer. Model tải về `models/stt/rumble-2-flash/` (đã gitignore, không commit). Chưa sửa gì trong `src/`.

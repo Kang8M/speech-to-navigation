@@ -2,6 +2,15 @@
 
 Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nhất ở trên cùng. Cách ghi xem `.claude/skills/ghi-tai-lieu/SKILL.md`.
 
+## 2026-11-19
+
+### Plan thử nghiệm STT Rumble-2-Flash song song Zipformer
+- **Loại:** Tài liệu
+- **Thay đổi:** Thêm `docs/superpowers/plans/2026-11-19-thu-nghiem-stt-rumble-2-flash.md` trên nhánh `thu-nghiem/stt-rumble-2-flash` (tạo từ `origin/dev`). Plan đánh giá `Reson8/Rumble-2-Flash` (Qwen3-ASR 0.5B, có tiếng Việt) trên cấu hình máy, chọn bản sherpa-onnx INT8 chạy CPU (`TypeWhisper/Rumble-2-Flash-sherpa-onnx-int8`, ghim revision và SHA-256) và chia 6 task: spike, chuẩn hóa câu theo model, tải model, chọn model bằng `ASR_MODEL`, đo bằng `eval-giong-noi`, báo cáo so sánh. Zipformer giữ nguyên là mặc định.
+- **Lý do:** Người dùng muốn thử model STT mới và so sánh với Zipformer trước khi quyết định.
+- **File:** `docs/superpowers/plans/2026-11-19-thu-nghiem-stt-rumble-2-flash.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** Đã xác nhận `sherpa-onnx-node` 2.0.1 đang cài có cấu hình `qwen3Asr` trong binding native. Chưa có thay đổi code.
+
 ## 2026-11-18
 
 ### Đưa hai quy tắc làm việc từ worktree priority-plan-2 vào nhánh

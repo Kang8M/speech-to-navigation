@@ -61,7 +61,10 @@ export const VAD_GIONG_NOI = "models/silero_vad.onnx";
 export const MODEL_THEO_TEN: Record<TenModelGiongNoi, { thuMuc: string; canCo: string[] }> = {
   zipformer: {
     thuMuc: MODEL_GIONG_NOI.thuMuc,
-    canCo: Object.keys(MODEL_GIONG_NOI.sha256).map((f) => `${MODEL_GIONG_NOI.thuMuc}/${f}`),
+    // Như cũ: bốn file chạy được; bpe.model chỉ cần cho /stt (Python), không bắt buộc ở đây
+    canCo: [MODEL_GIONG_NOI.file.encoder, MODEL_GIONG_NOI.file.decoder, MODEL_GIONG_NOI.file.joiner, MODEL_GIONG_NOI.file.tokens].map(
+      (f) => `${MODEL_GIONG_NOI.thuMuc}/${f}`,
+    ),
   },
   rumble: {
     thuMuc: MODEL_RUMBLE.thuMuc,

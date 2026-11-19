@@ -5,8 +5,8 @@
 
 import type { TenModelGiongNoi } from "../model-giong-noi";
 
-const TIEN_TO_NGON_NGU = /^language\s+[A-Za-z]+\s*/i;
-const TIEN_TO_ASR_TEXT = /^<asr_text>\s*/i;
+export const TIEN_TO_NGON_NGU = /^language\s+[A-Za-z]+\s*/i;
+export const TIEN_TO_ASR_TEXT = /^<asr_text>\s*/i;
 const CO_CHU_HOAC_SO = /[\p{L}\p{N}]/u;
 const KET_CAU = /[.?!…]$/;
 

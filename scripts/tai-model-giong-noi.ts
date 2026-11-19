@@ -43,7 +43,9 @@ async function sha256(file: string): Promise<string> {
 /** Một lần tải, ghi nối tiếp vào file tạm nếu server hỗ trợ Range (206). */
 async function taiMotLan(url: string, tam: string): Promise<void> {
   const daCo = fs.existsSync(tam) ? fs.statSync(tam).size : 0;
-  const res = await fetch(url, daCo > 0 ? { headers: { Range: `bytes=${daCo}-` } } : {});
+  // Quá 20 phút một lần tải (hoặc kết nối treo) thì bỏ để vòng thử lại chạy tiếp, file .dang-tai giữ nguyên để tải nối
+  const signal = AbortSignal.timeout(20 * 60_000);
+  const res = await fetch(url, daCo > 0 ? { headers: { Range: `bytes=${daCo}-` }, signal } : { signal });
   if (res.status === 416) {
     fs.rmSync(tam, { force: true });
     throw new Error("HTTP 416 (đoạn đã tải không hợp lệ, sẽ tải lại từ đầu)");

@@ -6,6 +6,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { OfflineRecognizer } from "sherpa-onnx-node";
 import { ASR_SAMPLE_RATE } from "@/shared/api";
+import { TIEN_TO_ASR_TEXT, TIEN_TO_NGON_NGU } from "@/shared/giong-noi/chuan-hoa-cau";
 import { MODEL_GIONG_NOI, MODEL_RUMBLE, MODEL_THEO_TEN, type TenModelGiongNoi } from "@/shared/model-giong-noi";
 
 const GOC = /*turbopackIgnore: true*/ process.cwd();
@@ -13,6 +14,8 @@ const tuGoc = (rel: string) => path.join(GOC, ...rel.split("/"));
 
 /** Rumble chỉ giải mã tin cậy tới ~30 giây (maxTotalLen 512 cắt âm thầm); đoạn dài hơn mức này thì chia đôi */
 const RUMBLE_DOAN_TOI_DA_GIAY = 18;
+/** 18 giây ≈ 234 token âm thanh + ~30 token prompt + 192 token chữ mới < maxTotalLen 512 */
+const RUMBLE_TOKEN_MOI_TOI_DA = 192;
 
 export interface BoNhanDang {
   /** Nhận dạng một đoạn âm thanh 16 kHz, trả chữ thô của model (chưa chuẩn hóa) */
@@ -21,14 +24,23 @@ export interface BoNhanDang {
   buocTamGiay: number;
   /** Phần câu đang nói dở dài hơn mức này (giây) thì giữ chữ tạm cũ, không nhận dạng lại (decode chặn event loop) */
   tamToiDaGiay: number;
+  /** true thì chữ tạm chỉ nhận dạng từ lúc VAD thấy bắt đầu nói (kèm đệm đầu), không kèm im lặng đứng trước */
+  chiTuLucNoi: boolean;
 }
+
+const g = globalThis as unknown as { boNhanDangAsr?: Partial<Record<TenModelGiongNoi, BoNhanDang>>; canhBaoAsrModel?: Set<string> };
 
 /** Model đang chọn bằng ASR_MODEL; đọc lại mỗi lần gọi. Giá trị lạ thì dùng zipformer */
 export function getAsrModel(): TenModelGiongNoi {
   const raw = process.env.ASR_MODEL?.trim().toLowerCase();
   if (!raw || raw === "zipformer") return "zipformer";
   if (raw === "rumble") return "rumble";
-  console.warn(`ASR_MODEL="${process.env.ASR_MODEL}" không hợp lệ (chỉ nhận zipformer hoặc rumble), dùng zipformer.`);
+  // Chỉ cảnh báo một lần cho mỗi giá trị lạ (hàm này được gọi ở mỗi request)
+  const daBao = (g.canhBaoAsrModel ??= new Set<string>());
+  if (!daBao.has(raw)) {
+    daBao.add(raw);
+    console.warn(`ASR_MODEL="${process.env.ASR_MODEL}" không hợp lệ (chỉ nhận zipformer hoặc rumble), dùng zipformer.`);
+  }
   return "zipformer";
 }
 
@@ -64,6 +76,7 @@ function taoZipformer(): BoNhanDang {
     },
     buocTamGiay: 0.4,
     tamToiDaGiay: Infinity,
+    chiTuLucNoi: false,
   };
 }
 
@@ -79,7 +92,7 @@ function taoRumble(): BoNhanDang {
         decoder: f(M.file.decoder),
         tokenizer: f(M.file.tokenizer),
         maxTotalLen: 512,
-        maxNewTokens: 128,
+        maxNewTokens: RUMBLE_TOKEN_MOI_TOI_DA,
       },
       tokens: "",
       numThreads: 4,
@@ -93,16 +106,17 @@ function taoRumble(): BoNhanDang {
     stream.setOption("language", "Vietnamese");
     stream.acceptWaveform({ samples, sampleRate: ASR_SAMPLE_RATE });
     r.decode(stream);
-    return r.getResult(stream).text.trim();
+    // Bỏ tiền tố "language Vietnamese<asr_text>" ở từng đoạn (nếu ép ngôn ngữ hỏng), không chỉ ở đầu câu nối
+    return r.getResult(stream).text.trim().replace(TIEN_TO_NGON_NGU, "").replace(TIEN_TO_ASR_TEXT, "").trim();
   };
   return {
     decode: (samples) => giaiMaChiaDoi(samples, decodeMot, RUMBLE_DOAN_TOI_DA_GIAY * ASR_SAMPLE_RATE),
     buocTamGiay: 2.0,
     tamToiDaGiay: 10,
+    chiTuLucNoi: true,
   };
 }
 
-const g = globalThis as unknown as { boNhanDangAsr?: Partial<Record<TenModelGiongNoi, BoNhanDang>> };
 
 /** Bộ nhận dạng của model, tạo lần đầu rồi dùng lại; thiếu file model thì báo lỗi bằng tiếng Việt */
 export function layBoNhanDang(model: TenModelGiongNoi): BoNhanDang {

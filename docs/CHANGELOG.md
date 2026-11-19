@@ -4,6 +4,13 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-19
 
+### Khai báo và tải model Rumble-2-Flash (Task 2)
+- **Loại:** Tính năng, Công cụ
+- **Thay đổi:** `src/shared/model-giong-noi.ts` thêm `MODEL_RUMBLE` (repo `TypeWhisper/Rumble-2-Flash-sherpa-onnx-int8`, revision `a8128305…`, SHA-256 ba file ONNX và ba file tokenizer, khóa theo đường dẫn tương đối) và `MODEL_THEO_TEN` (thư mục và danh sách file cần có theo model). `scripts/tai-model-giong-noi.ts` nhận `--model=rumble` (mặc định `zipformer`, hành vi cũ giữ nguyên); file tải bằng stream ra đĩa thay vì đọc cả file vào bộ nhớ, thử lại tối đa 3 lần mỗi file và tiếp tục bằng `Range` nếu mạng đứt; SHA-256 được tính theo stream trên file `.dang-tai` trước khi đổi tên. Vẫn ghi `provision.json` và tải Silero VAD nếu thiếu.
+- **Lý do:** Chuẩn bị model thứ hai để so sánh với Zipformer. File decoder 427 MB nên không thể tải kiểu `arrayBuffer()`, và Hugging Face đã ngắt kết nối giữa chừng trong lúc thử (Task 0).
+- **File:** `src/shared/model-giong-noi.ts`, `scripts/tai-model-giong-noi.ts`, `README.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** `npm run tai-model-giong-noi -- --model=rumble` tải đủ 6 file, SHA-256 khớp (hai lần thử lại: `encoder.int8.onnx` và `vocab.json` bị ngắt kết nối, lần sau tải được); chạy lần hai báo "đã có … bỏ qua" cho mọi file. Lệnh zipformer chạy lại báo "đã có … bỏ qua" cho mọi file. `npx eslint src scripts`: 0 lỗi. `tsc --noEmit`: không có lỗi ở hai file này.
+
 ### Tách chuẩn hóa câu nhận dạng theo model (Task 1)
 - **Loại:** Refactor, Kiểm thử
 - **Thay đổi:** Thêm `chuanHoaCau(text, model, chot)` trong `src/shared/giong-noi/chuan-hoa-cau.ts` thay cho hàm `chuThuong` trong `src/server/ai/asr.ts`. Zipformer: hạ hết về chữ thường rồi viết hoa đầu câu (như cũ). Rumble: giữ hoa thường và dấu câu, bỏ tiền tố `language <Tên>` và `<asr_text>` nếu có. Chữ chốt thêm dấu chấm cuối nếu chưa có `.?!…`; câu không còn chữ hay số thì trả rỗng và không đẩy vào danh sách chốt. Chữ tạm không thêm dấu. Thêm kiểu `TenModelGiongNoi = "zipformer" | "rumble"` trong `src/shared/model-giong-noi.ts`. `asr.ts` tạm cố định `"zipformer"`, chưa đọc biến môi trường.

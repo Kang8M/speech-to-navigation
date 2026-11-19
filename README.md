@@ -124,6 +124,7 @@ Bật `zipformer`:
 
 ```bash
 npm run tai-model-giong-noi   # tải Zipformer ~70 MB về models/stt/zipformer-vi/ (kiểm SHA-256) và Silero VAD về models/; không đưa lên git, đã có thì bỏ qua
+npm run tai-model-giong-noi -- --model=rumble   # tải Rumble-2-Flash INT8 ~655 MB về models/stt/rumble-2-flash/ (khóa revision, kiểm SHA-256 từng file, có thử lại khi mạng đứt); cũng cần Silero VAD
 ```
 
 rồi thêm `ASR_PROVIDER=zipformer` vào `.env.local` và khởi động lại `npm run dev`. Chưa tải model thì nút 🎤 tự quay về Web Speech và báo dưới nút.

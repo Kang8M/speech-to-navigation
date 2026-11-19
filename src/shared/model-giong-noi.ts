@@ -27,5 +27,44 @@ export const MODEL_GIONG_NOI = {
   } as Record<string, string>,
 } as const;
 
+/**
+ * Rumble-2-Flash (bản int8 của sherpa-onnx, dùng để so sánh với Zipformer).
+ * Khóa revision; khóa sha256 là đường dẫn tương đối từ thư mục model (tokenizer nằm trong thư mục con).
+ * Ba file tokenizer không có LFS hash trên HF, nên SHA-256 đo lúc tải lần đầu (Task 0).
+ */
+export const MODEL_RUMBLE = {
+  id: "TypeWhisper/Rumble-2-Flash-sherpa-onnx-int8",
+  revision: "a8128305e8e8c4aa5bf6fcd0a8454347ff80d6d1",
+  /** Thư mục tính từ gốc dự án */
+  thuMuc: "models/stt/rumble-2-flash",
+  file: {
+    convFrontend: "conv_frontend.onnx",
+    encoder: "encoder.int8.onnx",
+    decoder: "decoder.int8.onnx",
+    tokenizer: "tokenizer",
+  },
+  tepTokenizer: ["vocab.json", "merges.txt", "tokenizer_config.json"],
+  sha256: {
+    "conv_frontend.onnx": "00c48c47db2937884636a3d99f23166390088e8c939ff7e9e803e69b8af4c0b5",
+    "encoder.int8.onnx": "e6b4847992553dfa57bffda161b8c62d0af79c952c73269e6a2f6dc887f3e5dd",
+    "decoder.int8.onnx": "e9be29023d0d52518e75cc4b77abbfc569564c7453ad1f546e50174c9a8b426c",
+    "tokenizer/vocab.json": "c5e356c0638515539c196bca5da724fcf35a91fceaf1a2204c2a7193adc21059",
+    "tokenizer/merges.txt": "ca57770275b525f8766ed68bf4b2d1d66b85adc41b06d8b5686cc3ca2b808aa9",
+    "tokenizer/tokenizer_config.json": "c812aa17410d17b1b8c12f499d5359d6d9bd7395729bc7a7e1742aaa21f2b7df",
+  } as Record<string, string>,
+} as const;
+
 /** Silero VAD (chốt câu), tính từ gốc dự án */
 export const VAD_GIONG_NOI = "models/silero_vad.onnx";
+
+/** Thư mục và các file model cần có, theo tên model. canCo tính từ gốc dự án (gồm cả file tokenizer của Rumble). */
+export const MODEL_THEO_TEN: Record<TenModelGiongNoi, { thuMuc: string; canCo: string[] }> = {
+  zipformer: {
+    thuMuc: MODEL_GIONG_NOI.thuMuc,
+    canCo: Object.keys(MODEL_GIONG_NOI.sha256).map((f) => `${MODEL_GIONG_NOI.thuMuc}/${f}`),
+  },
+  rumble: {
+    thuMuc: MODEL_RUMBLE.thuMuc,
+    canCo: Object.keys(MODEL_RUMBLE.sha256).map((f) => `${MODEL_RUMBLE.thuMuc}/${f}`),
+  },
+};

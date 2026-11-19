@@ -7,6 +7,7 @@ import { loadIcd10 } from "./danh-muc";
 import { docGoTat } from "./go-tat";
 import { loadPhieuMau } from "./phieu-mau";
 import { docThoiQuen, MAU_TAI_KHOAN } from "./thoi-quen";
+import { khopGoi, type BangGiaDichVu, type GoiChiDinhGoc } from "@/shared/eform/goi-chi-dinh";
 import { khopBoMau, type MauGoiYGoc } from "@/shared/eform/goi-y";
 import type { ThuVien } from "@/shared/eform/goi-y-tab";
 import type { CaGia, EformData, MauCauData, QuyTacAi, TuyChon } from "@/shared/eform/types";
@@ -38,6 +39,8 @@ export function loadEformData(taiKhoan?: string): EformData {
     vietTat,
     canhBao: loadRules(),
     goiY: khopBoMau(readJson<{ mau: MauGoiYGoc[] }>("goi-y-theo-chan-doan.json").mau, danhMuc, vietTat),
+    goiChiDinh: khopGoi(readJson<{ goi: GoiChiDinhGoc[] }>("goi-chi-dinh.json").goi, danhMuc.dichVu, vietTat),
+    giaDichVu: readJson<BangGiaDichVu>("gia-dich-vu.json"),
     provider: getProviderName(),
     cauMau: { id: CA_MAU, noi: caMau?.input_noi ?? "", goTat: caMau?.input_go_tat ?? "" },
     suaChu: loadSuaChu(),

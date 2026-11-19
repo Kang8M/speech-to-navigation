@@ -9,7 +9,7 @@ import { ghepGoiY, hayKe, soLanDaKe } from "@/shared/eform/thoi-quen";
 import type { Nguon } from "@/shared/eform/types";
 
 /** Thứ tự lấy mã: chẩn đoán ra viện (xác định) trước, rồi ban đầu, rồi kèm theo */
-const TRUONG_ICD = ["icd_ra_vien", "icd_ban_dau", "icd_kem_theo"];
+export const TRUONG_ICD = ["icd_ra_vien", "icd_ban_dau", "icd_kem_theo"];
 
 interface Dong {
   ma: string;

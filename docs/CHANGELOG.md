@@ -4,6 +4,18 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-19
 
+### Màn chỉ định: Gói chỉ định và bước Xác nhận chỉ định
+- **Loại:** Tính năng, Giao diện, Dữ liệu
+- **Thay đổi:**
+  - Tab Chỉ định dịch vụ thành hai bước như EMR. Bước 1 thêm khu **Gói chỉ định** (`GoiChiDinh.tsx`): chip Gói cá nhân / Gói được chia sẻ, ô tìm gói, lưới gói, popup xem trước (Hủy · Chọn gói), nút Tạo gói cá nhân mới (mô phỏng). Gói có `icd` khớp chẩn đoán trên phiếu lên đầu lưới, viền tím, có dòng "✨ Gói hợp chẩn đoán". Trong popup bỏ tích được từng dịch vụ, dịch vụ đã có thì không thêm lại. Thanh dưới thêm nút **Tiếp tục**.
+  - Bước 2 mới (`XacNhanChiDinh.tsx`): khung đỏ tích BHYT từng dịch vụ kèm giá, chia nhóm Xét nghiệm / Chẩn đoán hình ảnh / Dịch vụ chung; Thông tin chung (chẩn đoán bắt buộc lấy sẵn từ phiếu khám, Buồng, Giường); Thông tin chỉ định dịch vụ; Tổng số, Thành tiền; Quay lại, Hủy toàn bộ, Thêm chỉ định, Xác nhận chỉ định. Xác nhận chỉ báo mô phỏng rồi về bước 1 với dòng "Đã xác nhận…". Chưa làm bước thanh toán.
+  - Dữ liệu giả mới: `data/eform/goi-chi-dinh.json` (8 gói: TMH-001 cắt amydan 11 dịch vụ theo ảnh, tiền phẫu nội soi mũi xoang, ngừng thở khi ngủ, 3 gói không phải TMH, 2 gói cá nhân), `data/eform/gia-dich-vu.json` (giá theo từ khóa, nhóm dịch vụ). `data/catalog/dich-vu.json` thêm 11 dịch vụ mã giả `DV-TMH-031`–`041` (X-quang ngực, Glucose, điện giải đồ, Creatinin, AST, ALT, Fibrinogen, nhóm máu, APTT, PT, đa ký giấc ngủ) vì danh mục chưa có.
+  - `src/shared/eform/goi-chi-dinh.ts`: khớp mã dịch vụ trong gói bằng `matchCatalog`, xếp gói theo chẩn đoán, giá, nhóm, thành tiền. Nạp vào `EformData` (`goiChiDinh`, `giaDichVu`). `TRUONG_ICD` trong `GoiYTheoChanDoan.tsx` export để dùng lại.
+- **Lý do:** Người dùng hỏi phần sau của chỉ định dịch vụ đã làm chưa (chưa: prototype dừng ở bước 1), đồng ý làm Gói chỉ định có AI đưa đúng gói lên và bước 2 bản gọn. Ảnh người dùng bổ sung vào `temp-1/` hôm nay là bộ ảnh 09/11 đã ghi ở `docs/cau-truc-man-chi-dinh-dich-vu.md`, chưa có màn sau Xác nhận chỉ định nên chưa làm thanh toán.
+- **File:** `src/client/eform/ChiDinhTab.tsx`, `src/client/eform/GoiChiDinh.tsx`, `src/client/eform/XacNhanChiDinh.tsx`, `src/client/eform/GoiYTheoChanDoan.tsx`, `src/shared/eform/goi-chi-dinh.ts`, `src/shared/eform/goi-chi-dinh.test.ts`, `src/shared/eform/types.ts`, `src/server/du-lieu/eform.ts`, `src/server/du-lieu/goi-chi-dinh.test.ts`, `data/eform/goi-chi-dinh.json`, `data/eform/gia-dich-vu.json`, `data/catalog/dich-vu.json`, `README.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** `npx tsc --noEmit`, `npm run lint` sạch. `npm test` 118/118 (thêm 7 test: giá, nhóm khớp nguyên từ, thành tiền, chia nhóm, xếp gói theo chẩn đoán; dữ liệu gói khớp chắc danh mục, ICD có thật). `npm run eval -- --rule-only` giống hệt trước khi thêm 11 dịch vụ vào danh mục (Chỉ định nói 93,3%, gõ tắt 100%). Playwright trên dev server cổng 3000: chọn J35.0 → tab Chỉ định có dòng gói hợp chẩn đoán TMH-001, mở popup 11 dịch vụ, bỏ Fibrinogen, Chọn gói (10), thêm 1 từ bộ mẫu, Tiếp tục → bước 2 có chẩn đoán "J35.0 – Viêm amydan mạn tính", 3 nhóm, Tổng 11 dịch vụ 1,580,000 VNĐ; Xác nhận → dòng "Đã xác nhận 11 dịch vụ…". Khổ 390 px không tràn ngang.
+- **Ảnh hưởng:** Bác sĩ thử thấy thêm một bước trước khi xong chỉ định, giống EMR. Giá và gói đều giả, cần thay khi có dữ liệu thật. Ô tích BHYT chỉ là ô tay, chưa tự đánh dấu.
+
 ### eForm: tách In ngay thành In phiếu khám và In đơn thuốc
 - **Loại:** Tính năng, Giao diện
 - **Thay đổi:**

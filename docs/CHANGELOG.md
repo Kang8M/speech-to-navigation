@@ -2,6 +2,19 @@
 
 Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nhất ở trên cùng. Cách ghi xem `.claude/skills/ghi-tai-lieu/SKILL.md`.
 
+## 2026-11-19
+
+### eForm: tách In ngay thành In phiếu khám và In đơn thuốc
+- **Loại:** Tính năng, Giao diện
+- **Thay đổi:**
+  - Nút **In ngay** ở thanh đáy (`EformScreen.tsx`) thay bằng hai nút **In phiếu khám** và **In đơn thuốc**. Mỗi nút đặt loại bản in (`flushSync`) rồi gọi `window.print()`. In đơn thuốc bị khóa khi đơn chưa có thuốc.
+  - `BanIn.tsx` nhận `loai: "phieu-kham" | "don-thuoc"`. Phiếu khám giữ như cũ (hành chính, sinh hiệu, các trường đã có chữ, chẩn đoán, bảng chỉ định) nhưng bỏ bảng thuốc. Đơn thuốc mới có tiêu đề ĐƠN THUỐC, hành chính, cảnh báo dị ứng, chẩn đoán chính và kèm theo, bảng thuốc, lời dặn, hẹn tái khám, chỗ ký.
+  - Thêm một nút làm thanh đáy tràn ngang ở khổ điện thoại (390 px rộng 494 px). Dưới `sm`, chữ gọn lại: "BCYT" (giữ `aria-label` Báo cáo y tế), huy hiệu của Lưu chỉ còn số, ẩn nút lên đầu trang. Chữ "khám", "thuốc" của hai nút in chỉ hiện từ `md`.
+- **Lý do:** Người dùng cho biết thực tế bác sĩ Lưu phiếu khám rồi in đưa bệnh nhân luôn, đơn thuốc cũng Lưu rồi in riêng (phiếu khám in từ EMR, đơn in từ Registration/OH). Bản in gộp một tờ trước đây không khớp quy trình. Chưa có mẫu in thật nên bố cục vẫn tự đặt.
+- **File:** `src/client/eform/BanIn.tsx`, `src/client/eform/EformScreen.tsx`, `README.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** `npx tsc --noEmit`, `npm run lint` sạch. Playwright + Chrome trên dev server riêng cổng 3005 (cổng 3000 đang chạy ứng dụng khác), thay `window.print` bằng hàm ghi lại tiêu đề đang in: mở trang thì In đơn bị khóa, In phiếu khám in ra "PHIẾU KHÁM NGOẠI TRÚ"; gọi phiếu mẫu viêm họng cấp qua bong bóng (F2) thì In đơn mở được, bấm xen kẽ hai nút in đúng tờ mỗi lần. Giả lập media print: bản phiếu khám có sinh hiệu và chỉ định, không có bảng thuốc; bản đơn thuốc có 2 thuốc, chẩn đoán J02.9 kèm J00, lời dặn, hẹn tái khám. Không tràn ngang ở 360, 390, 640, 700, 768, 1024, 1440 px. Không lỗi console. Chưa in ra máy in thật.
+- **Ảnh hưởng:** Bác sĩ thử nghiệm in hai lần thay vì một. Khổ điện thoại không còn nút lên đầu trang. `docs/cau-truc-phieu-kham-ngoai-tru.md` vẫn ghi "In ngay" vì đó là nút của EMR thật, không sửa.
+
 ## 2026-11-18
 
 ### Phiếu mẫu có chẩn đoán kèm theo

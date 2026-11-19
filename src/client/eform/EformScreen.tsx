@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useMemo, useRef, useState, type CSSProperties } from "react";
+import { flushSync } from "react-dom";
 import { luuLuotThu, luuThoiQuen } from "@/client/api";
-import { BanIn } from "@/client/eform/BanIn";
+import { BanIn, type LoaiBanIn } from "@/client/eform/BanIn";
 import { BaoCaoDialog } from "@/client/eform/BaoCaoDialog";
 import { BongBongAi } from "@/client/eform/BongBongAi";
 import { ChiDinhTab } from "@/client/eform/ChiDinhTab";
@@ -158,6 +159,7 @@ export function EformScreen({ data, kichBan, giaoDien = "gon", goiYTab = true }:
   const [lastEdit, setLastEdit] = useState(data.ca.chinh_sua_cuoi);
   const [expanded, setExpanded] = useState(false);
   const [showReport, setShowReport] = useState(false);
+  const [loaiIn, setLoaiIn] = useState<LoaiBanIn>("phieu-kham");
   const [toast, setToast] = useState("");
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   // Gợi ý chữ mờ (Tab): tắt đi để đo lượt đối chứng không có gợi ý. Bộ đếm để trong ref, không cần vẽ lại
@@ -383,6 +385,12 @@ export function EformScreen({ data, kichBan, giaoDien = "gon", goiYTab = true }:
     }
   };
 
+  // Đổi bản in rồi mới mở hộp thoại in, để trình duyệt chụp đúng tờ vừa chọn
+  const inBan = (loai: LoaiBanIn) => {
+    flushSync(() => setLoaiIn(loai));
+    window.print();
+  };
+
   const save = async () => {
     setLastEdit({ nguoi: data.ca.dang_nhap, luc: nowText() });
     setBanLuu({ fields, chiDinh, donThuoc });
@@ -548,25 +556,36 @@ export function EformScreen({ data, kichBan, giaoDien = "gon", goiYTab = true }:
             >
               ←<span className="hidden sm:inline"> Quay lại</span>
             </button>
-            <button type="button" className={`${BTN_OUTLINE} whitespace-nowrap`} onClick={() => setShowReport(true)}>
-              Báo cáo y tế
+            <button type="button" aria-label="Báo cáo y tế" className={`${BTN_OUTLINE} whitespace-nowrap`} onClick={() => setShowReport(true)}>
+              <span className="sm:hidden">BCYT</span>
+              <span className="hidden sm:inline">Báo cáo y tế</span>
             </button>
-            <button type="button" className={`${BTN_OUTLINE} whitespace-nowrap`} onClick={() => window.print()} title="In phiếu khám, chỉ định và đơn thuốc">
-              In ngay
+            <button type="button" className={`${BTN_OUTLINE} whitespace-nowrap`} onClick={() => inBan("phieu-kham")} title="In phiếu khám kèm chỉ định">
+              In phiếu<span className="hidden md:inline"> khám</span>
+            </button>
+            <button
+              type="button"
+              className={`${BTN_OUTLINE} whitespace-nowrap`}
+              onClick={() => inBan("don-thuoc")}
+              disabled={donThuoc.length === 0}
+              title={donThuoc.length === 0 ? "Đơn chưa có thuốc" : "In đơn thuốc"}
+            >
+              In đơn<span className="hidden md:inline"> thuốc</span>
             </button>
             {gon && <div ref={setKheBao} className="hidden min-w-0 flex-1 px-2 md:flex" />}
             <button type="button" className={`${BTN_CHINH} ml-auto inline-flex flex-1 items-center justify-center gap-2 whitespace-nowrap sm:max-w-sm`} onClick={save}>
               Lưu
               {conXem > 0 && (
                 <span className="rounded-full bg-xem-nhat px-2 py-px text-[11px] font-semibold text-xem" title="Số chỗ AI chưa chắc, bác sĩ nên xem lại trước khi Lưu">
-                  {conXem} cần xem lại
+                  {conXem}
+                  <span className="hidden sm:inline"> cần xem lại</span>
                 </span>
               )}
             </button>
             <button
               type="button"
               aria-label="Lên đầu trang"
-              className={BTN_OUTLINE}
+              className={`${BTN_OUTLINE} hidden sm:block`}
               onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
             >
               ↑
@@ -577,7 +596,7 @@ export function EformScreen({ data, kichBan, giaoDien = "gon", goiYTab = true }:
         {showReport && <BaoCaoDialog onClose={() => setShowReport(false)} />}
       </div>
 
-      <BanIn chiDinh={chiDinh} donThuoc={donThuoc} trangThai={trangThai} />
+      <BanIn loai={loaiIn} chiDinh={chiDinh} donThuoc={donThuoc} trangThai={trangThai} />
     </EformContext.Provider>
   );
 }

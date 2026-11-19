@@ -34,11 +34,23 @@ function Muc({ nhan, children }: { nhan: string; children: ReactNode }) {
 const TH_IN = "border border-black/60 px-1.5 py-0.5 text-left font-semibold";
 const TD_IN = "border border-black/60 px-1.5 py-0.5 align-top";
 
+export type LoaiBanIn = "phieu-kham" | "don-thuoc";
+
 /**
- * Bản in của "In ngay": phiếu khám, chỉ định và đơn thuốc trên khổ A4.
+ * Bản in A4. Như EMR thật, phiếu khám (kèm chỉ định) và đơn thuốc in thành hai tờ riêng, chọn bằng `loai`.
  * Trên màn hình bị ẩn; khi in thì chỉ khối này hiện (phần còn lại của trang có print:hidden).
  */
-export function BanIn({ chiDinh, donThuoc, trangThai }: { chiDinh: DongChiDinh[]; donThuoc: DongThuoc[]; trangThai: string }) {
+export function BanIn({
+  loai,
+  chiDinh,
+  donThuoc,
+  trangThai,
+}: {
+  loai: LoaiBanIn;
+  chiDinh: DongChiDinh[];
+  donThuoc: DongThuoc[];
+  trangThai: string;
+}) {
   const { data, get } = useEform();
   const { ca } = data;
   const sh = ca.sinh_hieu;
@@ -46,7 +58,12 @@ export function BanIn({ chiDinh, donThuoc, trangThai }: { chiDinh: DongChiDinh[]
   const chanDoan = chanDoanChinh(get);
   const diUng = v("di_ung") === "Có" ? [v("di_ung_loai"), v("di_ung_mo_ta")].filter(Boolean).join(": ") || "Có" : v("di_ung");
 
-  const truong: { nhan: string; noiDung: string }[] = [
+  const chanDoanIn = [nhanIcd(chanDoan.ma, data.icd10), chanDoan.moTa].filter(Boolean).join(". ");
+  const henTaiKham = v("hen_tai_kham") === "Có" ? ngayGio(v("ngay_tai_kham")) || "Có" : v("hen_tai_kham");
+  const phieuKham = loai === "phieu-kham";
+
+  const chanDoanKem = { nhan: "Chẩn đoán kèm theo", noiDung: nhanIcd(v("icd_kem_theo"), data.icd10) };
+  const truongPhieuKham = [
     { nhan: "Lý do đến khám", noiDung: v("ly_do") },
     { nhan: "Bệnh sử", noiDung: v("benh_su") },
     { nhan: "Tiền sử bản thân", noiDung: v("tien_su_ban_than") },
@@ -56,13 +73,15 @@ export function BanIn({ chiDinh, donThuoc, trangThai }: { chiDinh: DongChiDinh[]
     { nhan: "Khám chuyên khoa TMH", noiDung: v("kham_chuyen_khoa") },
     { nhan: "Khám các bộ phận khác", noiDung: v("kham_khac") },
     { nhan: "Xét nghiệm, thăm dò chính", noiDung: v("ghi_chu_kq") },
-    { nhan: chanDoan.nhan, noiDung: [nhanIcd(chanDoan.ma, data.icd10), chanDoan.moTa].filter(Boolean).join(". ") },
-    { nhan: "Chẩn đoán kèm theo", noiDung: nhanIcd(v("icd_kem_theo"), data.icd10) },
+    { nhan: chanDoan.nhan, noiDung: chanDoanIn },
+    chanDoanKem,
     { nhan: "Hướng điều trị", noiDung: v("huong_dieu_tri") },
     { nhan: "Lời dặn & theo dõi", noiDung: v("loi_dan") },
-    { nhan: "Hẹn tái khám", noiDung: v("hen_tai_kham") === "Có" ? ngayGio(v("ngay_tai_kham")) || "Có" : v("hen_tai_kham") },
+    { nhan: "Hẹn tái khám", noiDung: henTaiKham },
     { nhan: "Tình trạng ra viện", noiDung: v("tinh_trang_ra_vien") },
-  ].filter((item) => item.noiDung);
+  ];
+  const truongDonThuoc = [{ nhan: "Chẩn đoán", noiDung: chanDoanIn }, chanDoanKem];
+  const truong = (phieuKham ? truongPhieuKham : truongDonThuoc).filter((item) => item.noiDung);
 
   return (
     <div className="hidden bg-white text-[11pt] leading-snug text-black print:block">
@@ -79,7 +98,7 @@ export function BanIn({ chiDinh, donThuoc, trangThai }: { chiDinh: DongChiDinh[]
         </div>
       </div>
 
-      <h1 className="my-3 text-center text-[15pt] font-bold">PHIẾU KHÁM NGOẠI TRÚ</h1>
+      <h1 className="my-3 text-center text-[15pt] font-bold">{phieuKham ? "PHIẾU KHÁM NGOẠI TRÚ" : "ĐƠN THUỐC"}</h1>
 
       <div className="grid grid-cols-2 gap-x-6 gap-y-0.5">
         <Muc nhan="Họ tên">{ca.ho_ten}</Muc>
@@ -90,11 +109,13 @@ export function BanIn({ chiDinh, donThuoc, trangThai }: { chiDinh: DongChiDinh[]
         <Muc nhan="Trạng thái">{trangThai}</Muc>
       </div>
       {ca.canh_bao_di_ung && <p className="mt-1 font-bold">⚠ Cảnh báo dị ứng: {ca.canh_bao_di_ung}</p>}
-      <p className="mt-1">
-        <span className="font-semibold">Sinh hiệu: </span>
-        Mạch {sh.mach} l/ph · Nhiệt độ {sh.nhiet_do} °C · HA {sh.ha_tam_thu}/{sh.ha_tam_truong} mmHg · SpO2 {sh.spo2}% · Nhịp thở{" "}
-        {sh.nhip_tho} l/ph · Cao {sh.chieu_cao} cm · Nặng {sh.can_nang} kg
-      </p>
+      {phieuKham && (
+        <p className="mt-1">
+          <span className="font-semibold">Sinh hiệu: </span>
+          Mạch {sh.mach} l/ph · Nhiệt độ {sh.nhiet_do} °C · HA {sh.ha_tam_thu}/{sh.ha_tam_truong} mmHg · SpO2 {sh.spo2}% · Nhịp thở{" "}
+          {sh.nhip_tho} l/ph · Cao {sh.chieu_cao} cm · Nặng {sh.can_nang} kg
+        </p>
+      )}
 
       <div className="mt-3 space-y-1.5">
         {truong.map((item) => (
@@ -104,7 +125,7 @@ export function BanIn({ chiDinh, donThuoc, trangThai }: { chiDinh: DongChiDinh[]
         ))}
       </div>
 
-      {chiDinh.length > 0 && (
+      {phieuKham && chiDinh.length > 0 && (
         <div className="mt-4 break-inside-avoid">
           <h2 className="mb-1 font-bold">CHỈ ĐỊNH DỊCH VỤ</h2>
           <table className="w-full border-collapse text-[10pt]">
@@ -132,9 +153,8 @@ export function BanIn({ chiDinh, donThuoc, trangThai }: { chiDinh: DongChiDinh[]
         </div>
       )}
 
-      {donThuoc.length > 0 && (
+      {!phieuKham && (
         <div className="mt-4 break-inside-avoid">
-          <h2 className="mb-1 font-bold">ĐƠN THUỐC</h2>
           <table className="w-full border-collapse text-[10pt]">
             <thead>
               <tr>
@@ -153,6 +173,10 @@ export function BanIn({ chiDinh, donThuoc, trangThai }: { chiDinh: DongChiDinh[]
               ))}
             </tbody>
           </table>
+          <div className="mt-3 space-y-1.5">
+            {v("loi_dan") && <Muc nhan="Lời dặn">{v("loi_dan")}</Muc>}
+            {henTaiKham && <Muc nhan="Hẹn tái khám">{henTaiKham}</Muc>}
+          </div>
         </div>
       )}
 

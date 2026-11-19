@@ -10,13 +10,24 @@ declare module "sherpa-onnx-node" {
 
   export class OfflineStream {
     acceptWaveform(wave: Waveform): void;
+    /** Đặt tùy chọn cho riêng stream (vd. "language" = "Vietnamese" để ép ngôn ngữ của Qwen3-ASR) */
+    setOption(key: string, value: string): void;
   }
 
   export class OfflineRecognizer {
     constructor(config: {
       featConfig: { sampleRate: number; featureDim: number };
       modelConfig: {
-        transducer: { encoder: string; decoder: string; joiner: string };
+        transducer?: { encoder: string; decoder: string; joiner: string };
+        /** Qwen3-ASR (Rumble-2-Flash); tokenizer là thư mục chứa vocab.json, merges.txt, tokenizer_config.json */
+        qwen3Asr?: {
+          convFrontend: string;
+          encoder: string;
+          decoder: string;
+          tokenizer: string;
+          maxTotalLen?: number;
+          maxNewTokens?: number;
+        };
         tokens: string;
         numThreads?: number;
         provider?: string;

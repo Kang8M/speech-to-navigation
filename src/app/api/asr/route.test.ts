@@ -38,3 +38,33 @@ test("local ASR requires explicit consent before allocating a session", async ()
     else process.env.ASR_PROVIDER = previous;
   }
 });
+
+test("GET báo đúng model đang chọn bằng ASR_MODEL, giá trị lạ về zipformer", async () => {
+  const truocModel = process.env.ASR_MODEL;
+  const truocProvider = process.env.ASR_PROVIDER;
+  const canhBao = console.warn;
+  console.warn = () => undefined;
+  try {
+    delete process.env.ASR_PROVIDER;
+    delete process.env.ASR_MODEL;
+    let status = await GET().json();
+    assert.equal(status.model, "zipformer");
+    assert.equal(status.thuMucModel, "models/stt/zipformer-vi");
+
+    process.env.ASR_MODEL = "rumble";
+    status = await GET().json();
+    assert.equal(status.model, "rumble");
+    assert.equal(status.thuMucModel, "models/stt/rumble-2-flash");
+
+    process.env.ASR_MODEL = "abc";
+    status = await GET().json();
+    assert.equal(status.model, "zipformer");
+    assert.equal(status.thuMucModel, "models/stt/zipformer-vi");
+  } finally {
+    console.warn = canhBao;
+    if (truocModel === undefined) delete process.env.ASR_MODEL;
+    else process.env.ASR_MODEL = truocModel;
+    if (truocProvider === undefined) delete process.env.ASR_PROVIDER;
+    else process.env.ASR_PROVIDER = truocProvider;
+  }
+});

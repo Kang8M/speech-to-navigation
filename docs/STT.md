@@ -228,3 +228,18 @@ Cùng tiến trình STT, nhưng không dính tới nhận dạng giọng nói. M
 **Bộ nhớ:** đo ngày 18/11, bộ tách từ cộng onnxruntime tốn thêm khoảng 118 MB ngoài Zipformer, chưa tính mô hình PhoBERT int8 (135 MB trên đĩa).
 
 Cách tải dữ liệu, huấn luyện và bật NER: README mục "Lớp NER che PII".
+
+## Chọn model nhận dạng cho eForm (`ASR_MODEL`, 2026-11-19)
+
+Nút micro của eForm (`/api/asr`, `src/server/ai/asr.ts`) chạy được hai model trên máy, chọn bằng biến môi trường `ASR_MODEL` trong `.env.local`:
+
+| `ASR_MODEL` | Model | Tải về | Ghi chú |
+|---|---|---|---|
+| (không đặt) hoặc `zipformer` | Zipformer tiếng Việt (mặc định) | `npm run tai-model-giong-noi` | Chữ tạm cập nhật mỗi 0,4 giây; đầu ra không dấu câu, chữ chốt được hạ chữ thường rồi viết hoa đầu câu |
+| `rumble` | Rumble-2-Flash (Qwen3-ASR, INT8) | `npm run tai-model-giong-noi -- --model=rumble` (~655 MB) | Đầu ra có dấu câu và viết hoa; chữ tạm cập nhật mỗi 2 giây; RAM ~1,5 GB sau khi giải mã |
+
+- **Phải khởi động lại `npm run dev` khi đổi `ASR_MODEL`.** Recognizer đã nạp vẫn nằm trong bộ nhớ tiến trình (mỗi model đúng một recognizer, giữ trên `globalThis`). Phiên đang nói giữ model lúc mở phiên. `GET /api/asr` trả `model` và `thuMucModel` của model đang chọn theo biến môi trường hiện tại; nút micro hiện tên model nhỏ phía trên nút. Giá trị lạ (vd. `abc`) thì dùng `zipformer` và ghi cảnh báo ra log server.
+- `ASR_PROVIDER` vẫn là cổng chính sách "chỉ nhận dạng trên máy" (khác `zipformer` thì chặn); nó không chọn model.
+- Rumble ghi nhận tối đa khoảng 30 giây âm thanh mỗi lần (giới hạn `maxTotalLen` 512 của decoder, quá thì cắt âm thầm), nên `src/server/ai/bo-nhan-dang.ts` chia đoạn dài hơn 18 giây làm đôi (đệ quy) rồi nối chữ bằng dấu cách. Ngôn ngữ ép tiếng Việt bằng `stream.setOption("language", "Vietnamese")` cho từng stream (trường `language` trong config không có tác dụng).
+- Giải mã đồng bộ và chặn event loop của server (Rumble ~0,18 giây cho mỗi giây âm thanh), nên chữ tạm của Rumble chỉ cập nhật mỗi 2 giây và bị giữ nguyên khi phần câu đang nói dở dài quá 10 giây; chữ chốt vẫn nhận dạng đủ.
+- Đo thử bằng giọng máy đọc ca-02 (54 giây, gửi từng mẩu 0,4 giây đúng nhịp thật): độ trễ mỗi mẩu giữa các câu Zipformer trung vị ~0,1 giây, Rumble trung vị ~0,03 giây khi chỉ chờ VAD nhưng lúc chốt câu hoặc làm mới chữ tạm lên tới 0,6-1,7 giây (có lần 5,5 giây, nhiều khả năng do nạp model lần đầu).

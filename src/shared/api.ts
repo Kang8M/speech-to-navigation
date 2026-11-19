@@ -1,5 +1,6 @@
 // Hợp đồng giữa giao diện (src/client) và API (src/app/api): kiểu dữ liệu gửi đi, nhận về và các hằng hai bên phải khớp.
 // Đổi gì ở đây thì cả route lẫn nơi gọi đều báo lỗi kiểu, không bị lệch âm thầm.
+import type { TenModelGiongNoi } from "./model-giong-noi";
 import type { DonDaKe } from "./eform/thoi-quen";
 import type { RowMatches } from "./match";
 import type { SessionInput, SessionRecord } from "./metrics";
@@ -36,9 +37,11 @@ export const ASR_MAX_SECONDS = 600;
 /** GET /api/asr */
 export interface AsrTrangThai {
   provider: string;
-  /** Chỉ true khi provider là zipformer và model đã tải về models/ */
+  /** Chỉ true khi provider là zipformer (nhận dạng trên máy) và model đang chọn đã tải về models/ */
   sanSang: boolean;
-  /** Thư mục model, tính từ gốc dự án (vd. models/stt/zipformer-vi) */
+  /** Model đang chọn bằng ASR_MODEL (đọc lúc gọi, không phải model đang nạp trong bộ nhớ nếu đã đổi biến sau khi khởi động) */
+  model: TenModelGiongNoi;
+  /** Thư mục model đang chọn, tính từ gốc dự án (vd. models/stt/zipformer-vi) */
   thuMucModel: string;
   /** File model còn thiếu, tính từ gốc dự án; rỗng khi đủ hoặc khi không dùng zipformer */
   thieu: string[];

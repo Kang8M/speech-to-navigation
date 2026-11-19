@@ -1,43 +1,27 @@
-// Nhận dạng giọng nói chạy trên máy bằng Zipformer tiếng Việt (sherpa-onnx). Âm thanh không rời khỏi máy
+// Nhận dạng giọng nói chạy trên máy (sherpa-onnx): Zipformer tiếng Việt mặc định, hoặc Rumble-2-Flash khi ASR_MODEL=rumble. Âm thanh không rời khỏi máy
 // và không được lưu: chỉ nằm trong bộ nhớ của phiên đến khi câu được nhận dạng xong.
 //
 // Model là loại không streaming, nên mỗi phiên làm hai lớp để chữ hiện ra trong lúc nói:
-// - Chữ tạm: khi đang có tiếng nói, cứ thêm ~0,4 giây âm thanh thì nhận dạng lại phần câu đang nói dở.
+// - Chữ tạm: khi đang có tiếng nói, cứ thêm một bước âm thanh (0,4 giây Zipformer, 2 giây Rumble) thì nhận dạng lại phần câu đang nói dở.
 // - Chữ chốt: Silero VAD thấy ngắt nghỉ thì nhận dạng cả câu vừa xong và trả về để đưa vào ô nhập.
 import "server-only";
 import { randomUUID } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { OfflineRecognizer, Vad } from "sherpa-onnx-node";
+import { Vad } from "sherpa-onnx-node";
 import { ASR_MAX_SECONDS, ASR_SAMPLE_RATE, type AsrKetQua } from "@/shared/api";
 import { chuanHoaCau } from "@/shared/giong-noi/chuan-hoa-cau";
-import { MODEL_GIONG_NOI, type TenModelGiongNoi, VAD_GIONG_NOI } from "@/shared/model-giong-noi";
+import { MODEL_THEO_TEN, type TenModelGiongNoi, VAD_GIONG_NOI } from "@/shared/model-giong-noi";
+import { type BoNhanDang, getAsrModel, layBoNhanDang } from "./bo-nhan-dang";
 
-/** Tạm cố định Zipformer, bước sau sẽ đọc từ biến môi trường */
-const MODEL_DANG_DUNG: TenModelGiongNoi = "zipformer";
-
-// Model Zipformer ~70 MB, dùng chung thư mục với trang /stt (xem src/shared/model-giong-noi.ts)
+// Model do ASR_MODEL chọn (xem bo-nhan-dang.ts); Silero VAD dùng chung cho cả hai model
 const GOC = /*turbopackIgnore: true*/ process.cwd();
 const tuGoc = (rel: string) => path.join(GOC, ...rel.split("/"));
-const M = MODEL_GIONG_NOI;
-const FILE = {
-  encoder: tuGoc(`${M.thuMuc}/${M.file.encoder}`),
-  decoder: tuGoc(`${M.thuMuc}/${M.file.decoder}`),
-  joiner: tuGoc(`${M.thuMuc}/${M.file.joiner}`),
-  tokens: tuGoc(`${M.thuMuc}/${M.file.tokens}`),
-};
 const VAD_FILE = tuGoc(VAD_GIONG_NOI);
-/** Các file cần có, dạng đường dẫn tương đối tính từ gốc dự án (để hiện cho người dùng) */
-const CAN_CO = [
-  ...[M.file.encoder, M.file.decoder, M.file.joiner, M.file.tokens].map((f) => `${M.thuMuc}/${f}`),
-  VAD_GIONG_NOI,
-];
 /** Cửa sổ của Silero VAD ở 16 kHz */
 const VAD_WINDOW = 512;
 /** Một câu dài hơn mức này thì VAD tự cắt, nên chữ tạm cũng chỉ cần nhận dạng tối đa chừng ấy */
 const MAX_SEGMENT_SECONDS = 20;
-/** Thêm ít nhất chừng này âm thanh mới thì mới nhận dạng lại chữ tạm */
-const INTERIM_STEP = 0.4 * ASR_SAMPLE_RATE;
 /** Phiên không nhận thêm âm thanh trong khoảng này thì bị xóa */
 const IDLE_MS = 60_000;
 
@@ -45,37 +29,21 @@ export function getAsrProvider(): string {
   return process.env.ASR_PROVIDER?.trim() || "zipformer";
 }
 
-/** File model còn thiếu, đường dẫn tương đối tính từ gốc dự án; rỗng là đủ */
-export function fileModelThieu(): string[] {
-  return CAN_CO.filter((rel) => !fs.existsSync(tuGoc(rel)));
+/** File model còn thiếu (kể cả Silero VAD), đường dẫn tương đối tính từ gốc dự án; rỗng là đủ */
+export function fileModelThieu(model: TenModelGiongNoi = getAsrModel()): string[] {
+  return [...MODEL_THEO_TEN[model].canCo, VAD_GIONG_NOI].filter((rel) => !fs.existsSync(tuGoc(rel)));
 }
 
-export function modelSanSang(): boolean {
-  return fileModelThieu().length === 0;
-}
-
-let recognizer: OfflineRecognizer | null = null;
-
-function getRecognizer(): OfflineRecognizer {
-  const thieu = fileModelThieu();
-  if (thieu.length) throw new Error(`Chưa có model giọng nói (thiếu ${thieu.join(", ")}). Chạy: npm run tai-model-giong-noi`);
-  recognizer ??= new OfflineRecognizer({
-    featConfig: { sampleRate: ASR_SAMPLE_RATE, featureDim: 80 },
-    modelConfig: { transducer: FILE, tokens: FILE.tokens, numThreads: 2, provider: "cpu", debug: 0 },
-    decodingMethod: "greedy_search",
-  });
-  return recognizer;
-}
-
-function decode(samples: Float32Array): string {
-  const r = getRecognizer();
-  const stream = r.createStream();
-  stream.acceptWaveform({ samples, sampleRate: ASR_SAMPLE_RATE });
-  r.decode(stream);
-  return r.getResult(stream).text.trim();
+export function modelSanSang(model: TenModelGiongNoi = getAsrModel()): boolean {
+  return fileModelThieu(model).length === 0;
 }
 
 class PhienNhanDang {
+  private bo: BoNhanDang;
+  constructor(private model: TenModelGiongNoi) {
+    this.bo = layBoNhanDang(model);
+  }
+
   private vad = new Vad(
     {
       sileroVad: {
@@ -115,7 +83,7 @@ class PhienNhanDang {
     const chot: string[] = [];
     while (!this.vad.isEmpty()) {
       const doan = this.vad.front(false);
-      const text = chuanHoaCau(decode(doan.samples), MODEL_DANG_DUNG, true);
+      const text = chuanHoaCau(this.bo.decode(doan.samples), this.model, true);
       if (text) chot.push(text);
       // Bỏ phần âm thanh đã chốt khỏi bộ đệm chữ tạm
       const ketThuc = doan.start + doan.samples.length;
@@ -154,9 +122,12 @@ class PhienNhanDang {
     this.du = buf.slice(i);
 
     if (!this.vad.isDetected()) this.tam = "";
-    else if (this.tong - this.tamLuc >= INTERIM_STEP) {
+    else if (this.tong - this.tamLuc >= this.bo.buocTamGiay * ASR_SAMPLE_RATE) {
       this.tamLuc = this.tong;
-      this.tam = chuanHoaCau(decode(this.conLai), MODEL_DANG_DUNG, false);
+      // Câu nói dở đã quá dài thì giữ chữ tạm cũ: decode đồng bộ sẽ chặn server quá lâu
+      if (this.conLai.length <= this.bo.tamToiDaGiay * ASR_SAMPLE_RATE) {
+        this.tam = chuanHoaCau(this.bo.decode(this.conLai), this.model, false);
+      }
     }
     return { chot, tam: this.tam };
   }
@@ -180,9 +151,13 @@ function donPhienCu() {
 
 export function taoPhien(): string {
   donPhienCu();
-  getRecognizer();
+  // Chốt model lúc mở phiên: đổi ASR_MODEL giữa chừng không làm phiên đang nói lẫn model
+  const model = getAsrModel();
+  const thieu = fileModelThieu(model);
+  if (thieu.length) throw new Error(`Chưa có model giọng nói (thiếu ${thieu.join(", ")}). Chạy: npm run tai-model-giong-noi -- --model=${model}`);
+  const phien = new PhienNhanDang(model);
   const id = randomUUID();
-  PHIEN.set(id, new PhienNhanDang());
+  PHIEN.set(id, phien);
   return id;
 }
 

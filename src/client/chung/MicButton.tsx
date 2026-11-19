@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { DenoisedMic } from "./DenoisedMic";
 import { GIAO_DIEN_MIC, NoiDungMic } from "./mic-ui";
 import { ASR_MAX_SECONDS, ASR_SAMPLE_RATE, type ApiLoi, type AsrKetQua, type AsrPhienMoi, type AsrTrangThai } from "@/shared/api";
+import type { TenModelGiongNoi } from "@/shared/model-giong-noi";
 import type { RecordingBinding, RecordingHandle } from "@/shared/clinical/recording";
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -45,10 +46,13 @@ export interface MicButtonProps {
 }
 
 
+const TEN_MODEL_HIEN: Record<TenModelGiongNoi, string> = { zipformer: "Zipformer", rumble: "Rumble-2-Flash" };
+
 /** Only local Zipformer is allowed for medical audio; fail closed without cloud fallback. */
 export function MicButton(props: MicButtonProps) {
   const [mode, setMode] = useState<"dang-kiem" | "zipformer" | "blocked">("dang-kiem");
   const [note, setNote] = useState<string | null>(null);
+  const [model, setModel] = useState<TenModelGiongNoi | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -56,12 +60,15 @@ export function MicButton(props: MicButtonProps) {
       .then((res) => res.json())
       .then((data: AsrTrangThai) => {
         if (!active) return;
-        if (data.provider === "zipformer" && data.sanSang) return setMode("zipformer");
+        if (data.provider === "zipformer" && data.sanSang) {
+          setModel(data.model);
+          return setMode("zipformer");
+        }
         setMode("blocked");
         setNote(data.provider === "zipformer"
-          ? `Máy chủ chưa thấy model giọng nói ở ${data.thuMucModel}`
+          ? `Máy chủ chưa thấy model giọng nói ${TEN_MODEL_HIEN[data.model] ?? ""} ở ${data.thuMucModel}`
             + (data.thieu?.length ? ` (thiếu ${data.thieu.join(", ")})` : "")
-            + ". Chạy npm run tai-model-giong-noi ở thư mục dự án đang chạy server, hoặc gõ tay."
+            + `. Chạy npm run tai-model-giong-noi${data.model === "rumble" ? " -- --model=rumble" : ""} ở thư mục dự án đang chạy server, hoặc gõ tay.`
           : "Chính sách dữ liệu y tế chỉ cho phép nhận dạng trên máy. Đặt ASR_PROVIDER=zipformer hoặc gõ tay.");
       })
       .catch(() => {
@@ -75,7 +82,15 @@ export function MicButton(props: MicButtonProps) {
   }, []);
 
   if (mode === "dang-kiem") return null;
-  if (mode === "zipformer") return <ZipformerMic {...props} />;
+  if (mode === "zipformer") {
+    return (
+      <div>
+        {/* Cho biết đang thử model nào (chọn bằng ASR_MODEL khi khởi động server) */}
+        {model && <p className="mb-0.5 text-right text-[11px] text-muted" title="Model nhận dạng giọng nói đang dùng (đổi bằng ASR_MODEL)">{TEN_MODEL_HIEN[model] ?? model}</p>}
+        <ZipformerMic {...props} />
+      </div>
+    );
+  }
   return <p role="status" className="mt-1 text-xs text-muted">{note}</p>;
 }
 

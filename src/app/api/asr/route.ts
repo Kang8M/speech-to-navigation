@@ -1,19 +1,22 @@
-// Nhận dạng giọng nói trên máy (Zipformer).
+// Nhận dạng giọng nói trên máy (Zipformer mặc định, Rumble-2-Flash khi ASR_MODEL=rumble).
 // GET: cho trình duyệt biết đang dùng chế độ nào. POST: mở một phiên nói, trả về id phiên.
 // Gửi âm thanh và kết thúc phiên ở /api/asr/[id].
 import { fileModelThieu, getAsrProvider, taoPhien } from "@/server/ai/asr";
+import { getAsrModel } from "@/server/ai/bo-nhan-dang";
 import type { AsrPhienMoi, AsrTrangThai } from "@/shared/api";
-import { MODEL_GIONG_NOI } from "@/shared/model-giong-noi";
+import { MODEL_THEO_TEN } from "@/shared/model-giong-noi";
 
 export const runtime = "nodejs";
 
 export function GET() {
   const provider = getAsrProvider();
-  const thieu = provider === "zipformer" ? fileModelThieu() : [];
+  const model = getAsrModel();
+  const thieu = provider === "zipformer" ? fileModelThieu(model) : [];
   return Response.json({
     provider,
     sanSang: provider === "zipformer" && thieu.length === 0,
-    thuMucModel: MODEL_GIONG_NOI.thuMuc,
+    model,
+    thuMucModel: MODEL_THEO_TEN[model].thuMuc,
     thieu,
   } satisfies AsrTrangThai);
 }

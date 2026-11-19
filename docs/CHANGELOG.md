@@ -4,6 +4,13 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-19
 
+### eval-giong-noi đo được Rumble-2-Flash và RTF (Task 4)
+- **Loại:** Tính năng, Công cụ
+- **Thay đổi:** `scripts/eval-giong-noi.ts` thêm `--model=zipformer|rumble` (đặt `ASR_MODEL` trước phiên đầu; mặc định theo `ASR_MODEL`, giá trị lạ thì thoát với lỗi tiếng Việt) và `--thu-muc=<đường dẫn>` (mặc định `data/giong-noi`). Chữ thô lưu `<tên>.tho.json` cho Zipformer và `<tên>.tho.rumble.json` cho Rumble. Thêm cột RTF và số giây giải mã từng file, dòng tổng RTF; chữ lấy từ bộ lưu thì in "–" và nhắc dùng `--nhan-lai`. Script tự sinh `im-lang.wav` (5 giây im lặng) cùng `im-lang.txt` rỗng nếu thiếu; file này không tính WER mà in số câu chốt (kỳ vọng 0). Dòng đầu in tên model. Cập nhật `README.md` và `docs/STT.md`.
+- **Lý do:** So sánh công bằng hai model trên cùng bộ âm thanh: độ chính xác, tốc độ, và việc model có bịa câu khi im lặng hay không (Review Focus 3, 4).
+- **File:** `scripts/eval-giong-noi.ts`, `README.md`, `docs/STT.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** `npx eslint src scripts` 0 lỗi; `--model=bogus` thoát với lỗi. Tổng zipformer (chữ thô | sau sửa): WER 17,4% mã 5/42 liều 0/24 | WER 6,7% mã 30/42 liều 20/24, RTF 0,25 (139,9 s giải mã cho 550,7 s âm thanh). Tổng rumble: WER 21,4% mã 2/42 liều 0/24 | WER 13,9% mã 11/42 liều 7/24, RTF 0,53 (291,0 s). Sửa nhầm 0 từ ở cả hai. Im lặng: 0 câu chốt ở cả hai model.
+
 ### Chọn Zipformer hoặc Rumble-2-Flash bằng ASR_MODEL (Task 3)
 - **Loại:** Tính năng, Kiểm thử
 - **Thay đổi:** Thêm `src/server/ai/bo-nhan-dang.ts`: `getAsrModel()` đọc `ASR_MODEL` mỗi lần gọi (lạ thì về `zipformer` kèm `console.warn`), `layBoNhanDang(model)` giữ đúng một recognizer mỗi model trên `globalThis` (Zipformer cấu hình cũ, chữ tạm 0,4 giây; Rumble `qwen3Asr`, 4 luồng, ép tiếng Việt bằng `stream.setOption("language", "Vietnamese")`, chữ tạm 2 giây và giữ chữ tạm cũ khi phần câu đang nói dở dài quá 10 giây), `giaiMaChiaDoi` chia đoạn Rumble dài hơn 18 giây làm đôi đệ quy rồi nối chữ. `asr.ts`: `PhienNhanDang` chốt model lúc `taoPhien`, `fileModelThieu(model)` kiểm cả Silero VAD. `GET /api/asr` thêm `model`, `thuMucModel` theo model đang chọn (`AsrTrangThai.model`). `MicButton` hiện tên model nhỏ phía trên nút micro. `sherpa-onnx-node.d.ts` thêm `qwen3Asr`, `OfflineStream.setOption`, `transducer` thành tùy chọn. `.env.example` thêm `ASR_MODEL=zipformer`; `docs/STT.md` thêm mục chọn model.

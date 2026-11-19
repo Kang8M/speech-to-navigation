@@ -148,11 +148,12 @@ Cuối cùng số đọc thành chữ được đổi sang chữ số khi đứn
 
 ```bash
 npm run tao-am-thanh-mau     # Windows: giọng máy đọc 11 ca thành data/giong-noi/<id>.tts.wav
-npm run eval-giong-noi       # thêm --chi-tiet để in từng câu, --nhan-lai để nhận dạng lại từ đầu
+npm run eval-giong-noi       # thêm --chi-tiet để in từng câu, --nhan-lai để nhận dạng lại từ đầu (cần để đo RTF)
+npm run eval-giong-noi -- --model=rumble   # đo Rumble-2-Flash (mặc định theo ASR_MODEL); --thu-muc=<đường dẫn> đổi thư mục âm thanh
 npm run thu-che-pii -- "câu" # thử bộ che PII dùng chung (eForm, /demo-luong); --file đường/dẫn.txt để thử cả file
 ```
 
-Mỗi file `.wav` trong `data/giong-noi/` đi qua đúng luồng VAD của ứng dụng rồi được so với câu `input_noi` của ca cùng id. Script in cho chữ thô và chữ sau khi sửa: **WER** (tỉ lệ từ sai, so cả dấu, số đổi thành chữ ở hai phía), **Mã** (số mã dịch vụ, mã thuốc bộ tách quy tắc vẫn ra đúng so với khi tách câu gốc), **Liều** (số dòng thuốc có liều, số lần/ngày, số ngày trùng câu gốc), và **Sửa nhầm trên câu gốc** (bộ sửa chạy trên câu đúng mà đổi mất bao nhiêu từ, nên bằng 0). Chữ thô được lưu cạnh file âm thanh nên chỉnh bảng sửa rồi chạy lại chỉ mất vài giây. Cách tự ghi âm để đo bằng giọng thật: `data/giong-noi/README.md`.
+Mỗi file `.wav` trong `data/giong-noi/` đi qua đúng luồng VAD của ứng dụng rồi được so với câu `input_noi` của ca cùng id. Script in cho chữ thô và chữ sau khi sửa: **WER** (tỉ lệ từ sai, so cả dấu, số đổi thành chữ ở hai phía), **Mã** (số mã dịch vụ, mã thuốc bộ tách quy tắc vẫn ra đúng so với khi tách câu gốc), **Liều** (số dòng thuốc có liều, số lần/ngày, số ngày trùng câu gốc), và **Sửa nhầm trên câu gốc** (bộ sửa chạy trên câu đúng mà đổi mất bao nhiêu từ, nên bằng 0). Chữ thô được lưu cạnh file âm thanh (`<tên>.tho.json` cho Zipformer, `<tên>.tho.rumble.json` cho Rumble) nên chỉnh bảng sửa rồi chạy lại chỉ mất vài giây. Hai cột cuối là **RTF** (giây giải mã chia giây âm thanh) và số giây giải mã, chỉ đo khi nhận dạng thật (`--nhan-lai`), đọc từ bộ lưu thì in "–". Script tự sinh `im-lang.wav` (5 giây im lặng) để đếm số câu model bịa ra (kỳ vọng 0). Cách tự ghi âm để đo bằng giọng thật: `data/giong-noi/README.md`.
 
 Kết quả trên giọng máy ngày 2026-11-11: WER 21,4% thành 10,5%, Mã 7/42 thành 22/42, Liều 0/24 thành 11/24, sửa nhầm 0. **Giọng máy khác người thật**, nên các số này chỉ để so trước và sau một lần sửa. Hotword của sherpa-onnx (ưu tiên cụm từ ngay lúc giải mã) đã thử với `modified_beam_search` nhưng không thấy tác dụng trên model này, nên chưa dùng.
 

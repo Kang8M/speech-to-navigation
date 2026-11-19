@@ -34,6 +34,11 @@ const eslintConfig = defineConfig([
       ],
     },
   },
+  {
+    // Test chạy bằng node:test (npm test), được import node:* kể cả trong src/shared
+    files: ["src/**/*.test.ts"],
+    rules: { "no-restricted-imports": "off" },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:
@@ -41,6 +46,18 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Local Python runtime, provisioning caches and model artifacts.
+    ".venv-stt/**",
+    ".venv-community/**",
+    ".venv-ner-train/**",
+    ".gitnexus/**",
+    ".superpowers/**",
+    ".tmp/**",
+    ".cache-stt/**",
+    "models/stt/**",
+    "models/diarization/**",
+    "models/denoise/**",
+    "logs/**",
   ]),
 ]);
 

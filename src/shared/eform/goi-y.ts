@@ -22,6 +22,8 @@ export interface MauGoiY {
   chiDinh: DongChiDinh[];
   donThuoc: DongThuoc[];
   loiDan: string;
+  /** Chỉ có ở nhóm "Đơn anh/chị đã kê" (src/shared/eform/thoi-quen.ts): số lần đã kê, theo mã hoặc tên dòng */
+  cuaToi?: { tongLan: number; soLan: Record<string, number> };
 }
 
 /** Gán mã cho từng dòng của bộ mẫu bằng code khớp danh mục, chạy một lần khi nạp trang */

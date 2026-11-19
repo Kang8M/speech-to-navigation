@@ -37,6 +37,8 @@ export interface CatalogItem {
   hoat_chat?: string;
   ham_luong?: string;
   dang_bao_che?: string;
+  /** Mục trong danh mục bệnh viện soạn tay (data/catalog/), được khớp trước danh mục thật */
+  uu_tien?: boolean;
 }
 
 export type Catalogs = Record<string, CatalogItem[]>;
@@ -69,15 +71,10 @@ export interface CaseData {
   hanh_chinh: Values;
   input_noi: string;
   input_go_tat: string;
+  /** Phiếu mẫu tương ứng (data/eform/phieu-mau.json), cho npm run eval-mau */
+  mau_id?: string;
+  /** Câu ngắn kiểu bác sĩ gọi mẫu: tên tắt kèm vài chi tiết riêng của ca */
+  input_mau?: string;
   expected: Draft;
 }
 
-export interface AppConfig {
-  hanhChinh: FormConfig;
-  forms: FormConfig[];
-  catalogs: Catalogs;
-  vietTat: VietTat;
-  rules: WarningRules;
-  cases: CaseData[];
-  provider: string;
-}

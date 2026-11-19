@@ -135,7 +135,60 @@ function splitStrength(name: string): { name: string; strength: string } {
   return { name: name.slice(0, found.index), strength: found[1] };
 }
 
+const uuTienCache = new WeakMap<CatalogItem[], CatalogItem[]>();
+
+/** Phần danh mục bệnh viện (uu_tien) của một danh mục, nhớ lại để không lọc lại mỗi lần khớp */
+function phanUuTien(catalog: CatalogItem[]): CatalogItem[] {
+  const cached = uuTienCache.get(catalog);
+  if (cached) return cached;
+  const items = catalog.filter((item) => item.uu_tien);
+  uuTienCache.set(catalog, items);
+  return items;
+}
+
+/**
+ * Khớp hai tầng: danh mục bệnh viện và cả danh mục thật (hàng nghìn thuốc trùng tên khác hãng).
+ * Thứ tự tin: trùng tên ở danh mục bệnh viện, trùng tên ở danh mục thật, rồi mới đến tìm mờ (bệnh viện trước).
+ * Không tầng nào chắc thì trả ứng viên của cả hai, tầng có trùng tên đứng trước.
+ */
 export function matchCatalog(
+  name: string | null | undefined,
+  strength: string | null | undefined,
+  catalog: CatalogItem[],
+  vietTat: VietTat,
+): MatchResult {
+  const uuTien = phanUuTien(catalog);
+  if (uuTien.length === 0 || uuTien.length === catalog.length) return strip(matchIn(name, strength, catalog, vietTat));
+  // Trùng tên đứng trước tìm mờ; cùng loại thì danh mục bệnh viện trước (sort giữ nguyên thứ tự khi bằng nhau)
+  const [dau, sau] = [matchIn(name, strength, uuTien, vietTat), matchIn(name, strength, catalog, vietTat)].sort(
+    (a, b) => Number(b.exact) - Number(a.exact),
+  );
+  if (dau.status === "khop") return strip(dau);
+  if (sau.status === "khop" || dau.status === "khong_khop") return strip(sau);
+  const candidates = [...dau.candidates, ...sau.candidates.filter((item) => !dau.candidates.includes(item))];
+  return { ...strip(dau), candidates: candidates.slice(0, 6) };
+}
+
+/** Kết quả khớp trong một danh mục, kèm cờ cho biết tên có trùng khít không */
+type InnerResult = MatchResult & { exact: boolean };
+
+function strip(result: InnerResult): MatchResult {
+  const { status, item, reason, candidates } = result;
+  return reason === undefined ? { status, item, candidates } : { status, item, reason, candidates };
+}
+
+function matchIn(
+  name: string | null | undefined,
+  strength: string | null | undefined,
+  catalog: CatalogItem[],
+  vietTat: VietTat,
+): InnerResult {
+  const raw = (name ?? "").trim();
+  const exact = raw !== "" && (findExact(raw, catalog, vietTat).length > 0 || findExact(splitStrength(raw).name, catalog, vietTat).length > 0);
+  return { ...matchPool(name, strength, catalog, vietTat), exact };
+}
+
+function matchPool(
   name: string | null | undefined,
   strength: string | null | undefined,
   catalog: CatalogItem[],

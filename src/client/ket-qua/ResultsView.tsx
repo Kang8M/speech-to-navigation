@@ -127,7 +127,7 @@ export function ResultsView({ sessions }: { sessions: SessionRecord[] }) {
             {sessions.length === 0 && (
               <tr>
                 <td colSpan={HEADERS.length} className="px-3 py-6 text-center text-muted">
-                  Chưa có lượt thử nào. Hãy bấm &quot;Xác nhận&quot; ở màn hình làm việc để lưu lượt đầu tiên.
+                  Chưa có lượt thử nào. Trên trang eForm, để AI điền phiếu rồi bấm &quot;Lưu&quot; để ghi lượt đầu tiên.
                 </td>
               </tr>
             )}
@@ -139,6 +139,7 @@ export function ResultsView({ sessions }: { sessions: SessionRecord[] }) {
                 <td className="px-3 py-2">{session.kieu_nhap === "noi" ? "Nói" : "Gõ"}</td>
                 <td className="px-3 py-2 whitespace-nowrap">
                   {session.tu_ca_mau ? `Ca mẫu ${session.ca_mau_id ?? ""}` : "Nhập thật"}
+                  {session.mau_id ? ` · Mẫu ${session.mau_id}` : ""}
                 </td>
                 <td className="px-3 py-2">{session.provider}</td>
                 <td className="px-3 py-2 whitespace-nowrap">{formatSeconds(session.thoi_gian_giay)}</td>

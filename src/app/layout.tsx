@@ -4,14 +4,13 @@ import "@fontsource/be-vietnam-pro/500.css";
 import "@fontsource/be-vietnam-pro/600.css";
 import "@fontsource/be-vietnam-pro/700.css";
 import "./globals.css";
-import { Banner } from "@/client/chung/Banner";
 import { Header } from "@/client/chung/Header";
 import { getProviderName, loadTheme } from "@/server/du-lieu/config";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Trợ lý điền bệnh án TMH – Prototype",
+  title: "Trợ lý điền bệnh án TMH",
   description: "Prototype nhập một lần, điền ba chỗ. Chỉ dùng dữ liệu giả.",
 };
 
@@ -26,7 +25,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="flex min-h-full flex-col">
         <Header provider={getProviderName()} />
-        <Banner />
         {children}
       </body>
     </html>

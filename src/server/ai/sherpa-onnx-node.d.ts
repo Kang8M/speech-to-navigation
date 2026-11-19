@@ -5,6 +5,9 @@ declare module "sherpa-onnx-node" {
     sampleRate: number;
   }
 
+  /** Đọc file WAV (PCM 16-bit), dùng trong script đo */
+  export function readWave(file: string): Waveform;
+
   export class OfflineStream {
     acceptWaveform(wave: Waveform): void;
   }

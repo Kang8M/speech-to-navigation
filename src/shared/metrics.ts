@@ -6,6 +6,8 @@ export interface SessionInput {
   kieu_nhap: InputMode;
   tu_ca_mau: boolean;
   ca_mau_id: string | null;
+  /** Phiếu mẫu theo bệnh đã dùng trong lượt (data/eform/phieu-mau.json); lượt ghi trước 2026-11-12 không có */
+  mau_id?: string | null;
   provider: string;
   thoi_gian_giay: number;
   so_truong_ai_dien: number;
@@ -47,6 +49,7 @@ const CSV_COLUMNS: (keyof SessionRecord)[] = [
   "kieu_nhap",
   "tu_ca_mau",
   "ca_mau_id",
+  "mau_id",
   "provider",
   "thoi_gian_giay",
   "so_truong_ai_dien",

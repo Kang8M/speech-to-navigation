@@ -4,6 +4,13 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-19
 
+### Spike Task 0: Rumble-2-Flash chạy được qua sherpa-onnx-node
+- **Loại:** Thử nghiệm, Tài liệu
+- **Thay đổi:** Thêm script tạm `scripts/thu-rumble.ts` nạp model Rumble-2-Flash (INT8, revision ghim trong plan) bằng `sherpa-onnx-node` với `qwen3Asr`, ép tiếng Việt, đo tốc độ theo số luồng. Điền mục "Kết quả spike" trong plan: cấu hình Node đúng, `stream.setOption("language", "Vietnamese")` là cách ép ngôn ngữ duy nhất có tác dụng, âm thanh phải cắt đoạn khoảng 15-20 s vì `maxTotalLen` 512, RTF 0,29 / 0,18 / 0,20 ở 2 / 4 / 6 luồng, RAM khoảng 1,5 GB, SHA-256 ba file tokenizer. Model tải về `models/stt/rumble-2-flash/` (đã gitignore, không commit). Chưa sửa gì trong `src/`.
+- **Lý do:** Cổng go/no-go của plan: xác nhận model chạy được trên máy và đủ nhanh trước khi viết code thật.
+- **File:** `scripts/thu-rumble.ts`, `docs/superpowers/plans/2026-11-19-thu-nghiem-stt-rumble-2-flash.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** Ba file ONNX khớp SHA-256; chạy `npx tsx scripts/thu-rumble.ts` ra chữ tiếng Việt gần với `input_noi` ca-01 (giọng TTS); `npm run lint` sạch với script mới.
+
 ### Plan thử nghiệm STT Rumble-2-Flash song song Zipformer
 - **Loại:** Tài liệu
 - **Thay đổi:** Thêm `docs/superpowers/plans/2026-11-19-thu-nghiem-stt-rumble-2-flash.md` trên nhánh `thu-nghiem/stt-rumble-2-flash` (tạo từ `origin/dev`). Plan đánh giá `Reson8/Rumble-2-Flash` (Qwen3-ASR 0.5B, có tiếng Việt) trên cấu hình máy, chọn bản sherpa-onnx INT8 chạy CPU (`TypeWhisper/Rumble-2-Flash-sherpa-onnx-int8`, ghim revision và SHA-256) và chia 6 task: spike, chuẩn hóa câu theo model, tải model, chọn model bằng `ASR_MODEL`, đo bằng `eval-giong-noi`, báo cáo so sánh. Zipformer giữ nguyên là mặc định.

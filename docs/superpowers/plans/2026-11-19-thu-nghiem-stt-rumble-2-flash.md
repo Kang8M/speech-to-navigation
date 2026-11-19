@@ -167,4 +167,60 @@ test("câu rỗng hoặc chỉ dấu câu trả rỗng", () => {
 
 ## Kết quả spike
 
-_(điền ở Task 0)_
+Kết luận: **GO**. Model nạp và chạy được qua binding Node `sherpa-onnx-node` 2.0.1 trên máy này, RTF tốt nhất 0,18 (< 0,5). Thử bằng `scripts/thu-rumble.ts` (`npx tsx scripts/thu-rumble.ts`). Ba file ONNX khớp SHA-256 trong Global Constraints.
+
+**Cấu hình Node chạy được** (tên trường đúng, không cần `tokens`):
+
+```ts
+new OfflineRecognizer({
+  featConfig: { sampleRate: 16000, featureDim: 128 },
+  modelConfig: {
+    qwen3Asr: {
+      convFrontend: ".../conv_frontend.onnx",
+      encoder: ".../encoder.int8.onnx",
+      decoder: ".../decoder.int8.onnx",
+      tokenizer: ".../tokenizer", // thư mục chứa vocab.json, merges.txt, tokenizer_config.json
+      maxTotalLen: 512,
+      maxNewTokens: 128,
+    },
+    tokens: "",
+    numThreads: 4,
+    provider: "cpu",
+    debug: 0,
+  },
+});
+```
+
+**Ép tiếng Việt:** chỉ `stream.setOption("language", "Vietnamese")` (gọi trên từng stream trước `acceptWaveform`) có tác dụng. Đặt `qwen3Asr.language` trong config không có tác dụng (không báo lỗi, vẫn ra như không ép). Không ép: model tự nhận ngôn ngữ và kết quả chỉ là chuỗi `language Vietnamese` (token `language`, ` Vietnamese`), không có phần chữ nên không dùng được. Ép rồi: đầu ra là câu sạch, không còn tiền tố `language ...` hay `<asr_text>`; `lang`, `timestamps`, `ys_log_probs` đều rỗng, chỉ `text` và `tokens`. Đầu ra có dấu câu, viết hoa, chữ số ("38,5 độ", "250 miligram") nhưng lúc là số lúc là chữ ("ba ngày", "bảy ngày", "hai gói"), nên Task 1 phải chuẩn hóa. Ngắt từ giữa chừng cũng xảy ra ("Aza Cetamol", "n ay" chỉ là token, ghép lại đúng).
+
+**Giới hạn độ dài (quan trọng):** `maxTotalLen` 512 là giới hạn cứng của decoder đã xuất, gồm cả prompt, token âm thanh (~13 token/giây) và chữ sinh ra. Ca-01 dài 56,8 s không giải mã nổi một lần: native in cảnh báo `context_len (753) exceeds max_total_len (512). Truncating audio placeholders` và kết quả chỉ còn `Ừ`/`language`. Không ném lỗi, chỉ cắt âm thanh âm thầm. Thử: chunk 20 s đủ; 30 s chạy nhưng chữ cuối bị cụt; 36 s chỉ ra được khoảng 10 s đầu. Vậy phải cắt đoạn **tối đa khoảng 15-20 s** (thực tế tốt nhất cắt theo VAD/chỗ im lặng) rồi nối chữ. Task 2 nên có hằng số độ dài đoạn tối đa và cắt ở chỗ năng lượng thấp (script spike đã cắt thử mỗi 15 s, lùi về chỗ im lặng trong ±1,5 s).
+
+**Kết quả ca-01** (4 đoạn 14,1 + 13,9 + 14,7 + 14,1 s, `numThreads` 4, ép Vietnamese), so với `input_noi`:
+
+- Nhận dạng: "Ừ, bé này đến khám vì đau thai phổi và sốt. À, bệnh sử là ba ngày nay bé đau thai phổi sốt 38,5 độ. Trước đó có sổ mũi khoảng năm ngày. Tiên sử thì khỏe mạnh, chưa dị ứng thuốc gì. Toàn thân bé tỉnh. Sốt 38 độ, ừ, kháng hai mũi họng thấy màng nhĩ phải đỏ, phồng, mất nón sáng, hai trái bình thường, mũi có dịch đầy, trần đoán viêm thai giữa cấp thai phải, hướng điều trị là điều trị nội khoa ngoại trú, à. Chỉ định nội soi hai mũi họng một lần, kê đơn, Amoxicillin 250 miligram dạng gói, uống hai gói một lần, ngày hai lần, sau ăn, trong bảy ngày, Aza Cetamol 250 miligram gói, ..."
+- Tham chiếu: "Ừ, bé này đến khám vì đau tai phải và sốt. À, bệnh sử là 3 ngày nay bé đau tai phải, sốt 38,5 độ, ... Chẩn đoán viêm tai giữa cấp tai phải. ... Paracetamol 250 mg gói, ..."
+- Nhận xét: đúng phần lớn, tên thuốc Amoxicillin đúng, có dấu câu, giữ cả "ừ", "à". Lỗi điển hình: thiếu âm đầu "tai" -> "thai" ("thai phải", "viêm thai giữa"), "tai mũi họng" -> "hai mũi họng"/"kháng", "Paracetamol" -> "Aza Cetamol", "chảy mủ tai" -> "mủ thai". Đây là giọng máy đọc (TTS), chưa phải giọng người.
+
+**Tốc độ** (tổng thời gian giải mã 4 đoạn, không tính nạp; một lần chạy mỗi mức, máy không chạy việc nặng khác, đoạn đầu làm nóng riêng):
+
+| numThreads | Thời gian giải mã 56,8 s | RTF |
+|---|---|---|
+| 2 | 16,6 s | 0,293 |
+| 4 | 10,5 s | 0,184 |
+| 6 | 11,2 s | 0,197 |
+
+Chọn `numThreads` 4. Chunk đơn lẻ (4 luồng): 20 s mất 3,8 s (RTF 0,19), 30 s mất 6,3 s (RTF 0,21). Thời gian nạp model: 1,7 s (4 luồng; 3,0-3,8 s ở 2 và 6 luồng, lần nạp sau trong cùng tiến trình).
+
+**RAM** (xấp xỉ, `process.memoryUsage().rss`): ~0,75 GB ngay sau khi nạp, ~1,5 GB sau khi giải mã. Trong script spike RSS cộng dồn lên 4-5 GB vì tạo nhiều recognizer liên tiếp trong cùng tiến trình và native không nhả; ở eForm chỉ nên tạo một recognizer duy nhất (cache).
+
+**SHA-256 tokenizer** (cho `MODEL_RUMBLE.sha256` ở Task 2):
+
+```
+c5e356c0638515539c196bca5da724fcf35a91fceaf1a2204c2a7193adc21059  tokenizer/vocab.json
+ca57770275b525f8766ed68bf4b2d1d66b85adc41b06d8b5686cc3ca2b808aa9  tokenizer/merges.txt
+c812aa17410d17b1b8c12f499d5359d6d9bd7395729bc7a7e1742aaa21f2b7df  tokenizer/tokenizer_config.json
+```
+
+Kích thước file: conv_frontend 44.148.280 B, encoder 182.491.662 B, decoder 426.507.858 B (tổng ~655 MB), vocab 1.961.918 B, merges 1.075.910 B, tokenizer_config 13.585 B.
+
+**Bất ngờ khác:** (1) tải từ Hugging Face bị ngắt kết nối giữa chừng ("Connection was reset") với 3 file, cần `curl -C -` thử lại; (2) binding native in cảnh báo ra stderr cho mỗi lần cắt âm thanh, dùng để phát hiện đoạn quá dài; (3) không có `lang`/timestamps trong kết quả.

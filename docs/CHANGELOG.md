@@ -4,6 +4,14 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-19
 
+### Báo cáo so sánh Zipformer và Rumble-2-Flash (Task 5)
+- **Loại:** Tài liệu, Dọn dẹp
+- **Thay đổi:** Thêm `docs/STT-SO-SANH-RUMBLE.md`: bảng số liệu hai model trên 11 ca giọng máy (WER, mã, liều, RTF, RAM, thời gian nạp), WER theo ca, phần không lời và đoạn ngắn, 10 lỗi tiêu biểu mỗi model, ba phương án (giữ Zipformer, chuyển Rumble, kết hợp) với đánh đổi, giới hạn của kết quả, và hướng dẫn đo trên giọng thật (chưa làm). Kết luận là tạm vì chỉ có giọng máy. Mặc định không đổi: vẫn là Zipformer. Xóa script spike `scripts/thu-rumble.ts` (còn trong lịch sử git). README: sửa câu về `im-lang.wav` (chỉ kiểm VAD; bịa chữ đo bằng `tieng-on.wav` và phần "Gọi thẳng model"), thêm liên kết đến báo cáo. `docs/STT.md`: thêm liên kết đến báo cáo.
+- **Lý do:** Hoàn tất đợt so sánh hai model: cần số liệu và kết luận để quyết định model. Review cuối (N1) ghi README:156 còn mô tả `im-lang.wav` sai.
+- **File:** `docs/STT-SO-SANH-RUMBLE.md`, `README.md`, `docs/STT.md`, `docs/CHANGELOG.md`, `scripts/thu-rumble.ts` (xóa)
+- **Kiểm tra:** Số liệu lấy từ `npm run eval-giong-noi -- --model=zipformer --chi-tiet` (chạy từ bộ lưu) và các lần chạy `--nhan-lai` đã có; RAM và thời gian nạp đo bằng script nhỏ một lần cho mỗi model (RSS sau nạp và sau một lần giải mã 15 giây). Chưa kiểm tra: đo trên giọng thật.
+- **Ảnh hưởng:** Không đổi hành vi. Model mặc định vẫn là Zipformer.
+
 ### Sửa các phát hiện review nhánh Rumble-2-Flash
 - **Loại:** Sửa lỗi, Công cụ, Kiểm thử
 - **Thay đổi:** (1) `asr.ts`: phiên ghi chỗ VAD bắt đầu thấy tiếng nói; chữ tạm Rumble chỉ nhận dạng từ đó (lùi 0,5 giây đệm), quy tắc "bỏ qua khi > 10 giây" tính trên đoạn đó chứ không tính im lặng đứng trước. Zipformer giữ nguyên (nhận dạng cả bộ đệm). Logic chọn đoạn tách thành hàm thuần `batDauDoanChuTam` (`src/shared/giong-noi/doan-chu-tam.ts`). `ketThucPhien` nhận tham số tùy chọn để trả số đoạn VAD cho eval. (2) Rumble `maxNewTokens` 128 lên 192; tiền tố `language …<asr_text>` bỏ ở từng đoạn của lần giải mã chia đôi. (3) `canCo` của Zipformer trở lại bốn file chạy (không bắt `bpe.model`). (4) `getAsrModel()` chỉ cảnh báo một lần cho mỗi giá trị lạ. (5) Tải model có timeout 20 phút mỗi lần. (6) `eval-giong-noi.ts`: thêm `tieng-on.wav` (thở và tiếng ù ngắt quãng, sinh tự động) để VAD thật sự đưa đoạn cho model, in số đoạn VAD; thêm phần "Gọi thẳng model" (số 0, nhiễu, tiếng ù, không qua VAD); làm nóng model trước khi bấm giờ (RTF không tính lần nạp); RTF tổng không tính file không lời; thêm dòng "WER bỏ từ đệm" (ừ/à/ờ/ừm/ơ). Sửa chữ docs/STT.md và `.env.example`: đổi `ASR_MODEL` thì "nên" khởi động lại để giải phóng RAM.

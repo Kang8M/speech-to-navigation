@@ -4,6 +4,14 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-27
 
+### Kê đơn: dọn chữ còn nói đơn thuốc ngoài phạm vi
+- **Loại:** Sửa tài liệu và nhãn
+- **Thay đổi:** Câu trong bong bóng Trợ lý đổi thành "AI không kê thuốc. Đơn thuốc do bác sĩ nhập ở tab Đơn thuốc." Mục "Thói quen kê đơn" trong `docs/cau-truc-du-an.md` ghi đúng thực tế: thói quen hiện chỉ đọc, Lưu chưa ghi, và bỏ tên `ghiThoiQuen` đã không còn trên `dev`.
+- **Lý do:** Câu cũ "bác sĩ kê toa riêng" và tài liệu nói việc kê đơn nằm ngoài phạm vi đã sai sau khi đưa kê đơn trở lại.
+- **File:** `src/client/eform/TroLyAi.tsx`, `docs/cau-truc-du-an.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** Chỉ đổi chuỗi và tài liệu. Xem báo cáo task 10 để có kết quả `npm test`, `npx tsc --noEmit`, `npm run lint`.
+- **Ảnh hưởng:** Không đổi hành vi. Giao diện bong bóng Trợ lý hiện câu mới.
+
 ### Kê đơn: Tổng SL, thuốc dùng khi cần, liều "1 v", hồ sơ 1.3.0 có don_thuoc
 - **Loại:** Tính năng
 - **Thay đổi:** Phần thuần (chưa có giao diện) của kê đơn trở lại. `computeTotal` lấy `so_luong_ke` nếu > 0, không thì liều × số lần × số ngày; thuốc dùng khi cần không có số lần và không có số lượng kê thì ra `null`. Thêm `bungDonViLieu` ("1 v" → "1 viên", "1/2v" → "1/2 viên", theo `don_vi_viet_tat` trong `config/canh-bao.json`); `applyTotals` bung đơn vị trong liều rồi tính tổng. `DongThuoc` thêm `khi_can?`, `so_luong_ke?`; thêm `laKhiCan` (cờ, hoặc thời điểm bắt đầu bằng "Khi/Lúc/Nếu"); `dienPhieu`, `khopBoMau` ánh xạ hai trường mới; `COT_THUOC` và `/api/thoi-quen` nhận `khi_can`, `so_luong_ke`.

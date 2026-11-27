@@ -17,6 +17,14 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 - **File:** `src/shared/eform/{lenh-nhanh,nguon-mau,ap-lenh}.ts` (+test), `src/client/eform/{LenhNhanh,TroLyAi,EformScreen}.tsx`, `docs/cau-truc-du-an.md`, `README.md`, `docs/CHANGELOG.md`
 - **Kiểm tra:** `npx tsx --conditions=react-server --test src/shared/eform/lenh-nhanh.test.ts` 8/8; `nguon-mau.test.ts` 5/5; `ap-lenh.test.ts` 8/8; `npx tsc --noEmit`; `npm test` 481/481; `npm run lint` 0 lỗi. `grep -nE "fetch|@/client/api|clinical-api"` trên ô lệnh và 3 file shared không ra dòng nào.
 
+### Thiết kế "Trợ lý gọn": bong bóng, gọi phiếu mẫu bằng tên, câu quen (chưa code)
+- **Loại:** Tài liệu, Thiết kế
+- **Thay đổi:** Thêm `docs/superpowers/specs/2026-11-27-tro-ly-gon-design.md`. Bản đề xuất cách chuyển bong bóng Trợ lý (b7c0900), gọi phiếu mẫu bằng tên và câu quen (d8fa4f8) từ nhánh `thanh` sang `dev`. Hướng chọn: mẫu, gõ tắt, câu quen chạy trên máy, không gọi AI; chỉ lời nói đi qua luồng che PII → AI trích có bằng chứng → đề xuất. Không sửa lõi `src/server/clinical`, `src/shared/clinical`. Ô do mẫu điền lưu như bác sĩ nhập. Có 4 câu hỏi chờ bạn cùng nhóm.
+- **Lý do:** Giảm thời gian bác sĩ điền phiếu (nhật ký 16/11: điền phiếu 3–10 phút, dài hơn khám ở 4/6 ca). AI của `dev` chỉ được trích từ lời nói, nên không thể để AI viết câu quen hay điền chỗ trống trong mẫu như ở `thanh`.
+- **Kế hoạch triển khai:** `docs/superpowers/plans/2026-11-27-tro-ly-gon.md`, 5 task: xử lý lệnh nhanh, nguồn ô do mẫu và gõ tắt, áp lệnh vào phiếu và ô lệnh, bong bóng (chờ câu hỏi 1), số đo và tài liệu.
+- **File:** `docs/superpowers/specs/2026-11-27-tro-ly-gon-design.md`, `docs/superpowers/plans/2026-11-27-tro-ly-gon.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** Đối chiếu các dòng code dẫn trong thiết kế và kế hoạch với `dev` (61acd56). Không có thay đổi code.
+
 ### Chuyển gói chỉ định, bước Xác nhận chỉ định và gợi ý theo chẩn đoán từ nhánh `thanh` sang `dev`
 - **Loại:** Tính năng, Chuyển code giữa nhánh
 - **Thay đổi:** Màn Chỉ định dịch vụ (`src/client/eform/ChiDinhTab.tsx`) chia hai bước; giữ nguyên các phần `dev` đã có (bác sĩ xác nhận không chỉ định, chẩn đoán/lịch sử lâm sàng chỉ định, vị trí và bên, chọn lại dòng AI chưa chắc, Lưu nháp).

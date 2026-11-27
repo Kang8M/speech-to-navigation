@@ -4,6 +4,17 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-27
 
+### Chuyển gói chỉ định, bước Xác nhận chỉ định và gợi ý theo chẩn đoán từ nhánh `thanh` sang `dev`
+- **Loại:** Tính năng, Chuyển code giữa nhánh
+- **Thay đổi:** Màn Chỉ định dịch vụ (`src/client/eform/ChiDinhTab.tsx`) chia hai bước; giữ nguyên các phần `dev` đã có (bác sĩ xác nhận không chỉ định, chẩn đoán/lịch sử lâm sàng chỉ định, vị trí và bên, chọn lại dòng AI chưa chắc, Lưu nháp).
+  - **Bước 1:** khung "Gói chỉ định" (`GoiChiDinh.tsx`): gói cá nhân / gói được chia sẻ, tìm gói, bấm gói mở hộp chọn từng dịch vụ rồi thêm vào danh sách. Gói giả ở `data/eform/goi-chi-dinh.json`, chỉ ghi tên dịch vụ, mã gán ở server bằng `src/shared/match.ts` (`src/shared/eform/goi-chi-dinh.ts`).
+  - **Bước 2:** "Tiếp tục" sang `XacNhanChiDinh.tsx`: tích đủ điều kiện BHYT từng dịch vụ, nhập Chẩn đoán/Lịch sử lâm sàng (bắt buộc), buồng, giường; "Xác nhận chỉ định" chỉ mô phỏng (báo số dịch vụ và thành tiền theo giá giả `data/eform/gia-dich-vu.json`), chưa nối hệ thống thật.
+  - **Gợi ý theo chẩn đoán:** `data/eform/goi-y-theo-chan-doan.json` từ 12 lên 57 bộ mẫu giả; mã ICD trong bộ mẫu có thể là tiền tố ("H66" khớp H66.x, `khopMaIcd`); dòng `tuy_chon` hiện nhưng không tích sẵn. Màn chỉ định chỉ dùng phần chỉ định; phần đơn thuốc trong dữ liệu giữ nguyên định dạng cũ, không hiện ở đây. `data/catalog/dich-vu.json` thêm các dịch vụ bộ mẫu cần.
+  - Không gọi AI, không thêm API.
+- **Lý do:** Tiếp tục chuyển từng tính năng của `thanh` thành PR nhỏ (sau PR #6, #7). Phần kê đơn của `thanh` không chuyển vì `dev` đã đưa kê đơn ra ngoài phạm vi.
+- **File:** `src/client/eform/{ChiDinhTab,GoiChiDinh,XacNhanChiDinh,GoiYTheoChanDoan}.tsx`, `src/shared/eform/{goi-chi-dinh,goi-y,types}.ts` (+test), `src/server/du-lieu/eform.ts`, `src/server/du-lieu/{goi-chi-dinh,goi-y}.test.ts`, `data/eform/{goi-chi-dinh,gia-dich-vu,goi-y-theo-chan-doan}.json`, `data/catalog/dich-vu.json`, `docs/CHANGELOG.md`
+- **Kiểm tra:** `npx tsc --noEmit`; `npm test` 425/425 (dev trước đó 410); `npm run lint` 0 lỗi; `npm run build` qua. Trình duyệt (cổng 3002): chọn gói TMH-003 thêm 3 dịch vụ; bước Xác nhận chặn khi chưa có chẩn đoán, nhập xong báo 3 dịch vụ 5.400.000 VNĐ; chọn ICD H60.0 hiện gợi ý 2 mục tích sẵn + 1 tùy chọn, thêm vào thành 5 dịch vụ, mục đã có bị khoá; không lỗi console.
+
 ### Chuyển gợi ý chữ mờ bấm Tab và bộ gõ tắt từ nhánh `thanh` sang `dev`
 - **Loại:** Tính năng, Chuyển code giữa nhánh
 - **Thay đổi:** Ô chữ tự do của phiếu khám (`TextBox` trong `src/client/eform/fields.tsx`) hiện chữ mờ gợi ý khi con trỏ ở cuối ô; bấm **Tab** nhận, **Esc** bỏ qua. Đi qua ô bằng Tab mà chưa gõ hay bấm chuột thì Tab vẫn chuyển ô như cũ.

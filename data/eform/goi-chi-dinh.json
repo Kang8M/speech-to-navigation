@@ -1,0 +1,82 @@
+{
+  "_ghi_chu": "Gói chỉ định GIẢ, mô phỏng khu Gói chỉ định của màn chỉ định EMR (docs/cau-truc-man-chi-dinh-dich-vu.md). TMH-001 chép theo ảnh gói cắt amydan ngày 09/11, các gói khác tự đặt để demo, kể cả vài gói không phải TMH cho giống danh sách chia sẻ lẫn lộn. Chỉ ghi tên dịch vụ; mã do src/shared/match.ts gán khi nạp trang. 'loai' là ca_nhan (gói của bác sĩ đang đăng nhập) hoặc chia_se. 'icd' là mã hoặc tiền tố mã: chẩn đoán trên phiếu khớp thì gói được đưa lên đầu, để trống thì không bao giờ gợi ý. Kiểm tra bằng npm test.",
+  "goi": [
+    {
+      "ma": "TMH-001",
+      "ten": "Phẫu thuật cắt amydan – nạo VA",
+      "loai": "chia_se",
+      "icd": ["J35"],
+      "dich_vu": [
+        "Chụp X-quang ngực thẳng",
+        "Định lượng Glucose",
+        "Điện giải đồ (Na, K, Cl)",
+        "Định lượng Creatinin",
+        "Đo hoạt độ AST (GOT)",
+        "Đo hoạt độ ALT (GPT)",
+        "Định lượng Fibrinogen",
+        "Định nhóm máu ABO, Rh(D)",
+        "Thời gian thromboplastin hoạt hóa từng phần (APTT)",
+        "Tổng phân tích tế bào máu ngoại vi (bằng máy đếm laser)",
+        "Thời gian prothrombin (PT, TQ)"
+      ]
+    },
+    {
+      "ma": "TMH-002",
+      "ten": "Tiền phẫu nội soi mũi xoang",
+      "loai": "chia_se",
+      "icd": ["J32", "J33", "J34.2"],
+      "dich_vu": [
+        "Chụp CT xoang",
+        "Chụp X-quang ngực thẳng",
+        "Tổng phân tích tế bào máu ngoại vi (bằng máy đếm laser)",
+        "Thời gian prothrombin (PT, TQ)",
+        "Thời gian thromboplastin hoạt hóa từng phần (APTT)",
+        "Định nhóm máu ABO, Rh(D)",
+        "Định lượng Glucose",
+        "Định lượng Creatinin"
+      ]
+    },
+    {
+      "ma": "TMH-003",
+      "ten": "Chẩn đoán ngừng thở khi ngủ",
+      "loai": "chia_se",
+      "icd": [],
+      "dich_vu": ["Đa ký giấc ngủ", "Nội soi mũi xoang", "Nội soi họng thanh quản"]
+    },
+    {
+      "ma": "A",
+      "ten": "Lưu cấp cứu",
+      "loai": "chia_se",
+      "icd": [],
+      "dich_vu": ["Tổng phân tích tế bào máu ngoại vi (bằng máy đếm laser)", "Điện giải đồ (Na, K, Cl)", "Định lượng Glucose"]
+    },
+    {
+      "ma": "200",
+      "ten": "Theo dõi chức năng gan",
+      "loai": "chia_se",
+      "icd": [],
+      "dich_vu": ["Đo hoạt độ AST (GOT)", "Đo hoạt độ ALT (GPT)"]
+    },
+    {
+      "ma": "SL-01",
+      "ten": "Gói sàng lọc tim mạch – tiểu đường",
+      "loai": "chia_se",
+      "icd": [],
+      "dich_vu": ["Định lượng Glucose", "Định lượng Creatinin", "Tổng phân tích tế bào máu ngoại vi (bằng máy đếm laser)", "Chụp X-quang ngực thẳng"]
+    },
+    {
+      "ma": "CN-01",
+      "ten": "Nghe kém – đo thính lực",
+      "loai": "ca_nhan",
+      "icd": ["H90", "H91"],
+      "dich_vu": ["Đo thính lực đơn âm", "Đo nhĩ lượng", "Đo phản xạ cơ bàn đạp"]
+    },
+    {
+      "ma": "CN-02",
+      "ten": "Viêm mũi xoang – nội soi, CT",
+      "loai": "ca_nhan",
+      "icd": ["J01", "J32"],
+      "dich_vu": ["Nội soi mũi xoang", "Chụp CT xoang"]
+    }
+  ]
+}

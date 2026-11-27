@@ -253,5 +253,92 @@
       "test liên cầu",
       "test nhanh liên cầu"
     ]
+  },
+  {
+    "ma": "DV-TMH-031",
+    "ten": "Chụp X-quang ngực thẳng",
+    "ten_khac": [
+      "x-quang ngực",
+      "xquang ngực thẳng",
+      "chụp phổi thẳng"
+    ]
+  },
+  {
+    "ma": "DV-TMH-032",
+    "ten": "Định lượng Glucose",
+    "ten_khac": [
+      "glucose máu",
+      "đường máu"
+    ]
+  },
+  {
+    "ma": "DV-TMH-033",
+    "ten": "Điện giải đồ (Na, K, Cl)",
+    "ten_khac": [
+      "điện giải đồ",
+      "điện giải máu"
+    ]
+  },
+  {
+    "ma": "DV-TMH-034",
+    "ten": "Định lượng Creatinin",
+    "ten_khac": [
+      "creatinin máu"
+    ]
+  },
+  {
+    "ma": "DV-TMH-035",
+    "ten": "Đo hoạt độ AST (GOT)",
+    "ten_khac": [
+      "men gan AST",
+      "xét nghiệm GOT"
+    ]
+  },
+  {
+    "ma": "DV-TMH-036",
+    "ten": "Đo hoạt độ ALT (GPT)",
+    "ten_khac": [
+      "men gan ALT",
+      "xét nghiệm GPT"
+    ]
+  },
+  {
+    "ma": "DV-TMH-037",
+    "ten": "Định lượng Fibrinogen",
+    "ten_khac": [
+      "fibrinogen máu"
+    ]
+  },
+  {
+    "ma": "DV-TMH-038",
+    "ten": "Định nhóm máu ABO, Rh(D)",
+    "ten_khac": [
+      "nhóm máu",
+      "định nhóm máu"
+    ]
+  },
+  {
+    "ma": "DV-TMH-039",
+    "ten": "Thời gian thromboplastin hoạt hóa từng phần (APTT)",
+    "ten_khac": [
+      "APTT",
+      "TCK"
+    ]
+  },
+  {
+    "ma": "DV-TMH-040",
+    "ten": "Thời gian prothrombin (PT, TQ)",
+    "ten_khac": [
+      "tỷ lệ prothrombin",
+      "prothrombin"
+    ]
+  },
+  {
+    "ma": "DV-TMH-041",
+    "ten": "Đa ký giấc ngủ",
+    "ten_khac": [
+      "đa ký hô hấp",
+      "đo giấc ngủ"
+    ]
   }
 ]

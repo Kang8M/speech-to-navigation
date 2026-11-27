@@ -4,12 +4,12 @@ import { useState, type ReactNode } from "react";
 import { useEform } from "@/client/eform/EformContext";
 import { BTN_AI, BTN_OUTLINE, SourceBadge } from "@/client/eform/fields";
 import { splitCodes } from "@/client/eform/IcdField";
-import type { MauGoiY } from "@/shared/eform/goi-y";
+import { khoaDong as khoa, type MauGoiY } from "@/shared/eform/goi-y";
 import { ghepGoiY, hayKe, soLanDaKe } from "@/shared/eform/thoi-quen";
 import type { Nguon } from "@/shared/eform/types";
 
 /** Thứ tự lấy mã: chẩn đoán ra viện (xác định) trước, rồi ban đầu, rồi kèm theo */
-const TRUONG_ICD = ["icd_ra_vien", "icd_ban_dau", "icd_kem_theo"];
+export const TRUONG_ICD = ["icd_ra_vien", "icd_ban_dau", "icd_kem_theo"];
 
 interface Dong {
   ma: string;
@@ -30,12 +30,11 @@ interface Props<T extends Dong> {
   phuTro?: (mau: MauGoiY) => ReactNode;
 }
 
-const khoa = (row: Dong) => row.ma || row.ten.toLowerCase();
-
 /**
  * Gợi ý theo mã ICD10 đang chọn trên phiếu khám. Không tự thêm gì: bác sĩ tích chọn rồi bấm Thêm.
  * Bác sĩ đã từng Lưu đơn cho cùng chẩn đoán chính thì nhóm "Đơn anh/chị đã kê" đứng đầu, chỉ tích sẵn dòng
- * hay kê; khi đó bộ mẫu chung không tích sẵn dòng nào.
+ * hay kê; khi đó bộ mẫu chung không tích sẵn dòng nào. Dòng tùy chọn của bộ mẫu (xét nghiệm khi cần…)
+ * không bao giờ tích sẵn.
  */
 export function GoiYTheoChanDoan<T extends Dong>({ rows, lay, moTa, canhBao, onAdd, phuTro }: Props<T>) {
   const { data, get, notify } = useEform();
@@ -47,7 +46,7 @@ export function GoiYTheoChanDoan<T extends Dong>({ rows, lay, moTa, canhBao, onA
   const coThoiQuen = nhom.some(({ mau }) => mau.cuaToi);
   const daCo = new Set(rows.map(khoa));
 
-  // Mỗi dòng gợi ý: trùng dòng đang có hoặc trùng gợi ý phía trên thì không tích được; có cảnh báo thì bỏ tích sẵn
+  // Mỗi dòng gợi ý: trùng dòng đang có hoặc trùng gợi ý phía trên thì không tích được; có cảnh báo hoặc tùy chọn thì bỏ tích sẵn
   const daGap = new Set<string>();
   const danhSach = nhom.map(({ ma, mau }) => ({
     ma,
@@ -58,8 +57,9 @@ export function GoiYTheoChanDoan<T extends Dong>({ rows, lay, moTa, canhBao, onA
       daGap.add(k);
       const loi = canhBao?.(row) ?? null;
       const id = `${mau.id}:${i}`;
-      const macDinh = !loi && (mau.cuaToi ? hayKe(mau, row) : !coThoiQuen);
-      return { id, row, trung, loi, chon: !trung && (tich[id] ?? macDinh) };
+      const tuyChon = Boolean(mau.tuyChon?.includes(k));
+      const macDinh = !loi && !tuyChon && (mau.cuaToi ? hayKe(mau, row) : !coThoiQuen);
+      return { id, row, trung, loi, tuyChon, chon: !trung && (tich[id] ?? macDinh) };
     }),
   }));
   const daChon = danhSach.flatMap((g) => g.dong.filter((d) => d.chon).map((d) => d.row));
@@ -108,7 +108,7 @@ export function GoiYTheoChanDoan<T extends Dong>({ rows, lay, moTa, canhBao, onA
               </div>
               {dong.length === 0 && <p className="text-xs text-ef-phu">Bộ mẫu không có mục nào ở phần này.</p>}
               <ul className="space-y-1">
-                {dong.map(({ id, row, trung, loi, chon }) => (
+                {dong.map(({ id, row, trung, loi, tuyChon, chon }) => (
                   <li key={id}>
                     <label className={`flex items-start gap-2 ${trung ? "opacity-60" : "cursor-pointer"}`}>
                       <input
@@ -126,6 +126,7 @@ export function GoiYTheoChanDoan<T extends Dong>({ rows, lay, moTa, canhBao, onA
                           </span>
                         )}
                         {mau.cuaToi && <span className="ml-1 text-xs font-semibold text-tim">· kê {soLanDaKe(mau, row)}</span>}
+                        {tuyChon && <span className="ml-1 text-xs text-ef-phu">· tùy chọn</span>}
                         {moTa && moTa(row) && <span className="block text-xs text-ef-phu">{moTa(row)}</span>}
                         {trung && <span className="block text-xs text-ef-phu">{trung}</span>}
                         {loi && (

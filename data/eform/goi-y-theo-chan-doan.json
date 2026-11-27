@@ -1,129 +1,2866 @@
 {
-  "_ghi_chu": "Bộ mẫu GIẢ để demo gợi ý chỉ định và đơn thuốc theo chẩn đoán. Liều chỉ là minh họa, không dùng cho lâm sàng. Chỉ ghi tên dịch vụ/thuốc; mã do src/shared/match.ts gán khi nạp trang. Thay bằng danh sách bệnh hay gặp do bác sĩ đưa.",
+  "_ghi_chu": "Bộ mẫu GIẢ để demo gợi ý chỉ định và đơn thuốc theo chẩn đoán. Liều chỉ là minh họa, không dùng cho lâm sàng. Chỉ ghi tên dịch vụ/thuốc; mã do src/shared/match.ts gán khi nạp trang. 'icd' là mã hoặc tiền tố mã ('H66' khớp H66.x), các bộ không chồng mã lên nhau. Dòng có 'tuy_chon': true hiện trong danh sách nhưng không tích sẵn (liều trẻ em, kháng sinh thay thế khi dị ứng, xét nghiệm khi cần). Thay bằng danh sách bệnh hay gặp do bác sĩ đưa. Kiểm tra bằng npm test.",
   "mau": [
     {
-      "id": "viem-tai-giua-cap",
-      "ten": "Viêm tai giữa cấp",
-      "icd": ["H66.0", "H65.9"],
-      "chi_dinh": [{ "ten": "Nội soi tai" }, { "ten": "Đo nhĩ lượng" }],
-      "don_thuoc": [
-        { "ten": "Augmentin", "ham_luong": "625 mg", "duong_dung": "Uống", "lieu_moi_lan": "1 viên", "so_lan_ngay": "2", "thoi_diem": "Sáng, tối sau ăn", "so_ngay": "7" },
-        { "ten": "Paracetamol", "ham_luong": "500 mg", "duong_dung": "Uống", "lieu_moi_lan": "1 viên", "so_lan_ngay": "3", "thoi_diem": "Khi sốt hoặc đau", "so_ngay": "3" }
-      ],
-      "loi_dan": "Giữ khô tai, không ngoáy tai. Tái khám sau 7 ngày hoặc sớm hơn nếu sốt cao, đau tai tăng, chảy mủ tai."
-    },
-    {
-      "id": "viem-tai-giua-man-dot-cap",
-      "ten": "Viêm tai giữa mạn có mủ, đợt cấp",
-      "icd": ["H66.3", "H72.9"],
-      "chi_dinh": [{ "ten": "Nội soi tai" }, { "ten": "Đo thính lực đơn âm" }, { "ten": "Làm sạch ống tai, hút dịch tai" }],
-      "don_thuoc": [
-        { "ten": "Ciprofloxacin nhỏ tai", "ham_luong": "0,3%", "duong_dung": "Nhỏ tai", "lieu_moi_lan": "5 giọt", "so_lan_ngay": "2", "thoi_diem": "", "so_ngay": "7", "ghi_chu": "Tai bệnh" },
-        { "ten": "Augmentin", "ham_luong": "625 mg", "duong_dung": "Uống", "lieu_moi_lan": "1 viên", "so_lan_ngay": "2", "thoi_diem": "Sáng, tối sau ăn", "so_ngay": "7" },
-        { "ten": "Paracetamol", "ham_luong": "500 mg", "duong_dung": "Uống", "lieu_moi_lan": "1 viên", "so_lan_ngay": "3", "thoi_diem": "Sau ăn", "so_ngay": "5" }
-      ],
-      "loi_dan": "Giữ khô tai, tránh để nước vào tai khi tắm gội. Tái khám sau 7 ngày, cân nhắc phẫu thuật vá nhĩ khi tai khô."
-    },
-    {
       "id": "viem-tai-ngoai",
-      "ten": "Viêm tai ngoài",
-      "icd": ["H60.9"],
-      "chi_dinh": [{ "ten": "Nội soi tai" }, { "ten": "Làm sạch ống tai, hút dịch tai" }],
-      "don_thuoc": [
-        { "ten": "Ofloxacin nhỏ tai", "ham_luong": "0,3%", "duong_dung": "Nhỏ tai", "lieu_moi_lan": "5 giọt", "so_lan_ngay": "2", "thoi_diem": "", "so_ngay": "7", "ghi_chu": "Tai bệnh" },
-        { "ten": "Paracetamol", "ham_luong": "500 mg", "duong_dung": "Uống", "lieu_moi_lan": "1 viên", "so_lan_ngay": "3", "thoi_diem": "Khi đau", "so_ngay": "3" }
+      "ten": "Viêm tai ngoài, nhọt ống tai",
+      "icd": [
+        "H60"
       ],
-      "loi_dan": "Không ngoáy tai, tránh nước vào tai trong thời gian điều trị. Tái khám sau 5–7 ngày."
+      "chi_dinh": [
+        {
+          "ten": "Nội soi tai"
+        },
+        {
+          "ten": "Làm sạch ống tai, hút dịch tai"
+        },
+        {
+          "ten": "Trích nhọt ống tai ngoài",
+          "tuy_chon": true
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Ciprofloxacin nhỏ tai",
+          "ham_luong": "0,3%",
+          "duong_dung": "Nhỏ tai",
+          "lieu_moi_lan": "5 giọt",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối",
+          "so_ngay": "7"
+        },
+        {
+          "ten": "Paracetamol",
+          "ham_luong": "500 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "3",
+          "thoi_diem": "Khi đau",
+          "so_ngay": "3"
+        },
+        {
+          "ten": "Ofloxacin nhỏ tai",
+          "ham_luong": "0,3%",
+          "duong_dung": "Nhỏ tai",
+          "lieu_moi_lan": "5 giọt",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối",
+          "so_ngay": "7",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Augmentin",
+          "ham_luong": "625 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "7",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Ibuprofen",
+          "ham_luong": "400 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sau ăn, khi đau",
+          "so_ngay": "5",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Giữ khô tai, không ngoáy tai, không đi bơi trong thời gian điều trị. Tái khám nếu sưng đau lan ra vành tai, sốt."
+    },
+    {
+      "id": "viem-sun-vanh-tai",
+      "ten": "Viêm sụn vành tai",
+      "icd": [
+        "H61.0"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Nội soi tai"
+        },
+        {
+          "ten": "Tổng phân tích tế bào máu ngoại vi (bằng máy đếm laser)"
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Augmentin",
+          "ham_luong": "625 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "7"
+        },
+        {
+          "ten": "Ciprofloxacin nhỏ tai",
+          "ham_luong": "0,3%",
+          "duong_dung": "Nhỏ tai",
+          "lieu_moi_lan": "5 giọt",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối",
+          "so_ngay": "7"
+        },
+        {
+          "ten": "Paracetamol",
+          "ham_luong": "500 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "3",
+          "thoi_diem": "Khi đau",
+          "so_ngay": "3"
+        },
+        {
+          "ten": "Clarithromycin",
+          "ham_luong": "500 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "7",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Tháo khuyên tai, không nằm đè lên tai bệnh. Quay lại ngay nếu vành tai sưng phập phều, sốt cao."
     },
     {
       "id": "nut-ray-tai",
       "ten": "Nút ráy tai",
-      "icd": ["H61.2"],
-      "chi_dinh": [{ "ten": "Nội soi tai" }, { "ten": "Lấy nút ráy tai" }],
-      "don_thuoc": [],
-      "loi_dan": "Không dùng tăm bông ngoáy sâu trong tai."
+      "icd": [
+        "H61.2"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Lấy nút ráy tai"
+        },
+        {
+          "ten": "Nội soi tai"
+        },
+        {
+          "ten": "Đo thính lực đơn âm",
+          "tuy_chon": true
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Otipax",
+          "ham_luong": "4% + 1%",
+          "duong_dung": "Nhỏ tai",
+          "lieu_moi_lan": "4 giọt",
+          "so_lan_ngay": "3",
+          "so_ngay": "5",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Không ngoáy tai bằng vật cứng, không dùng tăm bông. Lấy ráy định kỳ nếu hay bị nút ráy."
+    },
+    {
+      "id": "zona-tai",
+      "ten": "Zona tai",
+      "icd": [
+        "H62.1"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Nội soi tai"
+        },
+        {
+          "ten": "Đo thính lực đơn âm"
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Paracetamol",
+          "ham_luong": "500 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "3",
+          "thoi_diem": "Khi đau",
+          "so_ngay": "3"
+        },
+        {
+          "ten": "Prednisolon",
+          "ham_luong": "5 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "4 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sau ăn sáng, trưa",
+          "so_ngay": "7",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Không chọc vỡ mụn nước. Quay lại ngay nếu méo miệng, nhắm mắt không kín, nghe kém, chóng mặt."
+    },
+    {
+      "id": "nam-ong-tai",
+      "ten": "Nấm ống tai",
+      "icd": [
+        "H62.2"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Nội soi tai"
+        },
+        {
+          "ten": "Làm sạch ống tai, hút dịch tai"
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Clotrimazol nhỏ tai",
+          "ham_luong": "1%",
+          "duong_dung": "Nhỏ tai",
+          "lieu_moi_lan": "3 giọt",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối",
+          "so_ngay": "14"
+        },
+        {
+          "ten": "Loratadin",
+          "ham_luong": "10 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "1",
+          "thoi_diem": "Buổi tối",
+          "so_ngay": "7",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Giữ khô tai, không ngoáy tai, không tự nhỏ thuốc kháng sinh. Dùng thuốc đủ 2 tuần dù hết ngứa."
     },
     {
       "id": "di-vat-tai",
       "ten": "Dị vật tai",
-      "icd": ["T16"],
-      "chi_dinh": [{ "ten": "Nội soi tai" }, { "ten": "Lấy dị vật tai" }],
-      "don_thuoc": [],
-      "loi_dan": "Tái khám ngay nếu đau tai, chảy dịch hoặc nghe kém sau khi lấy dị vật."
+      "icd": [
+        "T16"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Lấy dị vật tai"
+        },
+        {
+          "ten": "Nội soi tai"
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Ciprofloxacin nhỏ tai",
+          "ham_luong": "0,3%",
+          "duong_dung": "Nhỏ tai",
+          "lieu_moi_lan": "5 giọt",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối",
+          "so_ngay": "7",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Paracetamol",
+          "ham_luong": "500 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "3",
+          "thoi_diem": "Khi đau",
+          "so_ngay": "3",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Không tự lấy dị vật bằng vật cứng. Để vật nhỏ xa tầm tay trẻ. Tái khám nếu đau tai, chảy dịch tai."
     },
     {
-      "id": "nghe-kem-u-tai",
-      "ten": "Nghe kém, ù tai",
-      "icd": ["H91.9", "H93.1"],
-      "chi_dinh": [{ "ten": "Nội soi tai" }, { "ten": "Đo thính lực đơn âm" }, { "ten": "Đo nhĩ lượng" }],
+      "id": "viem-tai-giua-u-dich",
+      "ten": "Viêm tai giữa ứ dịch, tắc vòi tai",
+      "icd": [
+        "H65",
+        "H68",
+        "H69"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Nội soi tai"
+        },
+        {
+          "ten": "Đo nhĩ lượng"
+        },
+        {
+          "ten": "Đo thính lực đơn âm"
+        },
+        {
+          "ten": "Nội soi tai mũi họng",
+          "tuy_chon": true
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Mometason xịt mũi",
+          "ham_luong": "50 mcg/liều",
+          "duong_dung": "Xịt mũi",
+          "lieu_moi_lan": "2 xịt mỗi bên",
+          "so_lan_ngay": "1",
+          "thoi_diem": "Buổi sáng",
+          "so_ngay": "30"
+        },
+        {
+          "ten": "Natri clorid 0,9%",
+          "ham_luong": "0,9%",
+          "duong_dung": "Nhỏ mũi",
+          "lieu_moi_lan": "3 giọt mỗi bên",
+          "so_lan_ngay": "3",
+          "so_ngay": "7"
+        },
+        {
+          "ten": "Methylprednisolon",
+          "ham_luong": "16 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "1",
+          "thoi_diem": "Sau ăn sáng",
+          "so_ngay": "5",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Desloratadin",
+          "ham_luong": "5 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "1",
+          "thoi_diem": "Buổi tối",
+          "so_ngay": "14",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Desloratadin siro",
+          "ham_luong": "0,5 mg/ml",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "2,5 ml",
+          "so_lan_ngay": "1",
+          "thoi_diem": "Buổi tối",
+          "so_ngay": "14",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Tập thông vòi tai: ngậm miệng, bịt mũi, thổi nhẹ. Vệ sinh mũi hằng ngày. Tái khám sau 4 tuần đo lại nhĩ lượng."
+    },
+    {
+      "id": "viem-tai-giua-cap",
+      "ten": "Viêm tai giữa cấp",
+      "icd": [
+        "H66.0",
+        "H66.4",
+        "H66.9",
+        "H67"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Nội soi tai"
+        },
+        {
+          "ten": "Đo nhĩ lượng"
+        },
+        {
+          "ten": "Tổng phân tích tế bào máu ngoại vi (bằng máy đếm laser)",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Trích rạch màng nhĩ",
+          "tuy_chon": true
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Augmentin",
+          "ham_luong": "625 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "7"
+        },
+        {
+          "ten": "Paracetamol",
+          "ham_luong": "500 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "3",
+          "thoi_diem": "Khi sốt hoặc đau",
+          "so_ngay": "3"
+        },
+        {
+          "ten": "Natri clorid 0,9%",
+          "ham_luong": "0,9%",
+          "duong_dung": "Nhỏ mũi",
+          "lieu_moi_lan": "3 giọt mỗi bên",
+          "so_lan_ngay": "3",
+          "so_ngay": "7"
+        },
+        {
+          "ten": "Amoxicillin",
+          "ham_luong": "250 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "2 gói",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "7",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Paracetamol",
+          "ham_luong": "250 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 gói",
+          "so_lan_ngay": "3",
+          "thoi_diem": "Khi sốt trên 38,5 độ",
+          "so_ngay": "3",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Clarithromycin",
+          "ham_luong": "500 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "7",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Cefuroxim",
+          "ham_luong": "500 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "7",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Giữ khô tai, không ngoáy tai. Uống kháng sinh đủ ngày. Tái khám sau 7 ngày hoặc sớm hơn nếu sốt cao, đau tai tăng, chảy mủ tai."
+    },
+    {
+      "id": "viem-tai-giua-man",
+      "ten": "Viêm tai giữa mạn",
+      "icd": [
+        "H66.1",
+        "H66.2",
+        "H66.3"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Nội soi tai"
+        },
+        {
+          "ten": "Làm sạch ống tai, hút dịch tai"
+        },
+        {
+          "ten": "Đo thính lực đơn âm"
+        },
+        {
+          "ten": "Chụp CLVT tai - xương đá không tiêm thuốc (từ 1-32 dãy)",
+          "tuy_chon": true
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Ciprofloxacin nhỏ tai",
+          "ham_luong": "0,3%",
+          "duong_dung": "Nhỏ tai",
+          "lieu_moi_lan": "5 giọt",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối",
+          "so_ngay": "7"
+        },
+        {
+          "ten": "Augmentin",
+          "ham_luong": "625 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "7"
+        },
+        {
+          "ten": "Ofloxacin nhỏ tai",
+          "ham_luong": "0,3%",
+          "duong_dung": "Nhỏ tai",
+          "lieu_moi_lan": "5 giọt",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối",
+          "so_ngay": "7",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Clarithromycin",
+          "ham_luong": "500 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "7",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Giữ khô tai, không bơi lặn. Khi tắm gội nút tai bằng bông có thấm dầu. Tư vấn phẫu thuật khi tai khô."
+    },
+    {
+      "id": "cholesteatoma-xuong-chum",
+      "ten": "Cholesteatoma, viêm xương chũm",
+      "icd": [
+        "H70",
+        "H71",
+        "H75",
+        "H95"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Nội soi tai"
+        },
+        {
+          "ten": "Chụp CLVT tai - xương đá không tiêm thuốc (từ 1-32 dãy)"
+        },
+        {
+          "ten": "Đo thính lực đơn âm"
+        },
+        {
+          "ten": "Tổng phân tích tế bào máu ngoại vi (bằng máy đếm laser)"
+        },
+        {
+          "ten": "Định lượng CRP (C-Reactive Protein)",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Chụp X-quang Schuller",
+          "tuy_chon": true
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Ciprofloxacin nhỏ tai",
+          "ham_luong": "0,3%",
+          "duong_dung": "Nhỏ tai",
+          "lieu_moi_lan": "5 giọt",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối",
+          "so_ngay": "7"
+        },
+        {
+          "ten": "Augmentin",
+          "ham_luong": "625 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "7"
+        },
+        {
+          "ten": "Paracetamol",
+          "ham_luong": "500 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "3",
+          "thoi_diem": "Khi sốt hoặc đau",
+          "so_ngay": "3"
+        },
+        {
+          "ten": "Cefuroxim",
+          "ham_luong": "500 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "7",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Clarithromycin",
+          "ham_luong": "500 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "7",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Giữ khô tai. Cần phẫu thuật, quay lại cấp cứu ngay nếu đau đầu, nôn, sốt cao, méo miệng, chóng mặt."
+    },
+    {
+      "id": "thung-mang-nhi",
+      "ten": "Thủng màng nhĩ",
+      "icd": [
+        "H72"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Nội soi tai"
+        },
+        {
+          "ten": "Đo thính lực đơn âm"
+        },
+        {
+          "ten": "Đo nhĩ lượng",
+          "tuy_chon": true
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Paracetamol",
+          "ham_luong": "500 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "3",
+          "thoi_diem": "Khi đau",
+          "so_ngay": "3"
+        },
+        {
+          "ten": "Ciprofloxacin nhỏ tai",
+          "ham_luong": "0,3%",
+          "duong_dung": "Nhỏ tai",
+          "lieu_moi_lan": "5 giọt",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối",
+          "so_ngay": "7",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Augmentin",
+          "ham_luong": "625 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "7",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Giữ khô tai, không nhỏ thuốc tự mua, không xì mũi mạnh. Thủng do chấn thương thường tự liền sau 4–6 tuần."
+    },
+    {
+      "id": "viem-mang-nhi",
+      "ten": "Viêm màng nhĩ",
+      "icd": [
+        "H73"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Nội soi tai"
+        },
+        {
+          "ten": "Đo thính lực đơn âm"
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Otipax",
+          "ham_luong": "4% + 1%",
+          "duong_dung": "Nhỏ tai",
+          "lieu_moi_lan": "4 giọt",
+          "so_lan_ngay": "3",
+          "so_ngay": "5"
+        },
+        {
+          "ten": "Paracetamol",
+          "ham_luong": "500 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "3",
+          "thoi_diem": "Khi đau",
+          "so_ngay": "3"
+        },
+        {
+          "ten": "Augmentin",
+          "ham_luong": "625 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "7",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Giữ khô tai, không ngoáy tai. Quay lại nếu nghe kém tăng, chóng mặt."
+    },
+    {
+      "id": "xo-nhi-xop-xo",
+      "ten": "Xơ nhĩ, xốp xơ tai",
+      "icd": [
+        "H74",
+        "H80"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Nội soi tai"
+        },
+        {
+          "ten": "Đo thính lực đơn âm"
+        },
+        {
+          "ten": "Đo nhĩ lượng"
+        },
+        {
+          "ten": "Đo phản xạ cơ bàn đạp"
+        },
+        {
+          "ten": "Chụp CLVT tai - xương đá không tiêm thuốc (từ 1-32 dãy)",
+          "tuy_chon": true
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Ginkgo biloba",
+          "ham_luong": "40 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "30",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Tránh tiếng ồn lớn. Đo thính lực định kỳ 6 tháng. Tư vấn máy trợ thính hoặc phẫu thuật."
+    },
+    {
+      "id": "meniere",
+      "ten": "Bệnh Ménière",
+      "icd": [
+        "H81.0"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Đo thính lực đơn âm"
+        },
+        {
+          "ten": "Đo nhĩ lượng"
+        },
+        {
+          "ten": "Nội soi tai",
+          "tuy_chon": true
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Betahistin",
+          "ham_luong": "16 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "3",
+          "thoi_diem": "Sau ăn",
+          "so_ngay": "14"
+        },
+        {
+          "ten": "Ginkgo biloba",
+          "ham_luong": "40 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "30"
+        },
+        {
+          "ten": "Methylprednisolon",
+          "ham_luong": "16 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "1",
+          "thoi_diem": "Sau ăn sáng",
+          "so_ngay": "5",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Ăn nhạt dưới 2 g muối mỗi ngày, hạn chế cà phê, rượu bia. Ghi lại các cơn chóng mặt. Không lái xe khi có cơn."
+    },
+    {
+      "id": "chong-mat-tu-the",
+      "ten": "Chóng mặt tư thế kịch phát lành tính",
+      "icd": [
+        "H81.1"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Nội soi tai"
+        },
+        {
+          "ten": "Đo thính lực đơn âm",
+          "tuy_chon": true
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Betahistin",
+          "ham_luong": "16 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "3",
+          "thoi_diem": "Sau ăn",
+          "so_ngay": "14",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Ngủ kê cao gối 2 ngày đầu, tránh cúi ngửa đầu đột ngột. Tập bài tập tại nhà theo hướng dẫn."
+    },
+    {
+      "id": "viem-than-kinh-tien-dinh",
+      "ten": "Viêm dây thần kinh tiền đình",
+      "icd": [
+        "H81.2"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Đo thính lực đơn âm"
+        },
+        {
+          "ten": "Nội soi tai"
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Betahistin",
+          "ham_luong": "16 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "3",
+          "thoi_diem": "Sau ăn",
+          "so_ngay": "14"
+        },
+        {
+          "ten": "Methylprednisolon",
+          "ham_luong": "16 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "1",
+          "thoi_diem": "Sau ăn sáng",
+          "so_ngay": "5",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Esomeprazol",
+          "ham_luong": "40 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "1",
+          "thoi_diem": "Trước ăn sáng 30 phút",
+          "so_ngay": "30",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Tập phục hồi tiền đình sớm, vận động nhẹ khi đỡ chóng mặt. Quay lại ngay nếu đau đầu dữ dội, nói ngọng, yếu tay chân."
+    },
+    {
+      "id": "roi-loan-tien-dinh",
+      "ten": "Rối loạn tiền đình, chóng mặt",
+      "icd": [
+        "H81.3",
+        "H81.4",
+        "H81.8",
+        "H81.9",
+        "H82",
+        "H83.0",
+        "H83.2",
+        "R42"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Nội soi tai"
+        },
+        {
+          "ten": "Đo thính lực đơn âm"
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Betahistin",
+          "ham_luong": "16 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "3",
+          "thoi_diem": "Sau ăn",
+          "so_ngay": "14"
+        },
+        {
+          "ten": "Ginkgo biloba",
+          "ham_luong": "40 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "30"
+        }
+      ],
+      "loi_dan": "Đứng dậy từ từ, tránh quay đầu đột ngột. Không lái xe khi còn chóng mặt. Quay lại ngay nếu đau đầu dữ dội, yếu tay chân."
+    },
+    {
+      "id": "nghe-kem-tieng-on",
+      "ten": "Nghe kém do tiếng ồn",
+      "icd": [
+        "H83.3"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Nội soi tai"
+        },
+        {
+          "ten": "Đo thính lực đơn âm"
+        },
+        {
+          "ten": "Đo nhĩ lượng"
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Ginkgo biloba",
+          "ham_luong": "40 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "30",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Đeo nút tai chống ồn khi làm việc, không nghe tai nghe âm lượng lớn. Đo thính lực định kỳ 6 tháng."
+    },
+    {
+      "id": "nghe-kem",
+      "ten": "Nghe kém",
+      "icd": [
+        "H90",
+        "H91.0",
+        "H91.3",
+        "H91.8",
+        "H91.9"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Nội soi tai"
+        },
+        {
+          "ten": "Đo thính lực đơn âm"
+        },
+        {
+          "ten": "Đo nhĩ lượng"
+        },
+        {
+          "ten": "Đo âm ốc tai (OAE)",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Đo điện thính giác thân não (ABR)",
+          "tuy_chon": true
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Ginkgo biloba",
+          "ham_luong": "40 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "30",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Tránh tiếng ồn, không dùng thuốc độc tai. Tư vấn máy trợ thính nếu nghe kém nhiều."
+    },
+    {
+      "id": "lao-thinh",
+      "ten": "Nghe kém tuổi già",
+      "icd": [
+        "H91.1"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Nội soi tai"
+        },
+        {
+          "ten": "Đo thính lực đơn âm"
+        },
+        {
+          "ten": "Đo nhĩ lượng",
+          "tuy_chon": true
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Ginkgo biloba",
+          "ham_luong": "40 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "30",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Tư vấn đeo máy trợ thính. Người nhà nói chậm, rõ, đối diện người bệnh. Đo thính lực mỗi năm."
+    },
+    {
+      "id": "diec-dot-ngot",
+      "ten": "Điếc đột ngột",
+      "icd": [
+        "H91.2"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Đo thính lực đơn âm"
+        },
+        {
+          "ten": "Đo nhĩ lượng"
+        },
+        {
+          "ten": "Nội soi tai"
+        },
+        {
+          "ten": "Tổng phân tích tế bào máu ngoại vi (bằng máy đếm laser)",
+          "tuy_chon": true
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Prednisolon",
+          "ham_luong": "5 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "4 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sau ăn sáng, trưa",
+          "so_ngay": "7"
+        },
+        {
+          "ten": "Esomeprazol",
+          "ham_luong": "40 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "1",
+          "thoi_diem": "Trước ăn sáng 30 phút",
+          "so_ngay": "30"
+        },
+        {
+          "ten": "Ginkgo biloba",
+          "ham_luong": "40 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "30"
+        }
+      ],
+      "loi_dan": "Điếc đột ngột cần điều trị càng sớm càng tốt. Nghỉ ngơi, tránh tiếng ồn. Tái khám đo lại thính lực sau 1 tuần."
+    },
+    {
+      "id": "dau-tai",
+      "ten": "Đau tai, chảy dịch tai",
+      "icd": [
+        "H92"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Nội soi tai"
+        },
+        {
+          "ten": "Nội soi tai mũi họng",
+          "tuy_chon": true
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Ibuprofen",
+          "ham_luong": "400 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sau ăn, khi đau",
+          "so_ngay": "5"
+        },
+        {
+          "ten": "Paracetamol",
+          "ham_luong": "500 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "3",
+          "thoi_diem": "Khi đau",
+          "so_ngay": "3",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Ăn mềm, tránh nhai đồ cứng nếu đau tai do khớp thái dương hàm. Khám răng hàm mặt nếu có đau răng."
+    },
+    {
+      "id": "u-tai",
+      "ten": "Ù tai",
+      "icd": [
+        "H93"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Nội soi tai"
+        },
+        {
+          "ten": "Đo thính lực đơn âm"
+        },
+        {
+          "ten": "Đo nhĩ lượng"
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Ginkgo biloba",
+          "ham_luong": "40 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "30"
+        },
+        {
+          "ten": "Betahistin",
+          "ham_luong": "16 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "3",
+          "thoi_diem": "Sau ăn",
+          "so_ngay": "14",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Tránh tiếng ồn lớn, hạn chế cà phê, ngủ đủ giấc. Tái khám nếu ù tai tăng, nghe kém hơn."
+    },
+    {
+      "id": "liet-mat",
+      "ten": "Liệt mặt ngoại biên",
+      "icd": [
+        "G51"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Nội soi tai"
+        },
+        {
+          "ten": "Đo thính lực đơn âm"
+        },
+        {
+          "ten": "Đo phản xạ cơ bàn đạp",
+          "tuy_chon": true
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Prednisolon",
+          "ham_luong": "5 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "4 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sau ăn sáng, trưa",
+          "so_ngay": "7"
+        },
+        {
+          "ten": "Esomeprazol",
+          "ham_luong": "40 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "1",
+          "thoi_diem": "Trước ăn sáng 30 phút",
+          "so_ngay": "30"
+        }
+      ],
+      "loi_dan": "Nhỏ nước mắt nhân tạo, băng che mắt khi ngủ. Tập cơ mặt trước gương. Phối hợp vật lý trị liệu."
+    },
+    {
+      "id": "kham-thinh-luc",
+      "ten": "Khám thính lực định kỳ",
+      "icd": [
+        "Z01.1"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Nội soi tai"
+        },
+        {
+          "ten": "Đo thính lực đơn âm"
+        },
+        {
+          "ten": "Đo nhĩ lượng",
+          "tuy_chon": true
+        }
+      ],
       "don_thuoc": [],
-      "loi_dan": "Tránh môi trường tiếng ồn lớn. Tái khám khi có kết quả đo thính lực."
+      "loi_dan": "Bảo vệ tai khỏi tiếng ồn. Khám lại nếu nghe kém, ù tai."
+    },
+    {
+      "id": "may-tro-thinh",
+      "ten": "Máy trợ thính, thiết bị cấy ghép tai",
+      "icd": [
+        "Z46.1",
+        "Z96.2"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Nội soi tai"
+        },
+        {
+          "ten": "Đo thính lực đơn âm"
+        }
+      ],
+      "don_thuoc": [],
+      "loi_dan": "Vệ sinh máy và khuôn tai hằng ngày, tháo máy khi tắm. Đo thính lực định kỳ 6 tháng."
+    },
+    {
+      "id": "viem-mui-hong-cap",
+      "ten": "Viêm mũi họng cấp, nhiễm trùng hô hấp trên",
+      "icd": [
+        "J00",
+        "J06"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Nội soi tai mũi họng"
+        },
+        {
+          "ten": "Tổng phân tích tế bào máu ngoại vi (bằng máy đếm laser)",
+          "tuy_chon": true
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Paracetamol",
+          "ham_luong": "500 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "3",
+          "thoi_diem": "Khi sốt hoặc đau",
+          "so_ngay": "3"
+        },
+        {
+          "ten": "Natri clorid 0,9%",
+          "ham_luong": "0,9%",
+          "duong_dung": "Nhỏ mũi",
+          "lieu_moi_lan": "3 giọt mỗi bên",
+          "so_lan_ngay": "3",
+          "so_ngay": "7"
+        },
+        {
+          "ten": "Acetylcystein",
+          "ham_luong": "200 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 gói",
+          "so_lan_ngay": "3",
+          "thoi_diem": "Sau ăn",
+          "so_ngay": "7"
+        },
+        {
+          "ten": "Paracetamol",
+          "ham_luong": "250 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 gói",
+          "so_lan_ngay": "3",
+          "thoi_diem": "Khi sốt trên 38,5 độ",
+          "so_ngay": "3",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Loratadin",
+          "ham_luong": "10 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "1",
+          "thoi_diem": "Buổi tối",
+          "so_ngay": "7",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Nghỉ ngơi, uống nhiều nước ấm, vệ sinh mũi bằng nước muối. Quay lại nếu sốt trên 3 ngày, khó thở, đau tai."
     },
     {
       "id": "viem-xoang-cap",
-      "ten": "Viêm mũi xoang cấp",
-      "icd": ["J01.9", "J00"],
-      "chi_dinh": [{ "ten": "Nội soi mũi xoang" }, { "ten": "Hút rửa mũi xoang" }],
-      "don_thuoc": [
-        { "ten": "Augmentin", "ham_luong": "625 mg", "duong_dung": "Uống", "lieu_moi_lan": "1 viên", "so_lan_ngay": "2", "thoi_diem": "Sáng, tối sau ăn", "so_ngay": "10" },
-        { "ten": "Mometason xịt mũi", "ham_luong": "50 mcg/liều", "duong_dung": "Xịt mũi", "lieu_moi_lan": "2 nhát mỗi bên", "so_lan_ngay": "1", "thoi_diem": "Sáng", "so_ngay": "14" },
-        { "ten": "Muối rửa mũi", "ham_luong": "", "duong_dung": "Rửa mũi", "lieu_moi_lan": "1 gói", "so_lan_ngay": "2", "thoi_diem": "Sáng, tối", "so_ngay": "14" }
+      "ten": "Viêm xoang cấp",
+      "icd": [
+        "J01"
       ],
-      "loi_dan": "Rửa mũi trước khi xịt thuốc. Tái khám sau 10 ngày hoặc sớm hơn nếu sốt cao, sưng nề quanh mắt."
+      "chi_dinh": [
+        {
+          "ten": "Nội soi mũi xoang"
+        },
+        {
+          "ten": "Chụp X-quang Blondeau",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Chụp CT xoang",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Hút rửa mũi xoang",
+          "tuy_chon": true
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Augmentin",
+          "ham_luong": "1 g",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "10"
+        },
+        {
+          "ten": "Mometason xịt mũi",
+          "ham_luong": "50 mcg/liều",
+          "duong_dung": "Xịt mũi",
+          "lieu_moi_lan": "2 xịt mỗi bên",
+          "so_lan_ngay": "1",
+          "thoi_diem": "Buổi sáng",
+          "so_ngay": "30"
+        },
+        {
+          "ten": "Muối rửa mũi",
+          "ham_luong": "",
+          "duong_dung": "Rửa mũi",
+          "lieu_moi_lan": "1 gói",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối",
+          "so_ngay": "14"
+        },
+        {
+          "ten": "Paracetamol",
+          "ham_luong": "500 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "3",
+          "thoi_diem": "Khi đau",
+          "so_ngay": "3"
+        },
+        {
+          "ten": "Xylometazolin nhỏ mũi",
+          "ham_luong": "0,05%",
+          "duong_dung": "Nhỏ mũi",
+          "lieu_moi_lan": "2 giọt mỗi bên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối",
+          "so_ngay": "5",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Clarithromycin",
+          "ham_luong": "500 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "7",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Cefuroxim",
+          "ham_luong": "500 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "7",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Metronidazol",
+          "ham_luong": "250 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "2 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "7",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Amoxicillin",
+          "ham_luong": "250 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "2 gói",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "7",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Natri clorid 0,9%",
+          "ham_luong": "0,9%",
+          "duong_dung": "Nhỏ mũi",
+          "lieu_moi_lan": "2 giọt",
+          "so_lan_ngay": "3",
+          "so_ngay": "7",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Rửa mũi nước muối 2–3 lần mỗi ngày, xì mũi nhẹ từng bên. Quay lại ngay nếu sưng nề quanh mắt, nhìn mờ, đau đầu dữ dội."
+    },
+    {
+      "id": "viem-mui-van-mach",
+      "ten": "Viêm mũi vận mạch",
+      "icd": [
+        "J30.0"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Nội soi mũi xoang"
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Fluticason xịt mũi",
+          "ham_luong": "27,5 mcg/liều",
+          "duong_dung": "Xịt mũi",
+          "lieu_moi_lan": "2 xịt mỗi bên",
+          "so_lan_ngay": "1",
+          "thoi_diem": "Buổi sáng",
+          "so_ngay": "30",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Muối rửa mũi",
+          "ham_luong": "",
+          "duong_dung": "Rửa mũi",
+          "lieu_moi_lan": "1 gói",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối",
+          "so_ngay": "14"
+        },
+        {
+          "ten": "Mometason xịt mũi",
+          "ham_luong": "50 mcg/liều",
+          "duong_dung": "Xịt mũi",
+          "lieu_moi_lan": "2 xịt mỗi bên",
+          "so_lan_ngay": "1",
+          "thoi_diem": "Buổi sáng",
+          "so_ngay": "30",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Cetirizin",
+          "ham_luong": "10 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "1",
+          "thoi_diem": "Buổi tối",
+          "so_ngay": "7",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Giữ ấm mũi, đeo khẩu trang khi trời lạnh, tránh mùi mạnh. Không dùng thuốc co mạch kéo dài."
     },
     {
       "id": "viem-mui-di-ung",
       "ten": "Viêm mũi dị ứng",
-      "icd": ["J30.4", "J31.0"],
-      "chi_dinh": [{ "ten": "Nội soi mũi xoang" }],
-      "don_thuoc": [
-        { "ten": "Fexofenadin", "ham_luong": "180 mg", "duong_dung": "Uống", "lieu_moi_lan": "1 viên", "so_lan_ngay": "1", "thoi_diem": "Sáng", "so_ngay": "14" },
-        { "ten": "Mometason xịt mũi", "ham_luong": "50 mcg/liều", "duong_dung": "Xịt mũi", "lieu_moi_lan": "2 nhát mỗi bên", "so_lan_ngay": "1", "thoi_diem": "Sáng", "so_ngay": "30" },
-        { "ten": "Natri clorid 0,9%", "ham_luong": "0,9%", "duong_dung": "Nhỏ mũi", "lieu_moi_lan": "3 giọt mỗi bên", "so_lan_ngay": "3", "thoi_diem": "", "so_ngay": "14" }
+      "icd": [
+        "J30.1",
+        "J30.2",
+        "J30.3",
+        "J30.4"
       ],
-      "loi_dan": "Tránh bụi, lông thú, khói thuốc. Đeo khẩu trang khi ra ngoài."
+      "chi_dinh": [
+        {
+          "ten": "Nội soi mũi xoang"
+        },
+        {
+          "ten": "Nội soi tai mũi họng",
+          "tuy_chon": true
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Fexofenadin",
+          "ham_luong": "180 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "1",
+          "thoi_diem": "Buổi sáng",
+          "so_ngay": "14"
+        },
+        {
+          "ten": "Mometason xịt mũi",
+          "ham_luong": "50 mcg/liều",
+          "duong_dung": "Xịt mũi",
+          "lieu_moi_lan": "2 xịt mỗi bên",
+          "so_lan_ngay": "1",
+          "thoi_diem": "Buổi sáng",
+          "so_ngay": "30"
+        },
+        {
+          "ten": "Natri clorid 0,9%",
+          "ham_luong": "0,9%",
+          "duong_dung": "Nhỏ mũi",
+          "lieu_moi_lan": "3 giọt mỗi bên",
+          "so_lan_ngay": "3",
+          "so_ngay": "7"
+        },
+        {
+          "ten": "Desloratadin",
+          "ham_luong": "5 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "1",
+          "thoi_diem": "Buổi tối",
+          "so_ngay": "14",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Desloratadin siro",
+          "ham_luong": "0,5 mg/ml",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "2,5 ml",
+          "so_lan_ngay": "1",
+          "thoi_diem": "Buổi tối",
+          "so_ngay": "14",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Loratadin",
+          "ham_luong": "10 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "1",
+          "thoi_diem": "Buổi tối",
+          "so_ngay": "7",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Fluticason xịt mũi",
+          "ham_luong": "27,5 mcg/liều",
+          "duong_dung": "Xịt mũi",
+          "lieu_moi_lan": "2 xịt mỗi bên",
+          "so_lan_ngay": "1",
+          "thoi_diem": "Buổi sáng",
+          "so_ngay": "30",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Budesonid xịt mũi",
+          "ham_luong": "64 mcg/liều",
+          "duong_dung": "Xịt mũi",
+          "lieu_moi_lan": "2 xịt mỗi bên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối",
+          "so_ngay": "30",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Tránh bụi nhà, lông thú, phấn hoa, khói thuốc. Xịt thuốc mũi đều đặn kể cả khi đã đỡ."
+    },
+    {
+      "id": "viem-mui-man",
+      "ten": "Viêm mũi mạn",
+      "icd": [
+        "J31.0"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Nội soi mũi xoang"
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Mometason xịt mũi",
+          "ham_luong": "50 mcg/liều",
+          "duong_dung": "Xịt mũi",
+          "lieu_moi_lan": "2 xịt mỗi bên",
+          "so_lan_ngay": "1",
+          "thoi_diem": "Buổi sáng",
+          "so_ngay": "30"
+        },
+        {
+          "ten": "Muối rửa mũi",
+          "ham_luong": "",
+          "duong_dung": "Rửa mũi",
+          "lieu_moi_lan": "1 gói",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối",
+          "so_ngay": "14"
+        },
+        {
+          "ten": "Budesonid xịt mũi",
+          "ham_luong": "64 mcg/liều",
+          "duong_dung": "Xịt mũi",
+          "lieu_moi_lan": "2 xịt mỗi bên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối",
+          "so_ngay": "30",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Ngừng thuốc nhỏ mũi co mạch. Rửa mũi nước muối hằng ngày, tránh khói bụi."
+    },
+    {
+      "id": "viem-mui-hong-man",
+      "ten": "Viêm mũi họng mạn",
+      "icd": [
+        "J31.1"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Nội soi tai mũi họng"
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Muối rửa mũi",
+          "ham_luong": "",
+          "duong_dung": "Rửa mũi",
+          "lieu_moi_lan": "1 gói",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối",
+          "so_ngay": "14"
+        },
+        {
+          "ten": "Mometason xịt mũi",
+          "ham_luong": "50 mcg/liều",
+          "duong_dung": "Xịt mũi",
+          "lieu_moi_lan": "2 xịt mỗi bên",
+          "so_lan_ngay": "1",
+          "thoi_diem": "Buổi sáng",
+          "so_ngay": "30"
+        },
+        {
+          "ten": "Acetylcystein",
+          "ham_luong": "200 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 gói",
+          "so_lan_ngay": "3",
+          "thoi_diem": "Sau ăn",
+          "so_ngay": "7"
+        }
+      ],
+      "loi_dan": "Rửa mũi, súc họng nước muối hằng ngày. Tránh đồ lạnh, khói bụi."
+    },
+    {
+      "id": "viem-xoang-man",
+      "ten": "Viêm xoang mạn",
+      "icd": [
+        "J32"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Nội soi mũi xoang"
+        },
+        {
+          "ten": "Chụp CT xoang"
+        },
+        {
+          "ten": "Hút rửa mũi xoang",
+          "tuy_chon": true
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Mometason xịt mũi",
+          "ham_luong": "50 mcg/liều",
+          "duong_dung": "Xịt mũi",
+          "lieu_moi_lan": "2 xịt mỗi bên",
+          "so_lan_ngay": "1",
+          "thoi_diem": "Buổi sáng",
+          "so_ngay": "30"
+        },
+        {
+          "ten": "Muối rửa mũi",
+          "ham_luong": "",
+          "duong_dung": "Rửa mũi",
+          "lieu_moi_lan": "1 gói",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối",
+          "so_ngay": "14"
+        },
+        {
+          "ten": "Clarithromycin",
+          "ham_luong": "500 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "7",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Augmentin",
+          "ham_luong": "1 g",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "10",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Budesonid xịt mũi",
+          "ham_luong": "64 mcg/liều",
+          "duong_dung": "Xịt mũi",
+          "lieu_moi_lan": "2 xịt mỗi bên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối",
+          "so_ngay": "30",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Methylprednisolon",
+          "ham_luong": "16 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "1",
+          "thoi_diem": "Sau ăn sáng",
+          "so_ngay": "5",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Rửa mũi nước muối 2 lần mỗi ngày, xịt thuốc đều. Tái khám mang phim CT để tư vấn phẫu thuật nếu không đỡ."
+    },
+    {
+      "id": "polyp-mui",
+      "ten": "Polyp mũi",
+      "icd": [
+        "J33"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Nội soi mũi xoang"
+        },
+        {
+          "ten": "Chụp CT xoang"
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Mometason xịt mũi",
+          "ham_luong": "50 mcg/liều",
+          "duong_dung": "Xịt mũi",
+          "lieu_moi_lan": "2 xịt mỗi bên",
+          "so_lan_ngay": "1",
+          "thoi_diem": "Buổi sáng",
+          "so_ngay": "30"
+        },
+        {
+          "ten": "Muối rửa mũi",
+          "ham_luong": "",
+          "duong_dung": "Rửa mũi",
+          "lieu_moi_lan": "1 gói",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối",
+          "so_ngay": "14"
+        },
+        {
+          "ten": "Methylprednisolon",
+          "ham_luong": "16 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "1",
+          "thoi_diem": "Sau ăn sáng",
+          "so_ngay": "7"
+        },
+        {
+          "ten": "Budesonid xịt mũi",
+          "ham_luong": "64 mcg/liều",
+          "duong_dung": "Xịt mũi",
+          "lieu_moi_lan": "2 xịt mỗi bên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối",
+          "so_ngay": "30",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Xịt thuốc mũi kéo dài theo hướng dẫn. Tái khám mang phim CT để tư vấn phẫu thuật nội soi."
+    },
+    {
+      "id": "nhot-tien-dinh-mui",
+      "ten": "Nhọt tiền đình mũi",
+      "icd": [
+        "J34.0"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Nội soi mũi xoang"
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Augmentin",
+          "ham_luong": "625 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "7"
+        },
+        {
+          "ten": "Paracetamol",
+          "ham_luong": "500 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "3",
+          "thoi_diem": "Khi đau",
+          "so_ngay": "3"
+        },
+        {
+          "ten": "Cefuroxim",
+          "ham_luong": "500 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "7",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Clarithromycin",
+          "ham_luong": "500 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "7",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Không nặn nhọt vùng mũi. Quay lại ngay nếu sưng lan lên mắt, sốt cao, đau đầu."
+    },
+    {
+      "id": "nang-xoang",
+      "ten": "Nang xoang",
+      "icd": [
+        "J34.1"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Nội soi mũi xoang"
+        },
+        {
+          "ten": "Chụp CT xoang"
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Muối rửa mũi",
+          "ham_luong": "",
+          "duong_dung": "Rửa mũi",
+          "lieu_moi_lan": "1 gói",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối",
+          "so_ngay": "14",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Nang nhỏ không triệu chứng chỉ cần theo dõi. Tái khám mang phim CT."
+    },
+    {
+      "id": "veo-vach-ngan-cuon-mui",
+      "ten": "Vẹo vách ngăn, quá phát cuốn mũi",
+      "icd": [
+        "J34.2",
+        "J34.3",
+        "J34.8"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Nội soi mũi xoang"
+        },
+        {
+          "ten": "Chụp CT xoang",
+          "tuy_chon": true
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Mometason xịt mũi",
+          "ham_luong": "50 mcg/liều",
+          "duong_dung": "Xịt mũi",
+          "lieu_moi_lan": "2 xịt mỗi bên",
+          "so_lan_ngay": "1",
+          "thoi_diem": "Buổi sáng",
+          "so_ngay": "30"
+        },
+        {
+          "ten": "Muối rửa mũi",
+          "ham_luong": "",
+          "duong_dung": "Rửa mũi",
+          "lieu_moi_lan": "1 gói",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối",
+          "so_ngay": "14"
+        },
+        {
+          "ten": "Xylometazolin nhỏ mũi",
+          "ham_luong": "0,05%",
+          "duong_dung": "Nhỏ mũi",
+          "lieu_moi_lan": "2 giọt mỗi bên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối",
+          "so_ngay": "5",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Rửa mũi nước muối hằng ngày, không dùng thuốc co mạch kéo dài. Tư vấn phẫu thuật nếu ngạt nhiều."
+    },
+    {
+      "id": "chay-mau-mui",
+      "ten": "Chảy máu mũi",
+      "icd": [
+        "R04.0"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Nội soi mũi xoang"
+        },
+        {
+          "ten": "Tổng phân tích tế bào máu ngoại vi (bằng máy đếm laser)"
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Acid tranexamic",
+          "ham_luong": "500 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "3",
+          "thoi_diem": "Sau ăn",
+          "so_ngay": "5"
+        },
+        {
+          "ten": "Natri clorid 0,9%",
+          "ham_luong": "0,9%",
+          "duong_dung": "Nhỏ mũi",
+          "lieu_moi_lan": "3 giọt mỗi bên",
+          "so_lan_ngay": "3",
+          "so_ngay": "7",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Khi chảy máu: ngồi cúi đầu, bóp chặt hai cánh mũi 10 phút. Không ngoáy mũi, không xì mạnh. Theo dõi huyết áp."
+    },
+    {
+      "id": "gay-xuong-chinh-mui",
+      "ten": "Gãy xương chính mũi",
+      "icd": [
+        "S02.2"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Nội soi mũi xoang"
+        },
+        {
+          "ten": "Chụp CT xoang"
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Paracetamol",
+          "ham_luong": "500 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "3",
+          "thoi_diem": "Khi đau",
+          "so_ngay": "3"
+        },
+        {
+          "ten": "Acid tranexamic",
+          "ham_luong": "500 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "3",
+          "thoi_diem": "Sau ăn",
+          "so_ngay": "5"
+        },
+        {
+          "ten": "Ibuprofen",
+          "ham_luong": "400 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sau ăn, khi đau",
+          "so_ngay": "5",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Chườm lạnh 2 ngày đầu, tránh va chạm vào mũi, không xì mũi mạnh. Hẹn nắn chỉnh khi hết nề."
+    },
+    {
+      "id": "mat-khuu-giac",
+      "ten": "Rối loạn khứu giác",
+      "icd": [
+        "R43"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Nội soi mũi xoang"
+        },
+        {
+          "ten": "Chụp CT xoang",
+          "tuy_chon": true
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Mometason xịt mũi",
+          "ham_luong": "50 mcg/liều",
+          "duong_dung": "Xịt mũi",
+          "lieu_moi_lan": "2 xịt mỗi bên",
+          "so_lan_ngay": "1",
+          "thoi_diem": "Buổi sáng",
+          "so_ngay": "30"
+        },
+        {
+          "ten": "Muối rửa mũi",
+          "ham_luong": "",
+          "duong_dung": "Rửa mũi",
+          "lieu_moi_lan": "1 gói",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối",
+          "so_ngay": "14"
+        },
+        {
+          "ten": "Methylprednisolon",
+          "ham_luong": "16 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "1",
+          "thoi_diem": "Sau ăn sáng",
+          "so_ngay": "5",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Tập ngửi 4 mùi quen mỗi ngày 2 lần. Cẩn thận khi dùng bếp ga, thực phẩm ôi thiu."
+    },
+    {
+      "id": "di-vat-mui",
+      "ten": "Dị vật mũi",
+      "icd": [
+        "T17.0",
+        "T17.1"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Lấy dị vật mũi"
+        },
+        {
+          "ten": "Nội soi mũi xoang"
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Natri clorid 0,9%",
+          "ham_luong": "0,9%",
+          "duong_dung": "Nhỏ mũi",
+          "lieu_moi_lan": "3 giọt mỗi bên",
+          "so_lan_ngay": "3",
+          "so_ngay": "7",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Augmentin",
+          "ham_luong": "625 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "7",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Không tự lấy dị vật. Để vật nhỏ, pin cúc áo xa tầm tay trẻ."
+    },
+    {
+      "id": "viem-hong-lien-cau",
+      "ten": "Viêm họng do liên cầu",
+      "icd": [
+        "J02.0",
+        "J03.0"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Test nhanh liên cầu họng"
+        },
+        {
+          "ten": "Nội soi họng thanh quản",
+          "tuy_chon": true
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Amoxicillin",
+          "ham_luong": "500 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "2 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "10"
+        },
+        {
+          "ten": "Paracetamol",
+          "ham_luong": "500 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "3",
+          "thoi_diem": "Khi sốt hoặc đau",
+          "so_ngay": "3"
+        },
+        {
+          "ten": "Azithromycin",
+          "ham_luong": "500 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "1",
+          "thoi_diem": "Sau ăn sáng",
+          "so_ngay": "3",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Cefuroxim",
+          "ham_luong": "500 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "7",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Amoxicillin",
+          "ham_luong": "250 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "2 gói",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "7",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Paracetamol",
+          "ham_luong": "250 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 gói",
+          "so_lan_ngay": "3",
+          "thoi_diem": "Khi sốt trên 38,5 độ",
+          "so_ngay": "3",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Uống kháng sinh đủ 10 ngày dù đã hết sốt. Súc họng nước muối ấm, ăn mềm."
     },
     {
       "id": "viem-hong-cap",
       "ten": "Viêm họng cấp",
-      "icd": ["J02.9"],
-      "chi_dinh": [{ "ten": "Test nhanh liên cầu họng" }],
-      "don_thuoc": [
-        { "ten": "Paracetamol", "ham_luong": "500 mg", "duong_dung": "Uống", "lieu_moi_lan": "1 viên", "so_lan_ngay": "3", "thoi_diem": "Khi sốt hoặc đau", "so_ngay": "3" },
-        { "ten": "Alpha Choay", "ham_luong": "4,2 mg", "duong_dung": "Ngậm dưới lưỡi", "lieu_moi_lan": "2 viên", "so_lan_ngay": "3", "thoi_diem": "", "so_ngay": "5" }
+      "icd": [
+        "J02.8",
+        "J02.9"
       ],
-      "loi_dan": "Súc họng nước muối ấm, uống nhiều nước ấm. Tái khám nếu sốt quá 3 ngày hoặc khó nuốt tăng."
+      "chi_dinh": [
+        {
+          "ten": "Nội soi họng thanh quản"
+        },
+        {
+          "ten": "Test nhanh liên cầu họng",
+          "tuy_chon": true
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Alpha Choay",
+          "ham_luong": "4,2 mg",
+          "duong_dung": "Ngậm",
+          "lieu_moi_lan": "2 viên",
+          "so_lan_ngay": "3",
+          "so_ngay": "5"
+        },
+        {
+          "ten": "Paracetamol",
+          "ham_luong": "500 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "3",
+          "thoi_diem": "Khi sốt hoặc đau",
+          "so_ngay": "3"
+        },
+        {
+          "ten": "Acetylcystein",
+          "ham_luong": "200 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 gói",
+          "so_lan_ngay": "3",
+          "thoi_diem": "Sau ăn",
+          "so_ngay": "7",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Paracetamol",
+          "ham_luong": "250 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 gói",
+          "so_lan_ngay": "3",
+          "thoi_diem": "Khi sốt trên 38,5 độ",
+          "so_ngay": "3",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Amoxicillin",
+          "ham_luong": "500 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "2 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "10",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Súc họng nước muối ấm, uống nước ấm, hạn chế nói to. Quay lại nếu sốt cao, đau tăng một bên."
     },
     {
-      "id": "viem-amidan",
-      "ten": "Viêm amidan",
-      "icd": ["J03.9", "J35.0", "J36"],
-      "chi_dinh": [{ "ten": "Nội soi họng thanh quản" }, { "ten": "Test nhanh liên cầu họng" }, { "ten": "Xét nghiệm công thức máu" }],
-      "don_thuoc": [
-        { "ten": "Amoxicillin", "ham_luong": "500 mg", "duong_dung": "Uống", "lieu_moi_lan": "1 viên", "so_lan_ngay": "2", "thoi_diem": "Sáng, tối sau ăn", "so_ngay": "10" },
-        { "ten": "Paracetamol", "ham_luong": "500 mg", "duong_dung": "Uống", "lieu_moi_lan": "1 viên", "so_lan_ngay": "3", "thoi_diem": "Khi sốt hoặc đau", "so_ngay": "3" }
+      "id": "viem-amidan-cap",
+      "ten": "Viêm amidan cấp",
+      "icd": [
+        "J03.8",
+        "J03.9"
       ],
-      "loi_dan": "Ăn đồ mềm, nguội. Viêm tái phát nhiều lần trong năm thì cân nhắc phẫu thuật cắt amidan."
+      "chi_dinh": [
+        {
+          "ten": "Nội soi họng thanh quản"
+        },
+        {
+          "ten": "Test nhanh liên cầu họng"
+        },
+        {
+          "ten": "Tổng phân tích tế bào máu ngoại vi (bằng máy đếm laser)",
+          "tuy_chon": true
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Augmentin",
+          "ham_luong": "625 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "7"
+        },
+        {
+          "ten": "Paracetamol",
+          "ham_luong": "500 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "3",
+          "thoi_diem": "Khi sốt hoặc đau",
+          "so_ngay": "3"
+        },
+        {
+          "ten": "Alpha Choay",
+          "ham_luong": "4,2 mg",
+          "duong_dung": "Ngậm",
+          "lieu_moi_lan": "2 viên",
+          "so_lan_ngay": "3",
+          "so_ngay": "5"
+        },
+        {
+          "ten": "Clarithromycin",
+          "ham_luong": "500 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "7",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Cefuroxim",
+          "ham_luong": "500 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "7",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Amoxicillin",
+          "ham_luong": "250 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "2 gói",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "7",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Paracetamol",
+          "ham_luong": "250 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 gói",
+          "so_lan_ngay": "3",
+          "thoi_diem": "Khi sốt trên 38,5 độ",
+          "so_ngay": "3",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Súc họng nước muối ấm, ăn mềm nguội. Uống thuốc đủ ngày. Quay lại nếu há miệng hạn chế, khó thở."
     },
     {
-      "id": "khan-tieng",
-      "ten": "Viêm thanh quản, khàn tiếng",
-      "icd": ["J04.0", "J37.0", "J38.1"],
-      "chi_dinh": [{ "ten": "Nội soi họng thanh quản" }],
-      "don_thuoc": [
-        { "ten": "Acetylcystein", "ham_luong": "200 mg", "duong_dung": "Uống", "lieu_moi_lan": "1 gói", "so_lan_ngay": "3", "thoi_diem": "Sau ăn", "so_ngay": "7" }
+      "id": "viem-thanh-quan-cap",
+      "ten": "Viêm thanh quản cấp",
+      "icd": [
+        "J04"
       ],
-      "loi_dan": "Hạn chế nói to, nói nhiều; uống đủ nước, không hút thuốc. Tái khám sau 2 tuần nếu còn khàn tiếng."
+      "chi_dinh": [
+        {
+          "ten": "Nội soi họng thanh quản"
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Alpha Choay",
+          "ham_luong": "4,2 mg",
+          "duong_dung": "Ngậm",
+          "lieu_moi_lan": "2 viên",
+          "so_lan_ngay": "3",
+          "so_ngay": "5"
+        },
+        {
+          "ten": "Acetylcystein",
+          "ham_luong": "200 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 gói",
+          "so_lan_ngay": "3",
+          "thoi_diem": "Sau ăn",
+          "so_ngay": "7"
+        },
+        {
+          "ten": "Methylprednisolon",
+          "ham_luong": "16 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "1",
+          "thoi_diem": "Sau ăn sáng",
+          "so_ngay": "5",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Paracetamol",
+          "ham_luong": "500 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "3",
+          "thoi_diem": "Khi sốt hoặc đau",
+          "so_ngay": "3",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Nghỉ giọng, không nói to, uống nước ấm. Quay lại ngay nếu khó thở, thở rít."
+    },
+    {
+      "id": "croup",
+      "ten": "Viêm thanh quản rít trẻ em",
+      "icd": [
+        "J05.0"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Nội soi họng thanh quản",
+          "tuy_chon": true
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Prednisolon",
+          "ham_luong": "5 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "3 viên",
+          "so_lan_ngay": "1",
+          "thoi_diem": "Sau ăn sáng",
+          "so_ngay": "2"
+        },
+        {
+          "ten": "Paracetamol",
+          "ham_luong": "250 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 gói",
+          "so_lan_ngay": "3",
+          "thoi_diem": "Khi sốt trên 38,5 độ",
+          "so_ngay": "3"
+        }
+      ],
+      "loi_dan": "Cho trẻ uống đủ nước, giữ trẻ bình tĩnh. Quay lại cấp cứu ngay nếu thở rít khi nằm yên, rút lõm ngực, tím tái."
+    },
+    {
+      "id": "viem-hong-man",
+      "ten": "Viêm họng mạn",
+      "icd": [
+        "J31.2"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Nội soi họng thanh quản"
+        },
+        {
+          "ten": "Đốt họng hạt bằng nhiệt",
+          "tuy_chon": true
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Alpha Choay",
+          "ham_luong": "4,2 mg",
+          "duong_dung": "Ngậm",
+          "lieu_moi_lan": "2 viên",
+          "so_lan_ngay": "3",
+          "so_ngay": "5"
+        },
+        {
+          "ten": "Acetylcystein",
+          "ham_luong": "200 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 gói",
+          "so_lan_ngay": "3",
+          "thoi_diem": "Sau ăn",
+          "so_ngay": "7"
+        },
+        {
+          "ten": "Esomeprazol",
+          "ham_luong": "40 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "1",
+          "thoi_diem": "Trước ăn sáng 30 phút",
+          "so_ngay": "30",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Súc họng nước muối ấm, uống đủ nước, không hút thuốc. Hạn chế đằng hắng."
+    },
+    {
+      "id": "amidan-man",
+      "ten": "Viêm amidan mạn, quá phát amidan",
+      "icd": [
+        "J35.0",
+        "J35.1",
+        "J35.8",
+        "J35.9"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Nội soi họng thanh quản"
+        },
+        {
+          "ten": "Tổng phân tích tế bào máu ngoại vi (bằng máy đếm laser)",
+          "tuy_chon": true
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Paracetamol",
+          "ham_luong": "500 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "3",
+          "thoi_diem": "Khi đau",
+          "so_ngay": "3",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Alpha Choay",
+          "ham_luong": "4,2 mg",
+          "duong_dung": "Ngậm",
+          "lieu_moi_lan": "2 viên",
+          "so_lan_ngay": "3",
+          "so_ngay": "5",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Augmentin",
+          "ham_luong": "625 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "7",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Súc họng nước muối ấm. Tư vấn cắt amidan nếu viêm tái phát nhiều hoặc ngủ ngáy, ngừng thở. Sau mổ ăn mềm nguội 2 tuần."
+    },
+    {
+      "id": "va",
+      "ten": "Viêm VA, quá phát VA",
+      "icd": [
+        "J35.2",
+        "J35.3"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Nội soi tai mũi họng"
+        },
+        {
+          "ten": "Đo nhĩ lượng",
+          "tuy_chon": true
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Natri clorid 0,9%",
+          "ham_luong": "0,9%",
+          "duong_dung": "Nhỏ mũi",
+          "lieu_moi_lan": "2 giọt",
+          "so_lan_ngay": "3",
+          "so_ngay": "7"
+        },
+        {
+          "ten": "Amoxicillin",
+          "ham_luong": "250 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "2 gói",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "7",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Paracetamol",
+          "ham_luong": "250 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 gói",
+          "so_lan_ngay": "3",
+          "thoi_diem": "Khi sốt trên 38,5 độ",
+          "so_ngay": "3",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Desloratadin siro",
+          "ham_luong": "0,5 mg/ml",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "2,5 ml",
+          "so_lan_ngay": "1",
+          "thoi_diem": "Buổi tối",
+          "so_ngay": "14",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Mometason xịt mũi",
+          "ham_luong": "50 mcg/liều",
+          "duong_dung": "Xịt mũi",
+          "lieu_moi_lan": "2 xịt mỗi bên",
+          "so_lan_ngay": "1",
+          "thoi_diem": "Buổi sáng",
+          "so_ngay": "30",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Vệ sinh mũi cho trẻ hằng ngày, giữ ấm. Theo dõi ngủ ngáy, ngừng thở khi ngủ."
+    },
+    {
+      "id": "ap-xe-amidan",
+      "ten": "Áp xe quanh amidan",
+      "icd": [
+        "J36"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Trích áp xe quanh Amidan"
+        },
+        {
+          "ten": "Tổng phân tích tế bào máu ngoại vi (bằng máy đếm laser)"
+        },
+        {
+          "ten": "Nội soi họng thanh quản",
+          "tuy_chon": true
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Augmentin",
+          "ham_luong": "1 g",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "10"
+        },
+        {
+          "ten": "Paracetamol",
+          "ham_luong": "500 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "3",
+          "thoi_diem": "Khi sốt hoặc đau",
+          "so_ngay": "3"
+        },
+        {
+          "ten": "Metronidazol",
+          "ham_luong": "250 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "2 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "7",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Clarithromycin",
+          "ham_luong": "500 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "7",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Súc họng nước muối sau ăn, ăn lỏng mềm. Quay lại ngay nếu khó thở, sưng cổ, không nuốt được nước."
+    },
+    {
+      "id": "thanh-quan-man",
+      "ten": "Viêm thanh quản mạn, hạt xơ, polyp dây thanh",
+      "icd": [
+        "J37",
+        "J38.1",
+        "J38.2",
+        "J38.3",
+        "J38.7"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Nội soi họng thanh quản"
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Esomeprazol",
+          "ham_luong": "40 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "1",
+          "thoi_diem": "Trước ăn sáng 30 phút",
+          "so_ngay": "30"
+        },
+        {
+          "ten": "Alpha Choay",
+          "ham_luong": "4,2 mg",
+          "duong_dung": "Ngậm",
+          "lieu_moi_lan": "2 viên",
+          "so_lan_ngay": "3",
+          "so_ngay": "5"
+        },
+        {
+          "ten": "Acetylcystein",
+          "ham_luong": "200 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 gói",
+          "so_lan_ngay": "3",
+          "thoi_diem": "Sau ăn",
+          "so_ngay": "7",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Nghỉ giọng, không la hét, không nói thì thầm. Không hút thuốc. Luyện giọng theo hướng dẫn."
+    },
+    {
+      "id": "liet-day-thanh",
+      "ten": "Liệt dây thanh",
+      "icd": [
+        "J38.0"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Nội soi họng thanh quản"
+        }
+      ],
+      "don_thuoc": [],
+      "loi_dan": "Uống chậm, nuốt từng ngụm nhỏ. Quay lại ngay nếu khó thở, thở rít."
+    },
+    {
+      "id": "ap-xe-hong",
+      "ten": "Áp xe họng",
+      "icd": [
+        "J39.0",
+        "J39.1"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Tổng phân tích tế bào máu ngoại vi (bằng máy đếm laser)"
+        },
+        {
+          "ten": "Định lượng CRP (C-Reactive Protein)"
+        },
+        {
+          "ten": "Nội soi họng thanh quản"
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Augmentin",
+          "ham_luong": "1 g",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "10"
+        },
+        {
+          "ten": "Metronidazol",
+          "ham_luong": "250 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "2 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "7",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Paracetamol",
+          "ham_luong": "500 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "3",
+          "thoi_diem": "Khi sốt hoặc đau",
+          "so_ngay": "3"
+        }
+      ],
+      "loi_dan": "Nhập viện theo chỉ định. Quay lại cấp cứu ngay nếu khó thở, thở rít, không nuốt được nước."
+    },
+    {
+      "id": "loan-cam-hong",
+      "ten": "Loạn cảm họng, khó nuốt",
+      "icd": [
+        "J39.2",
+        "R13"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Nội soi họng thanh quản"
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Esomeprazol",
+          "ham_luong": "40 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "1",
+          "thoi_diem": "Trước ăn sáng 30 phút",
+          "so_ngay": "30"
+        },
+        {
+          "ten": "Alpha Choay",
+          "ham_luong": "4,2 mg",
+          "duong_dung": "Ngậm",
+          "lieu_moi_lan": "2 viên",
+          "so_lan_ngay": "3",
+          "so_ngay": "5",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Ăn bữa nhỏ, không nằm ngay sau ăn. Quay lại nếu nuốt nghẹn tăng, sút cân, khàn tiếng."
     },
     {
       "id": "trao-nguoc",
-      "ten": "Trào ngược dạ dày – thực quản",
-      "icd": ["K21.9", "J31.2"],
-      "chi_dinh": [{ "ten": "Nội soi họng thanh quản" }],
-      "don_thuoc": [
-        { "ten": "Esomeprazol", "ham_luong": "40 mg", "duong_dung": "Uống", "lieu_moi_lan": "1 viên", "so_lan_ngay": "1", "thoi_diem": "Sáng trước ăn 30 phút", "so_ngay": "28" }
+      "ten": "Trào ngược họng thanh quản",
+      "icd": [
+        "K21"
       ],
-      "loi_dan": "Không ăn no trước khi ngủ 3 giờ, kê cao đầu giường, hạn chế cà phê, rượu bia, đồ cay."
+      "chi_dinh": [
+        {
+          "ten": "Nội soi họng thanh quản"
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Esomeprazol",
+          "ham_luong": "40 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "1",
+          "thoi_diem": "Trước ăn sáng 30 phút",
+          "so_ngay": "30"
+        },
+        {
+          "ten": "Alpha Choay",
+          "ham_luong": "4,2 mg",
+          "duong_dung": "Ngậm",
+          "lieu_moi_lan": "2 viên",
+          "so_lan_ngay": "3",
+          "so_ngay": "5",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Ăn bữa nhỏ, không ăn no trước khi ngủ, kê cao đầu giường. Hạn chế cà phê, rượu bia, đồ chua cay."
+    },
+    {
+      "id": "di-vat-hong",
+      "ten": "Dị vật họng, thực quản",
+      "icd": [
+        "T17.2",
+        "T18.0",
+        "T18.1"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Lấy dị vật họng miệng"
+        },
+        {
+          "ten": "Nội soi họng thanh quản"
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Alpha Choay",
+          "ham_luong": "4,2 mg",
+          "duong_dung": "Ngậm",
+          "lieu_moi_lan": "2 viên",
+          "so_lan_ngay": "3",
+          "so_ngay": "5",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Paracetamol",
+          "ham_luong": "500 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "3",
+          "thoi_diem": "Khi đau",
+          "so_ngay": "3",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Không tự nuốt cơm, rau để đẩy dị vật. Ăn mềm 2–3 ngày. Quay lại ngay nếu đau tăng, sốt, khó thở, sưng cổ."
+    },
+    {
+      "id": "u-ba-dau-ro-luan-nhi",
+      "ten": "U bã đậu, rò luân nhĩ",
+      "icd": [
+        "L72",
+        "Q18"
+      ],
+      "chi_dinh": [
+        {
+          "ten": "Cắt u bã đậu vùng đầu mặt cổ"
+        },
+        {
+          "ten": "Tổng phân tích tế bào máu ngoại vi (bằng máy đếm laser)",
+          "tuy_chon": true
+        }
+      ],
+      "don_thuoc": [
+        {
+          "ten": "Augmentin",
+          "ham_luong": "625 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "2",
+          "thoi_diem": "Sáng, tối sau ăn",
+          "so_ngay": "7",
+          "tuy_chon": true
+        },
+        {
+          "ten": "Paracetamol",
+          "ham_luong": "500 mg",
+          "duong_dung": "Uống",
+          "lieu_moi_lan": "1 viên",
+          "so_lan_ngay": "3",
+          "thoi_diem": "Khi đau",
+          "so_ngay": "3",
+          "tuy_chon": true
+        }
+      ],
+      "loi_dan": "Không nặn khối, giữ vệ sinh vùng da. Quay lại nếu sưng đỏ, đau, chảy mủ."
     }
   ]
 }

@@ -21,12 +21,12 @@ export function datGoTat(hienTai: Truong, cau: string, xuongDong: boolean): Truo
   return { value: cau, nguon: "bs" };
 }
 
-/** Ô thuộc oTuMau có nguồn "cu"|"xem" → "bs"; không ô nào đổi thì trả đúng object fields cũ */
+/** Ô thuộc oTuMau có nguồn "cu"|"xem" → "bs", trừ ô còn chỗ [..] chưa điền (giữ "xem"); không ô nào đổi thì trả đúng object fields cũ */
 export function doiNguonKhiLuu(fields: Record<string, Truong>, oTuMau: ReadonlySet<string>): Record<string, Truong> {
   let kq: Record<string, Truong> | null = null;
   for (const k of oTuMau) {
     const t = fields[k];
-    if (t && (t.nguon === "cu" || t.nguon === "xem")) {
+    if (t && (t.nguon === "cu" || t.nguon === "xem") && demChoTrong(t.value) === 0) {
       kq ??= { ...fields };
       kq[k] = { ...t, nguon: "bs" };
     }

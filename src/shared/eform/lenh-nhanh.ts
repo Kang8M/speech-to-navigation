@@ -2,7 +2,7 @@
 import type { PipelineResult } from "../api";
 import type { VietTat } from "../types";
 import { tachGoTat, type GoTat, type KetQuaGoTat } from "./go-tat";
-import { dienChoTrongNhap, ketQuaTheoQuyTac, timPhieuMau, type PhieuMau } from "./phieu-mau";
+import { dienChoTrongNhap, ketQuaTheoQuyTac, phanConLai, timPhieuMau, type PhieuMau } from "./phieu-mau";
 
 export interface DuLieuLenh {
   goTat: GoTat[];
@@ -24,7 +24,9 @@ export type KetQuaLenh =
   | { loai: "chon_mau"; cacMau: PhieuMau[]; chiTiet: string; goTat: KetQuaGoTat }
   | LenhDien;
 
-const TACH_VE = /[,;.\n]+/;
+// Dấu , . giữa hai chữ số (38,5 / 38.5) là số thập phân, không phải chỗ ngắt vế.
+// Các vế được ghép lại bằng ", " chỉ khi so sánh; số thập phân nằm trọn trong một vế nên ghép lại vẫn nguyên.
+const TACH_VE = /(?:[;\n]|[,.](?!\d)|(?<!\d)[,.])+/;
 
 /** Vế chi tiết dư: bỏ vế đó đi mà kết quả điền chỗ trống không đổi. Giữ nguyên chữ bác sĩ gõ, đúng thứ tự */
 export function phanDuChiTiet(mau: PhieuMau, chiTiet: string, vietTat: VietTat): string[] {
@@ -53,12 +55,13 @@ export function xuLyLenh(lenh: string, du: DuLieuLenh): KetQuaLenh {
   // Không khớp tên trong phần còn lại: thử chẩn đoán vừa bung từ gõ tắt, khi đó chi tiết là cả phần còn lại
   if (!goi && goTat.cacO.chan_doan_chinh) {
     goi = timPhieuMau(goTat.cacO.chan_doan_chinh, du.phieuMau);
-    chiTiet = conLai;
+    chiTiet = phanConLai(conLai, 0);
   }
   if (goi?.loai === "nhieu") return { loai: "chon_mau", cacMau: goi.cacMau, chiTiet, goTat };
   if (goi) return dungMau(goi.mau, chiTiet, goTat, du.vietTat);
   if (goTat.daDung.length > 0) {
-    return { loai: "dien", mau: null, ketQua: null, goTat, phanDu: conLai ? [conLai] : [] };
+    const conDu = phanConLai(conLai, 0);
+    return { loai: "dien", mau: null, ketQua: null, goTat, phanDu: conDu ? [conDu] : [] };
   }
   return { loai: "trong" };
 }

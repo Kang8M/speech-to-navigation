@@ -47,3 +47,17 @@ test("doiNguonKhiLuu: chỉ ô do mẫu điền thành bs, không đổi thì tr
   assert.equal(kq.a.value, "x");
   assert.equal(doiNguonKhiLuu(f, new Set()), f);
 });
+
+test("doiNguonKhiLuu: ô còn chỗ [..] giữ nguyên nguồn xem, ô đã điền xong thành bs", () => {
+  const f = {
+    a: { value: "Phổi [phải|trái|2 bên] sạch", nguon: "xem" as const },
+    b: { value: "sốt [số] độ", nguon: "cu" as const },
+    c: { value: "ổn", nguon: "xem" as const },
+  };
+  const kq = doiNguonKhiLuu(f, new Set(["a", "b", "c"]));
+  assert.equal(kq.a, f.a);
+  assert.equal(kq.b, f.b);
+  assert.equal(kq.c.nguon, "bs");
+  const chiCo = { a: f.a, b: f.b };
+  assert.equal(doiNguonKhiLuu(chiCo, new Set(["a", "b"])), chiCo);
+});

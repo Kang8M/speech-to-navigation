@@ -402,7 +402,8 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
       setChiDinh(rows => rows === snapshot.chiDinh ? savedRows : rows);
       // Ô do mẫu điền đã lưu như bác sĩ nhập: đổi nguồn trên màn hình theo bản vừa lưu
       setFields(prev => prev === fields ? snapshot.fields : prev);
-      setOTuMau(new Set());
+      // Ô còn chỗ [..] chưa điền vẫn là ô do mẫu: giữ trong oTuMau để lần lưu sau (khi đã điền) mới đổi thành chữ bác sĩ
+      setOTuMau(new Set([...oTuMau].filter(id => ["cu", "xem"].includes(snapshot.fields[id]?.nguon ?? ""))));
       setBanLuu({ fields: snapshot.fields, chiDinh: savedRows, donThuoc, trangThai: snapshot.trangThai, summary, noServices, clinicalInfo });
       setReviewConfirmed(false); setScopesChosen([]);
       setLastEdit({ nguoi: response.record.audit.updated_by, luc: nowText() });

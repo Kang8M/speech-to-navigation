@@ -69,3 +69,23 @@ test("bí danh trùng thì chọn mẫu, giữ chi tiết", () => {
 test("không có gì để làm thì trống", () => {
   assert.deepEqual(xuLyLenh("không có gì", du), { loai: "trong" });
 });
+
+test("số thập phân 38,5 và 38.5 không bị cắt thành vế", () => {
+  for (const lenh of ["viêm họng cấp 3 ngày sốt 38,5", "viêm họng cấp, 3 ngày, sốt 38,5 độ", "viêm họng cấp, 3 ngày, sốt 38.5 độ"]) {
+    const kq = dien(lenh);
+    assert.deepEqual(kq.phanDu, [], lenh);
+    assert.match((kq.ketQua?.draft.phieu_kham as Record<string, string>).benh_su, /38[,.]5/, lenh);
+  }
+});
+
+test("sau gõ tắt chỉ có từ đệm: không phần dư", () => {
+  assert.deepEqual(dien("tbt nhé").phanDu, []);
+});
+
+test("không có tên mẫu nhưng gõ tắt chẩn đoán trùng tên mẫu: chọn mẫu đó, chi tiết là phần còn lại", () => {
+  const cd: GoTat[] = [{ ma: "vhc", o: "chan_doan_chinh", noi_dung: "Viêm họng cấp" }];
+  const kq = dien("vhc 3 ngày", { goTat: cd, phieuMau: [VIEM_HONG], vietTat: {} });
+  assert.equal(kq.mau?.id, "viem-hong");
+  assert.equal((kq.ketQua?.draft.phieu_kham as Record<string, string>).benh_su, "3 ngày nay đau họng, sốt [số] độ");
+  assert.deepEqual(kq.phanDu, []);
+});

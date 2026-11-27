@@ -66,7 +66,7 @@ function timTen(text: string, folded: string, ten: string): number | null {
   return null;
 }
 
-function phanConLai(text: string, cuoi: number): string {
+export function phanConLai(text: string, cuoi: number): string {
   const conLai = text.slice(cuoi).replace(/^[\s\p{P}]+/u, "").trim();
   const tu = normalizeVi(conLai).split(" ").filter(Boolean);
   return tu.every((t) => TU_DEM.has(t)) ? "" : conLai;

@@ -21,7 +21,7 @@ import { TroLyAi, type TabId } from "@/client/eform/TroLyAi";
 import { apKetQuaLenh } from "@/shared/eform/ap-lenh";
 import type { DongChiDinh, DongThuoc, KetQuaDien } from "@/shared/eform/dien-phieu";
 import { demLuot } from "@/shared/eform/do-luong";
-import { chuanHoaNguonThuoc, dieuKienIn, duyetMoiNhat, duyetPhieuMoiNhat } from "@/shared/eform/don-thuoc";
+import { canChonLaiThuoc, chuanHoaNguonThuoc, dieuKienIn, duyetMoiNhat, duyetPhieuMoiNhat } from "@/shared/eform/don-thuoc";
 import type { LenhDien } from "@/shared/eform/lenh-nhanh";
 import { doiNguonKhiLuu } from "@/shared/eform/nguon-mau";
 import { ghepGoiY } from "@/shared/eform/thoi-quen";
@@ -335,7 +335,8 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
 
   const conXem =
     Object.values(fields).filter((f) => f.nguon === "xem").length +
-    [...chiDinh, ...donThuoc].filter((row) => row.nguon === "xem").length;
+    chiDinh.filter((row) => row.nguon === "xem").length +
+    donThuoc.filter(canChonLaiThuoc).length;
 
   const batDauNhap = (kieuNhap: InputMode, tuCaMau: boolean) =>
     setLuot((prev) =>
@@ -660,10 +661,10 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
             <button type="button" className={`${BTN_OUTLINE} whitespace-nowrap`} onClick={() => inBan("don-thuoc")} disabled={!dkIn?.don.ok || saving} title={dkIn?.don.ok ? "In đơn thuốc" : (dkIn?.don.lyDo ?? "Chưa có hồ sơ")}>
               In đơn<span className="hidden md:inline"> thuốc</span>
             </button>
-            <button type="button" className={`${BTN_CHINH} ml-auto inline-flex flex-1 items-center justify-center gap-2 whitespace-nowrap sm:max-w-sm`} onClick={save} disabled={saving || loadingRecord || khoa}>
-              {saving ? "Đang lưu…" : (<><span className="sm:hidden">Lưu</span><span className="hidden sm:inline">Lưu phiếu, chỉ định &amp; đơn thuốc</span></>)}
+            <button type="button" className={`${BTN_CHINH} ml-auto inline-flex min-w-0 flex-1 items-center justify-center gap-2 whitespace-nowrap sm:max-w-sm`} onClick={save} disabled={saving || loadingRecord || khoa}>
+              {saving ? "Đang lưu…" : (<><span className="sm:hidden">Lưu</span><span className="hidden sm:inline lg:hidden">Lưu phiếu &amp; đơn</span><span className="hidden lg:inline">Lưu phiếu, chỉ định &amp; đơn thuốc</span></>)}
               {conXem > 0 && (
-                <span className="rounded-full bg-xem-nhat px-2 py-px text-[11px] font-semibold text-xem" title="Số chỗ AI chưa chắc, bác sĩ nên xem lại trước khi Lưu">
+                <span className="rounded-full bg-xem-nhat px-2 py-px text-[11px] font-semibold text-xem" title="Số chỗ cần xem lại (AI chưa chắc hoặc thuốc cần chọn đúng), bác sĩ nên xem lại trước khi Lưu">
                   {conXem}
                   <span className="hidden sm:inline"> cần xem lại</span>
                 </span>

@@ -133,7 +133,7 @@ export function BanIn({ loai, chiDinh, donThuoc, trangThai, summary, followUpTex
               <tr key={`${row.ma}-${row.ten}-${i}`}>
                 <td className={TD_IN}>{i + 1}</td>
                 <td className={TD_IN}>{row.ten}</td>
-                <td className={TD_IN}>{moTaLieu(row)}</td>
+                <td className={TD_IN}>{moTaLieu(row, data.canhBao)}</td>
                 <td className={TD_IN}>{tongSoLuong(row, data.canhBao) ?? ""}</td>
               </tr>
             ))}

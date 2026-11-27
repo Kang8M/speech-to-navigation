@@ -3,11 +3,10 @@ import { createHash, randomUUID } from "node:crypto";
 import { z } from "zod";
 import type { ClinicalActor, ClinicalResponse } from "@/shared/clinical/api";
 import type { Encounter, JsonValue } from "@/shared/clinical/types";
-import { approvalScopeForPath, approvalState, requiredApprovalScopes, scopeProjection, serializeApprovalScope, type ApprovalScope, type ApproveClinicalRequest, type TransitionClinicalRequest } from "@/shared/clinical/approvals";
+import { approvalScopeForPath, approvalState, DON_THUOC_TRONG, requiredApprovalScopes, scopeProjection, serializeApprovalScope, type ApprovalScope, type ApproveClinicalRequest, type TransitionClinicalRequest } from "@/shared/clinical/approvals";
 import { projectEform } from "@/shared/clinical/eform";
 import { computeTotal } from "@/shared/validate";
 import { loadRules } from "@/server/du-lieu/config";
-import { DON_THUOC_TRONG } from "@/shared/clinical/approvals";
 import { ClinicalError, ClinicalRepository } from "./repository";
 import { resolveEncounterContextForRecord } from "./encounter-context";
 import { loadClinicalRun } from "./extraction";
@@ -29,8 +28,10 @@ function assertOpen(record: Encounter) {
   if (!["dang_kham", "cho_kq_cls"].includes(record.status)) throw new ClinicalError("Lượt khám đã kết thúc; không thể tiếp tục hoặc duyệt bổ sung.", 409);
 }
 
+const isAffirmed = (item: Encounter["chan_doan"][number]) => !["loai_tru", "phu_dinh"].includes(item.noi_dung.muc_do_khang_dinh ?? "");
+
 function validateDiagnoses(record: Encounter, final: boolean) {
-  const diagnoses = record.chan_doan.filter(item => (item.noi_dung.giai_doan === "ra_vien") === final && !["loai_tru", "phu_dinh"].includes(item.noi_dung.muc_do_khang_dinh ?? ""));
+  const diagnoses = record.chan_doan.filter(item => (item.noi_dung.giai_doan === "ra_vien") === final && isAffirmed(item));
   if ((!final && !diagnoses.length) || diagnoses.some(item => !item.noi_dung.mo_ta?.trim() || item.noi_dung.giai_doan === "chua_ro" || !item.icd.code?.trim())) throw new ClinicalError("Cần bác sĩ xác định giai đoạn và chọn mã ICD cho chẩn đoán thuộc phạm vi duyệt.", 422);
 }
 
@@ -38,7 +39,7 @@ function validatePrescription(record: Encounter) {
   const don = record.don_thuoc ?? DON_THUOC_TRONG;
   if (don.de_cap === "chua_de_cap") throw new ClinicalError("Hãy xác nhận có hoặc không kê đơn thuốc.", 422);
   if (don.de_cap === "khong_ke_don") return;
-  if (!record.chan_doan.some(item => item.icd.code?.trim())) throw new ClinicalError("Cần ít nhất một chẩn đoán có mã ICD trước khi duyệt đơn thuốc.", 422);
+  if (!record.chan_doan.some(item => isAffirmed(item) && item.icd.code?.trim())) throw new ClinicalError("Cần ít nhất một chẩn đoán có mã ICD trước khi duyệt đơn thuốc.", 422);
   const rules = loadRules(); const config = rules.tinh_tong;
   const positive = (value: string | null) => Number(value) > 0;
   for (const item of don.items) {

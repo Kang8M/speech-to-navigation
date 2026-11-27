@@ -1,18 +1,19 @@
 import { approvalState, requiredApprovalScopes, DON_THUOC_TRONG } from "@/shared/clinical/approvals";
 import type { Encounter } from "@/shared/clinical/types";
 import type { WarningRules } from "@/shared/types";
-import { computeTotal } from "@/shared/validate";
+import { bungDonViLieu, computeTotal } from "@/shared/validate";
 import type { DongThuoc } from "./dien-phieu";
 
-function moTaSoLan(row: DongThuoc): string {
+function moTaSoLan(row: DongThuoc, rules: WarningRules): string {
   if (!row.lieu_moi_lan) return "";
-  if (!row.khi_can) return `${row.lieu_moi_lan} × ${row.so_lan_ngay} lần/ngày`;
-  return row.so_lan_ngay ? `${row.lieu_moi_lan} khi cần, tối đa ${row.so_lan_ngay} lần/ngày` : `${row.lieu_moi_lan} khi cần`;
+  const lieu = bungDonViLieu(row.lieu_moi_lan, rules);
+  if (!row.khi_can) return `${lieu} × ${row.so_lan_ngay} lần/ngày`;
+  return row.so_lan_ngay ? `${lieu} khi cần, tối đa ${row.so_lan_ngay} lần/ngày` : `${lieu} khi cần`;
 }
 
 /** Một dòng mô tả cách dùng: hàm lượng, đường dùng, liều, thời điểm, số ngày, SL bác sĩ ghi, ghi chú */
-export function moTaLieu(row: DongThuoc): string {
-  return [row.ham_luong, row.duong_dung, moTaSoLan(row), row.thoi_diem, row.so_ngay && `${row.so_ngay} ngày`, row.so_luong_ke && `SL ${row.so_luong_ke}`, row.ghi_chu]
+export function moTaLieu(row: DongThuoc, rules: WarningRules): string {
+  return [row.ham_luong, row.duong_dung, moTaSoLan(row, rules), row.thoi_diem, row.so_ngay && `${row.so_ngay} ngày`, row.so_luong_ke && `SL ${row.so_luong_ke}`, row.ghi_chu]
     .filter(Boolean)
     .join(" · ");
 }
@@ -29,6 +30,18 @@ export function chuanHoaNguonThuoc(rows: DongThuoc[]): DongThuoc[] {
     delete moi.tu_ai;
     return moi;
   });
+}
+
+/** Dòng thuốc chưa duyệt mà bác sĩ còn phải chọn lại thuốc: chưa có mã, hoặc còn ứng viên khác để chọn */
+export function canChonLaiThuoc(row: DongThuoc): boolean {
+  return row.nguon === "xem" && (!row.ma || row.ung_vien.length > 0);
+}
+
+/** Nhãn nguồn của dòng thuốc (không nhắc AI: thuốc chỉ do bác sĩ chọn); null khi không cần nhãn */
+export function nhanThuoc(row: DongThuoc): string | null {
+  if (row.nguon === "xem") return canChonLaiThuoc(row) ? "Cần chọn đúng thuốc" : "Chưa duyệt";
+  if (row.nguon === "sua") return "Đã sửa";
+  return null;
 }
 
 interface DieuKien { ok: boolean; lyDo: string }

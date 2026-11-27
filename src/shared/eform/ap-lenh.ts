@@ -114,10 +114,8 @@ export function apKetQuaLenh(kq: LenhDien, data: EformData, get: (id: string) =>
   if (mau) {
     thongBao = `Đã điền ${n} ô từ mẫu "${mau.ten}".`;
     if (vang > 0) thongBao += ` Còn ${vang} chỗ vàng cần xem.`;
-    if (chiDinhThem.length > 0 || thuocThem.length > 0) {
-      const them = [chiDinhThem.length > 0 && `${chiDinhThem.length} chỉ định`, thuocThem.length > 0 && `${thuocThem.length} thuốc`].filter(Boolean);
-      thongBao += ` Thêm ${them.join(", ")}.`;
-    }
+    if (chiDinhThem.length > 0) thongBao += ` Thêm ${chiDinhThem.length} chỉ định.`;
+    if (thuocThem.length > 0) thongBao += ` Đã thêm ${thuocThem.length} thuốc từ mẫu vào Đơn thuốc, chưa duyệt.`;
     if (boQua > 0) thongBao += ` Bỏ qua ${boQua} ô đã có chữ.`;
     if (daDung.length > 0) thongBao += ` Gõ tắt: ${daDung.join(", ")}.`;
   } else {

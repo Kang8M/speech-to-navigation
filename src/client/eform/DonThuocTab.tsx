@@ -1,11 +1,11 @@
 "use client";
 
 import { useEform } from "@/client/eform/EformContext";
-import { BTN_OUTLINE, SourceBadge } from "@/client/eform/fields";
+import { BTN_OUTLINE } from "@/client/eform/fields";
 import { GoiYTheoChanDoan } from "@/client/eform/GoiYTheoChanDoan";
 import { TimDanhMuc } from "@/client/eform/TimDanhMuc";
 import type { DongThuoc } from "@/shared/eform/dien-phieu";
-import { chuanHoaNguonThuoc, moTaLieu, tongSoLuong } from "@/shared/eform/don-thuoc";
+import { canChonLaiThuoc, chuanHoaNguonThuoc, moTaLieu, nhanThuoc, tongSoLuong } from "@/shared/eform/don-thuoc";
 import { trungDiUng } from "@/shared/eform/di-ung";
 import type { CatalogItem } from "@/shared/types";
 
@@ -57,7 +57,7 @@ export function DonThuocTab({ rows, onChange, khongKeDon, onKhongKeDon }: { rows
         <GoiYTheoChanDoan
           rows={rows}
           lay={(mau) => mau.donThuoc}
-          moTa={moTaLieu}
+          moTa={(row) => moTaLieu(row, data.canhBao)}
           canhBao={(row) =>
             trungDiUng(row.ten, thuoc.find((t) => t.ma === row.ma), diUng)
               ? `Bệnh nhân dị ứng ${diUng}: thuốc cùng nhóm, không tích sẵn.`
@@ -153,7 +153,11 @@ export function DonThuocTab({ rows, onChange, khongKeDon, onKhongKeDon }: { rows
                           <div className="flex flex-wrap items-center gap-1.5">
                             <span className="font-semibold">{row.ten}</span>
                             <span>{row.ham_luong}</span>
-                            <SourceBadge nguon={row.nguon} />
+                            {nhanThuoc(row) && (
+                              <span className={`inline-flex items-center whitespace-nowrap rounded-full px-2 py-px text-[11px] font-semibold ${row.nguon === "xem" ? "bg-xem-nhat text-xem ring-1 ring-xem/40" : "bg-ef-dam/10 text-ef-dam"}`}>
+                                {nhanThuoc(row)}
+                              </span>
+                            )}
                           </div>
                           <div className="text-xs text-ef-phu">{row.ma || "Chưa có mã"}</div>
                           {diUngTrung && (
@@ -161,7 +165,7 @@ export function DonThuocTab({ rows, onChange, khongKeDon, onKhongKeDon }: { rows
                               ⚠ Bệnh nhân dị ứng {diUng}: thuốc này cùng nhóm, cần cân nhắc.
                             </p>
                           )}
-                          {row.nguon === "xem" && (
+                          {canChonLaiThuoc(row) && (
                             <div className="mt-1.5">
                               <TimDanhMuc
                                 items={thuoc}
@@ -169,7 +173,7 @@ export function DonThuocTab({ rows, onChange, khongKeDon, onKhongKeDon }: { rows
                                 goiY={row.ung_vien}
                                 onPick={(picked) => update(index, chon(picked))}
                                 ariaLabel={`Chọn lại thuốc cho "${row.ten}"`}
-                                placeholder="AI chưa chắc – chọn hoặc gõ để tìm đúng thuốc…"
+                                placeholder="Chưa khớp danh mục – chọn hoặc gõ để tìm đúng thuốc…"
                                 className={`${CELL} border-xem/60`}
                               />
                             </div>

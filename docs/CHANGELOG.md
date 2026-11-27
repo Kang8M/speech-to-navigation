@@ -24,9 +24,13 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
     9. Trợ lý nội dung không đề xuất thuốc: **NOT RUN**.
     10. Khổ 375 px: **NOT RUN** (cửa sổ trình duyệt không thu được xuống 375 px; đo được thanh đáy có đủ "BCYT", "In phiếu khám", "In đơn thuốc" trong khung, nhưng trang rộng 840 px so với khung 819 px).
     11. Lệnh nhanh mẫu có thuốc: **NOT RUN** (Task 9 đã có test thuần, chưa đo trên trình duyệt).
-  - Đợt sửa sau review toàn nhánh (`bfa75cc` trở đi): `npm test` 535/535 pass; `npx tsc --noEmit` sạch; `npm run lint` 0 lỗi, 6 cảnh báo có sẵn; `npm run build` thành công. Đo lại trên trình duyệt (thanh đáy hẹp, dòng thuốc sau tải lại): chưa chạy trong đợt này.
+  - Đợt sửa sau review toàn nhánh (`bfa75cc` trở đi): `npm test` 535/535 pass; `npx tsc --noEmit` sạch; `npm run lint` 0 lỗi, 6 cảnh báo có sẵn; `npm run build` thành công. Thử trình duyệt cổng 3006 (28/11): 11/11 mục đạt, cộng hai mục kiểm tra lại (I1, I2) đạt:
+    - Hai bản in đúng nội dung: phiếu khám không có thuốc, đơn thuốc chỉ có thuốc; "1 v" in thành "1 viên".
+    - "Không kê đơn thuốc" hoạt động đúng; hồ sơ 1.2.0 (bản thử tạm) mở được.
+    - Trợ lý không đề xuất thuốc; Lệnh nhanh thêm thuốc ở trạng thái "chưa duyệt"; dòng thuốc đã lưu không còn chữ "AI".
+    - Thanh đáy không tràn ở 375/700/820/1280 px (đo trong iframe cùng gốc, vì không đổi được kích thước cửa sổ).
   - Đợt sửa sau review toàn nhánh: (1) dòng thuốc chưa duyệt có mã không còn nhãn "AI chưa chắc" và ô "Chọn lại thuốc"; nhãn riêng "Chưa duyệt" hoặc "Cần chọn đúng thuốc", chỉ dòng cần chọn thuốc mới tính vào "N cần xem lại" (hợp đồng dữ liệu `nguon: "xem"` giữ nguyên); (2) thanh đáy: nhãn nút Lưu dài chỉ hiện từ `lg`, khổ vừa dùng "Lưu phiếu & đơn", nút Lưu được co lại; (3) bản in đơn bung liều gõ tắt ("1 v" thành "1 viên"); (4) Lệnh nhanh báo "Đã thêm N thuốc từ mẫu vào Đơn thuốc, chưa duyệt"; (5) duyệt đơn thuốc chỉ tính chẩn đoán có mã ICD chưa bị loại trừ/phủ định (cùng bộ lọc với duyệt chẩn đoán); (6) test: thông báo mã lạ, accept-all có đề xuất, đơn đã chấp nhận sống sót `applyAiDraft`, điều kiện lời dặn đòi Kết luận, đổi tên test `kemThuoc`; (7) cập nhật `docs/CLINICAL-WORKFLOW.md`, `README.md`, `docs/kich-ban-thu-bac-si.md`, `docs/task-2/{README,field-mapping}.md`.
-- **Ảnh hưởng:** Trang `/` có tab Đơn thuốc và hai nút in thay "In ngay"; hồ sơ 1.1.0 và 1.2.0 vẫn đọc được. Điểm eval không đổi. Các mục trình duyệt còn NOT RUN (kể cả đo thanh đáy sau sửa) cần kiểm tra trước khi coi đợt này xong.
+- **Ảnh hưởng:** Trang `/` có tab Đơn thuốc và hai nút in thay "In ngay"; hồ sơ 1.1.0 và 1.2.0 vẫn đọc được. Điểm eval không đổi. Các mục trình duyệt đã đo lại ngày 28/11, xem mục Kiểm tra ở trên.
 
 ### Thiết kế và kế hoạch "Kê đơn thuốc trở lại" (chưa code)
 - **Loại:** Tài liệu, Thiết kế

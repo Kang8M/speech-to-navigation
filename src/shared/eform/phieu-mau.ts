@@ -15,6 +15,8 @@ export interface PhieuMauGoc {
   icd_ten: string;
   /** Ô "Khám các bộ phận khác" (eForm có, schema LLM không có) */
   kham_khac: string;
+  /** Ô eForm khác schema LLM không có (ghi chú kết quả, có PT/TT, đã xử lý, tình trạng ra viện), khóa là id ô eForm */
+  o_khac: Record<string, string>;
   /** Cùng dạng Draft của config/forms: phieu_kham, chi_dinh, ke_don; không có trường mã */
   nhap: Draft;
 }
@@ -27,6 +29,8 @@ export interface PhieuMau {
   /** Mã ICD10 tra từ icd_ten, "" nếu không tra được */
   icd: string;
   khamKhac: string;
+  /** Như o_khac của mẫu gốc */
+  oKhac?: Record<string, string>;
   /** draft đã khớp mã và tính tổng, provider "mau", duration_ms 0 */
   ketQua: PipelineResult;
 }

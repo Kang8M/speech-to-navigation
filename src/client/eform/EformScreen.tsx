@@ -93,9 +93,8 @@ function trangThaiDau(data: EformData, kichBan?: KichBan) {
   const fields = initFields(data.ca.gia_tri);
   const td = data.trinhDien;
   if (td && (kichBan === 2 || kichBan === 3)) {
-    const ten = data.icd10.find((item) => item.ma === td.icd)?.ten ?? "";
+    // Có mã thì ô ghi chẩn đoán bằng chữ để trống, như phiếu thật
     fields.icd_ra_vien = { value: td.icd, nguon: "bs" };
-    fields.mo_ta_ra_vien = { value: ten, nguon: "bs" };
   }
   if (td && kichBan === 1) {
     const kq = { ...td.phieuMau, donThuoc: [] };

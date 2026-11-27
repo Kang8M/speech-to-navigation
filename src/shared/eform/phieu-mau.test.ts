@@ -21,6 +21,7 @@ function mau(id: string, ten: string, bi_danh: string[]): PhieuMau {
     bi_danh,
     icd: "",
     khamKhac: "",
+    oKhac: {},
     ketQua: { draft: {}, matches: {}, provider: "mau", duration_ms: 0 },
   };
 }

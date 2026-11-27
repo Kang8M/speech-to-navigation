@@ -9,7 +9,7 @@ import { fillDraft } from "@/server/ai/schema";
 import type { Draft } from "@/shared/types";
 import { accuracy, chamNhap, emptyTally, printTable, type Outcome, type Tally } from "./cham-diem";
 
-/** Ô mẫu không điền: tiền sử bác sĩ Copy từ lần khám trước */
+/** Ô mẫu không có trong nháp: tiền sử chép từ lần khám trước khi gọi mẫu trên eForm */
 const KHONG_TINH = "phieu_kham.tien_su";
 
 interface Muc {
@@ -80,7 +80,7 @@ async function main() {
   }
   if (khongMau.length > 0) console.log(`\nCa chưa có mẫu: ${khongMau.join(", ")}`);
   console.log("\nChính xác = Đúng / (Đúng + Sai + Thiếu + Thừa), cùng cách chấm với npm run eval.");
-  console.log(`"Không tính tiền sử": mẫu không điền tiền sử, ô đó bác sĩ Copy từ lần khám trước.`);
+  console.log(`"Không tính tiền sử": tiền sử không nằm trong mẫu, eForm chép từ lần khám trước.`);
   console.log("Ước tính: mẫu và đáp án đều do nhóm soạn; số thật phải đo khi bác sĩ thử.");
   if (loi.length > 0) {
     console.log(`\nCó ${loi.length} lượt lỗi:`);

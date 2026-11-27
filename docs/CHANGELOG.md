@@ -2,6 +2,20 @@
 
 Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nhất ở trên cùng. Cách ghi xem `.claude/skills/ghi-tai-lieu/SKILL.md`.
 
+## 2026-11-27
+
+### Chuyển "chẩn đoán chỉ ghi chữ khi không có mã" và 83 phiếu mẫu từ nhánh `thanh` sang `dev`
+- **Loại:** Tính năng, Dữ liệu giả, Chuyển code giữa nhánh
+- **Thay đổi:**
+  - **Chẩn đoán** (`src/shared/eform/dien-phieu.ts`, `IcdField.tsx`): có mã ICD thì chỉ điền ô mã, ô ghi chẩn đoán bằng chữ để trống như phiếu EMR thật; không tìm được mã mới ghi chữ. Ô chữ không còn nhãn "Mô tả chẩn đoán", có chữ mờ "Không tìm được mã thì ghi chẩn đoán ở đây". Giữ quy tắc `clinicalOnly` của `dev` (không điền phần ra viện). Trang trình diễn không điền chữ khi đã có mã.
+  - **Chẩn đoán kèm theo:** tách theo ";", đúng tên một mã ICD thì lấy mã đó (`maIcdTheoTen`), không thì tách tiếp theo dấu phẩy và gợi ý theo từ khóa; bỏ mã trùng chẩn đoán chính.
+  - **Phiếu mẫu** (`data/eform/phieu-mau.json`): 39 → 83 mẫu giả (thêm trẻ em, tái khám sau mổ, cấp cứu chuyển viện), 82/83 có chẩn đoán kèm theo, có `o_khac` (ghi chú kết quả, có PT/TT, đã xử lý, tình trạng ra viện). `dienPhieu` nhận `oKhac` và `chepLichSu` (tiền sử, dị ứng còn trống thì chép từ lần khám gần nhất, nguồn "cu").
+  - Không chuyển phần thuốc dùng khi cần, vì `dev` đã bỏ tab Đơn thuốc. `PhieuMau.oKhac` để tùy chọn, để test cũ dựng mẫu không có trường này vẫn đúng kiểu.
+  - Giao diện gọi phiếu mẫu bằng tên (qua AI) chưa nối, chờ thống nhất cách đi qua luồng che PII. Hiện phiếu mẫu dùng cho gợi ý chữ mờ Tab (PR gợi ý Tab), trang trình diễn và `npm run eval-mau`.
+- **Lý do:** Chuyển từng tính năng của nhánh `thanh` sang `dev` thành PR nhỏ; phần này không gửi gì cho AI.
+- **File:** `src/shared/eform/{dien-phieu,phieu-mau}.ts` (+test), `src/server/du-lieu/phieu-mau.ts` (+test), `src/client/eform/{IcdField,EformScreen}.tsx`, `data/eform/phieu-mau.json`, `scripts/eval-mau.ts`
+- **Kiểm tra:** `npx tsc --noEmit`; `npm test` 416/416 (dev 410); `npm run lint` 0 lỗi; `npm run build` qua; `npm run eval-mau` (rule): chính xác chung 67,5%, không tính tiền sử 69,5% (ước tính, mẫu và đáp án đều do nhóm soạn).
+
 ## 2026-11-18
 
 ### Đưa hai quy tắc làm việc từ worktree priority-plan-2 vào nhánh

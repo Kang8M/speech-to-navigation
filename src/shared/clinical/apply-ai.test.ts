@@ -32,3 +32,11 @@ test("UI patch does not fill administrative/default/absent fields, retains posit
   assert.equal(patch.fields.hen_tai_kham.value, "Có");
   assert.equal(patch.fields.kham_chuyen_khoa.nguon, "xem");
 });
+test("applyAiDraft giữ nguyên don_thuoc đã có của bác sĩ", () => {
+  const base = emptyEncounter({ id: "enc-1", patientId: "patient-demo", doctorId: "doctor-demo", now: context.now });
+  const withDrugs = parseEncounter(base);
+  withDrugs.don_thuoc = { de_cap: "khong_ke_don", items: [] };
+  const result = applyAiDraft(withDrugs, run(), context);
+  assert.deepEqual(result.don_thuoc, withDrugs.don_thuoc);
+  assert.ok(!result.nguon_du_lieu.some(item => item.field_path.startsWith("/don_thuoc")));
+});

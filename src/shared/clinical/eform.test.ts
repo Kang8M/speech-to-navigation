@@ -195,3 +195,9 @@ test("bỏ dòng giữa đơn: nguồn dòng sau đánh lại chỉ số, dòng 
   const edited = applyEformSnapshot(three, snap([rows[1], { ...rows[2], so_ngay: "9" }]), drugCtx);
   assert.equal(edited.nguon_du_lieu.find(item => item.field_path === "/don_thuoc/items/1")?.source_system, "prototype-eform");
 });
+
+test("dòng thuốc client gửi nguon \"ai\" vẫn lưu với nguồn nhập tay, không bao giờ ai", () => {
+  const e = applyEformSnapshot(base(), snap([drugRow({ nguon: "ai" })]), drugCtx);
+  assert.equal(e.nguon_du_lieu.find(item => item.field_path === "/don_thuoc/items/0")?.nguon, "nhap_tay");
+  assert.ok(!e.nguon_du_lieu.some(item => item.field_path.startsWith("/don_thuoc") && item.nguon === "ai"));
+});

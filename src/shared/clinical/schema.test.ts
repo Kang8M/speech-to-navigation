@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import fs from "node:fs";
 import path from "node:path";
-import { parseEncounter, parseAiOutput, parseTranscript, emptyEncounter } from "./schema";
+import { parseEncounter, parseAiOutput, parseTranscript, emptyEncounter, resolveClinicalSchema } from "./schema";
 
 const fixture = (name: string) => JSON.parse(fs.readFileSync(path.resolve(`docs/task-2/examples/${name}.example.json`), "utf8"));
 test("runtime parses canonical record, AI and transcript fixtures", () => {
@@ -107,4 +107,17 @@ test("legacy 1.1 transcript and AI contracts retain compatibility alongside boun
   const binding = { encounter_id: "enc-1", recording_session_id: "session-1", generation: 1, content_revision: 1 };
   assert.deepEqual(parseTranscript({ ...legacy, binding }).binding, binding);
   assert.throws(() => parseTranscript({ ...legacy, binding: { ...binding, encounter_id: undefined } }));
+});
+test("ai-output.schema.json đã giải $ref không có khóa don_thuoc hay ke_don ở bất kỳ cấp nào", () => {
+  const raw = JSON.parse(fs.readFileSync(path.resolve("config/clinical/ai-output.schema.json"), "utf8"));
+  const keys = new Set<string>();
+  const walk = (node: unknown) => {
+    if (Array.isArray(node)) return node.forEach(walk);
+    if (!node || typeof node !== "object") return;
+    for (const [key, value] of Object.entries(node)) { keys.add(key); walk(value); }
+  };
+  walk(resolveClinicalSchema(raw));
+  assert.ok(keys.has("thuoc_dang_dung") && keys.has("co_thuoc_dang_dung"), "thuốc đang dùng vẫn là dữ kiện lâm sàng được phép");
+  assert.ok(!keys.has("don_thuoc"));
+  assert.ok(!keys.has("ke_don"));
 });

@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useEform } from "@/client/eform/EformContext";
-import { moTaLieu } from "@/client/eform/DonThuocTab";
+import { moTaLieu } from "@/shared/eform/don-thuoc";
 import { nhanIcd } from "@/client/eform/IcdField";
 import type { DongChiDinh, DongThuoc } from "@/shared/eform/dien-phieu";
 

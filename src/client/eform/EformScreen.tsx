@@ -7,6 +7,7 @@ import { BanIn } from "@/client/eform/BanIn";
 import { BongBong } from "@/client/eform/BongBong";
 import { BaoCaoDialog } from "@/client/eform/BaoCaoDialog";
 import { ChiDinhTab } from "@/client/eform/ChiDinhTab";
+import { DonThuocTab } from "@/client/eform/DonThuocTab";
 import type { EncounterBridge } from "@/client/eform/encounter-bridge";
 import { EformContext, MO_PHONG, type EformApi } from "@/client/eform/EformContext";
 import { EformForm } from "@/client/eform/EformForm";
@@ -19,6 +20,7 @@ import { TroLyAi, type TabId } from "@/client/eform/TroLyAi";
 import { apKetQuaLenh } from "@/shared/eform/ap-lenh";
 import type { DongChiDinh, DongThuoc, KetQuaDien } from "@/shared/eform/dien-phieu";
 import { demLuot } from "@/shared/eform/do-luong";
+import { chuanHoaNguonThuoc } from "@/shared/eform/don-thuoc";
 import type { LenhDien } from "@/shared/eform/lenh-nhanh";
 import { doiNguonKhiLuu } from "@/shared/eform/nguon-mau";
 import { ghepGoiY } from "@/shared/eform/thoi-quen";
@@ -42,6 +44,7 @@ const KHUNG = { "--cao-dau": "5.75rem", "--cao-day": "5.75rem" } as CSSPropertie
 const TABS: { id: TabId; nhan: string }[] = [
   { id: "phieu", nhan: "Phiếu khám" },
   { id: "chi_dinh", nhan: "Chỉ định dịch vụ" },
+  { id: "don_thuoc", nhan: "Đơn thuốc" },
 ];
 
 type TrangThai = ReturnType<typeof projectEform>["trangThai"];
@@ -51,6 +54,7 @@ function scopeLabel(record: Encounter, scope: ApprovalScope): string {
   if (scope === "initial_note") return "Phiếu khám ban đầu";
   if (scope === "conclusion") return "Kết luận";
   if (scope === "summary") return "Tóm tắt buổi khám";
+  if (scope === "prescription") return "Đơn thuốc";
   const item = record.chi_dinh.items.find((row) => `service_order:${row.id}` === scope);
   return `Chỉ định: ${item?.danh_muc.display || item?.noi_dung.ten_dich_vu || "dịch vụ"}`;
 }
@@ -139,9 +143,11 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
   const [noServices, setNoServices] = useState(false);
   const [fields, setFields] = useState(dau.fields);
   const [chiDinh, setChiDinh] = useState(dau.chiDinh);
-  const [donThuoc] = useState(dau.donThuoc);
+  const [donThuoc, setDonThuocRaw] = useState(dau.donThuoc);
+  const [khongKeDon, setKhongKeDon] = useState(false);
+  const setDonThuoc = (rows: DongThuoc[]) => { setDonThuocRaw(rows); if (rows.length > 0) setKhongKeDon(false); };
   // Dữ liệu lúc Lưu gần nhất (ban đầu là lúc mở phiếu); khác tham chiếu nghĩa là có thay đổi chưa Lưu
-  const [banLuu, setBanLuu] = useState(() => ({ fields, chiDinh, donThuoc, trangThai: data.ca.trang_thai, summary: "", noServices: false, clinicalInfo: "" }));
+  const [banLuu, setBanLuu] = useState(() => ({ fields, chiDinh, donThuoc, khongKeDon: false, trangThai: data.ca.trang_thai, summary: "", noServices: false, clinicalInfo: "" }));
   const [ketQua, setKetQua] = useState<KetQuaDien | null>(dau.ketQua);
   /** Ô do phiếu mẫu điền, chưa Lưu (để phân biệt với dữ liệu cũ thật cũng mang nguồn "cu"); lúc Lưu đổi thành bác sĩ nhập */
   const [oTuMau, setOTuMau] = useState<ReadonlySet<string>>(() => new Set());
@@ -189,8 +195,10 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
     setNoServices(response.record.chi_dinh.de_cap === "khong_chi_dinh");
     setClinicalInfo(response.snapshot.chiDinhLyDo ?? "");
     setChiDinh(response.snapshot.chiDinh);
+    setDonThuocRaw(response.snapshot.donThuoc ?? []);
+    setKhongKeDon(response.snapshot.donThuocDeCap === "khong_ke_don");
     setTrangThai(response.snapshot.trangThai);
-    setBanLuu({ fields: response.snapshot.fields, chiDinh: response.snapshot.chiDinh, donThuoc: [], trangThai: response.snapshot.trangThai, summary: response.record.tom_tat ?? "", noServices: response.record.chi_dinh.de_cap === "khong_chi_dinh", clinicalInfo: response.snapshot.chiDinhLyDo ?? "" });
+    setBanLuu({ fields: response.snapshot.fields, chiDinh: response.snapshot.chiDinh, donThuoc: response.snapshot.donThuoc ?? [], khongKeDon: response.snapshot.donThuocDeCap === "khong_ke_don", trangThai: response.snapshot.trangThai, summary: response.record.tom_tat ?? "", noServices: response.record.chi_dinh.de_cap === "khong_chi_dinh", clinicalInfo: response.snapshot.chiDinhLyDo ?? "" });
     setKetQua(null);
     setOTuMau(new Set());
     setDongAi({ tong: 0, khop: 0 });
@@ -263,7 +271,7 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
     }, 50);
   };
 
-  const chuaLuu = fields !== banLuu.fields || chiDinh !== banLuu.chiDinh || trangThai !== banLuu.trangThai || summary !== banLuu.summary || noServices !== banLuu.noServices || clinicalInfo !== banLuu.clinicalInfo;
+  const chuaLuu = fields !== banLuu.fields || chiDinh !== banLuu.chiDinh || donThuoc !== banLuu.donThuoc || khongKeDon !== banLuu.khongKeDon || trangThai !== banLuu.trangThai || summary !== banLuu.summary || noServices !== banLuu.noServices || clinicalInfo !== banLuu.clinicalInfo;
   const bridgeSetDirty = bridge?.setDirty;
   useEffect(() => { bridgeSetDirty?.(chuaLuu); }, [chuaLuu, bridgeSetDirty]);
   const khoa = trangThai === TRANG_THAI_HOAN_THANH || record?.status === "hoan_thanh_kham";
@@ -403,22 +411,24 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
     saveLock.current = true;
     setSaving(true);
     setClinicalError("");
-    const snapshot = { fields: doiNguonKhiLuu(fields, oTuMau), chiDinh, chiDinhLyDo: clinicalInfo, chiDinhDeCap: noServices ? "khong_chi_dinh" as const : "chua_de_cap" as const, trangThai: trangThai as TrangThai };
+    const snapshot = { fields: doiNguonKhiLuu(fields, oTuMau), chiDinh, chiDinhLyDo: clinicalInfo, chiDinhDeCap: noServices ? "khong_chi_dinh" as const : "chua_de_cap" as const, donThuoc: chuanHoaNguonThuoc(donThuoc).map((row) => ({ ...row, khi_can: Boolean(row.khi_can), so_luong_ke: row.so_luong_ke ?? "" })), donThuocDeCap: donThuoc.length > 0 ? "co_ke_don" as const : khongKeDon ? "khong_ke_don" as const : "chua_de_cap" as const, trangThai: trangThai as TrangThai };
     try {
       const current = bridge.latest().record;
       const response = await luuHoSo(snapshot, { id: current.id, revision: current.revision }, summary || null);
       bridge.publish(response);
       const savedRows = response.snapshot.chiDinh;
       setChiDinh(rows => rows === snapshot.chiDinh ? savedRows : rows);
+      const savedDrugs = response.snapshot.donThuoc ?? [];
+      setDonThuocRaw(rows => rows === donThuoc ? savedDrugs : rows);
       // Ô do mẫu điền đã lưu như bác sĩ nhập: đổi nguồn trên màn hình theo bản vừa lưu
       setFields(prev => prev === fields ? snapshot.fields : prev);
       // Ô còn chỗ [..] chưa điền vẫn là ô do mẫu: giữ trong oTuMau để lần lưu sau (khi đã điền) mới đổi thành chữ bác sĩ
       setOTuMau(new Set([...oTuMau].filter(id => ["cu", "xem"].includes(snapshot.fields[id]?.nguon ?? ""))));
-      setBanLuu({ fields: snapshot.fields, chiDinh: savedRows, donThuoc, trangThai: snapshot.trangThai, summary, noServices, clinicalInfo });
+      setBanLuu({ fields: snapshot.fields, chiDinh: savedRows, donThuoc: savedDrugs, khongKeDon: response.snapshot.donThuocDeCap === "khong_ke_don", trangThai: snapshot.trangThai, summary, noServices, clinicalInfo });
       setReviewConfirmed(false); setScopesChosen([]);
       setLastEdit({ nguoi: response.record.audit.updated_by, luc: nowText() });
       const ghiChu = await ghiLuot();
-      notify(`Đã lưu phiếu và chỉ định, phiên bản ${response.record.revision}.` + ghiChu);
+      notify(`Đã lưu phiếu, chỉ định và đơn thuốc, phiên bản ${response.record.revision}.` + ghiChu);
     } catch (error) {
       setClinicalError(error instanceof Error ? error.message : "Không lưu được hồ sơ.");
     } finally {
@@ -436,7 +446,7 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
   const coGoiY = {
     phieu: false,
     chi_dinh: boMau.some((mau) => mau.chiDinh.length > 0),
-    don_thuoc: false,
+    don_thuoc: boMau.some((mau) => mau.donThuoc.length > 0),
   };
   const khoaThaoTac = saving || loadingRecord || chuaLuu;
   const duyetMoiNhat = record?.approval_versions.at(-1)?.approved_at;
@@ -498,8 +508,7 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
             </div>
 
             <div className="rounded-lg border border-ef-vien bg-white px-4 py-3 text-[13px] text-ef-phu">
-              <p>Phiếu khám và chỉ định dịch vụ · {clinical ? `Bản lưu ${clinical.revision}` : "Chưa có bản lưu"}</p>
-              <p>Bác sĩ kê đơn thuốc bằng quy trình riêng.</p>
+              <p>Phiếu khám, chỉ định dịch vụ và đơn thuốc · {clinical ? `Bản lưu ${clinical.revision}` : "Chưa có bản lưu"}</p>
               {clinical && <button type="button" className={`${BTN_OUTLINE} mt-2`} onClick={reloadSaved} disabled={saving || loadingRecord}>{loadingRecord ? "Đang tải…" : chuaLuu ? "Tải bản lưu (bỏ thay đổi trên màn)" : "Tải bản lưu"}</button>}
             </div>
             {bridge && record && <RecordingSessions sessions={record.recording_sessions} busy={saving || bridge.busy} onDiscard={(session) => { void bridge.discardSession(session).catch((error) => setClinicalError(error instanceof Error ? error.message : "Không bỏ được phần chưa duyệt.")); }} />}
@@ -530,6 +539,7 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
                     </li>
                   ))}
                 </ul>
+                {record.don_thuoc?.de_cap === "chua_de_cap" && <p className="text-xs text-ef-phu">Chưa xác nhận có hay không kê đơn thuốc.</p>}
                 <label className="flex items-start gap-2 text-xs"><input type="checkbox" checked={reviewConfirmed} onChange={event => setReviewConfirmed(event.target.checked)} disabled={khoaThaoTac || khoa} />Tôi đã kiểm tra nội dung các phần đã chọn và các điểm AI đánh dấu.</label>
                 <div className="flex flex-wrap items-center gap-2">
                   <button type="button" className={BTN_OUTLINE} onClick={approveChosen} disabled={khoaThaoTac || khoa || !reviewConfirmed || scopesChosen.length === 0}>Duyệt các phần đã chọn</button>
@@ -553,6 +563,7 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
             {/* fieldset disabled khóa mọi ô nhập và nút bên trong khi phiếu đã hoàn thành */}
             <fieldset disabled={khoa || saving || loadingRecord} className="contents">
               {tab === "phieu" && <EformForm noiSoiEnabled={trangThai === TRANG_THAI_NOI_SOI} />}
+              {tab === "don_thuoc" && <DonThuocTab rows={donThuoc} onChange={setDonThuoc} khongKeDon={khongKeDon} onKhongKeDon={setKhongKeDon} />}
               {tab === "chi_dinh" && <ChiDinhTab rows={chiDinh} onChange={setChiDinh} onSave={save} saving={saving} noServices={noServices} onNoServices={setNoServices} clinicalInfo={clinicalInfo} onClinicalInfo={setClinicalInfo} />}
             </fieldset>
           </main>
@@ -633,7 +644,7 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
               In ngay
             </button>
             <button type="button" className={`${BTN_CHINH} ml-auto inline-flex flex-1 items-center justify-center gap-2 whitespace-nowrap sm:max-w-sm`} onClick={save} disabled={saving || loadingRecord || khoa}>
-              {saving ? "Đang lưu…" : "Lưu phiếu & chỉ định"}
+              {saving ? "Đang lưu…" : "Lưu phiếu, chỉ định & đơn thuốc"}
               {conXem > 0 && (
                 <span className="rounded-full bg-xem-nhat px-2 py-px text-[11px] font-semibold text-xem" title="Số chỗ AI chưa chắc, bác sĩ nên xem lại trước khi Lưu">
                   {conXem} cần xem lại

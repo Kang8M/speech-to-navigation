@@ -85,6 +85,10 @@ __pycache__/
 /models/denoise/
 /.superpowers/
 
+# bộ gõ tắt riêng của bác sĩ (có thể là câu chữ thật), mỗi tài khoản một file
+/data/go-tat/*
+!/data/go-tat/README.md
+
 # Dữ liệu chạy demo luồng dữ liệu (kịch bản mẫu được commit)
 /data/demo-luong/*
 !/data/demo-luong/kich-ban/

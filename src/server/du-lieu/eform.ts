@@ -4,9 +4,11 @@ import fs from "node:fs";
 import path from "node:path";
 import { getProviderName, loadCases, loadCatalogs, loadRules, loadSuaChu, loadVietTat } from "./config";
 import { loadIcd10 } from "./danh-muc";
+import { docGoTat } from "./go-tat";
 import { loadPhieuMau } from "./phieu-mau";
 import { docThoiQuen, MAU_TAI_KHOAN } from "./thoi-quen";
 import { khopBoMau, type MauGoiYGoc } from "@/shared/eform/goi-y";
+import type { ThuVien } from "@/shared/eform/goi-y-tab";
 import type { CaGia, EformData, MauCauData, QuyTacAi, TuyChon } from "@/shared/eform/types";
 
 /** Ca mẫu trùng bệnh nhân giả của trang eForm; ở chế độ mock câu này trả kết quả soạn sẵn */
@@ -28,7 +30,7 @@ export function loadEformData(taiKhoan?: string): EformData {
   return {
     ca,
     icd10: loadIcd10(),
-    thuVien: readJson<Record<string, string[]>>("thu-vien.json"),
+    thuVien: readJson<ThuVien>("thu-vien.json"),
     tuyChon: readJson<TuyChon>("tuy-chon.json"),
     quyTac: readJson<QuyTacAi>("quy-tac.json"),
     mauCau: readJson<MauCauData>("mau-cau.json"),
@@ -41,6 +43,7 @@ export function loadEformData(taiKhoan?: string): EformData {
     suaChu: loadSuaChu(),
     thoiQuen: docThoiQuen(ca.dang_nhap),
     phieuMau: loadPhieuMau(),
+    goTat: docGoTat(ca.dang_nhap).bo,
   };
 }
 

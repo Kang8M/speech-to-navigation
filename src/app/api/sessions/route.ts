@@ -17,6 +17,14 @@ const sessionSchema = z.object({
   so_muc_khop: count,
   so_muc_khong_khop: count,
   so_canh_bao: count,
+  goi_y_tab: z.boolean().default(false),
+  so_goi_y_hien: count.default(0),
+  so_goi_y_nhan: count.default(0),
+  so_goi_y_nhan_roi_sua: count.default(0),
+  so_ky_tu_goi_y: count.default(0),
+  so_ky_tu_go: count.default(0),
+  giao_dien: z.enum(["gon", "cu"]).default("cu"),
+  so_lan_bam_chuot: count.default(0),
 });
 
 export async function GET() {

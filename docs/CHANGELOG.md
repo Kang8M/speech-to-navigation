@@ -4,6 +4,17 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-27
 
+### Chuyển gợi ý chữ mờ bấm Tab và bộ gõ tắt từ nhánh `thanh` sang `dev`
+- **Loại:** Tính năng, Chuyển code giữa nhánh
+- **Thay đổi:** Ô chữ tự do của phiếu khám (`TextBox` trong `src/client/eform/fields.tsx`) hiện chữ mờ gợi ý khi con trỏ ở cuối ô; bấm **Tab** nhận, **Esc** bỏ qua. Đi qua ô bằng Tab mà chưa gõ hay bấm chuột thì Tab vẫn chuyển ô như cũ.
+  - Nguồn câu (`src/shared/eform/goi-y-tab.ts`, xếp điểm theo chẩn đoán đang có): bộ gõ tắt của tài khoản, lời dặn đã kê theo ICD (thói quen), phiếu mẫu, thư viện câu. Gõ đúng mã gõ tắt thì chữ mờ hiện câu sẽ bung (`mã → câu`).
+  - `data/eform/thu-vien.json` đổi dạng thành `{chung, nhom}`: 803 câu giả, 21 nhóm bệnh khớp theo tiền tố ICD và từ khóa. Nút "Mở thư viện tham khảo" xếp câu theo nhóm bệnh.
+  - Bộ gõ tắt (`src/shared/eform/go-tat.ts`, `src/server/du-lieu/go-tat.ts`): đọc `data/go-tat/<tài khoản>.json` (gitignore, có thể là câu chữ thật của bác sĩ), chưa có thì dùng bộ giả `data/eform/go-tat-mau.json`. `EformData.goTat` nạp theo `ca.dang_nhap`. **Không gửi gì cho AI**: phần câu quen trong prompt và bong bóng Trợ lý chưa chuyển, chờ thống nhất cách đi qua luồng che PII.
+  - Số đo lượt thử (`src/shared/metrics.ts`, `/api/sessions`, trang Kết quả): số gợi ý hiện/nhận/nhận rồi sửa, số ký tự từ gợi ý và tự gõ, số lần bấm chuột. Ô tích "Gợi ý chữ mờ" ở dòng Chú giải để tắt khi đo lượt đối chứng. Gõ vào phiếu (không gọi AI) cũng ghi lượt khi Lưu.
+- **Lý do:** Nhánh `thanh` không merge thẳng vào `dev` được (dev đã viết lại Trợ lý theo lượt khám nhiều phiên và che PII), nên chuyển từng tính năng thành PR nhỏ. Tab là tính năng không gọi AI, chuyển trước.
+- **File:** `src/client/eform/{fields,EformContext,EformScreen}.tsx`, `src/shared/eform/{goi-y-tab,go-tat,types}.ts` (+test), `src/server/du-lieu/{eform,go-tat}.ts`, `src/server/du-lieu/{go-tat,thu-vien}.test.ts`, `src/shared/metrics.ts`, `src/app/api/sessions/route.ts`, `src/client/ket-qua/ResultsView.tsx`, `data/eform/{thu-vien,go-tat-mau}.json`, `data/go-tat/README.md`, `.gitignore`, `docs/cau-truc-du-an.md`
+- **Kiểm tra:** `npx tsc --noEmit`; `npm test` 438/438 (dev trước đó 410); `npm run lint` 0 lỗi; `npm run build` qua. Trình duyệt (cổng 3001): ô Khám chuyên khoa gõ "Mũi" hiện chữ mờ, Tab chèn đủ câu, không lỗi console.
+
 ### Chuyển "chẩn đoán chỉ ghi chữ khi không có mã" và 83 phiếu mẫu từ nhánh `thanh` sang `dev`
 - **Loại:** Tính năng, Dữ liệu giả, Chuyển code giữa nhánh
 - **Thay đổi:**

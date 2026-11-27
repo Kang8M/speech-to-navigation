@@ -2,9 +2,11 @@
 import type { CatalogItem, VietTat, WarningRules } from "../types";
 import type { BangSuaChu } from "../giong-noi/sua-chu";
 import type { MauGoiY } from "./goi-y";
+import type { GoTat } from "./go-tat";
 import type { DonDaKe } from "./thoi-quen";
 import type { KetQuaDien } from "./dien-phieu";
 import type { PhieuMau } from "./phieu-mau";
+import type { ThuVien } from "./goi-y-tab";
 
 /** cu: dữ liệu có sẵn; ai: AI thêm; xem: AI thêm nhưng chưa chắc, bác sĩ cần xem lại;
  * sua: dữ liệu cũ hoặc AI đã bị bác sĩ sửa; bs: bác sĩ tự nhập */
@@ -131,7 +133,7 @@ export interface QuyTacAi {
 export interface EformData {
   ca: CaGia;
   icd10: Icd10[];
-  thuVien: Record<string, string[]>;
+  thuVien: ThuVien;
   tuyChon: TuyChon;
   quyTac: QuyTacAi;
   mauCau: MauCauData;
@@ -152,6 +154,8 @@ export interface EformData {
   thoiQuen: DonDaKe[];
   /** Phiếu mẫu theo bệnh (data/eform/phieu-mau.json), mã đã gán ở server */
   phieuMau: PhieuMau[];
+  /** Bộ gõ tắt của tài khoản đang đăng nhập (data/go-tat/<tài khoản>.json, chưa có thì bộ giả data/eform/go-tat-mau.json) */
+  goTat: GoTat[];
   /** Chỉ có ở trang /trinh-dien: không ghi gì khi Lưu, có kịch bản cho 4 kiểu tương tác */
   trinhDien?: TrinhDienData;
 }

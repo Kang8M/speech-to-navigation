@@ -111,6 +111,9 @@ function trangThaiDau(data: EformData, kichBan?: KichBan) {
   return { fields, chiDinh: KHONG_CHI_DINH, donThuoc: KHONG_THUOC, ketQua: null, dongAi: { tong: 0, khop: 0 }, tab: "phieu" as TabId };
 }
 
+/** Bác sĩ đã nhận gợi ý Tab bấy nhiêu lần thì thôi hiện dòng nhắc phím Tab, Esc dưới ô */
+const NHAN_DE_QUEN = 2;
+
 /**
  * Màn phiếu khám. Trong một lượt khám thật, `bridge` do EncounterWorkspace cấp: hồ sơ, phiên bản và điều phối ghi âm đều ở đó.
  * Không có `bridge` (trang /trinh-dien) thì màn chỉ để trình diễn, không ghi hồ sơ.
@@ -152,6 +155,12 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
   const [toast, setToast] = useState("");
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const hydrated = useRef(false);
+  // Gợi ý chữ mờ (Tab): tắt đi để đo lượt đối chứng không có gợi ý. Bộ đếm để trong ref, không cần vẽ lại
+  const [tabBat, setTabBat] = useState(true);
+  const demTab = useRef({ hien: new Set<string>(), nhan: [] as { id: string; cau: string }[], kyTuGoiY: 0, kyTuGo: 0 });
+  const [daQuenTab, setDaQuenTab] = useState(false);
+  /** Số lần bấm chuột trên màn hình từ lúc mở phiếu */
+  const soLanBam = useRef(0);
 
   const notify = useCallback((message: string) => {
     setToast(message);
@@ -213,8 +222,23 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
             [id]: { value: current ? `${current}\n${text}` : text, nguon: nguon ?? afterEdit(prev[id]?.nguon) },
           };
         }),
+      goiYTab: {
+        bat: tabBat,
+        daQuen: daQuenTab,
+        daHien: (khoa) => demTab.current.hien.add(khoa),
+        daNhan: (id, cau, soKyTu) => {
+          demTab.current.nhan.push({ id, cau });
+          demTab.current.kyTuGoiY += Math.max(0, soKyTu);
+          if (demTab.current.nhan.length >= NHAN_DE_QUEN) setDaQuenTab(true);
+        },
+        daGo: (soKyTu) => {
+          demTab.current.kyTuGo += soKyTu;
+          // Gõ vào ô phiếu cũng là bắt đầu lượt, để đo được cả lượt không gọi AI
+          setLuot((prev) => (prev.daGhi || prev.batDau !== null ? prev : { ...prev, batDau: Date.now() }));
+        },
+      },
     }),
-    [data, fields, notify],
+    [data, fields, notify, tabBat, daQuenTab],
   );
 
   const goTo = (id: string) => {
@@ -293,7 +317,8 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
 
   /** Ghi số đo lượt thử vào data/sessions/ (chỉ số đếm), hiện ở trang Kết quả thử nghiệm. Trả câu báo thêm */
   const ghiLuot = async (): Promise<string> => {
-    if (!ketQua) return "";
+    const dem = demTab.current;
+    if (!ketQua && dem.kyTuGo === 0 && dem.nhan.length === 0) return "";
     if (luot.daGhi) return "";
     try {
       await luuLuotThu({
@@ -303,10 +328,18 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
         mau_id: luot.mauId,
         provider: luot.provider,
         thoi_gian_giay: luot.batDau === null ? 0 : Math.round((Date.now() - luot.batDau) / 100) / 10,
-        ...demLuot(fields, ketQua.daDien, dongAi.tong, chiDinh, donThuoc, data.danhMuc.thuoc, data.ca.canh_bao_di_ung),
+        ...demLuot(fields, ketQua?.daDien ?? [], dongAi.tong, chiDinh, donThuoc, data.danhMuc.thuoc, data.ca.canh_bao_di_ung),
         so_muc_danh_muc: dongAi.tong,
         so_muc_khop: dongAi.khop,
         so_muc_khong_khop: dongAi.tong - dongAi.khop,
+        goi_y_tab: tabBat,
+        so_goi_y_hien: dem.hien.size,
+        so_goi_y_nhan: dem.nhan.length,
+        so_goi_y_nhan_roi_sua: dem.nhan.filter(({ id, cau }) => !(fields[id]?.value ?? "").includes(cau)).length,
+        so_ky_tu_goi_y: dem.kyTuGoiY,
+        so_ky_tu_go: dem.kyTuGo,
+        giao_dien: "cu",
+        so_lan_bam_chuot: soLanBam.current,
       });
       setLuot((prev) => ({ ...prev, daGhi: true }));
       return "";
@@ -364,7 +397,13 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
 
   return (
     <EformContext.Provider value={api}>
-      <div className="flex flex-1 flex-col bg-ef-nen text-sm text-ef-chu print:hidden" style={KHUNG}>
+      <div
+        className="flex flex-1 flex-col bg-ef-nen text-sm text-ef-chu print:hidden"
+        style={KHUNG}
+        onClickCapture={() => {
+          soLanBam.current += 1;
+        }}
+      >
         <EformHeader lastEdit={lastEdit} expanded={expanded} onToggleExpand={() => setExpanded((open) => !open)} />
 
         <div className={`mx-auto grid w-full flex-1 items-start gap-5 px-4 pb-8 pt-5 sm:px-6 lg:grid-cols-[minmax(0,1fr)_23rem] ${expanded ? "" : "max-w-[90rem]"}`}>
@@ -404,6 +443,10 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
                   <SourceBadge nguon="xem" />
                   <SourceBadge nguon="sua" />
                   <BcytTag />
+                  <label className="ml-auto flex cursor-pointer items-center gap-1.5 text-ef-chu" title="Tắt để đo lượt đối chứng không có gợi ý">
+                    <input type="checkbox" checked={tabBat} onChange={(e) => setTabBat(e.target.checked)} className="accent-ef-xanh" />
+                    Gợi ý chữ mờ, bấm Tab để nhận
+                  </label>
                 </div>
               )}
             </div>

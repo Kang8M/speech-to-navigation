@@ -1695,7 +1695,7 @@
         },
         "scope": {
           "type": "string",
-          "pattern": "^(initial_note|conclusion|summary|legacy|service_order:.+)$"
+          "pattern": "^(initial_note|conclusion|summary|prescription|legacy|service_order:.+)$"
         },
         "snapshot": {
           "$ref": "common.schema.json#/$defs/jsonValue"

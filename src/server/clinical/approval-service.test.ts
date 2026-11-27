@@ -3,7 +3,8 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
-import type { Encounter, Diagnosis, RecordingSession } from "@/shared/clinical/types";
+import type { Encounter, Diagnosis, PrescriptionItem, RecordingSession, Source } from "@/shared/clinical/types";
+import { approvalState } from "@/shared/clinical/approvals";
 import { emptyDefinition } from "@/shared/clinical/schema";
 import { ClinicalError, ClinicalRepository } from "./repository";
 import { getDemoClinicalActor, resolveEncounterContext } from "./encounter-context";
@@ -114,4 +115,102 @@ test("completion rejects changed approved note and requires meaningful summary a
   const completed = transitionEncounter(actor, { id: record.id, expected_revision: final.record.revision, action: "complete" }, store);
   assert.equal(completed.record.status, "hoan_thanh_kham");
   assert.deepEqual(completed.record.approval_versions.slice(0, 2), history);
+});
+
+// ---- Đơn thuốc (phạm vi "prescription") ----
+type Drug = Partial<PrescriptionItem["noi_dung"]> & { code?: string | null };
+function withDrugs(store: ClinicalRepository, id: string, actor: ReturnType<typeof getDemoClinicalActor>, rows: Drug[] | "khong_ke_don" | "chua_de_cap") {
+  const revision = store.read(id).revision;
+  return store.update(id, revision, draft => {
+    if (typeof rows === "string") { draft.don_thuoc = { de_cap: rows, items: [] }; return draft; }
+    const items = rows.map((row, index) => {
+      const item = emptyDefinition<PrescriptionItem>("prescriptionItem");
+      const { code = "TH-003", ...content } = row;
+      item.id = `drug-${index + 1}`;
+      Object.assign(item.noi_dung, { ten_thuoc: "Amoxicillin", lieu_moi_lan: "1 v", khi_can: false, so_lan_ngay: "3", so_ngay: "5", so_luong_ke: null }, content);
+      item.danh_muc.code = code; item.danh_muc.display = code ? "Amoxicillin 500 mg" : null;
+      return item;
+    });
+    draft.don_thuoc = { de_cap: "co_ke_don", items };
+    draft.nguon_du_lieu = draft.nguon_du_lieu.filter(source => !source.field_path.startsWith("/don_thuoc/"));
+    items.forEach((_, index) => { const source = emptyDefinition<Source>("source"); Object.assign(source, { field_path: `/don_thuoc/items/${index}`, nguon: "nhap_tay", source_system: "prototype-eform" }); draft.nguon_du_lieu.push(source); });
+    return draft;
+  }, actor.doctorId, new Date().toISOString());
+}
+const approveRx = (svc: Awaited<ReturnType<typeof service>>, actor: ReturnType<typeof getDemoClinicalActor>, store: ClinicalRepository, id: string) =>
+  svc.approveScopes(actor, { id, expected_revision: store.read(id).revision, scopes: ["prescription"], acknowledged_issues: true }, store);
+const message = (pattern: RegExp) => (error: unknown) => error instanceof ClinicalError && error.status === 422 && pattern.test(error.message);
+
+test("duyệt đơn thuốc: chưa xác nhận có hoặc không kê thì 422", async () => {
+  const svc = await service(); const { actor, store, record } = setup();
+  assert.throws(() => approveRx(svc, actor, store, record.id), message(/Hãy xác nhận có hoặc không kê đơn thuốc\./));
+});
+
+test("duyệt đơn thuốc: thiếu chẩn đoán có mã ICD thì 422", async () => {
+  const svc = await service(); const { actor, store, record } = setup();
+  withDrugs(store, record.id, actor, [{}]);
+  store.update(record.id, store.read(record.id).revision, draft => { draft.chan_doan[0].icd.code = null; return draft; }, actor.doctorId, new Date().toISOString());
+  assert.throws(() => approveRx(svc, actor, store, record.id), message(/chẩn đoán/i));
+});
+
+test("duyệt đơn thuốc: dòng thiếu mã, liều, lần/ngày, số ngày hoặc Tổng SL thì 422", async () => {
+  const svc = await service(); const { actor, store, record } = setup();
+  const cases: [Drug, RegExp][] = [
+    [{ code: null }, /chọn đúng thuốc/],
+    [{ lieu_moi_lan: "" }, /liều/i],
+    [{ so_lan_ngay: null }, /lần mỗi ngày|lần\/ngày/i],
+    [{ so_ngay: "0" }, /số ngày/i],
+    [{ khi_can: true, so_lan_ngay: null, so_ngay: null, so_luong_ke: null }, /Tổng SL/],
+    [{ lieu_moi_lan: "2 giọt", so_luong_ke: null }, /Tổng SL/],
+  ];
+  for (const [row, pattern] of cases) {
+    withDrugs(store, record.id, actor, [row]);
+    assert.throws(() => approveRx(svc, actor, store, record.id), message(pattern), JSON.stringify(row));
+  }
+  assert.equal(store.read(record.id).approval_versions.length, 0);
+});
+
+test("duyệt đơn thuốc hợp lệ: dòng được chấp nhận, ghi phiên bản, phần khác không đổi", async () => {
+  const svc = await service(); const { actor, store, record } = setup();
+  withDrugs(store, record.id, actor, [{}, { khi_can: true, so_lan_ngay: null, so_ngay: null, so_luong_ke: "6" }]);
+  const before = store.read(record.id);
+  const approved = approveRx(svc, actor, store, record.id).record;
+  assert.ok(approved.don_thuoc.items.every(item => item.review.trang_thai === "chap_nhan" && item.review.reviewer_id === actor.doctorId));
+  assert.equal(approved.approval_versions.length, 1);
+  const version = approved.approval_versions[0];
+  assert.equal(version.scope, "prescription"); assert.match(version.digest, /^[a-f0-9]{64}$/);
+  assert.deepEqual(version.sources.map(source => source.field_path), ["/don_thuoc/items/0", "/don_thuoc/items/1"]);
+  assert.ok(approved.nguon_du_lieu.filter(source => source.field_path.startsWith("/don_thuoc/")).every(source => source.review.trang_thai === "chap_nhan"));
+  assert.deepEqual(approved.phieu_kham, before.phieu_kham);
+  assert.deepEqual(approved.chi_dinh.items.map(item => item.review), before.chi_dinh.items.map(item => item.review));
+  assert.deepEqual(approved.chan_doan.map(item => item.review), before.chan_doan.map(item => item.review));
+  assert.equal(approvalState(approved, "prescription"), "current");
+});
+
+test("duyệt đơn: 'không kê đơn' duyệt được; sửa liều sau duyệt thành 'changed'; duyệt phiếu không động đến đơn", async () => {
+  const svc = await service(); const { actor, store, record } = setup();
+  withDrugs(store, record.id, actor, "khong_ke_don");
+  assert.equal(approveRx(svc, actor, store, record.id).record.approval_versions.at(-1)?.scope, "prescription");
+  withDrugs(store, record.id, actor, [{}]);
+  const approved = approveRx(svc, actor, store, record.id).record;
+  assert.equal(approvalState(approved, "prescription"), "current");
+  const edited = store.update(record.id, approved.revision, draft => { draft.don_thuoc.items[0].noi_dung.lieu_moi_lan = "2 v"; return draft; }, actor.doctorId, new Date().toISOString());
+  assert.equal(approvalState(edited, "prescription"), "changed");
+  const note = svc.approveScopes(actor, { id: record.id, expected_revision: edited.revision, scopes: ["initial_note"], acknowledged_issues: true }, store).record;
+  assert.equal(approvalState(note, "prescription"), "changed");
+  assert.equal(note.approval_versions.filter(version => version.scope === "prescription").length, approved.approval_versions.filter(version => version.scope === "prescription").length);
+});
+
+test("hoàn tất khám đòi duyệt đơn khi đã kê; chưa xác nhận có hoặc không kê vẫn hoàn tất được", async () => {
+  const svc = await service(); const { actor, store, record } = setup();
+  const complete = () => svc.transitionEncounter(actor, { id: record.id, expected_revision: store.read(record.id).revision, action: "complete" }, store);
+  svc.approveScopes(actor, { id: record.id, expected_revision: 1, scopes: ["initial_note", "service_order:svc-demo-001"], acknowledged_issues: true }, store);
+  withDrugs(store, record.id, actor, [{}]);
+  assert.throws(() => complete(), message(/Cần duyệt các phần hiện tại/));
+  approveRx(svc, actor, store, record.id);
+  assert.equal(complete().record.status, "hoan_thanh_kham");
+  const other = setup();
+  other.store.update(other.record.id, 1, draft => { draft.don_thuoc = { de_cap: "chua_de_cap", items: [] }; return draft; }, other.actor.doctorId, new Date().toISOString());
+  svc.approveScopes(other.actor, { id: other.record.id, expected_revision: 2, scopes: ["initial_note", "service_order:svc-demo-001"], acknowledged_issues: true }, other.store);
+  assert.equal(svc.transitionEncounter(other.actor, { id: other.record.id, expected_revision: 3, action: "complete" }, other.store).record.status, "hoan_thanh_kham");
 });

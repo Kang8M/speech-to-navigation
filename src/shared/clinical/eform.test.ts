@@ -7,7 +7,7 @@ import { applyEformSnapshot, projectEform, parseEformSnapshot } from "./eform";
 const now = "2026-11-12T10:00:00+07:00";
 const base = () => emptyEncounter({ id: "enc-test", patientId: "patient-demo", doctorId: "doctor-demo", now });
 let sequence = 0;
-const context = { now, newId: () => `row-${++sequence}`, services: [{ ma: "DV-1", ten: "Nội soi tai" }] };
+const context = { now, newId: () => `row-${++sequence}`, services: [{ ma: "DV-1", ten: "Nội soi tai" }], drugs: [] as { ma: string; ten: string }[] };
 test("maps explicit denials separately from unknowns and diagnosis stages separately", () => {
   const e = applyEformSnapshot(base(), parseEformSnapshot({ fields: {
     di_ung: { value: "Không xác định", nguon: "bs" },

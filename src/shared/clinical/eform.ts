@@ -53,7 +53,7 @@ export function specialistText(note: Encounter["phieu_kham"]["kham_chuyen_khoa"]
 }
 
 /** Full snapshot of the two supported screens; preserves non-UI structured fields in base. */
-export function applyEformSnapshot(base: Encounter, input: EformSnapshot, context: { now: string; newId: () => string; services: CatalogItem[]; drugs?: CatalogItem[]; icd?: { ma: string; ten: string }[] }): Encounter {
+export function applyEformSnapshot(base: Encounter, input: EformSnapshot, context: { now: string; newId: () => string; services: CatalogItem[]; drugs: CatalogItem[]; icd?: { ma: string; ten: string }[] }): Encounter {
   const result = structuredClone(base);
   const note = result.phieu_kham;
   const fields = input.fields;
@@ -201,7 +201,7 @@ export function applyEformSnapshot(base: Encounter, input: EformSnapshot, contex
       const item = previous ? structuredClone(previous) : emptyDefinition<PrescriptionItem>("prescriptionItem");
       item.id ||= context.newId();
       const sameSelection = previous && (previous.danh_muc.code ?? "") === row.ma && (previous.danh_muc.display ?? previous.noi_dung.ten_thuoc) === row.ten;
-      const match = row.ma ? context.drugs?.find(drug => drug.ma === row.ma) : undefined;
+      const match = row.ma ? context.drugs.find(drug => drug.ma === row.ma) : undefined;
       if (row.ma && !match && !sameSelection) throw new Error("Thuốc không có trong danh mục.");
       Object.assign(item.noi_dung, {
         ten_thuoc: sameSelection ? previous.noi_dung.ten_thuoc : row.ten, ham_luong: text(row.ham_luong), duong_dung: text(row.duong_dung), lieu_moi_lan: text(row.lieu_moi_lan),

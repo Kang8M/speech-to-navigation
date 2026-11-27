@@ -37,6 +37,7 @@ export function loadPhieuMau(): PhieuMau[] {
       bi_danh: goc.bi_danh,
       icd: maIcdTheoTen(goc.icd_ten, icd10),
       khamKhac: goc.kham_khac,
+      oKhac: goc.o_khac ?? {},
       ketQua: { draft, matches, provider: "mau", duration_ms: 0 },
     };
   });

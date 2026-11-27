@@ -15,6 +15,46 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 - **File:** `src/client/eform/{ChiDinhTab,GoiChiDinh,XacNhanChiDinh,GoiYTheoChanDoan}.tsx`, `src/shared/eform/{goi-chi-dinh,goi-y,types}.ts` (+test), `src/server/du-lieu/eform.ts`, `src/server/du-lieu/{goi-chi-dinh,goi-y}.test.ts`, `data/eform/{goi-chi-dinh,gia-dich-vu,goi-y-theo-chan-doan}.json`, `data/catalog/dich-vu.json`, `docs/CHANGELOG.md`
 - **Kiểm tra:** `npx tsc --noEmit`; `npm test` 425/425 (dev trước đó 410); `npm run lint` 0 lỗi; `npm run build` qua. Trình duyệt (cổng 3002): chọn gói TMH-003 thêm 3 dịch vụ; bước Xác nhận chặn khi chưa có chẩn đoán, nhập xong báo 3 dịch vụ 5.400.000 VNĐ; chọn ICD H60.0 hiện gợi ý 2 mục tích sẵn + 1 tùy chọn, thêm vào thành 5 dịch vụ, mục đã có bị khoá; không lỗi console.
 
+### Chuyển gợi ý chữ mờ bấm Tab và bộ gõ tắt từ nhánh `thanh` sang `dev`
+- **Loại:** Tính năng, Chuyển code giữa nhánh
+- **Thay đổi:** Ô chữ tự do của phiếu khám (`TextBox` trong `src/client/eform/fields.tsx`) hiện chữ mờ gợi ý khi con trỏ ở cuối ô; bấm **Tab** nhận, **Esc** bỏ qua. Đi qua ô bằng Tab mà chưa gõ hay bấm chuột thì Tab vẫn chuyển ô như cũ.
+  - Nguồn câu (`src/shared/eform/goi-y-tab.ts`, xếp điểm theo chẩn đoán đang có): bộ gõ tắt của tài khoản, lời dặn đã kê theo ICD (thói quen), phiếu mẫu, thư viện câu. Gõ đúng mã gõ tắt thì chữ mờ hiện câu sẽ bung (`mã → câu`).
+  - `data/eform/thu-vien.json` đổi dạng thành `{chung, nhom}`: 803 câu giả, 21 nhóm bệnh khớp theo tiền tố ICD và từ khóa. Nút "Mở thư viện tham khảo" xếp câu theo nhóm bệnh.
+  - Bộ gõ tắt (`src/shared/eform/go-tat.ts`, `src/server/du-lieu/go-tat.ts`): đọc `data/go-tat/<tài khoản>.json` (gitignore, có thể là câu chữ thật của bác sĩ), chưa có thì dùng bộ giả `data/eform/go-tat-mau.json`. `EformData.goTat` nạp theo `ca.dang_nhap`. **Không gửi gì cho AI**: phần câu quen trong prompt và bong bóng Trợ lý chưa chuyển, chờ thống nhất cách đi qua luồng che PII.
+  - Số đo lượt thử (`src/shared/metrics.ts`, `/api/sessions`, trang Kết quả): số gợi ý hiện/nhận/nhận rồi sửa, số ký tự từ gợi ý và tự gõ, số lần bấm chuột. Ô tích "Gợi ý chữ mờ" ở dòng Chú giải để tắt khi đo lượt đối chứng. Gõ vào phiếu (không gọi AI) cũng ghi lượt khi Lưu.
+- **Lý do:** Nhánh `thanh` không merge thẳng vào `dev` được (dev đã viết lại Trợ lý theo lượt khám nhiều phiên và che PII), nên chuyển từng tính năng thành PR nhỏ. Tab là tính năng không gọi AI, chuyển trước.
+- **File:** `src/client/eform/{fields,EformContext,EformScreen}.tsx`, `src/shared/eform/{goi-y-tab,go-tat,types}.ts` (+test), `src/server/du-lieu/{eform,go-tat}.ts`, `src/server/du-lieu/{go-tat,thu-vien}.test.ts`, `src/shared/metrics.ts`, `src/app/api/sessions/route.ts`, `src/client/ket-qua/ResultsView.tsx`, `data/eform/{thu-vien,go-tat-mau}.json`, `data/go-tat/README.md`, `.gitignore`, `docs/cau-truc-du-an.md`
+- **Kiểm tra:** `npx tsc --noEmit`; `npm test` 438/438 (dev trước đó 410); `npm run lint` 0 lỗi; `npm run build` qua. Trình duyệt (cổng 3001): ô Khám chuyên khoa gõ "Mũi" hiện chữ mờ, Tab chèn đủ câu, không lỗi console.
+
+### Chuyển "chẩn đoán chỉ ghi chữ khi không có mã" và 83 phiếu mẫu từ nhánh `thanh` sang `dev`
+- **Loại:** Tính năng, Dữ liệu giả, Chuyển code giữa nhánh
+- **Thay đổi:**
+  - **Chẩn đoán** (`src/shared/eform/dien-phieu.ts`, `IcdField.tsx`): có mã ICD thì chỉ điền ô mã, ô ghi chẩn đoán bằng chữ để trống như phiếu EMR thật; không tìm được mã mới ghi chữ. Ô chữ không còn nhãn "Mô tả chẩn đoán", có chữ mờ "Không tìm được mã thì ghi chẩn đoán ở đây". Giữ quy tắc `clinicalOnly` của `dev` (không điền phần ra viện). Trang trình diễn không điền chữ khi đã có mã.
+  - **Chẩn đoán kèm theo:** tách theo ";", đúng tên một mã ICD thì lấy mã đó (`maIcdTheoTen`), không thì tách tiếp theo dấu phẩy và gợi ý theo từ khóa; bỏ mã trùng chẩn đoán chính.
+  - **Phiếu mẫu** (`data/eform/phieu-mau.json`): 39 → 83 mẫu giả (thêm trẻ em, tái khám sau mổ, cấp cứu chuyển viện), 82/83 có chẩn đoán kèm theo, có `o_khac` (ghi chú kết quả, có PT/TT, đã xử lý, tình trạng ra viện). `dienPhieu` nhận `oKhac` và `chepLichSu` (tiền sử, dị ứng còn trống thì chép từ lần khám gần nhất, nguồn "cu").
+  - Không chuyển phần thuốc dùng khi cần, vì `dev` đã bỏ tab Đơn thuốc. `PhieuMau.oKhac` để tùy chọn, để test cũ dựng mẫu không có trường này vẫn đúng kiểu.
+  - Giao diện gọi phiếu mẫu bằng tên (qua AI) chưa nối, chờ thống nhất cách đi qua luồng che PII. Hiện phiếu mẫu dùng cho gợi ý chữ mờ Tab (PR gợi ý Tab), trang trình diễn và `npm run eval-mau`.
+- **Lý do:** Chuyển từng tính năng của nhánh `thanh` sang `dev` thành PR nhỏ; phần này không gửi gì cho AI.
+- **File:** `src/shared/eform/{dien-phieu,phieu-mau}.ts` (+test), `src/server/du-lieu/phieu-mau.ts` (+test), `src/client/eform/{IcdField,EformScreen}.tsx`, `data/eform/phieu-mau.json`, `scripts/eval-mau.ts`
+- **Kiểm tra:** `npx tsc --noEmit`; `npm test` 416/416 (dev 410); `npm run lint` 0 lỗi; `npm run build` qua; `npm run eval-mau` (rule): chính xác chung 67,5%, không tính tiền sử 69,5% (ước tính, mẫu và đáp án đều do nhóm soạn).
+
+### Chuyển nhật ký thực địa 10/11, 16/11, 17/11 và từ khóa ICD "u bã đậu" từ nhánh `thanh` sang `dev`
+- **Loại:** Tài liệu, Sửa lỗi, Chuyển code giữa nhánh
+- **Thay đổi:**
+  - Nhật ký thực địa (commit d38a48b của `thanh`): thêm ngày 10/11 vào cuối `docs/tham-khao/nhat-ky-day-du-tmh-tuan-2.md`; file mới `docs/tham-khao/nhat-ky-day-du-tmh-tuan-3.md` cho 16/11 và 17/11; mục lục `docs/tham-khao/README.md` thêm tuần 3; `docs/tong-hop-quan-sat-tmh.md` thêm số đo ba ngày này. Số đo chính: 16/11 điền phiếu 3–10 phút, dài hơn khám (2–4 phút) ở 4/6 ca; 17/11 bệnh nhân ngồi chờ bác sĩ làm giấy 5–7 phút/ca. Bản đã làm sạch (không tên người, không số năm kinh nghiệm).
+  - Từ khóa gợi ý cho **L72.1 Kén ở nang lông/tuyến bã** trong `data/eform/icd10.json` (`u bã đậu`, `kén bã đậu`, `nang bã đậu`, `kén tuyến bã`), lấy từ commit d0b2108. Trước đó "U bã đậu sau tai phải" ra **H60.9 Viêm tai ngoài**, vì bỏ dấu "bã đậu sau tai" khớp từ khóa "đau tai". Thêm test `src/server/du-lieu/icd.test.ts`.
+  - Không chuyển phần còn lại của d0b2108 (câu báo lỗi AI tiếng Việt gắn vào `/api/extract` mà `dev` đã khoá; kịch bản thử tả giao diện cũ) và sơ đồ de5d4cf (thiết kế Trợ lý cũ): chờ thống nhất cách Trợ lý đi qua luồng che PII.
+- **Lý do:** Tiếp tục chuyển phần của `thanh` không đụng luồng AI thành PR nhỏ.
+- **File:** `docs/tham-khao/{README,nhat-ky-day-du-tmh-tuan-2,nhat-ky-day-du-tmh-tuan-3}.md`, `docs/tong-hop-quan-sat-tmh.md`, `data/eform/icd10.json`, `src/server/du-lieu/icd.test.ts`, `docs/CHANGELOG.md`
+- **Kiểm tra:** `npx tsc --noEmit` (sau `npx next typegen`); `npm test` 411/411 (dev 410); `npm run lint` 0 lỗi.
+
+### Sửa test demo luồng `audio: STT trả chữ…` lúc qua lúc hỏng khi máy bận
+- **Loại:** Sửa lỗi (test)
+- **Thay đổi:** Máy STT giả trong `src/app/api/demo-luong/routes.test.ts` trả thêm header `connection: "close"`, mỗi request dùng kết nối mới.
+- **Lý do:** Lớp NER (`goiNer`) và STT cùng gọi máy giả này qua `STT_BACKEND_URL`, nên `fetch` giữ lại kết nối keep-alive từ lần gọi `/ner` để dùng cho lần gọi `/transcribe`. Khi `npm test` chạy nhiều file song song, tiến trình test chậm vài giây, bộ hẹn giờ keep-alive 5 giây phía máy chủ đóng kết nối đúng lúc client dùng lại, client nhận `ECONNRESET` và bước STT báo `loi` thay vì `xong`. Chạy riêng file hoặc `--test-concurrency=1` thì qua. Lỗi lộ ra mỗi lần khi gộp thử các PR #6–#9 (thêm 12 file test chạy song song), và có cả trên `dev` khi máy đang bận. Code thật không đổi.
+- **File:** `src/app/api/demo-luong/routes.test.ts`, `docs/CHANGELOG.md`
+- **Kiểm tra:** `npm test` trên bản gộp thử `dev` + #6–#9: trước khi sửa 459/460 (hỏng cả 3 lần chạy), sau khi sửa 460/460 cả 3 lần chạy.
+
 ## 2026-11-18
 
 ### Đưa hai quy tắc làm việc từ worktree priority-plan-2 vào nhánh

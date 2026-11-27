@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties }
 import { luuLuotThu } from "@/client/api";
 import { approveScopes, docHoSo, luuHoSo, transitionEncounter, type ClinicalResponse } from "@/client/clinical-api";
 import { BanIn } from "@/client/eform/BanIn";
+import { BongBong } from "@/client/eform/BongBong";
 import { BaoCaoDialog } from "@/client/eform/BaoCaoDialog";
 import { ChiDinhTab } from "@/client/eform/ChiDinhTab";
 import type { EncounterBridge } from "@/client/eform/encounter-bridge";
@@ -442,7 +443,7 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
       >
         <EformHeader lastEdit={lastEdit} expanded={expanded} onToggleExpand={() => setExpanded((open) => !open)} />
 
-        <div className={`mx-auto grid w-full flex-1 items-start gap-5 px-4 pb-8 pt-5 sm:px-6 lg:grid-cols-[minmax(0,1fr)_23rem] ${expanded ? "" : "max-w-[90rem]"}`}>
+        <div className={`mx-auto grid w-full flex-1 items-start gap-5 px-4 pb-8 pt-5 sm:px-6 ${expanded ? "" : "max-w-[90rem]"}`}>
           <main className="min-w-0 space-y-4">
             <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-b border-ef-vien">
               <div>
@@ -547,9 +548,8 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
             </fieldset>
           </main>
 
-          <fieldset disabled={khoa || saving || loadingRecord} className="contents">
-            {/* Tạm đặt ô Lệnh nhanh trên đầu cột Trợ lý; cả cột ghim giữa header và thanh đáy */}
-            <div className="flex flex-col gap-3 self-start lg:sticky lg:top-[calc(var(--cao-dau)+1rem)] lg:max-h-[calc(100vh-var(--cao-dau)-var(--cao-day)-2rem)] lg:overflow-y-auto">
+          <BongBong dangGhi={bridge?.recordingActive ?? false}>
+            <fieldset disabled={khoa || saving || loadingRecord} className="contents">
               <LenhNhanh
                 onDien={apLenh}
                 onChepXuong={bridge && !bridge.recordingActive ? (text) => setNoiDungThem((prev) => ({ seq: (prev?.seq ?? 0) + 1, text })) : undefined}
@@ -569,8 +569,8 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
                 hoiThoai={kichBan === 4 ? data.trinhDien?.hoiThoai : undefined}
                 noiDungThem={noiDungThem}
               />
-            </div>
-          </fieldset>
+            </fieldset>
+          </BongBong>
         </div>
 
         {toast && (

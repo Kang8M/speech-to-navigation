@@ -21,7 +21,7 @@ import { TroLyAi, type TabId } from "@/client/eform/TroLyAi";
 import { apKetQuaLenh } from "@/shared/eform/ap-lenh";
 import type { DongChiDinh, DongThuoc, KetQuaDien } from "@/shared/eform/dien-phieu";
 import { demLuot } from "@/shared/eform/do-luong";
-import { chuanHoaNguonThuoc, dieuKienIn, duyetMoiNhat } from "@/shared/eform/don-thuoc";
+import { chuanHoaNguonThuoc, dieuKienIn, duyetMoiNhat, duyetPhieuMoiNhat } from "@/shared/eform/don-thuoc";
 import type { LenhDien } from "@/shared/eform/lenh-nhanh";
 import { doiNguonKhiLuu } from "@/shared/eform/nguon-mau";
 import { ghepGoiY } from "@/shared/eform/thoi-quen";
@@ -463,7 +463,6 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
     don_thuoc: boMau.some((mau) => mau.donThuoc.length > 0),
   };
   const khoaThaoTac = saving || loadingRecord || chuaLuu;
-  
   return (
     <EformContext.Provider value={api}>
       <div
@@ -693,7 +692,7 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
             trangThai={banInSnapshot.trangThai}
             summary={inDuoc.tom_tat ?? ""}
             followUpText={inDuoc.phieu_kham.hen_tai_kham.nguyen_van ?? undefined}
-            duyet={loaiIn === "don-thuoc" ? banDuyet("Bản đã duyệt đơn thuốc", inDuoc.revision, duyetMoiNhat(inDuoc, "prescription")) : banDuyet("Bản đã duyệt đủ các phần", inDuoc.revision, record?.approval_versions.at(-1)?.approved_at)}
+            duyet={loaiIn === "don-thuoc" ? banDuyet("Bản đã duyệt đơn thuốc", inDuoc.revision, duyetMoiNhat(inDuoc, "prescription")) : banDuyet("Bản đã duyệt phiếu khám", inDuoc.revision, duyetPhieuMoiNhat(inDuoc))}
           />
         </EformContext.Provider>
       ) : <p className="hidden print:block">Hồ sơ đang là bản nháp hoặc còn phần chưa duyệt. Hãy lưu và duyệt đủ các phần trước khi in.</p>}

@@ -58,3 +58,13 @@ export function dieuKienIn(record: Encounter, chuaLuu: boolean): { phieu: DieuKi
 export function duyetMoiNhat(record: Encounter, scope: Encounter["approval_versions"][number]["scope"]): string | undefined {
   return record.approval_versions.findLast((item) => item.scope === scope)?.approved_at;
 }
+
+/** Thời điểm duyệt mới nhất trong các phần của phiếu khám (không tính đơn thuốc); undefined khi chưa phần nào được duyệt */
+export function duyetPhieuMoiNhat(record: Encounter): string | undefined {
+  return requiredApprovalScopes(record)
+    .filter((scope) => scope !== "prescription")
+    .map((scope) => duyetMoiNhat(record, scope))
+    .filter((luc): luc is string => Boolean(luc))
+    .sort()
+    .at(-1);
+}

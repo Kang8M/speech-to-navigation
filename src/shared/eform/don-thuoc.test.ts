@@ -5,7 +5,7 @@ import { requiredApprovalScopes } from "@/shared/clinical/approvals";
 import type { Encounter, JsonValue } from "@/shared/clinical/types";
 import type { WarningRules } from "@/shared/types";
 import type { DongThuoc } from "./dien-phieu";
-import { chuanHoaNguonThuoc, dieuKienIn, duyetMoiNhat, moTaLieu, tongSoLuong } from "./don-thuoc";
+import { chuanHoaNguonThuoc, dieuKienIn, duyetMoiNhat, duyetPhieuMoiNhat, moTaLieu, tongSoLuong } from "./don-thuoc";
 
 const rules = JSON.parse(fs.readFileSync("config/canh-bao.json", "utf8")) as WarningRules;
 const dong = (patch: Partial<DongThuoc> = {}): DongThuoc => ({ ma: "T1", ten: "Paracetamol", ham_luong: "500mg", duong_dung: "uống", lieu_moi_lan: "1 viên", khi_can: false, so_lan_ngay: "3", thoi_diem: "sau ăn", so_ngay: "5", so_luong_ke: "", ghi_chu: "", nguon: "bs", ung_vien: [], ...patch });
@@ -86,4 +86,16 @@ test("duyetMoiNhat: lấy lần duyệt mới nhất đúng phần, không có t
   record.approval_versions.push({ ...structuredClone(record.approval_versions[0]), id: "a-moi", approved_at: "2026-11-20T01:00:00Z" });
   assert.equal(duyetMoiNhat(record, "prescription"), "2026-11-20T01:00:00Z");
   assert.equal(duyetMoiNhat(record, "conclusion"), "2026-11-14T00:00:00Z");
+});
+
+test("duyetPhieuMoiNhat: bỏ qua lần duyệt đơn thuốc, lấy mới nhất của các phần còn lại", () => {
+  const record = base();
+  themThuoc(record);
+  assert.equal(duyetPhieuMoiNhat(record), undefined);
+  duyetHet(record);
+  const phieu = requiredApprovalScopes(record).filter((scope) => scope !== "prescription");
+  record.approval_versions.find((item) => item.scope === "prescription")!.approved_at = "2026-12-01T00:00:00Z";
+  assert.equal(duyetPhieuMoiNhat(record), "2026-11-14T00:00:00Z");
+  record.approval_versions.find((item) => item.scope === phieu[0])!.approved_at = "2026-11-15T00:00:00Z";
+  assert.equal(duyetPhieuMoiNhat(record), "2026-11-15T00:00:00Z");
 });

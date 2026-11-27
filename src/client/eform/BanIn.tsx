@@ -114,6 +114,7 @@ export function BanIn({ loai, chiDinh, donThuoc, trangThai, summary, followUpTex
           <Muc nhan="Thời gian khám">{ngayGio(v("thoi_gian_kham"))}</Muc>
         </div>
         {ca.canh_bao_di_ung && <p className="mt-1 font-bold">⚠ Cảnh báo dị ứng: {ca.canh_bao_di_ung}</p>}
+        {diUng && <p className="mt-1">Dị ứng (ghi nhận trong hồ sơ): {diUng}</p>}
         <div className="mt-2 space-y-1">
           <Muc nhan={chanDoan.nhan}>{[nhanIcd(chanDoan.ma, data.icd10), chanDoan.moTa].filter(Boolean).join(". ")}</Muc>
           {kem && <Muc nhan="Chẩn đoán kèm theo">{kem}</Muc>}

@@ -8,8 +8,9 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 - **Loại:** Tài liệu, Thiết kế
 - **Thay đổi:** Thêm `docs/superpowers/specs/2026-11-27-tro-ly-gon-design.md`. Bản đề xuất cách chuyển bong bóng Trợ lý (b7c0900), gọi phiếu mẫu bằng tên và câu quen (d8fa4f8) từ nhánh `thanh` sang `dev`. Hướng chọn: mẫu, gõ tắt, câu quen chạy trên máy, không gọi AI; chỉ lời nói đi qua luồng che PII → AI trích có bằng chứng → đề xuất. Không sửa lõi `src/server/clinical`, `src/shared/clinical`. Ô do mẫu điền lưu như bác sĩ nhập. Có 4 câu hỏi chờ bạn cùng nhóm.
 - **Lý do:** Giảm thời gian bác sĩ điền phiếu (nhật ký 16/11: điền phiếu 3–10 phút, dài hơn khám ở 4/6 ca). AI của `dev` chỉ được trích từ lời nói, nên không thể để AI viết câu quen hay điền chỗ trống trong mẫu như ở `thanh`.
-- **File:** `docs/superpowers/specs/2026-11-27-tro-ly-gon-design.md`, `docs/CHANGELOG.md`
-- **Kiểm tra:** Đối chiếu các dòng code dẫn trong thiết kế với `dev` (61acd56). Không có thay đổi code.
+- **Kế hoạch triển khai:** `docs/superpowers/plans/2026-11-27-tro-ly-gon.md`, 5 task: xử lý lệnh nhanh, nguồn ô do mẫu và gõ tắt, áp lệnh vào phiếu và ô lệnh, bong bóng (chờ câu hỏi 1), số đo và tài liệu.
+- **File:** `docs/superpowers/specs/2026-11-27-tro-ly-gon-design.md`, `docs/superpowers/plans/2026-11-27-tro-ly-gon.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** Đối chiếu các dòng code dẫn trong thiết kế và kế hoạch với `dev` (61acd56). Không có thay đổi code.
 
 ### Chuyển gói chỉ định, bước Xác nhận chỉ định và gợi ý theo chẩn đoán từ nhánh `thanh` sang `dev`
 - **Loại:** Tính năng, Chuyển code giữa nhánh

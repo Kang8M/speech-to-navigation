@@ -2,7 +2,7 @@
 
 Ngày: 12/11/2026. Phạm vi người dùng đã chọn: **ngoại trú Tai Mũi Họng trước**.
 
-Phạm vi task 2, 3 và 4 chỉ gồm **phiếu khám và chỉ định dịch vụ**. **Bác sĩ tự kê đơn thuốc qua quy trình riêng**; cấu trúc lưu, đầu ra AI và mapping trong bộ thiết kế này không chứa đơn thuốc. Dị ứng và thuốc bệnh nhân đang dùng vẫn thuộc bệnh sử/tiền sử. Hướng điều trị và lời dặn chỉ ghi nội dung chăm sóc, theo dõi, tái khám; không chứa tên thuốc kê mới, liều dùng hoặc nội dung đơn thuốc.
+Phạm vi task 2, 3 và 4 chỉ gồm **phiếu khám và chỉ định dịch vụ**. **Bác sĩ tự kê đơn thuốc ở tab Đơn thuốc** (AI không kê; xem `docs/CLINICAL-WORKFLOW.md`); cấu trúc lưu, đầu ra AI và mapping trong bộ thiết kế này không chứa đơn thuốc. Dị ứng và thuốc bệnh nhân đang dùng vẫn thuộc bệnh sử/tiền sử. Hướng điều trị và lời dặn chỉ ghi nội dung chăm sóc, theo dõi, tái khám; không chứa tên thuốc kê mới, liều dùng hoặc nội dung đơn thuốc.
 
 Đây là bộ thiết kế dữ liệu và JSON mẫu cho prototype. Hồ sơ Encounter dùng `1.3.0` (có khối `don_thuoc`); đầu ra AI, transcript và identity vẫn tương thích `1.1.0`. Hồ sơ `1.1.0` và `1.2.0` được migrate khi đọc, giữ bản duyệt legacy và không tạo phiên ghi âm giả. Các schema đã được nối vào validator, API, trích xuất AI, hai màn hình và lưu JSON. Xem [hướng dẫn vận hành](../CLINICAL-WORKFLOW.md). Không có dữ liệu bệnh nhân thật trong ví dụ. Transcript mẫu có cả lời nhắc kê thuốc để minh họa việc bỏ qua nội dung này trong đầu ra.
 
@@ -184,7 +184,7 @@ Các điểm bắt buộc thử khi triển khai: không có chỉ định; thu�
 - Checkbox BHYT là đề nghị, xác nhận điều kiện hay thao tác khác; phòng BHYT cung cấp quy tắc nào. `chon_bhyt` và `dieu_kien_bhyt` giữ riêng tới khi biết rõ.
 - Trường con khi có thuốc đang dùng, hẹn tái khám; phần cuối phiếu bị cắt. Những trường bổ sung trong schema là đề xuất, không phải khẳng định màn thật có.
 - Gói chọn cả khối có cho bỏ từng dịch vụ không; lịch sử ViHC có trường gì. Không tự tạo cấu trúc chi tiết từ tên tab.
-- Quy trình bác sĩ tự kê và in đơn thuốc nằm ngoài bộ thiết kế này; không thiết kế database hoặc adapter cho quy trình đó trong task 2, 3, 4.
+- Quy trình bác sĩ tự kê và in đơn thuốc ở tab Đơn thuốc không nằm trong bộ thiết kế này; không thiết kế database hoặc adapter cho quy trình đó trong task 2, 3, 4.
 
 ## 9. Nguồn nghiên cứu bên ngoài
 

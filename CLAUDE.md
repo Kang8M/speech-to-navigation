@@ -2,7 +2,7 @@
 
 # Trợ lý điền bệnh án TMH – hướng dẫn cho Claude
 
-Prototype Next.js 16 (App Router) + React 19 + Tailwind 4. Bác sĩ nói hoặc gõ tắt, AI tách và điền nháp Phiếu khám, Chỉ định, Đơn thuốc. Chi tiết cách chạy và cấu hình xem `README.md`; quan sát thực địa xem `docs/` (tóm tắt và cấu trúc màn hình EMR) và `docs/tham-khao/` (nhật ký, báo cáo tuần, mục lục ở `docs/tham-khao/README.md`). Cần biết bác sĩ thực sự nhập gì, mất bao lâu thì tra ở đó trước khi đoán.
+Prototype Next.js 16 (App Router) + React 19 + Tailwind 4. Bác sĩ nói hoặc gõ tắt, AI tách và điền nháp Phiếu khám và Chỉ định; Đơn thuốc do bác sĩ nhập. Chi tiết cách chạy và cấu hình xem `README.md`; quan sát thực địa xem `docs/` (tóm tắt và cấu trúc màn hình EMR) và `docs/tham-khao/` (nhật ký, báo cáo tuần, mục lục ở `docs/tham-khao/README.md`). Cần biết bác sĩ thực sự nhập gì, mất bao lâu thì tra ở đó trước khi đoán.
 
 ## Quy tắc bắt buộc
 
@@ -21,6 +21,8 @@ Prototype Next.js 16 (App Router) + React 19 + Tailwind 4. Bác sĩ nói hoặc 
    - **Chạy song song chỉ khi hai agent sửa file khác nhau** và chỉ một agent được chạy `next dev` trong cùng thư mục (hai `next dev` xung đột `.next`); agent còn lại không chạy dev/build. Việc có phụ thuộc kết quả của nhau thì chạy tuần tự.
    - Mỗi agent chỉ `git add` đúng đường dẫn của mình (không `git add -A`), commit tiếng Việt, không push/merge/stash; khi sửa `docs/CHANGELOG.md` thì đọc lại file ngay trước khi sửa vì agent khác cũng thêm mục.
    - Trước khi giao việc, kiểm tra nhánh đang làm có chứa phần code mà plan phụ thuộc không (vd. lớp clinical của ưu tiên 1); nếu thiếu, tách phần làm được độc lập, để phần phụ thuộc chờ và báo rõ cho người dùng.
+
+8. **AI không kê thuốc.** Dòng thuốc chỉ do bác sĩ nhập hoặc chọn từ mẫu, `nguon` chỉ `bs` hoặc `xem`, không bao giờ `ai`. Schema AI không có khóa `don_thuoc` hay `ke_don`.
 
 ## Lệnh thường dùng
 

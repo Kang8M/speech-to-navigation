@@ -1,6 +1,6 @@
 # Luồng khám TMH — prototype ngày 12/11/2026
 
-Đã nối các task 2–5 vào trang `/`: **phiếu khám và chỉ định dịch vụ**. Kê đơn do bác sĩ làm riêng. Trang `/stt` vẫn là nơi thử STT độc lập; thuật toán phân tách người nói không thay đổi trong đợt này.
+Đã nối các task 2–5 vào trang `/`: **phiếu khám và chỉ định dịch vụ**. Đơn thuốc do bác sĩ nhập ở tab Đơn thuốc, duyệt riêng; AI không kê thuốc (xem mục Đơn thuốc bên dưới). Trang `/stt` vẫn là nơi thử STT độc lập; thuật toán phân tách người nói không thay đổi trong đợt này.
 
 ## Chạy và dùng
 
@@ -19,6 +19,13 @@ Mở `http://localhost:3000`. Mặc định dùng `mock`; đây là bộ trích 
 6. **Lưu phiếu & chỉ định** hoặc **Lưu nháp** trong tab chỉ định ghi cùng một hồ sơ JSON. URL nhận `?ho_so=<uuid>`; tải lại URL để mở đúng hồ sơ. Hai tab lưu cùng revision thì tab đến sau nhận lỗi xung đột.
 7. Xác nhận đã xem các điểm AI đánh dấu, rồi **Duyệt phiếu và chỉ định**. Backend kiểm dữ liệu bắt buộc và ghi người/thời gian duyệt từ persona server.
 8. **In ngay** chỉ bật cho bản đã duyệt, không có thay đổi chưa lưu. Sửa sau duyệt làm bản đang sửa không in được; lưu lại sẽ xóa duyệt cũ. Ctrl+P khi chưa duyệt chỉ có thông báo bản nháp.
+
+## Đơn thuốc (tab Đơn thuốc)
+
+- Hồ sơ lưu khối `don_thuoc` (`de_cap`, tối đa 50 dòng), `schema_version` **1.3.0**. Hồ sơ 1.1.0 và 1.2.0 vẫn đọc được: `migrateEncounter` thêm `don_thuoc` rỗng, không đổi `revision`; hồ sơ cũ đã duyệt đủ vẫn đã duyệt đủ.
+- Mỗi dòng: mã thuốc lấy từ `data/catalog/thuoc.json` (bác sĩ chọn, hoặc `src/shared/match.ts` gán), liều, số lần/ngày, số ngày, hoặc đánh dấu "Khi cần". Tổng SL tự tính (liều × số lần × số ngày, hoặc số lượng bác sĩ nhập); thuốc khi cần không có số lần thì phải nhập Tổng SL tay. Nguồn dòng chỉ là `bs` hoặc `xem`; AI không tạo dòng thuốc.
+- Duyệt: phạm vi `prescription` là phần riêng, không gộp với phiếu khám hay chỉ định. Trước khi duyệt phải chọn "có kê" hoặc "không kê đơn thuốc". Có kê thì mỗi dòng cần mã thuốc và liều; thuốc thường cần số lần/ngày và số ngày > 0; Tổng SL phải xác định. Sửa dòng sau khi duyệt làm đơn thành "đã sửa", phải lưu và duyệt lại.
+- In: **In phiếu khám** bật khi phiếu khám và chỉ định đã duyệt, không có mục đơn thuốc. **In đơn thuốc** bật khi đơn đã lưu, đã chọn có kê và phạm vi `prescription` đã duyệt; bản in chỉ có thuốc, không có bảng chỉ định.
 
 ## Demo luồng dữ liệu (`/demo-luong`)
 

@@ -60,6 +60,11 @@ export function apKetQuaLenh(kq: LenhDien, data: EformData, get: (id: string) =>
     chiDinhThem = moi.chiDinh.filter((row) => !daCo.has(khoaDong(row)));
   }
   const oTuMau = new Set(Object.keys(truong));
+  if (mau) {
+    // Ô chép từ lần khám trước (tiền sử, dị ứng) là dữ liệu cũ thật, giữ "cu" khi lưu: không tính là do mẫu điền
+    const lichSu = dienPhieu({}, {}, data, get, { chepLichSu: true, clinicalOnly: true }).truong;
+    for (const [id, t] of Object.entries(lichSu)) if (truong[id]?.value === t.value) oTuMau.delete(id);
+  }
 
   // Gõ tắt: câu của chính bác sĩ, đặt sau mẫu nên thay chữ mẫu ở cùng ô
   const { cacO, daDung } = kq.goTat;

@@ -100,3 +100,15 @@ test("ô Khám các bộ phận khác của mẫu chỉ điền khi trống", ()
   const r = apKetQuaLenh(kq, DATA, getTu({ kham_khac: { value: "Khác", nguon: "bs" } }), []);
   assert.equal(r.truong.kham_khac, undefined);
 });
+
+test("ô chép từ lịch sử khám là dữ liệu cũ thật: nguồn 'cu', không nằm trong oTuMau", () => {
+  const data = {
+    ...DATA,
+    ca: { lich_su: { tien_su_ban_than: [{ ngay: "01/01/2026", noi_dung: "Viêm mũi dị ứng (giả)" }], tien_su_gia_dinh: [], di_ung: [] } },
+  } as unknown as EformData;
+  const r = apKetQuaLenh(lenh("3 ngày"), data, getTu({}), []);
+  assert.deepEqual(r.truong.tien_su_ban_than, { value: "Viêm mũi dị ứng (giả)", nguon: "cu" });
+  assert.ok(!r.oTuMau.includes("tien_su_ban_than"));
+  assert.ok(r.oTuMau.includes("ly_do"));
+  assert.deepEqual(r.ketQua?.donThuoc, []);
+});

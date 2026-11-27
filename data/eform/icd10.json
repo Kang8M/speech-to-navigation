@@ -26,5 +26,6 @@
   { "ma": "K21.9", "ten": "Bệnh trào ngược dạ dày - thực quản không kèm viêm thực quản", "manh": ["trào ngược họng thanh quản", "trào ngược dạ dày"], "vua": ["ợ chua", "vướng họng", "đằng hắng"] },
   { "ma": "R04.0", "ten": "Chảy máu cam", "manh": ["chảy máu mũi", "điểm mạch vách ngăn"], "vua": [] },
   { "ma": "T16", "ten": "Dị vật ở tai", "manh": ["dị vật ống tai", "dị vật tai"], "vua": ["đau tai"] },
-  { "ma": "T17.1", "ten": "Dị vật trong lỗ mũi", "manh": ["dị vật mũi", "dị vật hốc mũi"], "vua": ["chảy mũi một bên"] }
+  { "ma": "T17.1", "ten": "Dị vật trong lỗ mũi", "manh": ["dị vật mũi", "dị vật hốc mũi"], "vua": ["chảy mũi một bên"] },
+  { "ma": "L72.1", "ten": "Kén ở nang lông/tuyến bã", "manh": ["u bã đậu", "kén bã đậu", "nang bã đậu", "kén tuyến bã"], "vua": [] }
 ]

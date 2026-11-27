@@ -23,7 +23,14 @@ function Stat({ label, value, note }: { label: string; value: string; note: stri
   );
 }
 
-const HEADERS = ["Thời điểm", "Kiểu nhập", "Nguồn", "AI", "Thời gian", "AI điền", "Đã sửa", "Bổ sung", "Khớp danh mục", "Cảnh báo"];
+const HEADERS = ["Thời điểm", "Kiểu nhập", "Nguồn", "AI", "Thời gian", "AI điền", "Đã sửa", "Bổ sung", "Khớp danh mục", "Cảnh báo", "Gợi ý Tab", "Giao diện", "Bấm chuột"];
+
+/** Cột Gợi ý Tab: nhận/hiện, kèm số đã nhận rồi sửa; lượt tắt gợi ý hoặc ghi trước khi có gợi ý thì để gạch */
+function goiYTab(session: SessionRecord): string {
+  if (!session.goi_y_tab) return "–";
+  const sua = session.so_goi_y_nhan_roi_sua ? ` (sửa ${session.so_goi_y_nhan_roi_sua})` : "";
+  return `${session.so_goi_y_nhan ?? 0}/${session.so_goi_y_hien ?? 0}${sua}`;
+}
 
 export function ResultsView({ sessions }: { sessions: SessionRecord[] }) {
   const [includeSamples, setIncludeSamples] = useState(false);
@@ -69,7 +76,7 @@ export function ResultsView({ sessions }: { sessions: SessionRecord[] }) {
         </button>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <Stat
           label="Số lượt được tính"
           value={String(stats.so_luot)}
@@ -89,6 +96,16 @@ export function ResultsView({ sessions }: { sessions: SessionRecord[] }) {
           label="Khớp danh mục"
           value={formatPercent(stats.ty_le_khop)}
           note="Trên số dịch vụ và thuốc AI nhận ra"
+        />
+        <Stat
+          label="Gợi ý Tab được nhận"
+          value={formatPercent(stats.ty_le_nhan_goi_y)}
+          note="Trên số gợi ý chữ mờ đã hiện"
+        />
+        <Stat
+          label="Chữ đến từ gợi ý Tab"
+          value={formatPercent(stats.ty_le_chu_goi_y)}
+          note="Trên tổng chữ nhận từ gợi ý và chữ tự gõ vào phiếu"
         />
       </div>
 
@@ -127,7 +144,7 @@ export function ResultsView({ sessions }: { sessions: SessionRecord[] }) {
             {sessions.length === 0 && (
               <tr>
                 <td colSpan={HEADERS.length} className="px-3 py-6 text-center text-muted">
-                  Chưa có lượt thử nào. Trên trang eForm, để AI điền phiếu rồi bấm &quot;Lưu&quot; để ghi lượt đầu tiên.
+                  Chưa có lượt thử nào. Trên trang eForm, gõ vào phiếu hoặc để AI điền phiếu rồi bấm &quot;Lưu&quot; để ghi lượt đầu tiên.
                 </td>
               </tr>
             )}
@@ -150,6 +167,9 @@ export function ResultsView({ sessions }: { sessions: SessionRecord[] }) {
                   {session.so_muc_khop}/{session.so_muc_danh_muc}
                 </td>
                 <td className="px-3 py-2">{session.so_canh_bao}</td>
+                <td className="px-3 py-2 whitespace-nowrap">{goiYTab(session)}</td>
+                <td className="px-3 py-2 whitespace-nowrap">{session.giao_dien === "gon" ? "Gọn" : "Cũ"}</td>
+                <td className="px-3 py-2">{session.so_lan_bam_chuot ?? "–"}</td>
               </tr>
             ))}
           </tbody>

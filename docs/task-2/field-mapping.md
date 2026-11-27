@@ -107,7 +107,7 @@ Catalog gói tương lai cần `id`, mã, tên, loại cá nhân/chia sẻ, `own
 
 ## D. Kê đơn thuốc — làm ở tab Đơn thuốc, không do AI
 
-Bác sĩ tự chọn thuốc, kê liều, chỉnh/ngừng thuốc, kiểm tra, lưu và in đơn ở tab Đơn thuốc của eForm (xem `docs/CLINICAL-WORKFLOW.md`, mục Đơn thuốc). Bộ schema này không có `don_thuoc`, `ke_don`, bảng đơn thuốc, mapping màn kê đơn hoặc chức năng AI gợi ý/điền đơn. Tài liệu màn OH trong repo chỉ là tham khảo lịch sử.
+Bác sĩ tự chọn thuốc, kê liều, chỉnh/ngừng thuốc, kiểm tra, lưu và in đơn ở tab Đơn thuốc của eForm (xem `docs/CLINICAL-WORKFLOW.md`, mục Đơn thuốc). `encounter.schema.json` có khối `don_thuoc` (đơn do bác sĩ nhập, duyệt riêng phạm vi `prescription`); bộ schema vẫn không có `ke_don` trong đầu ra AI, bảng đơn thuốc ngoài hồ sơ, mapping màn kê đơn OH hoặc chức năng AI gợi ý/điền đơn. Tài liệu màn OH trong repo chỉ là tham khảo lịch sử.
 
 ## E. Trường hiển thị và thao tác không lưu như dữ kiện lâm sàng
 

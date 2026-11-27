@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import { test } from "node:test";
 import { applyAiDraft, aiEformPatch } from "./apply-ai";
+import { applyEformSnapshot, parseEformSnapshot } from "./eform";
 import { emptyEncounter, parseEncounter } from "./schema";
 import type { ClinicalExtraction } from "./api";
 
@@ -34,9 +35,15 @@ test("UI patch does not fill administrative/default/absent fields, retains posit
 });
 test("applyAiDraft giữ nguyên don_thuoc đã có của bác sĩ", () => {
   const base = emptyEncounter({ id: "enc-1", patientId: "patient-demo", doctorId: "doctor-demo", now: context.now });
-  const withDrugs = parseEncounter(base);
-  withDrugs.don_thuoc = { de_cap: "khong_ke_don", items: [] };
+  const withDrugs = applyEformSnapshot(parseEncounter(base), parseEformSnapshot({ fields: {}, chiDinh: [], trangThai: "Đang khám", donThuoc: [
+    { ma: "T-1", ten: "Paracetamol 500mg", ham_luong: "500mg", duong_dung: "Uống", lieu_moi_lan: "1 viên", khi_can: false, so_lan_ngay: "3", thoi_diem: "Sau ăn", so_ngay: "5", so_luong_ke: "", ghi_chu: "", nguon: "bs", ung_vien: [] },
+  ] }), { now: context.now, newId: () => "drug-row-1", services: [], drugs: [{ ma: "T-1", ten: "Paracetamol 500mg" }] });
+  withDrugs.don_thuoc.items[0].review = { trang_thai: "chap_nhan", reviewer_id: "doctor-demo", reviewed_at: context.now };
+  const truoc = structuredClone(withDrugs.don_thuoc);
+  assert.equal(truoc.items.length, 1);
+  assert.equal(truoc.items[0].danh_muc.code, "T-1");
   const result = applyAiDraft(withDrugs, run(), context);
-  assert.deepEqual(result.don_thuoc, withDrugs.don_thuoc);
-  assert.ok(!result.nguon_du_lieu.some(item => item.field_path.startsWith("/don_thuoc")));
+  assert.deepEqual(result.don_thuoc, truoc);
+  const nguonThuoc = (record: typeof result) => record.nguon_du_lieu.filter(item => item.field_path.startsWith("/don_thuoc"));
+  assert.deepEqual(nguonThuoc(result), nguonThuoc(withDrugs));
 });

@@ -24,7 +24,7 @@ test("clinical scope does not copy an initial diagnosis to discharge or fill a p
   assert.equal(result.chiDinh[0].so_luong, "");
 });
 
-test("kemThuoc cùng clinicalOnly: có dòng thuốc, mã do matches gán", () => {
+test("kemThuoc cùng clinicalOnly: có dòng thuốc, giữ mã thuốc của bản nháp", () => {
   const draft = { ...nhap({}), ke_don: [{ ma_thuoc: "T-GIA-01", ten_thuoc: "Thuốc mẫu" }] };
   const matches = { ke_don: [{ status: "khop", candidates: [] }] } as never;
   assert.deepEqual(dienPhieu(draft, matches, DATA, getTu({}), { clinicalOnly: true }).donThuoc, []);

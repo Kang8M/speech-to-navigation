@@ -5,15 +5,15 @@ import { requiredApprovalScopes } from "@/shared/clinical/approvals";
 import type { Encounter, JsonValue } from "@/shared/clinical/types";
 import type { WarningRules } from "@/shared/types";
 import type { DongThuoc } from "./dien-phieu";
-import { chuanHoaNguonThuoc, dieuKienIn, duyetMoiNhat, duyetPhieuMoiNhat, moTaLieu, tongSoLuong } from "./don-thuoc";
+import { canChonLaiThuoc, chuanHoaNguonThuoc, dieuKienIn, duyetMoiNhat, duyetPhieuMoiNhat, moTaLieu, nhanThuoc, tongSoLuong } from "./don-thuoc";
 
 const rules = JSON.parse(fs.readFileSync("config/canh-bao.json", "utf8")) as WarningRules;
 const dong = (patch: Partial<DongThuoc> = {}): DongThuoc => ({ ma: "T1", ten: "Paracetamol", ham_luong: "500mg", duong_dung: "uống", lieu_moi_lan: "1 viên", khi_can: false, so_lan_ngay: "3", thoi_diem: "sau ăn", so_ngay: "5", so_luong_ke: "", ghi_chu: "", nguon: "bs", ung_vien: [], ...patch });
 
 test("moTaLieu: thuốc thường, khi cần và SL", () => {
-  assert.equal(moTaLieu(dong()), "500mg · uống · 1 viên × 3 lần/ngày · sau ăn · 5 ngày");
-  assert.equal(moTaLieu(dong({ khi_can: true, so_lan_ngay: "", thoi_diem: "", so_ngay: "", so_luong_ke: "6" })), "500mg · uống · 1 viên khi cần · SL 6");
-  assert.match(moTaLieu(dong({ khi_can: true, so_lan_ngay: "4" })), /1 viên khi cần, tối đa 4 lần\/ngày/);
+  assert.equal(moTaLieu(dong(), rules), "500mg · uống · 1 viên × 3 lần/ngày · sau ăn · 5 ngày");
+  assert.equal(moTaLieu(dong({ khi_can: true, so_lan_ngay: "", thoi_diem: "", so_ngay: "", so_luong_ke: "6" }), rules), "500mg · uống · 1 viên khi cần · SL 6");
+  assert.match(moTaLieu(dong({ khi_can: true, so_lan_ngay: "4" }), rules), /1 viên khi cần, tối đa 4 lần\/ngày/);
 });
 
 test("tongSoLuong: tự tính, SL bác sĩ gõ thắng, khi cần không số lượng là null", () => {
@@ -72,10 +72,13 @@ test("dieuKienIn: chưa có thuốc và không kê đơn thì tắt nút đơn",
 
 test("dieuKienIn: coLoiDan theo phần Kết luận", () => {
   const record = base(); themThuoc(record);
-  const scopes = requiredApprovalScopes(record);
+  assert.equal(dieuKienIn(record, false).coLoiDan, true, "không đòi Kết luận thì in được lời dặn");
+  record.phieu_kham.loi_dan = "Uống nhiều nước";
+  assert.ok(requiredApprovalScopes(record).includes("conclusion"), "fixture phải đòi phần Kết luận");
   duyetHet(record, ["conclusion"]);
-  assert.equal(dieuKienIn(record, false).coLoiDan, !scopes.includes("conclusion"));
-  if (scopes.includes("conclusion")) { approve(record, "conclusion"); assert.equal(dieuKienIn(record, false).coLoiDan, true); }
+  assert.equal(dieuKienIn(record, false).coLoiDan, false);
+  approve(record, "conclusion");
+  assert.equal(dieuKienIn(record, false).coLoiDan, true);
 });
 
 test("duyetMoiNhat: lấy lần duyệt mới nhất đúng phần, không có thì undefined", () => {
@@ -98,4 +101,24 @@ test("duyetPhieuMoiNhat: bỏ qua lần duyệt đơn thuốc, lấy mới nhấ
   assert.equal(duyetPhieuMoiNhat(record), "2026-11-14T00:00:00Z");
   record.approval_versions.find((item) => item.scope === phieu[0])!.approved_at = "2026-11-15T00:00:00Z";
   assert.equal(duyetPhieuMoiNhat(record), "2026-11-15T00:00:00Z");
+});
+
+test("moTaLieu: bung đơn vị gõ tắt của liều khi in", () => {
+  assert.equal(moTaLieu(dong({ lieu_moi_lan: "1 v" }), rules), "500mg · uống · 1 viên × 3 lần/ngày · sau ăn · 5 ngày");
+  assert.match(moTaLieu(dong({ lieu_moi_lan: "1/2v", khi_can: true, so_lan_ngay: "" }), rules), /1\/2 viên khi cần/);
+});
+
+test("canChonLaiThuoc: chỉ dòng chưa duyệt thiếu mã hoặc còn ứng viên mới cần chọn lại", () => {
+  const uv = [{ ma: "T2", ten: "Khác" }] as DongThuoc["ung_vien"];
+  assert.equal(canChonLaiThuoc(dong({ nguon: "xem" })), false);
+  assert.equal(canChonLaiThuoc(dong({ nguon: "xem", ma: "" })), true);
+  assert.equal(canChonLaiThuoc(dong({ nguon: "xem", ung_vien: uv })), true);
+  assert.equal(canChonLaiThuoc(dong({ nguon: "bs", ma: "" })), false);
+});
+
+test("nhanThuoc: nhãn riêng cho dòng thuốc, không nhắc AI", () => {
+  assert.equal(nhanThuoc(dong({ nguon: "xem" })), "Chưa duyệt");
+  assert.equal(nhanThuoc(dong({ nguon: "xem", ma: "" })), "Cần chọn đúng thuốc");
+  assert.equal(nhanThuoc(dong({ nguon: "sua" })), "Đã sửa");
+  assert.equal(nhanThuoc(dong({ nguon: "bs" })), null);
 });

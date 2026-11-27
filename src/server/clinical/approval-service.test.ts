@@ -153,6 +153,13 @@ test("duyệt đơn thuốc: thiếu chẩn đoán có mã ICD thì 422", async 
   assert.throws(() => approveRx(svc, actor, store, record.id), message(/chẩn đoán/i));
 });
 
+test("duyệt đơn thuốc: chẩn đoán duy nhất có mã ICD nhưng đã phủ định thì 422", async () => {
+  const svc = await service(); const { actor, store, record } = setup();
+  withDrugs(store, record.id, actor, [{}]);
+  store.update(record.id, store.read(record.id).revision, draft => { draft.chan_doan[0].noi_dung.muc_do_khang_dinh = "phu_dinh"; return draft; }, actor.doctorId, new Date().toISOString());
+  assert.throws(() => approveRx(svc, actor, store, record.id), message(/chẩn đoán/i));
+});
+
 test("duyệt đơn thuốc: dòng thiếu mã, liều, lần/ngày, số ngày hoặc Tổng SL thì 422", async () => {
   const svc = await service(); const { actor, store, record } = setup();
   const cases: [Drug, RegExp][] = [

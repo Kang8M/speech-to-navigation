@@ -79,6 +79,7 @@ test("chấp nhận mọi thay đổi của AI vẫn giữ nguyên don_thuoc, k�
   withDrugs.don_thuoc.items[0].review = { trang_thai: "chap_nhan", reviewer_id: "doctor-demo", reviewed_at: now };
   const before = structuredClone(withDrugs.don_thuoc);
   const set = proposeClinicalChanges(withDrugs, run("run-drug-accept", "ai-output-service"));
+  assert.ok(set.changes.length > 0);
   const result = applyClinicalChanges(withDrugs, set, set.changes.map(item => item.id), context());
   assert.deepEqual(result.don_thuoc, before);
 });

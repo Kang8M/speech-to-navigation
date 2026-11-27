@@ -51,11 +51,11 @@ test("mẫu kèm chi tiết: chỗ trống vừa thay là 'xem', ô nằm trong 
   assert.ok(r.oTuMau.includes("ly_do"));
   assert.equal(r.chiDinhThem.length, 1);
   assert.equal(r.chiDinhThem[0].tu_ai, false);
-  assert.equal(r.thongBao, 'Đã điền 2 ô từ mẫu "Đau họng giả". Còn 1 chỗ vàng cần xem. Thêm 1 chỉ định, 1 thuốc.');
+  assert.equal(r.thongBao, 'Đã điền 2 ô từ mẫu "Đau họng giả". Còn 1 chỗ vàng cần xem. Thêm 1 chỉ định. Đã thêm 1 thuốc từ mẫu vào Đơn thuốc, chưa duyệt.');
   assert.equal(r.thuocThem.length, 1);
   assert.equal(r.ketQua?.donThuoc.length, 1);
   assert.ok(r.thuocThem.every((t) => t.nguon !== "ai" && t.tu_ai === undefined));
-  assert.ok(r.thongBao.endsWith("Thêm 1 chỉ định, 1 thuốc."));
+  assert.ok(r.thongBao.includes("Đã thêm 1 thuốc từ mẫu vào Đơn thuốc, chưa duyệt"));
 });
 
 test("mẫu không thuốc: thuocThem rỗng, câu báo không nhắc thuốc", () => {

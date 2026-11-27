@@ -180,7 +180,7 @@ test("lưu đơn thuốc: mã trong danh mục thì lưu vào don_thuoc, mã l�
   const saved = save({ ...opened.snapshot, donThuoc: [row(drug.ma)] }, 1);
   assert.equal(saved.record.don_thuoc.de_cap, "co_ke_don");
   assert.equal(saved.record.don_thuoc.items[0].danh_muc.code, drug.ma);
-  assert.throws(() => save({ ...opened.snapshot, donThuoc: [row("KHONG-CO")] }, saved.record.revision));
+  assert.throws(() => save({ ...opened.snapshot, donThuoc: [row("KHONG-CO")] }, saved.record.revision), /danh mục/);
   const without = { ...saved.snapshot, donThuoc: undefined };
   const kept = save(without, saved.record.revision);
   assert.deepEqual(kept.record.don_thuoc.items.map(item => item.id), saved.record.don_thuoc.items.map(item => item.id));

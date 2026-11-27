@@ -248,7 +248,7 @@ export function EncounterWorkspace({ initialRecordId }: { initialRecordId?: stri
       {pendingSwitch && (
         <div role="alertdialog" aria-label="Nội dung chưa kiểm tra" className="mx-4 mt-3 rounded-lg border border-ef-vien bg-white px-4 py-3 text-sm print:hidden sm:mx-6">
           <p className="font-semibold text-ef-dam">{pendingSwitch.reason}</p>
-          <p className="text-ef-phu">Hãy bấm “Che thông tin và tạo bản nháp” để lưu phần này trước khi chuyển. Nếu chuyển ngay, phần chưa lưu sẽ được bỏ (bản đã lưu trước đó vẫn được giữ).</p>
+          <p className="text-ef-phu">Hãy mở Trợ lý (bong bóng góc dưới phải hoặc phím F2), bấm “Che thông tin và tạo bản nháp” để lưu phần này trước khi chuyển. Nếu chuyển ngay, phần chưa lưu sẽ được bỏ (bản đã lưu trước đó vẫn được giữ).</p>
           <div className="mt-2 flex gap-2">
             <button type="button" className={BTN_OUTLINE} onClick={() => setPendingSwitch(null)}>Ở lại lượt này</button>
             <button type="button" className={BTN_OUTLINE} disabled={switching} onClick={() => void discardAndSwitch(pendingSwitch.key)}>Bỏ phần chưa duyệt và chuyển</button>

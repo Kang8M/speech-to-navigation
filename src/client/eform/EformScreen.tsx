@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties }
 import { luuLuotThu } from "@/client/api";
 import { approveScopes, docHoSo, luuHoSo, transitionEncounter, type ClinicalResponse } from "@/client/clinical-api";
 import { BanIn } from "@/client/eform/BanIn";
+import { BongBong } from "@/client/eform/BongBong";
 import { BaoCaoDialog } from "@/client/eform/BaoCaoDialog";
 import { ChiDinhTab } from "@/client/eform/ChiDinhTab";
 import type { EncounterBridge } from "@/client/eform/encounter-bridge";
@@ -169,6 +170,8 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
   const [daQuenTab, setDaQuenTab] = useState(false);
   /** Số lần bấm chuột trên màn hình từ lúc mở phiếu */
   const soLanBam = useRef(0);
+  /** Số đo ô lệnh nhanh: số lần dùng và các ô đã điền/đổi (chỉ id ô, không giữ chữ) */
+  const demLenh = useRef({ soLan: 0, oDoi: new Set<string>() });
 
   const notify = useCallback((message: string) => {
     setToast(message);
@@ -341,6 +344,10 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
     // Số đo lượt thử: ô do mẫu, gõ tắt điền không tính là AI điền hay bác sĩ sửa (daDien rỗng); ketQua chỉ để lượt có mẫu vẫn được ghi
     const them = r.ketQua;
     if (them) setKetQua((prev) => prev ?? { ...them, daDien: [] });
+    if (daDoi.length > 0 || r.chiDinhThem.length > 0) {
+      demLenh.current.soLan += 1;
+      for (const id of daDoi) demLenh.current.oDoi.add(id);
+    }
     const mauId = kq.mau?.id;
     if (mauId) setLuot((prev) => ({ ...prev, mauId }));
     batDauNhap("go", false);
@@ -350,7 +357,7 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
   /** Ghi số đo lượt thử vào data/sessions/ (chỉ số đếm), hiện ở trang Kết quả thử nghiệm. Trả câu báo thêm */
   const ghiLuot = async (): Promise<string> => {
     const dem = demTab.current;
-    if (!ketQua && dem.kyTuGo === 0 && dem.nhan.length === 0) return "";
+    if (!ketQua && dem.kyTuGo === 0 && dem.nhan.length === 0 && demLenh.current.soLan === 0) return "";
     if (luot.daGhi) return "";
     try {
       await luuLuotThu({
@@ -370,8 +377,11 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
         so_goi_y_nhan_roi_sua: dem.nhan.filter(({ id, cau }) => !(fields[id]?.value ?? "").includes(cau)).length,
         so_ky_tu_goi_y: dem.kyTuGoiY,
         so_ky_tu_go: dem.kyTuGo,
-        giao_dien: "cu",
+        giao_dien: "gon",
         so_lan_bam_chuot: soLanBam.current,
+        so_lenh_nhanh: demLenh.current.soLan,
+        so_o_lenh_nhanh: demLenh.current.oDoi.size,
+        so_cho_vang: conXem,
       });
       setLuot((prev) => ({ ...prev, daGhi: true }));
       return "";
@@ -442,7 +452,7 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
       >
         <EformHeader lastEdit={lastEdit} expanded={expanded} onToggleExpand={() => setExpanded((open) => !open)} />
 
-        <div className={`mx-auto grid w-full flex-1 items-start gap-5 px-4 pb-8 pt-5 sm:px-6 lg:grid-cols-[minmax(0,1fr)_23rem] ${expanded ? "" : "max-w-[90rem]"}`}>
+        <div className={`mx-auto grid w-full flex-1 items-start gap-5 px-4 pb-24 pt-5 sm:px-6 ${expanded ? "" : "max-w-[90rem]"}`}>
           <main className="min-w-0 space-y-4">
             <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-b border-ef-vien">
               <div>
@@ -547,12 +557,13 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
             </fieldset>
           </main>
 
-          <fieldset disabled={khoa || saving || loadingRecord} className="contents">
-            {/* Tạm đặt ô Lệnh nhanh trên đầu cột Trợ lý; cả cột ghim giữa header và thanh đáy */}
-            <div className="flex flex-col gap-3 self-start lg:sticky lg:top-[calc(var(--cao-dau)+1rem)] lg:max-h-[calc(100vh-var(--cao-dau)-var(--cao-day)-2rem)] lg:overflow-y-auto">
+          <BongBong dangGhi={bridge?.recordingActive ?? false}>
+            <fieldset disabled={khoa || saving || loadingRecord} className="contents">
               <LenhNhanh
                 onDien={apLenh}
-                onChepXuong={bridge && !bridge.recordingActive ? (text) => setNoiDungThem((prev) => ({ seq: (prev?.seq ?? 0) + 1, text })) : undefined}
+                onChepXuong={bridge && !bridge.recordingActive ? (text) => {
+                  setNoiDungThem((prev) => ({ seq: (prev?.seq ?? 0) + 1, text }));
+                } : undefined}
                 chuaLuu={chuaLuu}
                 onLuu={bridge ? () => void save() : undefined}
                 saving={saving}
@@ -569,8 +580,8 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
                 hoiThoai={kichBan === 4 ? data.trinhDien?.hoiThoai : undefined}
                 noiDungThem={noiDungThem}
               />
-            </div>
-          </fieldset>
+            </fieldset>
+          </BongBong>
         </div>
 
         {toast && (

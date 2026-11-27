@@ -19,6 +19,7 @@ import { TroLyAi, type TabId } from "@/client/eform/TroLyAi";
 import { apKetQuaLenh } from "@/shared/eform/ap-lenh";
 import type { DongChiDinh, DongThuoc, KetQuaDien } from "@/shared/eform/dien-phieu";
 import { demLuot } from "@/shared/eform/do-luong";
+import { demChoTrong } from "@/shared/eform/mau-cau";
 import type { LenhDien } from "@/shared/eform/lenh-nhanh";
 import { doiNguonKhiLuu } from "@/shared/eform/nguon-mau";
 import { ghepGoiY } from "@/shared/eform/thoi-quen";
@@ -170,6 +171,8 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
   const [daQuenTab, setDaQuenTab] = useState(false);
   /** Số lần bấm chuột trên màn hình từ lúc mở phiếu */
   const soLanBam = useRef(0);
+  /** Số đo ô lệnh nhanh: số lần dùng và các ô đã điền/đổi (chỉ id ô, không giữ chữ) */
+  const demLenh = useRef({ soLan: 0, oDoi: new Set<string>() });
 
   const notify = useCallback((message: string) => {
     setToast(message);
@@ -342,6 +345,10 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
     // Số đo lượt thử: ô do mẫu, gõ tắt điền không tính là AI điền hay bác sĩ sửa (daDien rỗng); ketQua chỉ để lượt có mẫu vẫn được ghi
     const them = r.ketQua;
     if (them) setKetQua((prev) => prev ?? { ...them, daDien: [] });
+    if (daDoi.length > 0 || r.chiDinhThem.length > 0) {
+      demLenh.current.soLan += 1;
+      for (const id of daDoi) demLenh.current.oDoi.add(id);
+    }
     const mauId = kq.mau?.id;
     if (mauId) setLuot((prev) => ({ ...prev, mauId }));
     batDauNhap("go", false);
@@ -351,7 +358,7 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
   /** Ghi số đo lượt thử vào data/sessions/ (chỉ số đếm), hiện ở trang Kết quả thử nghiệm. Trả câu báo thêm */
   const ghiLuot = async (): Promise<string> => {
     const dem = demTab.current;
-    if (!ketQua && dem.kyTuGo === 0 && dem.nhan.length === 0) return "";
+    if (!ketQua && dem.kyTuGo === 0 && dem.nhan.length === 0 && demLenh.current.soLan === 0) return "";
     if (luot.daGhi) return "";
     try {
       await luuLuotThu({
@@ -371,8 +378,11 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
         so_goi_y_nhan_roi_sua: dem.nhan.filter(({ id, cau }) => !(fields[id]?.value ?? "").includes(cau)).length,
         so_ky_tu_goi_y: dem.kyTuGoiY,
         so_ky_tu_go: dem.kyTuGo,
-        giao_dien: "cu",
+        giao_dien: "gon",
         so_lan_bam_chuot: soLanBam.current,
+        so_lenh_nhanh: demLenh.current.soLan,
+        so_o_lenh_nhanh: demLenh.current.oDoi.size,
+        so_cho_vang: Object.values(fields).reduce((tong, f) => tong + demChoTrong(f.value), 0),
       });
       setLuot((prev) => ({ ...prev, daGhi: true }));
       return "";
@@ -552,7 +562,10 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
             <fieldset disabled={khoa || saving || loadingRecord} className="contents">
               <LenhNhanh
                 onDien={apLenh}
-                onChepXuong={bridge && !bridge.recordingActive ? (text) => setNoiDungThem((prev) => ({ seq: (prev?.seq ?? 0) + 1, text })) : undefined}
+                onChepXuong={bridge && !bridge.recordingActive ? (text) => {
+                  batDauNhap("go", false);
+                  setNoiDungThem((prev) => ({ seq: (prev?.seq ?? 0) + 1, text }));
+                } : undefined}
                 chuaLuu={chuaLuu}
                 onLuu={bridge ? () => void save() : undefined}
                 saving={saving}

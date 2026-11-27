@@ -8,13 +8,13 @@ Tài liệu cho một buổi thử Trợ lý AI điền phiếu với bác sĩ T
 
 ## Phần 1. Cho bác sĩ
 
-Phiếu trên màn hình là một bệnh nhân giả: **chị Nguyễn Thị Giả, 38 tuổi, dị ứng Penicillin**. Điều dưỡng đã nhập sẵn lý do khám và bệnh sử. Cột bên phải là **Trợ lý AI điền phiếu**.
+Phiếu trên màn hình là một bệnh nhân giả: **chị Nguyễn Thị Giả, 38 tuổi, dị ứng Penicillin**. Điều dưỡng đã nhập sẵn lý do khám và bệnh sử. Nút tròn **Trợ lý** ở góc dưới bên phải (hoặc phím **F2**) mở khung **Trợ lý AI điền phiếu**; bấm lại hoặc Esc để đóng.
 
 Trợ lý có sẵn **39 phiếu mẫu theo bệnh** (viêm tai giữa cấp, viêm mũi xoang cấp, viêm họng cấp, chóng mặt tư thế…). Anh/chị chỉ cần gõ hoặc nói **tên mẫu**, có thể kèm vài chi tiết riêng của bệnh nhân. Phiếu khám, chỉ định và đơn thuốc sẽ được điền theo mẫu, sau đó anh/chị kiểm tra và sửa.
 
 ### Các bước
 
-1. Gõ vào ô bên phải, hoặc bấm **🎤 Bắt đầu nói** rồi nói, ví dụ:
+1. Mở bong bóng Trợ lý, gõ vào ô trong khung, hoặc bấm **🎤 Bắt đầu nói** rồi nói, ví dụ:
    - `mẫu viêm tai giữa cấp`
    - `vtg cấp, tai T, 3n, sốt 38,5`
 
@@ -22,6 +22,18 @@ Trợ lý có sẵn **39 phiếu mẫu theo bệnh** (viêm tai giữa cấp, vi
 2. Bấm **✨ Điền vào phiếu**.
 3. Kiểm tra cả ba tab **Phiếu khám**, **Chỉ định dịch vụ**, **Đơn thuốc**. Chỗ **tím** là điền theo mẫu, chỗ **vàng** là phải xem lại (ví dụ `[phải|trái|2 bên]` còn chưa chọn). Sửa như sửa phiếu bình thường. Chỗ vàng mà đã đúng thì bấm **✓ Đúng**.
 4. Thấy phiếu ổn thì bấm **Lưu**. **Tải lại trang (F5)** trước khi sang kịch bản sau.
+
+### Thử ô Lệnh nhanh (không gọi AI)
+
+Ô **Lệnh nhanh** nằm trên đầu khung Trợ lý, chạy hoàn toàn trên máy, không gửi chữ đi đâu.
+
+1. Gõ tên mẫu kèm chi tiết, ví dụ `viêm tai giữa cấp, tai P, 3n, sốt 38,5`, bấm Enter. Câu báo cho biết đã điền mấy ô, còn mấy chỗ vàng.
+2. Xem các chỗ **vàng** (`[phải|trái|2 bên]` chưa chọn) ở ba tab, chọn hoặc sửa cho đúng. Phần chi tiết không điền được thì có nút **Chép xuống** để đưa vào Nội dung buổi khám.
+3. Bấm **Lưu phiếu**. Ô do mẫu điền được lưu như chữ bác sĩ nhập.
+4. Mở lại ô Lệnh nhanh, nói thêm một mã gõ tắt hoặc chi tiết nữa (ví dụ gọi lại cùng mẫu): ô đã đúng không bị điền lại, chỉ định không bị thêm trùng.
+5. Với phần cần AI (chi tiết còn dư, bệnh chưa có mẫu), chép xuống rồi duyệt các đề xuất của Trợ lý như bình thường.
+
+Số đo `/ket-qua` của lượt này hiện giao diện "Gọn". Số lệnh nhanh, số ô và số chỗ vàng còn lại được ghi vào dữ liệu lượt thử và CSV (chỉ số đếm, không có chữ).
 
 Mẫu **chỉ điền vào ô còn trống**: ô đã có chữ (điều dưỡng nhập, anh/chị đã gõ) được giữ nguyên. Muốn bỏ lần vừa điền thì bấm **↶ Hoàn tác lần AI điền**.
 

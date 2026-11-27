@@ -25,6 +25,9 @@ const sessionSchema = z.object({
   so_ky_tu_go: count.default(0),
   giao_dien: z.enum(["gon", "cu"]).default("cu"),
   so_lan_bam_chuot: count.default(0),
+  so_lenh_nhanh: count.default(0),
+  so_o_lenh_nhanh: count.default(0),
+  so_cho_vang: count.default(0),
 });
 
 export async function GET() {

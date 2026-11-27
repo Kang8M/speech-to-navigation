@@ -43,7 +43,7 @@ npm run thu-che-pii -- "câu" # thử bộ che PII dùng chung chePii (eForm, /d
 
 ## Kiến trúc nhanh
 
-- Chỉ có hai trang: `/` là eForm (mô phỏng phiếu khám EMR + cột Trợ lý AI, `src/client/eform/`), `/ket-qua` là số đo lượt thử (ghi khi bấm Lưu trên eForm). Trang "Màn hình làm việc" cũ đã bỏ ngày 2026-11-11.
+- Chỉ có hai trang: `/` là eForm (mô phỏng phiếu khám EMR + bong bóng Trợ lý, `src/client/eform/`), `/ket-qua` là số đo lượt thử (ghi khi bấm Lưu trên eForm). Trang "Màn hình làm việc" cũ đã bỏ ngày 2026-11-11.
 - `config/forms/*.json` sinh ra schema gửi LLM, prompt, mock và eval. Giao diện eForm viết tay: thêm trường thì sửa JSON, rồi nối vào `src/shared/eform/dien-phieu.ts` và `src/client/eform/` nếu cần hiện trên phiếu.
 - Code chia theo nơi chạy, xem `docs/cau-truc-du-an.md`: `src/app` (định tuyến mỏng), `src/client` (FE), `src/server` (BE, có `import "server-only"`), `src/shared` (TS thuần dùng cả hai phía). `src/client` không import `src/server`, gọi qua `/api/*` bằng `src/client/api.ts`; kiểu request/response đặt ở `src/shared/api.ts`. `npm run lint` chặn import sai chiều.
 - AI thật (LLM, ASR) ở `src/server/ai/`: `pipeline.ts` → `llm/{mock,anthropic,openai,gemini,rules}.ts` → `src/shared/match.ts` (khớp danh mục) → `src/shared/validate.ts`.

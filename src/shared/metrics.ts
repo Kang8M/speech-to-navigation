@@ -31,6 +31,12 @@ export interface SessionInput {
   giao_dien?: "gon" | "cu";
   /** Số lần bấm chuột trên màn hình eForm từ lúc mở phiếu đến lúc Lưu */
   so_lan_bam_chuot?: number;
+  /** Số lần dùng ô lệnh nhanh (mỗi lần có đổi ít nhất một ô hoặc thêm chỉ định); chỉ đếm, không ghi chữ trong ô lệnh. Lượt ghi trước 2026-11-27 không có */
+  so_lenh_nhanh?: number;
+  /** Số ô phiếu khác nhau do ô lệnh nhanh điền hoặc đổi (mẫu hay gõ tắt). Lượt ghi trước 2026-11-27 không có */
+  so_o_lenh_nhanh?: number;
+  /** Số chỗ vàng [..] còn lại trong các ô phiếu lúc Lưu. Lượt ghi trước 2026-11-27 không có */
+  so_cho_vang?: number;
 }
 
 export interface SessionRecord extends SessionInput {
@@ -90,6 +96,9 @@ const CSV_COLUMNS: (keyof SessionRecord)[] = [
   "so_ky_tu_go",
   "giao_dien",
   "so_lan_bam_chuot",
+  "so_lenh_nhanh",
+  "so_o_lenh_nhanh",
+  "so_cho_vang",
 ];
 
 function csvCell(value: unknown): string {

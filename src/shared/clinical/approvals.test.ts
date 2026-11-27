@@ -93,3 +93,60 @@ test("canonical scope serialization ignores object key order and missing orders 
 test("metadata paths and unknown nested clinical fields do not acquire a scope", () => {
   for (const path of ["/sinh_hieu/measured_at", "/sinh_hieu/source_system", "/thong_tin_khac/unknown", "/phieu_kham/di_ung/unknown", "/chi_dinh/items/0/review", "/chi_dinh/groups/0/created_at"]) assert.throws(() => approvals.approvalScopeForPath(path, "stable-order"), path);
 });
+
+function withDrug(record: Encounter, deCap: "co_ke_don" | "khong_ke_don" = "co_ke_don"): Encounter {
+  record.don_thuoc = { de_cap: deCap, items: [] };
+  if (deCap === "co_ke_don") {
+    record.don_thuoc.items.push({
+      id: "rx-demo-001", noi_dung: { ten_thuoc: "Paracetamol", ham_luong: "500mg", duong_dung: "uống", lieu_moi_lan: "1 viên", khi_can: false, so_lan_ngay: "3", thoi_diem: null, so_ngay: "5", so_luong_ke: null, ghi_chu: null },
+      danh_muc: structuredClone(record.chi_dinh.items[0].danh_muc), chan_doan_ids: [], requester_id: null, requested_at: null, review: structuredClone(record.chi_dinh.items[0].review),
+    });
+  }
+  return record;
+}
+
+test("prescription scope: path mapping", () => {
+  assert.equal(approvals.approvalScopeForPath("/don_thuoc/de_cap"), "prescription");
+  assert.equal(approvals.approvalScopeForPath("/don_thuoc/items/0/noi_dung"), "prescription");
+  assert.throws(() => approvals.approvalScopeForPath("/don_thuoc/items/0/review"));
+});
+
+test("prescription scope: required only once decided", () => {
+  const record = fixture();
+  assert.ok(!approvals.requiredApprovalScopes(record).includes("prescription"));
+  assert.ok(approvals.requiredApprovalScopes(withDrug(structuredClone(record))).includes("prescription"));
+  const none = approvals.requiredApprovalScopes(withDrug(structuredClone(record), "khong_ke_don"));
+  assert.ok(none.includes("prescription"));
+  const scopes = approvals.requiredApprovalScopes(withDrug(structuredClone(record)));
+  assert.ok(scopes.indexOf("prescription") > scopes.indexOf(`service_order:${record.chi_dinh.items[0].id}`));
+});
+
+test("prescription scope: state follows dose, diagnosis, allergy and de_cap but not review or other notes", () => {
+  const record = withDrug(fixture());
+  record.chan_doan.push({ id: "dx-demo-001", noi_dung: { giai_doan: "ban_dau", mo_ta: "Viêm họng", muc_do_khang_dinh: "xac_dinh", vai_tro: "chinh" }, icd: structuredClone(record.chi_dinh.items[0].danh_muc), review: structuredClone(record.chi_dinh.items[0].review) });
+  approve(record, "prescription");
+  assert.equal(approvals.approvalState(record, "prescription"), "current");
+  record.don_thuoc.items[0].review.trang_thai = "chua_duyet";
+  record.phieu_kham.benh_su = "Bệnh sử khác";
+  assert.equal(approvals.approvalState(record, "prescription"), "current");
+  const base = structuredClone(record);
+  record.don_thuoc.items[0].noi_dung.lieu_moi_lan = "2 viên";
+  assert.equal(approvals.approvalState(record, "prescription"), "changed");
+  const di = structuredClone(base); di.phieu_kham.di_ung.mo_ta = "Dị ứng mới";
+  assert.equal(approvals.approvalState(di, "prescription"), "changed");
+  const cd = structuredClone(base); cd.chan_doan.find(item => item.noi_dung.giai_doan === "ban_dau")!.noi_dung.mo_ta = "Chẩn đoán khác";
+  assert.equal(approvals.approvalState(cd, "prescription"), "changed");
+  const dc = structuredClone(base); dc.don_thuoc = { de_cap: "khong_ke_don", items: [] };
+  assert.equal(approvals.approvalState(dc, "prescription"), "changed");
+});
+
+test("prescription scope: old snapshots without don_thuoc stay readable and approved", () => {
+  const record = fixture(); approve(record, "initial_note"); approve(record, `service_order:${record.chi_dinh.items[0].id}`);
+  for (const version of record.approval_versions) delete (version.snapshot as Record<string, unknown>).don_thuoc;
+  assert.doesNotThrow(() => approvals.approvalState(record, "initial_note"));
+  assert.equal(approvals.approvalState(record, "initial_note"), "current");
+  assert.notEqual(approvals.approvalAuditCompatibility(record).approved_at, null);
+  const legacy = fixture(); legacy.approval_versions = [{ id: "legacy", scope: "legacy", snapshot: structuredClone(legacy) as unknown as JsonValue, digest: "old", approved_by: "doctor", approved_at: "2026-11-13T00:00:00Z", sources: [] }]; delete (legacy.approval_versions[0].snapshot as Record<string, unknown>).don_thuoc;
+  assert.doesNotThrow(() => approvals.approvalAuditCompatibility(legacy));
+  assert.equal(approvals.approvalState(withDrug(structuredClone(legacy)), "prescription"), "unapproved");
+});

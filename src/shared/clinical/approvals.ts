@@ -1,7 +1,7 @@
 import type { ApprovalVersion, Encounter, JsonValue } from "./types";
 
 export type { ApprovalVersion, JsonValue } from "./types";
-export type ApprovalScope = "initial_note" | "conclusion" | "summary" | `service_order:${string}`;
+export type ApprovalScope = "initial_note" | "conclusion" | "summary" | "prescription" | `service_order:${string}`;
 export type StoredApprovalScope = ApprovalScope | "legacy";
 /** Full immutable clinical record for printing; digest is over the scope projection only. */
 export type ApprovalSnapshot = JsonValue;
@@ -16,6 +16,10 @@ const OTHER_INFO_FIELDS = ["chuyen_noi_soi", "xn_benh_tat", "xn_bhxh", "xn_me"];
 const NESTED_FORM_FIELDS: Record<string, readonly string[]> = { di_ung: ["trang_thai", "loai", "mo_ta"], hen_tai_kham: ["co_hen", "nguyen_van", "sau_bao_lau", "ngay_cu_the"] };
 const ORDER_CONTENT_FIELDS = ["noi_dung", "danh_muc", "trang_thai", "group_id", "package_id", "package_version", "thay_the_order_id", "chan_doan_ids", "billing", "intentional_repeat_reason"];
 const GROUP_CONTENT_FIELDS = ["chan_doan_lich_su_lam_sang", "room_id", "bed_id"];
+const PRESCRIPTION_CONTENT_FIELDS = ["noi_dung", "danh_muc", "chan_doan_ids"];
+/** Empty prescription for records and approval snapshots written before schema 1.3.0. */
+export const DON_THUOC_TRONG: Encounter["don_thuoc"] = { de_cap: "chua_de_cap", items: [] };
+const drugs = (record: Encounter) => record.don_thuoc ?? DON_THUOC_TRONG;
 const UI_INITIAL = new Set(["ly_do", "benh_su", "tien_su_ban_than", "tien_su_gia_dinh", "noi_gioi_thieu", "di_ung", "di_ung_loai", "di_ung_mo_ta", "thuoc_dang_dung", "co_pttt", "kham_toan_than", "kham_chuyen_khoa", "kham_khac", "icd_ban_dau", "mo_ta_ban_dau", "icd_kem_theo", "giai_doan_kem_theo", "chuyen_noi_soi", "xn_benh_tat", "xn_bhxh", "xn_me"]);
 const UI_CONCLUSION = new Set(["ghi_chu_kq", "da_xu_ly", "huong_dieu_tri", "loi_dan", "hen_tai_kham", "ngay_tai_kham", "tinh_trang_ra_vien", "icd_ra_vien", "mo_ta_ra_vien"]);
 
@@ -42,6 +46,11 @@ export function approvalScopeForPath(fieldPath: string, itemId?: string): Approv
     const content = parts[1] === "items" ? ORDER_CONTENT_FIELDS : parts[1] === "groups" ? GROUP_CONTENT_FIELDS : undefined;
     // Review, identity and audit fields of an order never carry a clinical approval scope.
     if (content && itemId?.trim() && (parts[3] === undefined || content.includes(parts[3]))) return `service_order:${itemId}`;
+  }
+  if (parts[0] === "don_thuoc") {
+    if (parts[1] === "de_cap" && parts.length === 2) return "prescription";
+    // Review, identity and audit fields of a drug line never carry a clinical approval scope.
+    if (parts[1] === "items" && (parts[3] === undefined || PRESCRIPTION_CONTENT_FIELDS.includes(parts[3]))) return "prescription";
   }
   if (parts[0] === "sinh_hieu" && (parts.length === 1 || VITAL_FIELDS.includes(parts[1]))) return "initial_note";
   if (parts[0] === "thong_tin_khac" && (parts.length === 1 || OTHER_INFO_FIELDS.includes(parts[1]))) return "initial_note";
@@ -75,6 +84,15 @@ export function scopeProjection(record: Encounter, scope: ApprovalScope): JsonVa
     note: pick(record.phieu_kham, CONCLUSION_FIELDS), diagnoses: diagnoses(record, true),
     results: record.ket_qua.map(item => pick(item, ["id", "service_order_id", "nhom", "ten", "ket_qua_text", "gia_tri", "khoang_tham_chieu", "co_bat_thuong", "tai_lieu_ids", "ngay"])),
   } as JsonValue;
+  if (scope === "prescription") {
+    const don = drugs(record);
+    return {
+      de_cap: don.de_cap,
+      items: don.items.map(item => ({ id: item.id, noi_dung: item.noi_dung, catalog: pick(item.danh_muc, ["catalog_id", "code_system", "code", "display", "catalog_version"]), chan_doan_ids: item.chan_doan_ids })),
+      diagnoses: { ban_dau: diagnoses(record, false), ra_vien: diagnoses(record, true) },
+      di_ung: record.phieu_kham.di_ung,
+    } as JsonValue;
+  }
   if (!scope.startsWith("service_order:") || !scope.slice(14)) throw new Error("Phạm vi duyệt không hợp lệ.");
   const item = record.chi_dinh.items.find(item => item.id === scope.slice(14));
   if (!item) return null;
@@ -115,6 +133,7 @@ function meaningful(value: unknown): boolean {
 
 export function requiredApprovalScopes(record: Encounter): ApprovalScope[] {
   const scopes: ApprovalScope[] = ["initial_note", ...record.chi_dinh.items.map(item => `service_order:${item.id}` as ApprovalScope)];
+  if (drugs(record).de_cap !== "chua_de_cap") scopes.push("prescription");
   if (meaningful(pick(record.phieu_kham, CONCLUSION_FIELDS)) || diagnoses(record, true).length) scopes.push("conclusion");
   if (meaningful(record.tom_tat)) scopes.push("summary");
   return scopes;

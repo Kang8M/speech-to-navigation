@@ -4,6 +4,14 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-27
 
+### Thiết kế và kế hoạch "Kê đơn thuốc trở lại" (chưa code)
+- **Loại:** Tài liệu, Thiết kế
+- **Thay đổi:** Thêm bản thiết kế `docs/superpowers/specs/2026-11-27-ke-don-design.md` và kế hoạch 11 task `docs/superpowers/plans/2026-11-27-ke-don.md`: đưa lại tab Đơn thuốc (thuốc dùng khi cần, Tổng SL tự tính), gợi ý thuốc theo chẩn đoán, tách In phiếu khám và In đơn thuốc. Đơn thuốc lưu vào hồ sơ clinical (khối `don_thuoc`, `schema_version` 1.3.0 có đọc-chuyển từ 1.2.0) và là phần duyệt riêng `prescription`. AI vẫn không kê thuốc.
+- **Lý do:** Bác sĩ cần tự kê và in đơn riêng; PR #7 đưa kê đơn ra ngoài phạm vi nên mất cả phần bác sĩ tự kê. Nguồn: các commit d8fa4f8, 5d40321, 6b06182 của nhánh `thanh`.
+- **File:** `docs/superpowers/specs/2026-11-27-ke-don-design.md`, `docs/superpowers/plans/2026-11-27-ke-don.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** Chỉ tài liệu, chưa sửa code. Mốc trước khi làm trên `origin/dev` b1fa808: `npm test` 482/482 pass, `npx tsc --noEmit` sạch, `npm run lint` 0 lỗi (6 cảnh báo có sẵn).
+- **Ảnh hưởng:** Không đổi hành vi ứng dụng. README, `docs/CLINICAL-WORKFLOW.md`, `CLAUDE.md` sẽ được sửa ở task cuối khi code xong.
+
 ### Trợ lý gọn: ô lệnh nhanh, bong bóng Trợ lý và số đo
 - **Loại:** Tính năng
 - **Thay đổi:** Thêm `src/shared/eform/lenh-nhanh.ts`: `xuLyLenh` tách một dòng lệnh của bác sĩ (tên mẫu + chi tiết + mã gõ tắt) thành kết quả điền: `trong`, `chon_mau` (bí danh trùng, hỏi lại) hoặc `dien`. Thứ tự: tách gõ tắt, tìm mẫu theo phần còn lại, không khớp thì tìm theo chẩn đoán vừa bung từ gõ tắt. `dungMau` điền chỗ trống theo chi tiết (chi tiết rỗng thì giữ nguyên kết quả của mẫu); `phanDuChiTiet` trả các vế chi tiết không điền được chỗ trống nào để bác sĩ tự ghi. Chạy hoàn toàn trên máy, không gọi API hay AI.

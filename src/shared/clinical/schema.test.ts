@@ -14,6 +14,9 @@ test("runtime parses canonical record, AI and transcript fixtures", () => {
 });
 test("strictly refuses prescription keys, including nested and empty fields", () => {
   assert.throws(() => parseEncounter({ ...fixture("encounter"), don_thuoc: { items: [] } }));
+  const noDrugBlock = fixture("encounter");
+  delete noDrugBlock.don_thuoc;
+  assert.throws(() => parseEncounter(noDrugBlock));
   const ai = fixture("ai-output");
   ai.phieu_kham.ke_don = [];
   assert.throws(() => parseAiOutput(ai));
@@ -43,9 +46,30 @@ test("empty encounter uses null, preserves uncertainty and is an unapproved draf
   parseEncounter(e);
 });
 
+const drugLine = (id = "thuoc-1") => ({
+  id, noi_dung: { ten_thuoc: "Thuốc mẫu", ham_luong: "500mg", duong_dung: "uống", lieu_moi_lan: "1 viên", khi_can: false, so_lan_ngay: "2", thoi_diem: "Sau ăn", so_ngay: "3", so_luong_ke: null, ghi_chu: null },
+  danh_muc: { catalog_id: null, code_system: null, code: null, display: null, catalog_version: null, trang_thai: "chua_khop", ung_vien_ids: [] },
+  chan_doan_ids: [], requester_id: "doctor-demo", requested_at: "2026-11-12T10:00:00+07:00",
+  review: { trang_thai: "chua_duyet", reviewer_id: null, reviewed_at: null },
+});
+test("encounter 1.3 has an empty prescription block and checks it", () => {
+  const e = emptyEncounter({ id: "enc-1", patientId: "patient-demo", doctorId: "doctor-demo", now: "2026-11-12T10:00:00+07:00" });
+  assert.deepEqual(e.don_thuoc, { de_cap: "chua_de_cap", items: [] });
+  assert.doesNotThrow(() => parseEncounter({ ...e, don_thuoc: { de_cap: "co_ke_don", items: [drugLine()] } }));
+  assert.doesNotThrow(() => parseEncounter({ ...e, don_thuoc: { de_cap: "khong_ke_don", items: [] } }));
+  assert.throws(() => parseEncounter({ ...e, don_thuoc: { de_cap: "co_ke_don", items: [] } }), /đơn thuốc/i);
+  assert.throws(() => parseEncounter({ ...e, don_thuoc: { de_cap: "khong_ke_don", items: [drugLine()] } }), /đơn thuốc/i);
+  assert.throws(() => parseEncounter({ ...e, don_thuoc: { de_cap: "co_ke_don", items: [drugLine("a"), drugLine("a")] } }), /trùng/i);
+  assert.throws(() => parseEncounter({ ...e, don_thuoc: { de_cap: "co_ke_don", items: [{ ...drugLine(), chan_doan_ids: ["missing"] }] } }), /chẩn đoán/i);
+  const many = Array.from({ length: 51 }, (_, i) => drugLine(`t-${i}`));
+  assert.throws(() => parseEncounter({ ...e, don_thuoc: { de_cap: "co_ke_don", items: many } }));
+  assert.throws(() => parseEncounter({ ...e, schema_version: "1.4.0" }));
+  assert.throws(() => parseEncounter({ ...e, schema_version: "1.2.0" }));
+});
+
 test("encounter 1.2 stores recording metadata and immutable reviewed revisions", () => {
   const e = emptyEncounter({ id: "enc-1", patientId: "patient-demo", doctorId: "doctor-demo", now: "2026-11-12T10:00:00+07:00" });
-  assert.equal(e.schema_version, "1.2.0");
+  assert.equal(e.schema_version, "1.3.0");
   assert.deepEqual(e.recording_sessions, []);
   assert.deepEqual(e.approval_versions, []);
   assert.deepEqual(e.change_decisions, []);
@@ -59,7 +83,7 @@ const recording = () => ({
 });
 test("encounter rejects duplicate sessions, reversed time, and foreign source sessions", () => {
   const e = emptyEncounter({ id: "enc-1", patientId: "patient-demo", doctorId: "doctor-demo", now: "2026-11-12T10:00:00+07:00" });
-  const valid = { ...e, schema_version: "1.2.0", recording_sessions: [recording()] };
+  const valid = { ...e, schema_version: "1.3.0", recording_sessions: [recording()] };
   assert.doesNotThrow(() => parseEncounter(valid));
   assert.throws(() => parseEncounter({ ...valid, recording_sessions: [recording(), recording()] }), /trùng/i);
   assert.throws(() => parseEncounter({ ...valid, recording_sessions: [{ ...recording(), ended_at: "2026-11-12T09:59:00+07:00" }] }), /thời gian/i);

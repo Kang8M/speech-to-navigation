@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.2.0",
+  "schema_version": "1.3.0",
   "id": "enc-demo-001",
   "revision": 1,
   "patient_id": "patient-demo-001",
@@ -126,6 +126,10 @@
     "de_cap": "khong_chi_dinh",
     "items": [],
     "groups": []
+  },
+  "don_thuoc": {
+    "de_cap": "chua_de_cap",
+    "items": []
   },
   "thong_tin_khac": {
     "chuyen_noi_soi": null,

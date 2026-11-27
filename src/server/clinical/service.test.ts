@@ -23,7 +23,7 @@ test("real form fixture saves clinical data and restores fields, results, vitals
   assert.equal(first.record.sinh_hieu.can_nang.value, data.ca.sinh_hieu.can_nang);
   assert.equal(first.record.ket_qua[0].ngay, "2026-08-14");
   assert.ok(first.record.lich_su.length > 0);
-  assert.equal("don_thuoc" in first.record, false);
+  assert.deepEqual(first.record.don_thuoc, { de_cap: "chua_de_cap", items: [] });
   const restored = readClinical(first.record.id, store);
   assert.equal(restored.snapshot.fields.di_ung_mo_ta.value, data.ca.gia_tri.di_ung_mo_ta);
   restored.snapshot.fields.loi_dan.value = "Tái khám khi cần";

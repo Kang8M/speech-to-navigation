@@ -4,7 +4,7 @@ Ngày: 12/11/2026. Phạm vi người dùng đã chọn: **ngoại trú Tai Mũi
 
 Phạm vi task 2, 3 và 4 chỉ gồm **phiếu khám và chỉ định dịch vụ**. **Bác sĩ tự kê đơn thuốc qua quy trình riêng**; cấu trúc lưu, đầu ra AI và mapping trong bộ thiết kế này không chứa đơn thuốc. Dị ứng và thuốc bệnh nhân đang dùng vẫn thuộc bệnh sử/tiền sử. Hướng điều trị và lời dặn chỉ ghi nội dung chăm sóc, theo dõi, tái khám; không chứa tên thuốc kê mới, liều dùng hoặc nội dung đơn thuốc.
 
-Đây là bộ thiết kế dữ liệu và JSON mẫu cho prototype. Hồ sơ Encounter dùng `1.2.0`; đầu ra AI, transcript và identity vẫn tương thích `1.1.0`. Hồ sơ `1.1.0` được migrate khi đọc, giữ bản duyệt legacy và không tạo phiên ghi âm giả. Các schema đã được nối vào validator, API, trích xuất AI, hai màn hình và lưu JSON. Xem [hướng dẫn vận hành](../CLINICAL-WORKFLOW.md). Không có dữ liệu bệnh nhân thật trong ví dụ. Transcript mẫu có cả lời nhắc kê thuốc để minh họa việc bỏ qua nội dung này trong đầu ra.
+Đây là bộ thiết kế dữ liệu và JSON mẫu cho prototype. Hồ sơ Encounter dùng `1.3.0` (có khối `don_thuoc`); đầu ra AI, transcript và identity vẫn tương thích `1.1.0`. Hồ sơ `1.1.0` và `1.2.0` được migrate khi đọc, giữ bản duyệt legacy và không tạo phiên ghi âm giả. Các schema đã được nối vào validator, API, trích xuất AI, hai màn hình và lưu JSON. Xem [hướng dẫn vận hành](../CLINICAL-WORKFLOW.md). Không có dữ liệu bệnh nhân thật trong ví dụ. Transcript mẫu có cả lời nhắc kê thuốc để minh họa việc bỏ qua nội dung này trong đầu ra.
 
 ## Đọc bộ tài liệu theo thứ tự
 

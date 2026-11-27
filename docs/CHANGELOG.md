@@ -4,12 +4,12 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-27
 
-### Kê đơn: Tổng SL, thuốc dùng khi cần, liều "1 v"
+### Kê đơn: Tổng SL, thuốc dùng khi cần, liều "1 v", hồ sơ 1.3.0 có don_thuoc
 - **Loại:** Tính năng
 - **Thay đổi:** Phần thuần (chưa có giao diện) của kê đơn trở lại. `computeTotal` lấy `so_luong_ke` nếu > 0, không thì liều × số lần × số ngày; thuốc dùng khi cần không có số lần và không có số lượng kê thì ra `null`. Thêm `bungDonViLieu` ("1 v" → "1 viên", "1/2v" → "1/2 viên", theo `don_vi_viet_tat` trong `config/canh-bao.json`); `applyTotals` bung đơn vị trong liều rồi tính tổng. `DongThuoc` thêm `khi_can?`, `so_luong_ke?`; thêm `laKhiCan` (cờ, hoặc thời điểm bắt đầu bằng "Khi/Lúc/Nếu"); `dienPhieu`, `khopBoMau` ánh xạ hai trường mới; `COT_THUOC` và `/api/thoi-quen` nhận `khi_can`, `so_luong_ke`.
-- **Lý do:** Bác sĩ kê thuốc dùng khi cần (khi đau, khi sốt) và gõ liều tắt "1 v". Nguồn: commit d8fa4f8 của nhánh `thanh`, không lấy phần schema AI. AI vẫn không kê thuốc.
-- **File:** `config/canh-bao.json`, `src/shared/{types,validate}.ts`, `src/shared/eform/{dien-phieu,goi-y,thoi-quen}.ts`, `src/app/api/thoi-quen/route.ts`, test `src/shared/validate.test.ts`, `src/shared/eform/{dien-phieu,goi-y,thoi-quen}.test.ts`, `docs/CHANGELOG.md`
-- **Kiểm tra:** `npm test` 490/490 (482 cũ + 8 mới); `npx tsc --noEmit` sạch; `npm run lint` 0 lỗi (6 cảnh báo có sẵn).
+- **Lý do:** Bác sĩ kê thuốc dùng khi cần (khi đau, khi sốt) và gõ liều tắt "1 v". Nguồn: commit d8fa4f8 của nhánh `thanh`, không lấy phần schema AI. AI vẫn không kê thuốc. Hồ sơ `schema_version` 1.3.0: thêm khối bắt buộc `don_thuoc` (`de_cap`, `items` tối đa 50, def `prescriptionItem`), kiểm `co_ke_don` khớp danh sách, ID dòng không trùng, `chan_doan_ids` phải tồn tại. `migrateEncounter` đọc-chuyển từng bậc 1.1.0 → 1.2.0 → 1.3.0 (thuần, chỉ thêm `don_thuoc` rỗng, không đổi `revision`, giữ nguyên `approval_versions`); bản đã duyệt vẫn đã duyệt. `ai-output.schema.json` không đổi.
+- **File:** `config/clinical/{common,encounter}.schema.json`, `src/shared/clinical/{schema.ts,types.ts}` (types sinh), `src/server/clinical/migrations.ts`, `docs/task-2/{README.md,examples/encounter*.example.json}`, test `src/shared/clinical/{schema,apply-ai}.test.ts`, `src/server/clinical/{migrations,service}.test.ts`, `src/shared/clinic/projection.test.ts`, `config/canh-bao.json`, `src/shared/{types,validate}.ts`, `src/shared/eform/{dien-phieu,goi-y,thoi-quen}.ts`, `src/app/api/thoi-quen/route.ts`, test `src/shared/validate.test.ts`, `src/shared/eform/{dien-phieu,goi-y,thoi-quen}.test.ts`, `docs/CHANGELOG.md`
+- **Kiểm tra:** `npm test` 493/493 (482 cũ + 8 + 3 mới); `npx tsc --noEmit` sạch; `npm run lint` 0 lỗi (6 cảnh báo có sẵn).
 - **Ảnh hưởng:** Chưa đổi giao diện. Dòng thuốc cũ không có hai trường mới vẫn đọc được.
 
 ### Thiết kế và kế hoạch "Kê đơn thuốc trở lại" (chưa code)

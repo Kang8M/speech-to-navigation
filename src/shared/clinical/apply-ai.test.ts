@@ -18,7 +18,7 @@ test("AI draft becomes structured notes/services with provenance; retry does not
   assert.ok(result.nguon_du_lieu.some(item => item.field_path === "/chi_dinh/items/0/noi_dung" && item.ai_run_id === "run-1"));
   const retry = applyAiDraft(result, run(), context);
   assert.deepEqual(retry, result);
-  assert.equal("don_thuoc" in result, false);
+  assert.deepEqual(result.don_thuoc, { de_cap: "chua_de_cap", items: [] });
   parseEncounter(result);
 });
 test("UI patch does not fill administrative/default/absent fields, retains positive clinical claims", () => {

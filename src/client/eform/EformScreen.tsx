@@ -19,7 +19,6 @@ import { TroLyAi, type TabId } from "@/client/eform/TroLyAi";
 import { apKetQuaLenh } from "@/shared/eform/ap-lenh";
 import type { DongChiDinh, DongThuoc, KetQuaDien } from "@/shared/eform/dien-phieu";
 import { demLuot } from "@/shared/eform/do-luong";
-import { demChoTrong } from "@/shared/eform/mau-cau";
 import type { LenhDien } from "@/shared/eform/lenh-nhanh";
 import { doiNguonKhiLuu } from "@/shared/eform/nguon-mau";
 import { ghepGoiY } from "@/shared/eform/thoi-quen";
@@ -382,7 +381,7 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
         so_lan_bam_chuot: soLanBam.current,
         so_lenh_nhanh: demLenh.current.soLan,
         so_o_lenh_nhanh: demLenh.current.oDoi.size,
-        so_cho_vang: Object.values(fields).reduce((tong, f) => tong + demChoTrong(f.value), 0),
+        so_cho_vang: conXem,
       });
       setLuot((prev) => ({ ...prev, daGhi: true }));
       return "";
@@ -453,7 +452,7 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
       >
         <EformHeader lastEdit={lastEdit} expanded={expanded} onToggleExpand={() => setExpanded((open) => !open)} />
 
-        <div className={`mx-auto grid w-full flex-1 items-start gap-5 px-4 pb-8 pt-5 sm:px-6 ${expanded ? "" : "max-w-[90rem]"}`}>
+        <div className={`mx-auto grid w-full flex-1 items-start gap-5 px-4 pb-24 pt-5 sm:px-6 ${expanded ? "" : "max-w-[90rem]"}`}>
           <main className="min-w-0 space-y-4">
             <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-b border-ef-vien">
               <div>
@@ -563,7 +562,6 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
               <LenhNhanh
                 onDien={apLenh}
                 onChepXuong={bridge && !bridge.recordingActive ? (text) => {
-                  batDauNhap("go", false);
                   setNoiDungThem((prev) => ({ seq: (prev?.seq ?? 0) + 1, text }));
                 } : undefined}
                 chuaLuu={chuaLuu}

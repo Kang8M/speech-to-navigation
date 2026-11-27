@@ -35,7 +35,7 @@ export interface SessionInput {
   so_lenh_nhanh?: number;
   /** Số ô phiếu khác nhau do ô lệnh nhanh điền hoặc đổi (mẫu hay gõ tắt). Lượt ghi trước 2026-11-27 không có */
   so_o_lenh_nhanh?: number;
-  /** Số chỗ vàng [..] còn lại trong các ô phiếu lúc Lưu. Lượt ghi trước 2026-11-27 không có */
+  /** Số chỗ "cần xem lại" (vàng) còn lại lúc Lưu, đếm như thanh dưới: ô phiếu và dòng chỉ định/thuốc có nguồn "xem". Lượt ghi trước 2026-11-27 không có */
   so_cho_vang?: number;
 }
 

@@ -10,23 +10,42 @@ const FOCUS = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visi
  */
 export function BongBong({ children, dangGhi }: { children: ReactNode; dangGhi: boolean }) {
   const [mo, setMo] = useState(false);
-  /** Phần tử đang focus trước khi mở, đóng lại thì trả con trỏ về đó */
+  /** Phần tử cuối cùng được focus ngoài bong bóng; đóng lại thì trả con trỏ về đó */
   const truocDo = useRef<HTMLElement | null>(null);
   const nut = useRef<HTMLButtonElement>(null);
   const khung = useRef<HTMLDivElement>(null);
   const moRef = useRef(false);
+  const khongGiuCon = useRef(false);
 
-  const doiTrangThai = (moi: boolean) => {
+  const doiTrangThai = (moi: boolean, giuCon = false) => {
     if (moi === moRef.current) return;
     moRef.current = moi;
+    khongGiuCon.current = giuCon;
     setMo(moi);
-    if (moi) {
-      const dang = document.activeElement;
-      truocDo.current = dang instanceof HTMLElement && dang !== document.body && dang !== nut.current ? dang : null;
-    } else {
-      (truocDo.current ?? nut.current)?.focus({ preventScroll: true });
+    if (!moi) {
+      const dich = truocDo.current;
+      const dungDuoc = dich && dich.isConnected && !(dich as HTMLInputElement).disabled && !dich.matches(":disabled");
+      (dungDuoc ? dich : nut.current)?.focus();
     }
   };
+
+  useEffect(() => {
+    const onFocusIn = (e: FocusEvent) => {
+      const t = e.target;
+      if (!(t instanceof HTMLElement) || t === document.body) return;
+      if (nut.current?.contains(t) || khung.current?.contains(t)) return;
+      truocDo.current = t;
+    };
+    document.addEventListener("focusin", onFocusIn);
+    return () => document.removeEventListener("focusin", onFocusIn);
+  }, []);
+
+  // Ghi âm tự dừng (lỗi, quá 600 giây) lúc đang đóng: mở khung để bác sĩ thấy lý do, không cướp con trỏ
+  const dangGhiTruoc = useRef(dangGhi);
+  useEffect(() => {
+    if (dangGhiTruoc.current && !dangGhi && !moRef.current) doiTrangThai(true, true);
+    dangGhiTruoc.current = dangGhi;
+  }, [dangGhi]);
 
   // F2: phím chức năng còn trống trên trình duyệt, không đụng việc gõ chữ
   useEffect(() => {
@@ -40,7 +59,9 @@ export function BongBong({ children, dangGhi }: { children: ReactNode; dangGhi: 
   }, []);
 
   useEffect(() => {
-    if (mo) khung.current?.focus({ preventScroll: true });
+    if (!mo || khongGiuCon.current) return;
+    const o = khung.current?.querySelector<HTMLElement>("input:not(:disabled), textarea:not(:disabled)");
+    (o ?? khung.current)?.focus({ preventScroll: true });
   }, [mo]);
 
   return (
@@ -54,7 +75,7 @@ export function BongBong({ children, dangGhi }: { children: ReactNode; dangGhi: 
         hidden={!mo}
         className="max-h-[calc(100vh-var(--cao-dau)-var(--cao-day)-6rem)] w-[26rem] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-xl border border-tim-vien bg-white text-[13px] shadow-[0_12px_32px_-12px_rgba(26,37,51,0.35)] outline-none"
         onKeyDown={(e) => {
-          if (e.key === "Escape") {
+          if (e.key === "Escape" && !e.nativeEvent.isComposing) {
             e.stopPropagation();
             doiTrangThai(false);
           }
@@ -76,7 +97,7 @@ export function BongBong({ children, dangGhi }: { children: ReactNode; dangGhi: 
       <button
         ref={nut}
         type="button"
-        aria-label="Trợ lý điền phiếu"
+        aria-label={dangGhi ? "Trợ lý điền phiếu, đang ghi âm" : "Trợ lý điền phiếu"}
         aria-expanded={mo}
         aria-controls="khung-tro-ly"
         title="Trợ lý (F2)"

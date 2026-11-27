@@ -27,7 +27,7 @@ src/
     chung/                component dùng được ở mọi trang
       MicButton.tsx       nút 🎤: Web Speech hoặc Zipformer (gọi /api/asr)
       Header.tsx          thanh trên cùng (link eForm, Kết quả, chế độ AI)
-    eform/                trang / (màn giống EMR + cột Trợ lý AI; Lưu ghi số đo lượt thử)
+    eform/                trang / (màn giống EMR + bong bóng Trợ lý góc dưới phải; Lưu ghi số đo lượt thử)
     ket-qua/              trang /ket-qua
 
   server/                 BE: chỉ chạy trên server (có import "server-only")
@@ -96,14 +96,14 @@ Muốn thay một tính năng rule bằng LLM thật (ví dụ tóm tắt lịch
 
 ## Luồng chính
 
-**Điền nháp (cột Trợ lý AI của trang eForm):**
+**Điền nháp (Trợ lý lâm sàng trong bong bóng của trang eForm):**
 `TroLyAi.tsx` → `client/api.ts › goiAiDienNhap` → `POST /api/extract` → `server/ai/pipeline.ts › runPipeline` → `llm/index.ts` (chọn theo `LLM_PROVIDER`, kiểm tra zod, thử lại 1 lần) → bỏ trường không `ai_fill` → `shared/match.ts` gán mã → `shared/validate.ts` tính tổng → trả `PipelineResult`.
 
 **Giọng nói Zipformer:** `MicButton.tsx` → `GET /api/asr` (chế độ) → `POST /api/asr` (mở phiên) → `POST /api/asr/[id]` mỗi 0,4 giây (PCM 16 kHz, nhận `{ chot, tam }`) → `DELETE /api/asr/[id]`. Mỗi câu chốt (cả Web Speech) đi qua `shared/giong-noi/sua-chu.ts › suaChu` trong `TroLyAi.tsx` với bảng `data.suaChu` (`config/sua-chu-giong-noi.json`) rồi mới vào ô nhập.
 
 **Nạp trang eForm (`/`):** `src/app/page.tsx` (server) đọc `?bs=` rồi gọi `server/du-lieu/eform.ts › loadEformData` (đọc `data/eform/`, gán mã cho bộ mẫu gợi ý, đọc `data/thoi-quen/<tài khoản>.json`) → truyền xuống `EformScreen` (client). Các gợi ý rule chạy trên trình duyệt với dữ liệu đó, không gọi API.
 
-**Đo lượt thử:** `TroLyAi.tsx` báo `onBatDau` (gõ, bấm 🎤, bấm câu mẫu) → `EformScreen` ghi mốc giờ → bấm Lưu lần đầu sau khi AI điền → `shared/eform/do-luong.ts › demLuot` đếm → `client/api.ts › luuLuotThu` → `POST /api/sessions` → `server/du-lieu/sessions.ts` ghi `data/sessions/` → trang `/ket-qua` đọc lại.
+**Đo lượt thử:** `TroLyAi.tsx` báo `onBatDau` (gõ, bấm 🎤, bấm câu mẫu) → `EformScreen` ghi mốc giờ → bấm Lưu lần đầu sau khi dùng ô Lệnh nhanh hoặc AI điền (kèm `giao_dien`, `so_lenh_nhanh`, `so_o_lenh_nhanh`, `so_cho_vang`) → `shared/eform/do-luong.ts › demLuot` đếm → `client/api.ts › luuLuotThu` → `POST /api/sessions` → `server/du-lieu/sessions.ts` ghi `data/sessions/` → trang `/ket-qua` đọc lại.
 
 **Trang Trình diễn (`/trinh-dien`, tạm ẩn từ 2026-11-12, `page.tsx` gọi `notFound()`):** `src/app/trinh-dien/page.tsx` gọi `server/du-lieu/trinh-dien.ts › loadTrinhDienData` (gồm `loadEformData`, đơn đã kê giả trong `data/eform/trinh-dien.json` được gán mã bằng `shared/match.ts`, nháp của câu mẫu chạy pipeline `mock` rồi đổ vào phiếu bằng `dienPhieu` ngay ở server) → `client/trinh-dien/TrinhDienScreen.tsx` (thanh chọn kiểu) → `EformScreen` với `kichBan` 1–4 (`trangThaiDau` dựng trạng thái mở phiếu; có `data.trinhDien` thì Lưu không ghi gì). Nháp kiểu 1 tính ở server chứ không ở trình duyệt, vì khi để component client tự tính lúc SSR, mã ICD ra khác trình duyệt và React báo lỗi hydration.
 
@@ -128,7 +128,8 @@ Muốn thay một tính năng rule bằng LLM thật (ví dụ tóm tắt lịch
 | Gợi ý theo thói quen | `shared/eform/thoi-quen.ts`, `/api/thoi-quen` | `GoiYTheoChanDoan`, `EformScreen` | `ghepGoiY` trả nhóm thói quen trước, bộ mẫu sau, dùng chung cho tab Chỉ định và Đơn thuốc |
 | Gợi ý chữ mờ Tab | `shared/eform/goi-y-tab.ts`, `data/eform/thu-vien.json` | `TextBox`, `ThuVienButton` (`client/eform/fields.tsx`) | `khoCau` gom câu theo ô từ gõ tắt, thói quen, phiếu mẫu, thư viện; `timGoiYTab` chọn câu khớp phần đang gõ |
 | Bộ gõ tắt riêng | `shared/eform/go-tat.ts`, `server/du-lieu/go-tat.ts` | `EformData.goTat`, gợi ý Tab | Đọc `data/go-tat/<tài khoản>.json` (gitignore), chưa có thì bộ giả; chưa gửi cho AI |
-| Ô lệnh nhanh | `client/eform/LenhNhanh.tsx`, `shared/eform/{lenh-nhanh,nguon-mau,ap-lenh}.ts` | `EformScreen` (trên đầu cột Trợ lý) | `xuLyLenh` tách tên mẫu, chi tiết, gõ tắt; `apKetQuaLenh` trả các ô cần đổi, ô do mẫu điền (`oTuMau`), chỉ định chưa có và câu báo. Chạy trên máy, không gọi API; lúc Lưu `doiNguonKhiLuu` đổi ô do mẫu điền thành bác sĩ nhập |
+| Ô lệnh nhanh | `client/eform/LenhNhanh.tsx`, `shared/eform/{lenh-nhanh,nguon-mau,ap-lenh}.ts` | `EformScreen` (trong bong bóng Trợ lý, trên `TroLyAi`) | `xuLyLenh` tách tên mẫu, chi tiết, gõ tắt; `apKetQuaLenh` trả các ô cần đổi, ô do mẫu điền (`oTuMau`), chỉ định chưa có và câu báo. Chạy trên máy, không gọi API; lúc Lưu `doiNguonKhiLuu` đổi ô do mẫu điền thành bác sĩ nhập |
+| Bong bóng Trợ lý | `client/eform/BongBong.tsx` | `EformScreen` | Nút tròn góc dưới phải (hoặc F2) mở khung chứa `LenhNhanh` và `TroLyAi`; khung luôn render, đóng thì `hidden` nên state và ghi âm không mất. Esc đóng và trả con trỏ về ô đang gõ; ghi âm tự dừng lúc đóng thì khung tự mở (không lấy con trỏ) |
 | Demo luồng dữ liệu | `src/app/demo-luong`, `src/client/demo-luong/`, `src/server/demo-luong/`, `src/shared/clinical/pii/`, `src/shared/demo-luong/types.ts`, `/api/demo-luong/*` | trang `/demo-luong` | Bộ che PII là TS thuần ở `shared` (dùng được cả hai phía); điều phối 5 bước và kho phiếu ở `server`; client đọc stream NDJSON qua `client/demo-luong/api.ts` |
 
 ## Thêm mới thì đặt ở đâu

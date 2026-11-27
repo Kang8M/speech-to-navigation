@@ -30,8 +30,8 @@ before(async () => {
   stt = http.createServer((req, res) => {
     req.resume();
     req.on("end", () => {
-      if (!sttBody) { res.writeHead(500, { "content-type": "application/json" }); res.end("{\"detail\":\"STT_FAIL\"}"); return; }
-      res.writeHead(200, { "content-type": "application/json" }); res.end(JSON.stringify(sttBody));
+      if (!sttBody) { res.writeHead(500, { "content-type": "application/json", connection: "close" }); res.end("{\"detail\":\"STT_FAIL\"}"); return; }
+      res.writeHead(200, { "content-type": "application/json", connection: "close" }); res.end(JSON.stringify(sttBody));
     });
   });
   await new Promise<void>(r => stt.listen(0, "127.0.0.1", r));

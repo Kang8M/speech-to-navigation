@@ -282,7 +282,7 @@ npm run eval-pii -- --ner
 
 ## Mô phỏng eForm ngoại trú
 
-Trang `/` có hai tab **Phiếu khám** và **Chỉ định dịch vụ**, dữ liệu giả. Trợ lý bên phải có bước lọc/xem lại transcript trước model và bước áp dụng bản nháp. Bác sĩ tự kê đơn trong quy trình riêng.
+Trang `/` có hai tab **Phiếu khám** và **Chỉ định dịch vụ**, dữ liệu giả. Trợ lý bên phải có bước lọc/xem lại transcript trước model và bước áp dụng bản nháp. Bác sĩ tự kê đơn trong quy trình riêng. Ô **Lệnh nhanh** chạy ngay trên máy, không gọi AI: gõ tên mẫu kèm chi tiết và mã gõ tắt, phần nào không điền được vào chỗ trống của mẫu thì nút **Chép xuống** đưa sang Nội dung buổi khám.
 
 Trang chính mở theo **mã khám**: thanh **Lượt khám** ở đầu trang chuyển giữa các bệnh nhân (đang khám, chờ kết quả) hoặc mở mã khác; mỗi mã khám là một hồ sơ có nhiều phiên ghi âm. Nút **Lưu phiếu & chỉ định** ghi hồ sơ JSON có revision; **Tải bản lưu** và URL `?ho_so=...` khôi phục đúng hồ sơ. Duyệt theo từng phần (phiếu ban đầu, kết luận, tóm tắt, từng chỉ định); sửa phần nào chỉ phần đó cần duyệt lại. **Chờ kết quả**, **Tiếp tục khám**, **Hoàn tất lượt khám** đổi trạng thái lượt khám, tách khỏi việc duyệt. Đề xuất của AI hiện thành danh sách để bác sĩ chấp nhận hoặc từ chối từng mục. Chỉ in được khi mọi phần đã duyệt đúng bản đang lưu. Chuyển lượt khi phiếu chưa lưu hoặc còn nội dung chưa kiểm tra sẽ bị chặn hoặc hỏi lại.
 

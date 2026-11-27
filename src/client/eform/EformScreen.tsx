@@ -351,10 +351,11 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
 
   /** Ô Lệnh nhanh: áp mẫu và gõ tắt vào phiếu ngay trên máy, trả câu báo */
   const apLenh = (kq: LenhDien): string => {
-    const r = apKetQuaLenh(kq, data, api.get, chiDinh);
+    const r = apKetQuaLenh(kq, data, api.get, chiDinh, donThuoc);
     const daDoi = Object.keys(r.truong);
     if (daDoi.length > 0) setFields((prev) => ({ ...prev, ...r.truong }));
     if (r.chiDinhThem.length > 0) setChiDinh((prev) => [...prev, ...r.chiDinhThem]);
+    if (r.thuocThem.length > 0) setDonThuoc([...donThuoc, ...r.thuocThem]);
     // Ô gõ tắt vừa thay chữ mẫu là chữ bác sĩ, không còn tính là do mẫu điền
     if (daDoi.length > 0) {
       setOTuMau((prev) => {
@@ -366,7 +367,7 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
     // Số đo lượt thử: ô do mẫu, gõ tắt điền không tính là AI điền hay bác sĩ sửa (daDien rỗng); ketQua chỉ để lượt có mẫu vẫn được ghi
     const them = r.ketQua;
     if (them) setKetQua((prev) => prev ?? { ...them, daDien: [] });
-    if (daDoi.length > 0 || r.chiDinhThem.length > 0) {
+    if (daDoi.length > 0 || r.chiDinhThem.length > 0 || r.thuocThem.length > 0) {
       demLenh.current.soLan += 1;
       for (const id of daDoi) demLenh.current.oDoi.add(id);
     }

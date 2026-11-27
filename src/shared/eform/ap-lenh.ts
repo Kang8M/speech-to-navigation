@@ -1,11 +1,12 @@
 // Áp kết quả ô lệnh nhanh (mẫu + chi tiết + gõ tắt) vào phiếu, hoàn toàn trên máy, không gọi AI.
 // Nguồn ô: chữ mẫu giữ nguyên là "cu", chỗ quy tắc vừa thay là "xem", câu gõ tắt là "bs" (xem nguon-mau.ts).
-import { dienPhieu, type DongChiDinh, type KetQuaDien, type MucDaDien } from "./dien-phieu";
+import { dienPhieu, type DongChiDinh, type DongThuoc, type KetQuaDien, type MucDaDien } from "./dien-phieu";
 import { ketQuaGoTat } from "./go-tat";
 import { O_XUONG_DONG } from "./goi-y-tab";
 import { khoaDong } from "./goi-y";
 import type { LenhDien } from "./lenh-nhanh";
 import { datGoTat, ganNguonMau } from "./nguon-mau";
+import { chuanHoaNguonThuoc } from "./don-thuoc";
 import { icdTheoMau } from "./phieu-mau";
 import type { EformData, Nguon, Truong } from "./types";
 
@@ -16,7 +17,9 @@ export interface ApLenh {
   oTuMau: string[];
   /** Chỉ định của mẫu chưa có trong tab Chỉ định */
   chiDinhThem: DongChiDinh[];
-  /** Các ô vừa điền (daDien) và chỉ định thêm, không bao giờ có thuốc. Không phải AI điền: màn hình không đếm daDien vào số đo AI */
+  /** Thuốc của mẫu chưa có trong tab Đơn thuốc: chưa duyệt, nguồn "bs" hoặc "xem", không bao giờ "ai" */
+  thuocThem: DongThuoc[];
+  /** Các ô vừa điền (daDien), chỉ định và thuốc thêm. Không phải AI điền: màn hình không đếm daDien vào số đo AI */
   ketQua: KetQuaDien | null;
   thongBao: string;
 }
@@ -26,12 +29,13 @@ const NHAN_KHAM_KHAC = "Khám các bộ phận khác";
 /** Ô mã ICD10 (danh sách mã ngăn bằng dấu phẩy): không nối câu như ô chữ, nối bằng dấu cách sẽ thành một mã sai */
 const O_MA_ICD = new Set(["icd_ban_dau", "icd_ra_vien", "icd_kem_theo"]);
 
-export function apKetQuaLenh(kq: LenhDien, data: EformData, get: (id: string) => Truong, chiDinhHienTai: DongChiDinh[]): ApLenh {
+export function apKetQuaLenh(kq: LenhDien, data: EformData, get: (id: string) => Truong, chiDinhHienTai: DongChiDinh[], thuocHienTai: DongThuoc[] = []): ApLenh {
   const mau = kq.mau;
   let truong: Record<string, Truong> = {};
   const nhan: Record<string, string> = {};
   let boQua = 0;
   let chiDinhThem: DongChiDinh[] = [];
+  let thuocThem: DongThuoc[] = [];
 
   if (mau) {
     const ketQua = kq.ketQua ?? mau.ketQua;
@@ -42,6 +46,7 @@ export function apKetQuaLenh(kq: LenhDien, data: EformData, get: (id: string) =>
         oKhac: mau.oKhac,
         chepLichSu: true,
         clinicalOnly: true,
+        kemThuoc: true,
       });
     const moi = dien(ketQua.draft, ketQua.matches);
     const goc = dien(mau.ketQua.draft, mau.ketQua.matches);
@@ -61,6 +66,9 @@ export function apKetQuaLenh(kq: LenhDien, data: EformData, get: (id: string) =>
     const daCo = new Set(chiDinhHienTai.map(khoaDong));
     // Dòng do mẫu thêm không phải AI điền: bỏ cờ tu_ai để số đo lượt thử không tính là dòng AI
     chiDinhThem = moi.chiDinh.filter((row) => !daCo.has(khoaDong(row))).map((row) => ({ ...row, tu_ai: false }));
+    // Thuốc của mẫu: cùng cách chống trùng; chuẩn hóa nguồn để không bao giờ là "ai"
+    const daCoThuoc = new Set(thuocHienTai.map(khoaDong));
+    thuocThem = chuanHoaNguonThuoc(moi.donThuoc.filter((row) => !daCoThuoc.has(khoaDong(row))));
   }
   const oTuMau = new Set(Object.keys(truong));
   if (mau) {
@@ -100,13 +108,16 @@ export function apKetQuaLenh(kq: LenhDien, data: EformData, get: (id: string) =>
 
   const daDien: MucDaDien[] = Object.entries(truong).map(([id, t]) => ({ id, nhan: nhan[id] ?? id, nguon: t.nguon as Nguon }));
   const n = daDien.length;
-  const vang = daDien.filter((muc) => muc.nguon === "xem").length + chiDinhThem.filter((row) => row.nguon === "xem").length;
+  const vang = daDien.filter((muc) => muc.nguon === "xem").length + [...chiDinhThem, ...thuocThem].filter((row) => row.nguon === "xem").length;
 
   let thongBao: string;
   if (mau) {
     thongBao = `Đã điền ${n} ô từ mẫu "${mau.ten}".`;
     if (vang > 0) thongBao += ` Còn ${vang} chỗ vàng cần xem.`;
-    if (chiDinhThem.length > 0) thongBao += ` Thêm ${chiDinhThem.length} chỉ định.`;
+    if (chiDinhThem.length > 0 || thuocThem.length > 0) {
+      const them = [chiDinhThem.length > 0 && `${chiDinhThem.length} chỉ định`, thuocThem.length > 0 && `${thuocThem.length} thuốc`].filter(Boolean);
+      thongBao += ` Thêm ${them.join(", ")}.`;
+    }
     if (boQua > 0) thongBao += ` Bỏ qua ${boQua} ô đã có chữ.`;
     if (daDung.length > 0) thongBao += ` Gõ tắt: ${daDung.join(", ")}.`;
   } else {
@@ -118,7 +129,8 @@ export function apKetQuaLenh(kq: LenhDien, data: EformData, get: (id: string) =>
     truong,
     oTuMau: [...oTuMau],
     chiDinhThem,
-    ketQua: { truong, daDien, boQua: [], chiDinh: chiDinhThem, donThuoc: [] },
+    thuocThem,
+    ketQua: { truong, daDien, boQua: [], chiDinh: chiDinhThem, donThuoc: thuocThem },
     thongBao,
   };
 }

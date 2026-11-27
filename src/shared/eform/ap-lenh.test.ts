@@ -51,25 +51,37 @@ test("mẫu kèm chi tiết: chỗ trống vừa thay là 'xem', ô nằm trong 
   assert.ok(r.oTuMau.includes("ly_do"));
   assert.equal(r.chiDinhThem.length, 1);
   assert.equal(r.chiDinhThem[0].tu_ai, false);
-  assert.equal(r.thongBao, 'Đã điền 2 ô từ mẫu "Đau họng giả". Còn 1 chỗ vàng cần xem. Thêm 1 chỉ định.');
-  assert.deepEqual(r.ketQua?.donThuoc, []);
+  assert.equal(r.thongBao, 'Đã điền 2 ô từ mẫu "Đau họng giả". Còn 1 chỗ vàng cần xem. Thêm 1 chỉ định, 1 thuốc.');
+  assert.equal(r.thuocThem.length, 1);
+  assert.equal(r.ketQua?.donThuoc.length, 1);
+  assert.ok(r.thuocThem.every((t) => t.nguon !== "ai" && t.tu_ai === undefined));
+  assert.ok(r.thongBao.endsWith("Thêm 1 chỉ định, 1 thuốc."));
+});
+
+test("mẫu không thuốc: thuocThem rỗng, câu báo không nhắc thuốc", () => {
+  const khong: PhieuMau = { ...MAU, ketQua: { ...MAU.ketQua, draft: { ...MAU.ketQua.draft, ke_don: [] } } };
+  const r = apKetQuaLenh(dungMau(khong, "3 ngày", KHONG_GO_TAT, {}), DATA, getTu({}), []);
+  assert.deepEqual(r.thuocThem, []);
+  assert.ok(!r.thongBao.includes("thuốc"));
 });
 
 test("ô bác sĩ đã nhập giữ nguyên và báo bỏ qua", () => {
   const r = apKetQuaLenh(lenh("3 ngày"), DATA, getTu({ ly_do: { value: "Đau tai", nguon: "bs" } }), []);
   assert.equal(r.truong.ly_do, undefined);
   assert.ok(r.thongBao.includes("Bỏ qua 1 ô"));
-  assert.deepEqual(r.ketQua?.donThuoc, []);
+  assert.equal(r.thuocThem.length, 1);
 });
 
 test("gọi lại cùng mẫu: chỉ định đã có cùng mã không thêm, ô đã đúng giá trị không đếm lại", () => {
   const lan1 = apKetQuaLenh(lenh("3 ngày"), DATA, getTu({}), []);
   const daCo: DongChiDinh[] = [{ ma: "DV-GIA-01", ten: "Nội soi họng", so_luong: "1", ghi_chu: "", nguon: "ai", ung_vien: [] }];
-  const r = apKetQuaLenh(lenh("3 ngày"), DATA, getTu(lan1.truong), daCo);
+  const r = apKetQuaLenh(lenh("3 ngày"), DATA, getTu(lan1.truong), daCo, lan1.thuocThem);
   assert.deepEqual(r.chiDinhThem, []);
+  assert.deepEqual(r.thuocThem, []);
   assert.deepEqual(r.truong, {});
   assert.ok(!r.thongBao.includes("Thêm"));
   assert.deepEqual(r.ketQua?.donThuoc, []);
+  assert.equal(apKetQuaLenh(lenh("3 ngày"), DATA, getTu(lan1.truong), daCo).thuocThem.length, 1);
 });
 
 test("gõ tắt vào ô mẫu vừa điền: câu gõ tắt thay chữ mẫu, nguồn 'bs', bỏ khỏi oTuMau", () => {
@@ -79,7 +91,7 @@ test("gõ tắt vào ô mẫu vừa điền: câu gõ tắt thay chữ mẫu, ng
   assert.ok(!r.oTuMau.includes("kham_chuyen_khoa"));
   assert.ok(r.oTuMau.includes("ly_do"));
   assert.ok(r.thongBao.endsWith(" Gõ tắt: tbt."));
-  assert.deepEqual(r.ketQua?.donThuoc, []);
+  assert.equal(r.thuocThem.length, 1);
 });
 
 test("chỉ có gõ tắt: điền ô theo id eForm, nối vào ô bác sĩ đã gõ, câu đã có thì không nối lại", () => {
@@ -111,7 +123,7 @@ test("ô chép từ lịch sử khám là dữ liệu cũ thật: nguồn 'cu', 
   assert.deepEqual(r.truong.tien_su_ban_than, { value: "Viêm mũi dị ứng (giả)", nguon: "cu" });
   assert.ok(!r.oTuMau.includes("tien_su_ban_than"));
   assert.ok(r.oTuMau.includes("ly_do"));
-  assert.deepEqual(r.ketQua?.donThuoc, []);
+  assert.equal(r.thuocThem.length, 1);
 });
 
 test("gõ tắt chẩn đoán vào ô mã ICD: không nối mã bằng dấu cách", () => {

@@ -116,6 +116,8 @@ function moiNhat<T extends { ngay: string }>(rows: T[]): T | undefined {
 export interface TuyChonDien {
   /** Current scope: clinical note/services only; do not duplicate an initial diagnosis at discharge. */
   clinicalOnly?: boolean;
+  /** Chỉ có hiệu lực cùng clinicalOnly: vẫn điền dòng thuốc (phiếu mẫu do bác sĩ gọi, không phải AI) */
+  kemThuoc?: boolean;
   /** Phiếu mẫu: chỉ điền ô còn trống, ô đã có chữ (kể cả dữ liệu cũ, AI điền trước) giữ nguyên */
   chiOTrong?: boolean;
   /** Mã ICD10 đã tra sẵn (phiếu mẫu), dùng thay cho gợi ý theo từ khóa */
@@ -213,7 +215,7 @@ export function dienPhieu(
     tu_ai: true,
   }));
 
-  const donThuoc = ((tuyChon.clinicalOnly ? [] : draft.ke_don ?? []) as Values[]).map((row, i) => ({
+  const donThuoc = ((tuyChon.clinicalOnly && !tuyChon.kemThuoc ? [] : draft.ke_don ?? []) as Values[]).map((row, i) => ({
     ma: chu(row.ma_thuoc),
     ten: chu(row.ten_thuoc),
     ham_luong: chu(row.ham_luong),

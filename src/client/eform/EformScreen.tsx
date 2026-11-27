@@ -1,9 +1,10 @@
 "use client";
 
+import { flushSync } from "react-dom";
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { luuLuotThu } from "@/client/api";
 import { approveScopes, docHoSo, luuHoSo, transitionEncounter, type ClinicalResponse } from "@/client/clinical-api";
-import { BanIn } from "@/client/eform/BanIn";
+import { BanIn, type LoaiBanIn } from "@/client/eform/BanIn";
 import { BongBong } from "@/client/eform/BongBong";
 import { BaoCaoDialog } from "@/client/eform/BaoCaoDialog";
 import { ChiDinhTab } from "@/client/eform/ChiDinhTab";
@@ -20,7 +21,7 @@ import { TroLyAi, type TabId } from "@/client/eform/TroLyAi";
 import { apKetQuaLenh } from "@/shared/eform/ap-lenh";
 import type { DongChiDinh, DongThuoc, KetQuaDien } from "@/shared/eform/dien-phieu";
 import { demLuot } from "@/shared/eform/do-luong";
-import { chuanHoaNguonThuoc } from "@/shared/eform/don-thuoc";
+import { chuanHoaNguonThuoc, dieuKienIn, duyetMoiNhat } from "@/shared/eform/don-thuoc";
 import type { LenhDien } from "@/shared/eform/lenh-nhanh";
 import { doiNguonKhiLuu } from "@/shared/eform/nguon-mau";
 import { ghepGoiY } from "@/shared/eform/thoi-quen";
@@ -86,6 +87,11 @@ function initFields(values: Record<string, string>): Record<string, Truong> {
 /** Sửa tay vào dữ liệu cũ hoặc phần AI thêm thì chuyển thành "Đã sửa" */
 function afterEdit(nguon: Nguon | null | undefined): Nguon {
   return nguon === "cu" || nguon === "ai" || nguon === "xem" || nguon === "sua" ? "sua" : "bs";
+}
+
+/** Dòng dưới tiêu đề bản in: loại bản duyệt, phiên bản hồ sơ, giờ duyệt (giờ Việt Nam) */
+function banDuyet(nhan: string, revision: number, luc?: string): string {
+  return `${nhan} · phiên bản hồ sơ ${revision}${luc ? ` · duyệt lúc ${new Date(luc).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}` : ""}`;
 }
 
 function nowText(): string {
@@ -166,6 +172,7 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
   const [trangThai, setTrangThai] = useState(data.ca.trang_thai);
   const [lastEdit, setLastEdit] = useState(data.ca.chinh_sua_cuoi);
   const [expanded, setExpanded] = useState(false);
+  const [loaiIn, setLoaiIn] = useState<LoaiBanIn>("phieu-kham");
   const [showReport, setShowReport] = useState(false);
   const [toast, setToast] = useState("");
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -279,8 +286,15 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
   const required = record ? requiredApprovalScopes(record) : [];
   const duyet = record ? required.map((scope) => ({ scope, state: approvalState(record, scope) })) : [];
   const duyetDu = duyet.length > 0 && duyet.every((item) => item.state === "current");
-  const printable = record && duyetDu && !chuaLuu ? record : null;
-  const banInSnapshot = useMemo(() => (printable ? projectEform(printable) : null), [printable]);
+  const inDuoc = record && !chuaLuu ? record : null;
+  const banInSnapshot = useMemo(() => (inDuoc ? projectEform(inDuoc) : null), [inDuoc]);
+  const dkIn = record ? dieuKienIn(record, chuaLuu) : null;
+  const choIn = (loai: LoaiBanIn) => (loai === "phieu-kham" ? dkIn?.phieu : dkIn?.don)?.ok === true;
+  const inBan = (loai: LoaiBanIn) => {
+    if (!choIn(loai)) return;
+    flushSync(() => setLoaiIn(loai));
+    window.print();
+  };
   const printApi = useMemo<EformApi>(() => (banInSnapshot ? { ...api, get: (id) => banInSnapshot.fields[id] ?? EMPTY } : api), [api, banInSnapshot]);
 
   /** Thao tác ghi lên server: chạy một lần, cập nhật phiên bản hồ sơ và đổ lại phiếu theo kết quả. */
@@ -449,8 +463,7 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
     don_thuoc: boMau.some((mau) => mau.donThuoc.length > 0),
   };
   const khoaThaoTac = saving || loadingRecord || chuaLuu;
-  const duyetMoiNhat = record?.approval_versions.at(-1)?.approved_at;
-
+  
   return (
     <EformContext.Provider value={api}>
       <div
@@ -637,24 +650,29 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
             >
               ←<span className="hidden sm:inline"> Quay lại</span>
             </button>
-            <button type="button" className={`${BTN_OUTLINE} whitespace-nowrap`} onClick={() => setShowReport(true)}>
-              Báo cáo y tế
+            <button type="button" aria-label="Báo cáo y tế" className={`${BTN_OUTLINE} whitespace-nowrap`} onClick={() => setShowReport(true)}>
+              <span className="sm:hidden">BCYT</span>
+              <span className="hidden sm:inline">Báo cáo y tế</span>
             </button>
-            <button type="button" className={`${BTN_OUTLINE} whitespace-nowrap`} onClick={() => { if (printable) window.print(); }} disabled={!printable || saving} title="Chỉ in bản đã lưu và đã được bác sĩ duyệt đủ các phần">
-              In ngay
+            <button type="button" className={`${BTN_OUTLINE} whitespace-nowrap`} onClick={() => inBan("phieu-kham")} disabled={!dkIn?.phieu.ok || saving} title={dkIn?.phieu.ok ? "In phiếu khám kèm chỉ định" : (dkIn?.phieu.lyDo ?? "Chưa có hồ sơ")}>
+              In phiếu<span className="hidden md:inline"> khám</span>
+            </button>
+            <button type="button" className={`${BTN_OUTLINE} whitespace-nowrap`} onClick={() => inBan("don-thuoc")} disabled={!dkIn?.don.ok || saving} title={dkIn?.don.ok ? "In đơn thuốc" : (dkIn?.don.lyDo ?? "Chưa có hồ sơ")}>
+              In đơn<span className="hidden md:inline"> thuốc</span>
             </button>
             <button type="button" className={`${BTN_CHINH} ml-auto inline-flex flex-1 items-center justify-center gap-2 whitespace-nowrap sm:max-w-sm`} onClick={save} disabled={saving || loadingRecord || khoa}>
-              {saving ? "Đang lưu…" : "Lưu phiếu, chỉ định & đơn thuốc"}
+              {saving ? "Đang lưu…" : (<><span className="sm:hidden">Lưu</span><span className="hidden sm:inline">Lưu phiếu, chỉ định &amp; đơn thuốc</span></>)}
               {conXem > 0 && (
                 <span className="rounded-full bg-xem-nhat px-2 py-px text-[11px] font-semibold text-xem" title="Số chỗ AI chưa chắc, bác sĩ nên xem lại trước khi Lưu">
-                  {conXem} cần xem lại
+                  {conXem}
+                  <span className="hidden sm:inline"> cần xem lại</span>
                 </span>
               )}
             </button>
             <button
               type="button"
               aria-label="Lên đầu trang"
-              className={BTN_OUTLINE}
+              className={`${BTN_OUTLINE} hidden sm:block`}
               onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
             >
               ↑
@@ -665,9 +683,18 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
         {showReport && <BaoCaoDialog onClose={() => setShowReport(false)} />}
       </div>
 
-      {printable && banInSnapshot ? (
+      {inDuoc && banInSnapshot && choIn(loaiIn) ? (
         <EformContext.Provider value={printApi}>
-          <BanIn chiDinh={banInSnapshot.chiDinh} donThuoc={[]} trangThai={banInSnapshot.trangThai} summary={printable.tom_tat ?? ""} followUpText={printable.phieu_kham.hen_tai_kham.nguyen_van ?? undefined} duyet={`Bản đã duyệt đủ các phần · phiên bản hồ sơ ${printable.revision}${duyetMoiNhat ? ` · duyệt lúc ${new Date(duyetMoiNhat).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}` : ""}`} />
+          <BanIn
+            loai={loaiIn}
+            chiDinh={banInSnapshot.chiDinh}
+            donThuoc={banInSnapshot.donThuoc ?? []}
+            loiDan={dkIn?.coLoiDan}
+            trangThai={banInSnapshot.trangThai}
+            summary={inDuoc.tom_tat ?? ""}
+            followUpText={inDuoc.phieu_kham.hen_tai_kham.nguyen_van ?? undefined}
+            duyet={loaiIn === "don-thuoc" ? banDuyet("Bản đã duyệt đơn thuốc", inDuoc.revision, duyetMoiNhat(inDuoc, "prescription")) : banDuyet("Bản đã duyệt đủ các phần", inDuoc.revision, record?.approval_versions.at(-1)?.approved_at)}
+          />
         </EformContext.Provider>
       ) : <p className="hidden print:block">Hồ sơ đang là bản nháp hoặc còn phần chưa duyệt. Hãy lưu và duyệt đủ các phần trước khi in.</p>}
     </EformContext.Provider>

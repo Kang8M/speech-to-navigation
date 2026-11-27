@@ -53,3 +53,8 @@ export function dieuKienIn(record: Encounter, chuaLuu: boolean): { phieu: DieuKi
 
   return { phieu, don, coLoiDan: !required.includes("conclusion") || current("conclusion") };
 }
+
+/** Thời điểm duyệt mới nhất của một phần (chuỗi ISO); undefined khi chưa duyệt lần nào */
+export function duyetMoiNhat(record: Encounter, scope: Encounter["approval_versions"][number]["scope"]): string | undefined {
+  return record.approval_versions.findLast((item) => item.scope === scope)?.approved_at;
+}

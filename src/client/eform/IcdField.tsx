@@ -28,14 +28,14 @@ function GoiYButton({ open, onToggle }: { open: boolean; onToggle: () => void })
   );
 }
 
-/** Một mã ICD10 kèm ô mô tả */
+/** Một mã ICD10 kèm ô ghi chẩn đoán bằng chữ (không nhãn, dùng khi không tìm được mã) */
 export function IcdField({ id, moTaId, label }: { id: string; moTaId: string; label: string }) {
   const { data, get, put, edit } = useEform();
   const [open, setOpen] = useState(false);
   const field = get(id);
   const moTa = get(moTaId);
   return (
-    <div className="space-y-3">
+    <div className="space-y-1.5">
       <div id={anchorId(id)} className="scroll-mt-44">
         <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
           <FieldLabel id={id} label={`${label} (ICD10)`} nguon={field.nguon} />
@@ -68,15 +68,14 @@ export function IcdField({ id, moTaId, label }: { id: string; moTaId: string; la
           />
         )}
       </div>
+      {/* Phiếu EMR không có nhãn riêng cho ô này: chỉ ghi khi không tìm được mã trong danh mục */}
       <div id={anchorId(moTaId)} className="scroll-mt-44">
-        <div className="mb-1">
-          <FieldLabel id={moTaId} label={`Mô tả ${label.toLowerCase()}`} nguon={moTa.nguon} />
-        </div>
         <textarea
-          aria-label={`Mô tả ${label.toLowerCase()}`}
+          aria-label={`Ghi ${label.toLowerCase()} khi không tìm được mã`}
           rows={1}
           value={moTa.value}
           onChange={(e) => edit(moTaId, e.target.value)}
+          placeholder="Không tìm được mã thì ghi chẩn đoán ở đây"
           className={inputClass(moTa.nguon)}
         />
       </div>

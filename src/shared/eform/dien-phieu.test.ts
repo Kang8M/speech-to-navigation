@@ -43,6 +43,22 @@ test("icd truyền vào thay cho goiYIcd", () => {
   assert.deepEqual(kq.truong.icd_ban_dau, { value: "H66.0", nguon: "xem" });
 });
 
+test("chẩn đoán kèm theo đúng tên mã ICD thì lấy đúng mã, kể cả tên có dấu phẩy; bỏ mã trùng chẩn đoán chính", () => {
+  const icd10 = [
+    { ma: "H66.0", ten: "Viêm tai giữa có mủ cấp tính" },
+    { ma: "J02.9", ten: "Viêm họng cấp tính, không xác định" },
+    { ma: "J00", ten: "Viêm mũi họng cấp tính [cảm thường]" },
+  ];
+  const data = { ...DATA, icd10 } as unknown as EformData;
+  const kq = dienPhieu(
+    nhap({ chan_doan_kem: "Viêm họng cấp tính, không xác định; Viêm mũi họng cấp tính [cảm thường]; Viêm tai giữa có mủ cấp tính" }),
+    {},
+    data,
+    getTu({ icd_ra_vien: { value: "H66.0", nguon: "bs" } }),
+  );
+  assert.deepEqual(kq.truong.icd_kem_theo, { value: "J02.9,J00", nguon: "xem" });
+});
+
 test("chỗ trống làm ô thành 'xem'", () => {
   const kq = dienPhieu(nhap({ benh_su: "Đau tai [phải|trái] 3 ngày", loi_dan: "Giữ khô tai" }), {}, DATA, getTu({}));
   assert.equal(kq.truong.benh_su?.nguon, "xem");
@@ -84,6 +100,49 @@ test("ô đã đúng giá trị mẫu thì không tính là vừa điền", () =
   assert.deepEqual(kq.daDien.map((m) => m.id), []);
 });
 
+const LICH_SU = {
+  tien_su_ban_than: [
+    { ngay: "03/03/2026", bac_si: "BS. C", khoa: "TMH", noi_dung: "Cũ" },
+    { ngay: "14/08/2026", bac_si: "BS. B", khoa: "TMH", noi_dung: "Viêm mũi dị ứng" },
+  ],
+  tien_su_gia_dinh: [],
+  benh_su: [],
+  di_ung: [{ ngay: "20/11/2025", loai_phieu: "Phiếu khám", loai: "Thuốc", thong_tin: "Penicillin: nổi mẩn", nguoi: "bs" }],
+};
+const DATA_LS = { ...DATA, ca: { lich_su: LICH_SU } } as unknown as EformData;
+
+test("phiếu mẫu điền ô o_khac, ô chọn mặc định 'Không' vẫn được đổi, ô bác sĩ chọn thì giữ", () => {
+  const kq = dienPhieu(
+    nhap({}),
+    {},
+    DATA,
+    getTu({ co_pttt: { value: "Không", nguon: "cu" }, da_xu_ly: { value: "Không", nguon: "bs" } }),
+    { chiOTrong: true, oKhac: { ghi_chu_kq: "Chờ kết quả nội soi tai.", co_pttt: "Có", da_xu_ly: "Có", tinh_trang_ra_vien: "Đỡ, giảm" } },
+  );
+  assert.equal(kq.truong.ghi_chu_kq?.value, "Chờ kết quả nội soi tai.");
+  assert.equal(kq.truong.co_pttt?.value, "Có");
+  assert.equal(kq.truong.da_xu_ly, undefined);
+  assert.equal(kq.truong.tinh_trang_ra_vien?.value, "Đỡ, giảm");
+});
+
+test("phiếu mẫu chép tiền sử, dị ứng mới nhất từ lần khám trước, đánh dấu dữ liệu cũ", () => {
+  const kq = dienPhieu(nhap({}), {}, DATA_LS, getTu({}), { chiOTrong: true, chepLichSu: true });
+  assert.deepEqual(kq.truong.tien_su_ban_than, { value: "Viêm mũi dị ứng", nguon: "cu" });
+  assert.equal(kq.truong.tien_su_gia_dinh, undefined);
+  assert.equal(kq.truong.di_ung?.value, "Có");
+  assert.equal(kq.truong.di_ung_mo_ta?.value, "Penicillin: nổi mẩn");
+});
+
+test("chép lịch sử không đè tiền sử, dị ứng đã có trên phiếu", () => {
+  const kq = dienPhieu(nhap({}), {}, DATA_LS, getTu({ tien_su_ban_than: { value: "BS ghi", nguon: "bs" }, di_ung: { value: "Không", nguon: "bs" } }), {
+    chiOTrong: true,
+    chepLichSu: true,
+  });
+  assert.equal(kq.truong.tien_su_ban_than, undefined);
+  assert.equal(kq.truong.di_ung, undefined);
+  assert.equal(kq.truong.di_ung_mo_ta, undefined);
+});
+
 test("gopTruongMoi bỏ ô bị sửa trong lúc chờ AI", () => {
   const luc: Record<string, Truong> = { huong_dieu_tri: TRONG, loi_dan: TRONG };
   const bsGo: Truong = { value: "Theo dõi", nguon: "bs" };
@@ -93,3 +152,4 @@ test("gopTruongMoi bỏ ô bị sửa trong lúc chờ AI", () => {
   assert.equal(ra.huong_dieu_tri, bsGo);
   assert.equal(ra.loi_dan.value, "Giữ khô tai");
 });
+

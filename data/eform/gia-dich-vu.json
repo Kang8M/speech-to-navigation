@@ -1,0 +1,25 @@
+{
+  "_ghi_chu": "Giá GIẢ để bước Xác nhận chỉ định có cột giá và Thành tiền. Chưa có bảng giá thật, chỉ biết Khám lại (khám chuyên sâu TMH) là 690.000đ (ảnh 09/11). Mỗi quy tắc khớp theo cụm từ trong tên dịch vụ (không dấu, nguyên từ), quy tắc đầu tiên khớp thì lấy. 'nhom' xếp dịch vụ vào 3 nhóm như EMR; không khớp nhóm nào thì là Dịch vụ chung.",
+  "mac_dinh": 300000,
+  "gia": [
+    { "tu_khoa": ["khám"], "gia": 690000 },
+    { "tu_khoa": ["đa ký giấc ngủ"], "gia": 4500000 },
+    { "tu_khoa": ["cộng hưởng từ"], "gia": 3500000 },
+    { "tu_khoa": ["CT", "CLVT"], "gia": 1800000 },
+    { "tu_khoa": ["nội soi"], "gia": 450000 },
+    { "tu_khoa": ["X-quang"], "gia": 250000 },
+    { "tu_khoa": ["đo thính lực", "đo nhĩ lượng", "phản xạ", "OAE", "ABR"], "gia": 300000 },
+    { "tu_khoa": ["tổng phân tích tế bào máu"], "gia": 120000 },
+    { "tu_khoa": ["định lượng", "đo hoạt độ", "điện giải", "nhóm máu", "thời gian", "test nhanh"], "gia": 95000 }
+  ],
+  "nhom": [
+    {
+      "ten": "Xét nghiệm",
+      "tu_khoa": ["xét nghiệm", "định lượng", "đo hoạt độ", "điện giải", "tế bào máu", "nhóm máu", "thời gian", "test nhanh", "cấy", "nuôi cấy"]
+    },
+    {
+      "ten": "Chẩn đoán hình ảnh",
+      "tu_khoa": ["chụp", "X-quang", "siêu âm", "CT", "CLVT", "cộng hưởng từ"]
+    }
+  ]
+}

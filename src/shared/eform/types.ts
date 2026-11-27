@@ -5,6 +5,7 @@ import type { MauGoiY } from "./goi-y";
 import type { DonDaKe } from "./thoi-quen";
 import type { KetQuaDien } from "./dien-phieu";
 import type { PhieuMau } from "./phieu-mau";
+import type { BangGiaDichVu, GoiChiDinh } from "./goi-chi-dinh";
 
 /** cu: dữ liệu có sẵn; ai: AI thêm; xem: AI thêm nhưng chưa chắc, bác sĩ cần xem lại;
  * sua: dữ liệu cũ hoặc AI đã bị bác sĩ sửa; bs: bác sĩ tự nhập */
@@ -142,6 +143,10 @@ export interface EformData {
   canhBao: WarningRules;
   /** Bộ mẫu chỉ định và đơn thuốc theo chẩn đoán, mã đã gán bằng src/shared/match.ts */
   goiY: MauGoiY[];
+  /** Gói chỉ định giả (data/eform/goi-chi-dinh.json), mã đã gán bằng src/shared/match.ts */
+  goiChiDinh: GoiChiDinh[];
+  /** Giá và nhóm dịch vụ giả (data/eform/gia-dich-vu.json) cho bước Xác nhận chỉ định */
+  giaDichVu: BangGiaDichVu;
   /** Nhà cung cấp AI đang dùng (mock, anthropic, openai, gemini) */
   provider: string;
   /** Câu mẫu của ca giả này (lấy từ data/cases/ca-11-*.json) để demo nhanh; id ghi vào số đo lượt thử */

@@ -1,9 +1,10 @@
 import { z } from "zod";
 import type { CatalogItem } from "../types";
-import type { DongChiDinh } from "../eform/dien-phieu";
+import type { DongChiDinh, DongThuoc } from "../eform/dien-phieu";
 import type { Truong } from "../eform/types";
-import type { Diagnosis, Encounter, ServiceOrder, Source } from "./types";
+import type { Diagnosis, Encounter, PrescriptionItem, ServiceOrder, Source } from "./types";
 import { emptyDefinition, parseEncounter } from "./schema";
+import { DON_THUOC_TRONG } from "./approvals";
 
 const TEXT_FIELDS = {
   ly_do: "ly_do_kham", benh_su: "benh_su", tien_su_ban_than: "tien_su_ban_than",
@@ -27,6 +28,14 @@ const snapshotSchema = z.object({
     so_luong: z.string().max(30), ghi_chu: z.string().max(5000),
     nguon: z.enum(["cu", "ai", "xem", "sua", "bs"]), ung_vien: z.array(z.unknown()).max(100).transform(() => [] as CatalogItem[]), tu_ai: z.boolean().optional(),
   }).strict()).max(200),
+  donThuocDeCap: z.enum(["chua_de_cap", "khong_ke_don", "co_ke_don"]).optional(),
+  donThuoc: z.array(z.object({
+    id: z.string().max(100).optional(), ma: z.string().max(200), ten: z.string().trim().min(1).max(1000),
+    ham_luong: z.string().max(500), duong_dung: z.string().max(500), lieu_moi_lan: z.string().max(500),
+    khi_can: z.boolean(), so_lan_ngay: z.string().max(30), thoi_diem: z.string().max(500), so_ngay: z.string().max(30),
+    so_luong_ke: z.string().max(30), ghi_chu: z.string().max(5000),
+    nguon: z.enum(["cu", "ai", "xem", "sua", "bs"]), ung_vien: z.array(z.unknown()).max(100).transform(() => [] as CatalogItem[]),
+  }).strict()).max(50).optional(),
   trangThai: z.enum(Object.keys(STATUS) as [keyof typeof STATUS, ...Array<keyof typeof STATUS>]),
 }).strict();
 export type EformSnapshot = z.infer<typeof snapshotSchema>;
@@ -44,7 +53,7 @@ export function specialistText(note: Encounter["phieu_kham"]["kham_chuyen_khoa"]
 }
 
 /** Full snapshot of the two supported screens; preserves non-UI structured fields in base. */
-export function applyEformSnapshot(base: Encounter, input: EformSnapshot, context: { now: string; newId: () => string; services: CatalogItem[]; icd?: { ma: string; ten: string }[] }): Encounter {
+export function applyEformSnapshot(base: Encounter, input: EformSnapshot, context: { now: string; newId: () => string; services: CatalogItem[]; drugs?: CatalogItem[]; icd?: { ma: string; ten: string }[] }): Encounter {
   const result = structuredClone(base);
   const note = result.phieu_kham;
   const fields = input.fields;
@@ -181,17 +190,50 @@ export function applyEformSnapshot(base: Encounter, input: EformSnapshot, contex
       record("clinicalInfo", `/chi_dinh/groups/${result.chi_dinh.groups.indexOf(group)}/chan_doan_lich_su_lam_sang`);
     }
   }
+  // Absent donThuoc means "not part of this save": keep the stored prescription untouched.
+  const changedDrugs = new Set<number>();
+  if (input.donThuoc !== undefined) {
+    const oldDrugs = (base.don_thuoc ?? DON_THUOC_TRONG).items;
+    const usedDrugs = new Set<string>();
+    const items = input.donThuoc.map((row, index) => {
+      const previous = oldDrugs.find(item => !usedDrugs.has(item.id) && (row.id ? row.id === item.id : (item.danh_muc.code ?? "") === row.ma && (item.danh_muc.display ?? item.noi_dung.ten_thuoc) === row.ten));
+      if (previous) usedDrugs.add(previous.id);
+      const item = previous ? structuredClone(previous) : emptyDefinition<PrescriptionItem>("prescriptionItem");
+      item.id ||= context.newId();
+      const sameSelection = previous && (previous.danh_muc.code ?? "") === row.ma && (previous.danh_muc.display ?? previous.noi_dung.ten_thuoc) === row.ten;
+      const match = row.ma ? context.drugs?.find(drug => drug.ma === row.ma) : undefined;
+      if (row.ma && !match && !sameSelection) throw new Error("Thuốc không có trong danh mục.");
+      Object.assign(item.noi_dung, {
+        ten_thuoc: sameSelection ? previous.noi_dung.ten_thuoc : row.ten, ham_luong: text(row.ham_luong), duong_dung: text(row.duong_dung), lieu_moi_lan: text(row.lieu_moi_lan),
+        khi_can: row.khi_can, so_lan_ngay: text(row.so_lan_ngay), thoi_diem: text(row.thoi_diem), so_ngay: text(row.so_ngay), so_luong_ke: text(row.so_luong_ke), ghi_chu: text(row.ghi_chu),
+      });
+      if (!sameSelection) item.danh_muc = { catalog_id: match?.ma ?? null, code_system: match ? "prototype-drug" : null, code: match?.ma ?? null, display: match?.ten ?? null, catalog_version: null, trang_thai: match ? "bac_si_chon" : "chua_khop", ung_vien_ids: [] };
+      item.chan_doan_ids = item.chan_doan_ids.filter(id => result.chan_doan.some(dx => dx.id === id));
+      if (!previous) { item.requester_id = base.examiner_id; item.requested_at = context.now; }
+      if (!previous || JSON.stringify({ ...item, review: null }) !== JSON.stringify({ ...previous, review: null })) {
+        item.review = { trang_thai: "chua_duyet", reviewer_id: null, reviewed_at: null };
+        changedDrugs.add(index);
+      }
+      return item;
+    });
+    result.don_thuoc = { de_cap: items.length ? "co_ke_don" : input.donThuocDeCap === "khong_ke_don" ? "khong_ke_don" : "chua_de_cap", items };
+  }
   // Rebase unchanged row evidence by stable ID; never attach old evidence to an edited/deleted row.
   result.nguon_du_lieu = result.nguon_du_lieu.flatMap(source => {
-    const match = /^\/(chi_dinh\/items|chan_doan)\/(\d+)(\/.*)?$/.exec(source.field_path);
+    const match = /^\/(chi_dinh\/items|chan_doan|don_thuoc\/items)\/(\d+)(\/.*)?$/.exec(source.field_path);
     if (!match) return [source];
-    const before = match[1] === "chan_doan" ? base.chan_doan : base.chi_dinh.items;
-    const after = match[1] === "chan_doan" ? result.chan_doan : result.chi_dinh.items;
+    const before = match[1] === "chan_doan" ? base.chan_doan : match[1] === "chi_dinh/items" ? base.chi_dinh.items : (base.don_thuoc ?? DON_THUOC_TRONG).items;
+    const after = match[1] === "chan_doan" ? result.chan_doan : match[1] === "chi_dinh/items" ? result.chi_dinh.items : result.don_thuoc.items;
     const old = before[Number(match[2])];
     const index = old ? after.findIndex(item => item.id === old.id) : -1;
     if (index < 0 || JSON.stringify(old) !== JSON.stringify(after[index])) return [];
     return [{ ...source, field_path: `/${match[1]}/${index}${match[3] ?? ""}` }];
   });
+  for (const index of changedDrugs) {
+    const source = emptyDefinition<Source>("source");
+    Object.assign(source, { field_path: `/don_thuoc/items/${index}`, nguon: "nhap_tay", source_system: "prototype-eform" });
+    result.nguon_du_lieu.push(source);
+  }
   result.audit = { ...result.audit, updated_at: context.now, updated_by: base.examiner_id, approved_at: null, approved_by: null };
   return parseEncounter(result);
 }
@@ -225,5 +267,6 @@ export function projectEform(record: Encounter): EformSnapshot {
   const stages = new Set(record.chan_doan.filter(item => item.noi_dung.vai_tro === "kem_theo").map(item => item.noi_dung.giai_doan));
   set("giai_doan_kem_theo", stages.size === 1 ? ({ ban_dau: "Ban đầu", ra_vien: "Ra viện", chua_ro: "Chưa rõ" })[[...stages][0]] : null);
   const rows: DongChiDinh[] = record.chi_dinh.items.map(item => ({ id: item.id, ma: item.danh_muc.code ?? "", ten: item.danh_muc.display ?? item.noi_dung.ten_dich_vu ?? "Dịch vụ chưa có tên", vi_tri: item.noi_dung.vi_tri ?? "", ben: item.noi_dung.ben, so_luong: item.noi_dung.so_luong === null ? "" : String(item.noi_dung.so_luong), ghi_chu: item.noi_dung.ghi_chu ?? "", nguon: item.review.trang_thai === "chua_duyet" ? "xem" : "bs", ung_vien: [] }));
-  return parseEformSnapshot({ fields, chiDinh: rows, chiDinhLyDo: record.chi_dinh.groups.at(-1)?.chan_doan_lich_su_lam_sang ?? "", chiDinhDeCap: record.chi_dinh.de_cap, trangThai: Object.entries(STATUS).find(([, value]) => value === record.status)?.[0] ?? "Đang khám" });
+  const drugRows: DongThuoc[] = (record.don_thuoc ?? DON_THUOC_TRONG).items.map(item => ({ id: item.id, ma: item.danh_muc.code ?? "", ten: item.danh_muc.display ?? item.noi_dung.ten_thuoc ?? "Thuốc chưa có tên", ham_luong: item.noi_dung.ham_luong ?? "", duong_dung: item.noi_dung.duong_dung ?? "", lieu_moi_lan: item.noi_dung.lieu_moi_lan ?? "", khi_can: item.noi_dung.khi_can, so_lan_ngay: item.noi_dung.so_lan_ngay ?? "", thoi_diem: item.noi_dung.thoi_diem ?? "", so_ngay: item.noi_dung.so_ngay ?? "", so_luong_ke: item.noi_dung.so_luong_ke ?? "", ghi_chu: item.noi_dung.ghi_chu ?? "", nguon: item.review.trang_thai === "chua_duyet" ? "xem" : "bs", ung_vien: [] }));
+  return parseEformSnapshot({ fields, chiDinh: rows, donThuoc: drugRows, donThuocDeCap: (record.don_thuoc ?? DON_THUOC_TRONG).de_cap, chiDinhLyDo: record.chi_dinh.groups.at(-1)?.chan_doan_lich_su_lam_sang ?? "", chiDinhDeCap: record.chi_dinh.de_cap, trangThai: Object.entries(STATUS).find(([, value]) => value === record.status)?.[0] ?? "Đang khám" });
 }

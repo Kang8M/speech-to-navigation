@@ -50,7 +50,7 @@ test("service quantity is nullable, code must be in hospital catalog, identifier
   assert.throws(() => applyEformSnapshot(base(), snapshot, context), /số lượng/i);
 });
 test("snapshot cannot submit prescription, identity or approval; no date shifts with host timezone", () => {
-  assert.throws(() => parseEformSnapshot({ fields: {}, chiDinh: [], trangThai: "Đang khám", donThuoc: [] }));
+  assert.throws(() => parseEformSnapshot({ fields: {}, chiDinh: [], trangThai: "Đang khám", donThuoc: [], donThuocKhac: [] }));
   assert.throws(() => parseEformSnapshot({ fields: { approved_by: { value: "doctor", nguon: "bs" } }, chiDinh: [], trangThai: "Đang khám" }));
   const e = applyEformSnapshot(base(), parseEformSnapshot({ fields: { thoi_gian_kham: { value: "2026-11-12T00:15", nguon: "bs" } }, chiDinh: [], trangThai: "Đang khám" }), context);
   assert.equal(e.encounter_at, "2026-11-12T00:15:00+07:00");
@@ -107,4 +107,91 @@ test("bác sĩ chọn mã ICD cho chẩn đoán AI chưa rõ vai trò thì thay 
   const chosen = applyEformSnapshot(withAi, parseEformSnapshot({ fields: { ...shown.fields, icd_ban_dau: { value: "J02.9", nguon: "bs" }, mo_ta_ban_dau: { value: "Viêm họng cấp tính, không xác định", nguon: "bs" } }, chiDinh: [], trangThai: "Đang khám" }), { ...context, icd: [{ ma: "J02.9", ten: "Viêm họng cấp tính, không xác định" }] });
   assert.equal(chosen.chan_doan.length, 1);
   assert.equal(chosen.chan_doan[0].icd.code, "J02.9");
+});
+
+const drugs = [{ ma: "T-1", ten: "Paracetamol 500mg" }, { ma: "T-2", ten: "Amoxicillin 500mg" }];
+const drugCtx = { ...context, drugs };
+const drugRow = (over: Record<string, unknown> = {}) => ({ ma: "T-1", ten: "Paracetamol 500mg", ham_luong: "500mg", duong_dung: "Uống", lieu_moi_lan: "1 viên", khi_can: false, so_lan_ngay: "3", thoi_diem: "Sau ăn", so_ngay: "5", so_luong_ke: "", ghi_chu: "", nguon: "bs", ung_vien: [], ...over });
+const snap = (donThuoc?: unknown[], extra: Record<string, unknown> = {}) => parseEformSnapshot({ fields: {}, chiDinh: [], trangThai: "Đang khám", ...(donThuoc ? { donThuoc } : {}), ...extra });
+const saved2 = () => applyEformSnapshot(base(), snap([drugRow(), drugRow({ ma: "T-2", ten: "Amoxicillin 500mg" })]), drugCtx);
+
+test("lưu đơn thuốc: mã trong danh mục, chưa duyệt, nguồn nhập tay", () => {
+  const e = saved2();
+  assert.equal(e.don_thuoc.de_cap, "co_ke_don");
+  assert.equal(e.don_thuoc.items.length, 2);
+  assert.equal(e.don_thuoc.items[0].danh_muc.code, "T-1");
+  assert.equal(e.don_thuoc.items[0].review.trang_thai, "chua_duyet");
+  assert.equal(e.nguon_du_lieu.find(item => item.field_path === "/don_thuoc/items/0")?.nguon, "nhap_tay");
+  parseEncounter(e);
+});
+
+test("mã thuốc ngoài danh mục bị từ chối; dòng cũ giữ mã khi chỉ sửa liều", () => {
+  assert.throws(() => applyEformSnapshot(base(), snap([drugRow({ ma: "X-9" })]), drugCtx), /Thuốc không có trong danh mục\./);
+  const e = saved2();
+  const edited = snap(projectEform(e).donThuoc!.map(row => ({ ...row, lieu_moi_lan: "2 viên" })));
+  const again = applyEformSnapshot(e, edited, { ...context, drugs: [] });
+  assert.equal(again.don_thuoc.items[0].danh_muc.code, "T-1");
+  assert.equal(again.don_thuoc.items[0].noi_dung.lieu_moi_lan, "2 viên");
+});
+
+test("snapshot không có donThuoc thì không xoá đơn đã lưu", () => {
+  const e = saved2();
+  e.don_thuoc.items[0].review = { trang_thai: "chap_nhan", reviewer_id: "doctor-demo", reviewed_at: now };
+  const after = applyEformSnapshot(e, snap(undefined, { donThuocDeCap: "khong_ke_don" }), drugCtx);
+  assert.equal(after.don_thuoc.items.length, 2);
+  assert.equal(after.don_thuoc.de_cap, "co_ke_don");
+  assert.deepEqual(after.don_thuoc.items[0].review, e.don_thuoc.items[0].review);
+});
+
+test("đề cập đơn thuốc: rỗng + không kê, rỗng mặc định chưa đề cập, có dòng thì co_ke_don", () => {
+  assert.equal(applyEformSnapshot(base(), snap([], { donThuocDeCap: "khong_ke_don" }), drugCtx).don_thuoc.de_cap, "khong_ke_don");
+  assert.equal(applyEformSnapshot(base(), snap([]), drugCtx).don_thuoc.de_cap, "chua_de_cap");
+  assert.equal(applyEformSnapshot(base(), snap([drugRow()], { donThuocDeCap: "khong_ke_don" }), drugCtx).don_thuoc.de_cap, "co_ke_don");
+});
+
+test("duyệt dòng thuốc giữ khi không đổi, về chưa duyệt khi sửa; dòng mới chưa duyệt", () => {
+  const e = saved2();
+  for (const item of e.don_thuoc.items) item.review = { trang_thai: "chap_nhan", reviewer_id: "doctor-demo", reviewed_at: now };
+  const same = applyEformSnapshot(e, snap(projectEform(e).donThuoc), drugCtx);
+  assert.equal(same.don_thuoc.items[0].review.trang_thai, "chap_nhan");
+  assert.equal(same.don_thuoc.items[1].review.trang_thai, "chap_nhan");
+  const rows = projectEform(e).donThuoc!;
+  const changed = applyEformSnapshot(e, snap([{ ...rows[0], lieu_moi_lan: "2 viên" }, rows[1], drugRow({ ma: "", ten: "Thuốc tự gõ" })]), drugCtx);
+  assert.equal(changed.don_thuoc.items[0].review.trang_thai, "chua_duyet");
+  assert.equal(changed.don_thuoc.items[1].review.trang_thai, "chap_nhan");
+  assert.equal(changed.don_thuoc.items[2].review.trang_thai, "chua_duyet");
+});
+
+test("vòng projectEform giữ dữ liệu, ung_vien rỗng, nguồn thuốc không bao giờ ai", () => {
+  const e = saved2();
+  const view = projectEform(e);
+  assert.ok(view.donThuoc!.every(row => row.nguon === "xem" && row.ung_vien.length === 0));
+  assert.equal(view.donThuocDeCap, "co_ke_don");
+  e.don_thuoc.items[0].review = { trang_thai: "chap_nhan", reviewer_id: "doctor-demo", reviewed_at: now };
+  const approved = projectEform(e).donThuoc!;
+  assert.equal(approved[0].nguon, "bs");
+  assert.ok(approved.every(row => row.nguon !== ("ai" as string)));
+  const back = applyEformSnapshot(e, snap(approved), drugCtx);
+  assert.deepEqual(back.don_thuoc.items, e.don_thuoc.items);
+  assert.equal(projectEform(base()).donThuocDeCap, "chua_de_cap");
+});
+
+test("kiểm tra schema dòng thuốc", () => {
+  assert.throws(() => snap([drugRow({ ten: "" })]));
+  assert.throws(() => snap([drugRow({ khi_can: "có" })]));
+  assert.throws(() => snap(Array.from({ length: 51 }, () => drugRow())));
+  assert.doesNotThrow(() => snap(Array.from({ length: 50 }, () => drugRow())));
+});
+
+test("bỏ dòng giữa đơn: nguồn dòng sau đánh lại chỉ số, dòng sửa không giữ nguồn cũ", () => {
+  const three = applyEformSnapshot(base(), snap([drugRow(), drugRow({ ma: "T-2", ten: "Amoxicillin 500mg" }), drugRow({ ma: "", ten: "Thuốc tự gõ" })]), drugCtx);
+  const rows = projectEform(three).donThuoc!;
+  const marker = three.nguon_du_lieu.find(item => item.field_path === "/don_thuoc/items/2")!;
+  marker.source_system = "dau-van-tay";
+  const after = applyEformSnapshot(three, snap([rows[1], rows[2]]), drugCtx);
+  const paths = after.nguon_du_lieu.filter(item => item.field_path.startsWith("/don_thuoc/items/"));
+  assert.ok(paths.some(item => item.field_path === "/don_thuoc/items/1" && item.source_system === "dau-van-tay"));
+  assert.equal(paths.some(item => item.field_path === "/don_thuoc/items/2"), false);
+  const edited = applyEformSnapshot(three, snap([rows[1], { ...rows[2], so_ngay: "9" }]), drugCtx);
+  assert.equal(edited.nguon_du_lieu.find(item => item.field_path === "/don_thuoc/items/1")?.source_system, "prototype-eform");
 });

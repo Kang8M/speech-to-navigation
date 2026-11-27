@@ -4,12 +4,13 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-27
 
-### Trợ lý gọn: xử lý lệnh nhanh trên máy
+### Trợ lý gọn: xử lý lệnh nhanh và nguồn ô do mẫu trên máy
 - **Loại:** Tính năng
 - **Thay đổi:** Thêm `src/shared/eform/lenh-nhanh.ts`: `xuLyLenh` tách một dòng lệnh của bác sĩ (tên mẫu + chi tiết + mã gõ tắt) thành kết quả điền: `trong`, `chon_mau` (bí danh trùng, hỏi lại) hoặc `dien`. Thứ tự: tách gõ tắt, tìm mẫu theo phần còn lại, không khớp thì tìm theo chẩn đoán vừa bung từ gõ tắt. `dungMau` điền chỗ trống theo chi tiết (chi tiết rỗng thì giữ nguyên kết quả của mẫu); `phanDuChiTiet` trả các vế chi tiết không điền được chỗ trống nào để bác sĩ tự ghi. Chạy hoàn toàn trên máy, không gọi API hay AI.
+  - Thêm `src/shared/eform/nguon-mau.ts` (thuần): `ganNguonMau` gán nguồn ô do mẫu điền (khác chữ gốc hoặc còn chỗ `[..]` thì "xem", còn lại "cu"); `datGoTat` đặt câu gõ tắt vào ô (ô trống hoặc nguồn cu/xem/ai thì thay, nguồn bs/sua thì nối, ô đã chứa nguyên câu thì giữ nguyên); `doiNguonKhiLuu` đổi ô do mẫu điền từ cu/xem sang "bs" khi lưu, không ô nào đổi thì trả đúng object cũ.
 - **Lý do:** Nền cho ô lệnh nhanh của Trợ lý gọn; các bước sau nối giao diện và áp kết quả vào phiếu.
-- **File:** `src/shared/eform/lenh-nhanh.ts`, `src/shared/eform/lenh-nhanh.test.ts`, `docs/CHANGELOG.md`
-- **Kiểm tra:** `npx tsx --conditions=react-server --test src/shared/eform/lenh-nhanh.test.ts` 5/5; `npx tsc --noEmit`; `npm test`; `npm run lint` 0 lỗi.
+- **File:** `src/shared/eform/lenh-nhanh.ts`, `src/shared/eform/lenh-nhanh.test.ts`, `src/shared/eform/nguon-mau.ts`, `src/shared/eform/nguon-mau.test.ts`, `docs/CHANGELOG.md`
+- **Kiểm tra:** `npx tsx --conditions=react-server --test src/shared/eform/lenh-nhanh.test.ts` 5/5; `nguon-mau.test.ts` 4/4; `npx tsc --noEmit`; `npm test`; `npm run lint` 0 lỗi.
 
 ### Chuyển gói chỉ định, bước Xác nhận chỉ định và gợi ý theo chẩn đoán từ nhánh `thanh` sang `dev`
 - **Loại:** Tính năng, Chuyển code giữa nhánh

@@ -50,6 +50,7 @@ test("mẫu kèm chi tiết: chỗ trống vừa thay là 'xem', ô nằm trong 
   assert.deepEqual(r.truong.kham_chuyen_khoa, { value: "Họng đỏ", nguon: "cu" });
   assert.ok(r.oTuMau.includes("ly_do"));
   assert.equal(r.chiDinhThem.length, 1);
+  assert.equal(r.chiDinhThem[0].tu_ai, false);
   assert.equal(r.thongBao, 'Đã điền 2 ô từ mẫu "Đau họng giả". Còn 1 chỗ vàng cần xem. Thêm 1 chỉ định.');
   assert.deepEqual(r.ketQua?.donThuoc, []);
 });
@@ -111,4 +112,20 @@ test("ô chép từ lịch sử khám là dữ liệu cũ thật: nguồn 'cu', 
   assert.ok(!r.oTuMau.includes("tien_su_ban_than"));
   assert.ok(r.oTuMau.includes("ly_do"));
   assert.deepEqual(r.ketQua?.donThuoc, []);
+});
+
+test("gõ tắt chẩn đoán vào ô mã ICD: không nối mã bằng dấu cách", () => {
+  const icd10 = [{ ma: "J01.9", ten: "Viêm xoang cấp (giả)", manh: ["viêm xoang"], vua: [] }];
+  const data = { ...DATA, icd10 } as unknown as EformData;
+  const goTat = tachGoTat("vmx", [{ ma: "vmx", o: "chan_doan_chinh", noi_dung: "Viêm xoang cấp" }]);
+  const kq: LenhDien = { loai: "dien", mau: null, ketQua: null, goTat, phanDu: [] };
+  // Ô trống hoặc mã do mẫu/AI điền: thay bằng mã của gõ tắt, nguồn bác sĩ nhập
+  assert.deepEqual(apKetQuaLenh(kq, data, getTu({}), []).truong.icd_ban_dau, { value: "J01.9", nguon: "bs" });
+  assert.deepEqual(apKetQuaLenh(kq, data, getTu({ icd_ban_dau: { value: "J30.4", nguon: "xem" } }), []).truong.icd_ban_dau, { value: "J01.9", nguon: "bs" });
+  // Bác sĩ đã nhập mã khác: giữ nguyên, báo bỏ qua
+  const giu = apKetQuaLenh(kq, data, getTu({ icd_ban_dau: { value: "J30.4", nguon: "bs" } }), []);
+  assert.equal(giu.truong.icd_ban_dau, undefined);
+  assert.ok(giu.thongBao.includes("Bỏ qua 1 ô"));
+  // Đã đúng mã: không đổi gì
+  assert.deepEqual(apKetQuaLenh(kq, data, getTu({ icd_ban_dau: { value: "J01.9", nguon: "sua" } }), []).truong, {});
 });

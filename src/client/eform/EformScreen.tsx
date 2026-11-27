@@ -338,8 +338,9 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
         return moi;
       });
     }
+    // Số đo lượt thử: ô do mẫu, gõ tắt điền không tính là AI điền hay bác sĩ sửa (daDien rỗng); ketQua chỉ để lượt có mẫu vẫn được ghi
     const them = r.ketQua;
-    if (them) setKetQua((prev) => (prev ? { ...prev, daDien: [...prev.daDien, ...them.daDien] } : them));
+    if (them) setKetQua((prev) => prev ?? { ...them, daDien: [] });
     const mauId = kq.mau?.id;
     if (mauId) setLuot((prev) => ({ ...prev, mauId }));
     batDauNhap("go", false);
@@ -550,7 +551,7 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
             <div className="flex flex-col gap-3 self-start lg:sticky lg:top-[calc(var(--cao-dau)+1rem)] lg:max-h-[calc(100vh-var(--cao-dau)-var(--cao-day)-2rem)] lg:overflow-y-auto">
               <LenhNhanh
                 onDien={apLenh}
-                onChepXuong={bridge ? (text) => setNoiDungThem((prev) => ({ seq: (prev?.seq ?? 0) + 1, text })) : undefined}
+                onChepXuong={bridge && !bridge.recordingActive ? (text) => setNoiDungThem((prev) => ({ seq: (prev?.seq ?? 0) + 1, text })) : undefined}
                 chuaLuu={chuaLuu}
                 onLuu={bridge ? () => void save() : undefined}
                 saving={saving}

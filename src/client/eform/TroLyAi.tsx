@@ -142,11 +142,13 @@ export function TroLyAi({ bridge, dirty, onDecided, onBatDau, onOpenTab, soChiDi
   const themRef = useRef(themNoiDung);
   useEffect(() => { themRef.current = themNoiDung; });
   const daNoiSeq = useRef(noiDungThem?.seq ?? 0);
+  // Đang ghi âm hoặc còn chữ tạm từ micro thì chờ ghi xong mới nối, để không lẫn vào đoạn ghi âm đang phân vai BS/BN
+  const dangNghe = dangGhi || Boolean(interim);
   useEffect(() => {
-    if (!noiDungThem || noiDungThem.seq === daNoiSeq.current) return;
+    if (!noiDungThem || noiDungThem.seq === daNoiSeq.current || dangNghe) return;
     daNoiSeq.current = noiDungThem.seq;
     themRef.current(noiDungThem.text);
-  }, [noiDungThem]);
+  }, [noiDungThem, dangNghe]);
 
   // Chữ từ micro chỉ vào ô này khi binding thuộc đúng lượt khám đang mở.
   useEffect(() => {

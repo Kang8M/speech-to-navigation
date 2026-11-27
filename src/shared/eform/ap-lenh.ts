@@ -16,13 +16,15 @@ export interface ApLenh {
   oTuMau: string[];
   /** Chỉ định của mẫu chưa có trong tab Chỉ định */
   chiDinhThem: DongChiDinh[];
-  /** Để đếm số đo lượt thử; không bao giờ có thuốc */
+  /** Các ô vừa điền (daDien) và chỉ định thêm, không bao giờ có thuốc. Không phải AI điền: màn hình không đếm daDien vào số đo AI */
   ketQua: KetQuaDien | null;
   thongBao: string;
 }
 
 const TRONG: Truong = { value: "", nguon: null };
 const NHAN_KHAM_KHAC = "Khám các bộ phận khác";
+/** Ô mã ICD10 (danh sách mã ngăn bằng dấu phẩy): không nối câu như ô chữ, nối bằng dấu cách sẽ thành một mã sai */
+const O_MA_ICD = new Set(["icd_ban_dau", "icd_ra_vien", "icd_kem_theo"]);
 
 export function apKetQuaLenh(kq: LenhDien, data: EformData, get: (id: string) => Truong, chiDinhHienTai: DongChiDinh[]): ApLenh {
   const mau = kq.mau;
@@ -57,7 +59,8 @@ export function apKetQuaLenh(kq: LenhDien, data: EformData, get: (id: string) =>
 
     // Review Focus 1: gọi lại cùng mẫu không thêm dòng trùng (theo mã, chưa có mã thì theo tên)
     const daCo = new Set(chiDinhHienTai.map(khoaDong));
-    chiDinhThem = moi.chiDinh.filter((row) => !daCo.has(khoaDong(row)));
+    // Dòng do mẫu thêm không phải AI điền: bỏ cờ tu_ai để số đo lượt thử không tính là dòng AI
+    chiDinhThem = moi.chiDinh.filter((row) => !daCo.has(khoaDong(row))).map((row) => ({ ...row, tu_ai: false }));
   }
   const oTuMau = new Set(Object.keys(truong));
   if (mau) {
@@ -77,9 +80,20 @@ export function apKetQuaLenh(kq: LenhDien, data: EformData, get: (id: string) =>
   }
   for (const [id, cau] of Object.entries(cauGoTat)) {
     const hienTai = truong[id] ?? get(id);
-    const sau = datGoTat(hienTai, cau, O_XUONG_DONG.has(id));
-    // Ô đã có nguyên câu: không đổi gì, không đếm
-    if (sau === hienTai) continue;
+    let sau: Truong;
+    if (O_MA_ICD.has(id)) {
+      // Mã ICD: trùng thì thôi; bác sĩ đã nhập hay đã sửa mã khác thì giữ, báo bỏ qua; còn lại thay bằng mã của gõ tắt
+      if (hienTai.value === cau) continue;
+      if (hienTai.value.trim() && (hienTai.nguon === "bs" || hienTai.nguon === "sua")) {
+        boQua += 1;
+        continue;
+      }
+      sau = { value: cau, nguon: "bs" };
+    } else {
+      sau = datGoTat(hienTai, cau, O_XUONG_DONG.has(id));
+      // Ô đã có nguyên câu: không đổi gì, không đếm
+      if (sau === hienTai) continue;
+    }
     truong[id] = sau;
     oTuMau.delete(id);
   }
@@ -97,6 +111,7 @@ export function apKetQuaLenh(kq: LenhDien, data: EformData, get: (id: string) =>
     if (daDung.length > 0) thongBao += ` Gõ tắt: ${daDung.join(", ")}.`;
   } else {
     thongBao = `Đã điền gõ tắt ${daDung.join(", ")}: ${n} ô.`;
+    if (boQua > 0) thongBao += ` Bỏ qua ${boQua} ô đã có chữ.`;
   }
 
   return {

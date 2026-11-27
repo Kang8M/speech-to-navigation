@@ -4,6 +4,14 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-27
 
+### Kê đơn: Tổng SL, thuốc dùng khi cần, liều "1 v"
+- **Loại:** Tính năng
+- **Thay đổi:** Phần thuần (chưa có giao diện) của kê đơn trở lại. `computeTotal` lấy `so_luong_ke` nếu > 0, không thì liều × số lần × số ngày; thuốc dùng khi cần không có số lần và không có số lượng kê thì ra `null`. Thêm `bungDonViLieu` ("1 v" → "1 viên", "1/2v" → "1/2 viên", theo `don_vi_viet_tat` trong `config/canh-bao.json`); `applyTotals` bung đơn vị trong liều rồi tính tổng. `DongThuoc` thêm `khi_can?`, `so_luong_ke?`; thêm `laKhiCan` (cờ, hoặc thời điểm bắt đầu bằng "Khi/Lúc/Nếu"); `dienPhieu`, `khopBoMau` ánh xạ hai trường mới; `COT_THUOC` và `/api/thoi-quen` nhận `khi_can`, `so_luong_ke`.
+- **Lý do:** Bác sĩ kê thuốc dùng khi cần (khi đau, khi sốt) và gõ liều tắt "1 v". Nguồn: commit d8fa4f8 của nhánh `thanh`, không lấy phần schema AI. AI vẫn không kê thuốc.
+- **File:** `config/canh-bao.json`, `src/shared/{types,validate}.ts`, `src/shared/eform/{dien-phieu,goi-y,thoi-quen}.ts`, `src/app/api/thoi-quen/route.ts`, test `src/shared/validate.test.ts`, `src/shared/eform/{dien-phieu,goi-y,thoi-quen}.test.ts`, `docs/CHANGELOG.md`
+- **Kiểm tra:** `npm test` 490/490 (482 cũ + 8 mới); `npx tsc --noEmit` sạch; `npm run lint` 0 lỗi (6 cảnh báo có sẵn).
+- **Ảnh hưởng:** Chưa đổi giao diện. Dòng thuốc cũ không có hai trường mới vẫn đọc được.
+
 ### Thiết kế và kế hoạch "Kê đơn thuốc trở lại" (chưa code)
 - **Loại:** Tài liệu, Thiết kế
 - **Thay đổi:** Thêm bản thiết kế `docs/superpowers/specs/2026-11-27-ke-don-design.md` và kế hoạch 11 task `docs/superpowers/plans/2026-11-27-ke-don.md`: đưa lại tab Đơn thuốc (thuốc dùng khi cần, Tổng SL tự tính), gợi ý thuốc theo chẩn đoán, tách In phiếu khám và In đơn thuốc. Đơn thuốc lưu vào hồ sơ clinical (khối `don_thuoc`, `schema_version` 1.3.0 có đọc-chuyển từ 1.2.0) và là phần duyệt riêng `prescription`. AI vẫn không kê thuốc.

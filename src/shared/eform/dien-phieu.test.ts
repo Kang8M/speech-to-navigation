@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import { test } from "node:test";
 import type { Draft } from "../types";
-import { dienPhieu, gopTruongMoi } from "./dien-phieu";
+import { dienPhieu, gopTruongMoi, laKhiCan } from "./dien-phieu";
 import type { EformData, QuyTacAi, Truong } from "./types";
 
 const quyTac = JSON.parse(fs.readFileSync("data/eform/quy-tac.json", "utf8")) as QuyTacAi;
@@ -153,3 +153,16 @@ test("gopTruongMoi bỏ ô bị sửa trong lúc chờ AI", () => {
   assert.equal(ra.loi_dan.value, "Giữ khô tai");
 });
 
+
+test("laKhiCan nhận thuốc dùng khi cần theo cờ hoặc thời điểm", () => {
+  assert.equal(laKhiCan({ thoi_diem: "Khi đau" }), true);
+  assert.equal(laKhiCan({ thoi_diem: "Sau ăn" }), false);
+  assert.equal(laKhiCan({ khi_can: true }), true);
+});
+
+test("dienPhieu ánh xạ khi_can và so_luong_ke của dòng thuốc", () => {
+  const draft = { ...nhap({}), ke_don: [{ ten_thuoc: "Thuốc mẫu", thoi_diem: "Khi sốt", so_luong_ke: "6" }] };
+  const kq = dienPhieu(draft, {}, DATA, getTu({}));
+  assert.equal(kq.donThuoc[0].khi_can, true);
+  assert.equal(kq.donThuoc[0].so_luong_ke, "6");
+});

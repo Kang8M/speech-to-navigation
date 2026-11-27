@@ -19,9 +19,11 @@ const schema = z.object({
           ham_luong: chu(100),
           duong_dung: chu(50),
           lieu_moi_lan: chu(50),
+          khi_can: z.boolean().optional(),
           so_lan_ngay: chu(20),
           thoi_diem: chu(100),
           so_ngay: chu(20),
+          so_luong_ke: chu(20).optional(),
           ghi_chu: chu(300),
         }),
       )

@@ -28,13 +28,24 @@ export interface DongThuoc {
   ham_luong: string;
   duong_dung: string;
   lieu_moi_lan: string;
+  /** Thuốc dùng khi cần (khi đau, khi sốt): số lần/ngày là số lần tối đa, có thể để trống */
+  khi_can?: boolean;
   so_lan_ngay: string;
   thoi_diem: string;
   so_ngay: string;
+  /** Tổng số lượng bác sĩ nói rõ hoặc tự gõ; trống thì tự tính */
+  so_luong_ke?: string;
   ghi_chu: string;
   nguon: Nguon;
   ung_vien: CatalogItem[];
   tu_ai?: boolean;
+}
+
+const LA_KHI_CAN = /^(?:khi|lúc|nếu)\s/iu;
+
+/** Bộ mẫu cũ chỉ ghi "Khi đau", "Khi sốt" ở thời điểm dùng: coi như thuốc dùng khi cần */
+export function laKhiCan(row: { khi_can?: boolean | string | null; thoi_diem?: string | null }): boolean {
+  return row.khi_can === true || row.khi_can === "Có" || LA_KHI_CAN.test((row.thoi_diem ?? "").trim());
 }
 
 export interface MucDaDien {
@@ -208,9 +219,11 @@ export function dienPhieu(
     ham_luong: chu(row.ham_luong),
     duong_dung: chu(row.duong_dung),
     lieu_moi_lan: chu(row.lieu_moi_lan),
+    khi_can: laKhiCan({ khi_can: chu(row.khi_can), thoi_diem: chu(row.thoi_diem) }),
     so_lan_ngay: chu(row.so_lan_ngay),
     thoi_diem: chu(row.thoi_diem),
     so_ngay: chu(row.so_ngay),
+    so_luong_ke: chu(row.so_luong_ke),
     ghi_chu: chu(row.ghi_chu),
     nguon: nguonDong(matches.ke_don?.[i]),
     ung_vien: matches.ke_don?.[i]?.candidates ?? [],

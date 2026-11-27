@@ -26,6 +26,8 @@ interface Props {
   vanBanDau?: string;
   hoiThoai?: { ai: "BS" | "BN"; cau: string }[];
   onGoTo?: (id: string) => void;
+  /** Chữ chép xuống từ ô Lệnh nhanh: seq đổi thì nối text vào cuối ô Nội dung buổi khám */
+  noiDungThem?: { seq: number; text: string };
 }
 
 const FOCUS = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-tim";
@@ -50,7 +52,7 @@ function BanDaChe({ text }: { text: string }) {
 }
 const usable = (session: RecordingSession) => session.content_state !== "discarded";
 
-export function TroLyAi({ bridge, dirty, onDecided, onBatDau, onOpenTab, soChiDinh, vanBanDau, hoiThoai }: Props) {
+export function TroLyAi({ bridge, dirty, onDecided, onBatDau, onOpenTab, soChiDinh, vanBanDau, hoiThoai, noiDungThem }: Props) {
   // Ô nhập giữ chữ gốc, chỉ nằm trong bộ nhớ trình duyệt; máy chủ là nơi duy nhất che trước khi tạo bản nháp.
   const [text, setText] = useState(() => vanBanDau ?? "");
   const [mode, setMode] = useState<SpeakerMode>("conversation");
@@ -130,6 +132,22 @@ export function TroLyAi({ bridge, dirty, onDecided, onBatDau, onOpenTab, soChiDi
   }
   useEffect(() => { appendRef.current = appendInput; });
 
+  /** Nối chữ chép từ ô Lệnh nhanh vào cuối ô (xuống dòng nếu ô có chữ); bản đã che cũ không còn đúng nên bỏ */
+  function themNoiDung(chunk: string) {
+    invalidate();
+    lastMicSession.current = null;
+    setNoiTiepMic(false);
+    setText((current) => (current.trim() ? `${current}\n${chunk}` : chunk));
+  }
+  const themRef = useRef(themNoiDung);
+  useEffect(() => { themRef.current = themNoiDung; });
+  const daNoiSeq = useRef(noiDungThem?.seq ?? 0);
+  useEffect(() => {
+    if (!noiDungThem || noiDungThem.seq === daNoiSeq.current) return;
+    daNoiSeq.current = noiDungThem.seq;
+    themRef.current(noiDungThem.text);
+  }, [noiDungThem]);
+
   // Chữ từ micro chỉ vào ô này khi binding thuộc đúng lượt khám đang mở.
   useEffect(() => {
     if (!bridge) return;
@@ -194,7 +212,7 @@ export function TroLyAi({ bridge, dirty, onDecided, onBatDau, onOpenTab, soChiDi
   const dirtyReason = dirty ? "Phiếu còn thay đổi chưa lưu. Hãy bấm Lưu phiếu rồi chọn các đề xuất để áp dụng." : null;
 
   return (
-    <aside className="flex flex-col self-start rounded-xl border border-tim-vien bg-white text-[13px] shadow-[0_1px_2px_rgba(26,37,51,0.06)] lg:sticky lg:top-[calc(var(--cao-dau)+1rem)] lg:max-h-[calc(100vh-var(--cao-dau)-var(--cao-day)-2rem)] lg:overflow-y-auto">
+    <aside className="flex flex-col rounded-xl border border-tim-vien bg-white text-[13px] shadow-[0_1px_2px_rgba(26,37,51,0.06)]">
       <div className="space-y-2 border-b border-tim-vien/60 bg-tim-nhat px-4 py-3">
         <h2 className="text-[15px] font-semibold text-tim">✨ Trợ lý lâm sàng</h2>
         <p className="text-xs text-ef-phu">Nhập nội dung. Máy chủ tự che thông tin nhận dạng (R1–R14) rồi mới tạo bản nháp; bác sĩ chọn từng đề xuất để duyệt.</p>

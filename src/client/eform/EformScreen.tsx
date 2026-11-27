@@ -12,10 +12,14 @@ import { EformForm } from "@/client/eform/EformForm";
 import { EformHeader } from "@/client/eform/EformHeader";
 import { BTN_CHINH, BTN_OUTLINE, BcytTag, SourceBadge, anchorId } from "@/client/eform/fields";
 import { splitCodes } from "@/client/eform/IcdField";
+import { LenhNhanh } from "@/client/eform/LenhNhanh";
 import { RecordingSessions } from "@/client/eform/RecordingSessions";
 import { TroLyAi, type TabId } from "@/client/eform/TroLyAi";
+import { apKetQuaLenh } from "@/shared/eform/ap-lenh";
 import type { DongChiDinh, DongThuoc, KetQuaDien } from "@/shared/eform/dien-phieu";
 import { demLuot } from "@/shared/eform/do-luong";
+import type { LenhDien } from "@/shared/eform/lenh-nhanh";
+import { doiNguonKhiLuu } from "@/shared/eform/nguon-mau";
 import { ghepGoiY } from "@/shared/eform/thoi-quen";
 import type { EformData, KichBan, Nguon, Truong } from "@/shared/eform/types";
 import { approvalState, requiredApprovalScopes, type ApprovalScope } from "@/shared/clinical/approvals";
@@ -138,6 +142,10 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
   // Dữ liệu lúc Lưu gần nhất (ban đầu là lúc mở phiếu); khác tham chiếu nghĩa là có thay đổi chưa Lưu
   const [banLuu, setBanLuu] = useState(() => ({ fields, chiDinh, donThuoc, trangThai: data.ca.trang_thai, summary: "", noServices: false, clinicalInfo: "" }));
   const [ketQua, setKetQua] = useState<KetQuaDien | null>(dau.ketQua);
+  /** Ô do phiếu mẫu điền, chưa Lưu (để phân biệt với dữ liệu cũ thật cũng mang nguồn "cu"); lúc Lưu đổi thành bác sĩ nhập */
+  const [oTuMau, setOTuMau] = useState<ReadonlySet<string>>(() => new Set());
+  /** Chữ ô Lệnh nhanh chép xuống ô Nội dung buổi khám của Trợ lý */
+  const [noiDungThem, setNoiDungThem] = useState<{ seq: number; text: string } | undefined>(undefined);
   const [dongAi, setDongAi] = useState<DongAi>(dau.dongAi);
   const [luot, setLuot] = useState<Luot>({
     batDau: null,
@@ -181,6 +189,7 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
     setTrangThai(response.snapshot.trangThai);
     setBanLuu({ fields: response.snapshot.fields, chiDinh: response.snapshot.chiDinh, donThuoc: [], trangThai: response.snapshot.trangThai, summary: response.record.tom_tat ?? "", noServices: response.record.chi_dinh.de_cap === "khong_chi_dinh", clinicalInfo: response.snapshot.chiDinhLyDo ?? "" });
     setKetQua(null);
+    setOTuMau(new Set());
     setDongAi({ tong: 0, khop: 0 });
     setLastEdit({ nguoi: response.record.audit.updated_by, luc: new Date(response.record.audit.updated_at).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" }) });
     setClinicalError("");
@@ -315,6 +324,28 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
           },
     );
 
+  /** Ô Lệnh nhanh: áp mẫu và gõ tắt vào phiếu ngay trên máy, trả câu báo */
+  const apLenh = (kq: LenhDien): string => {
+    const r = apKetQuaLenh(kq, data, api.get, chiDinh);
+    const daDoi = Object.keys(r.truong);
+    if (daDoi.length > 0) setFields((prev) => ({ ...prev, ...r.truong }));
+    if (r.chiDinhThem.length > 0) setChiDinh((prev) => [...prev, ...r.chiDinhThem]);
+    // Ô gõ tắt vừa thay chữ mẫu là chữ bác sĩ, không còn tính là do mẫu điền
+    if (daDoi.length > 0) {
+      setOTuMau((prev) => {
+        const moi = new Set([...prev].filter((id) => !r.truong[id]));
+        for (const id of r.oTuMau) moi.add(id);
+        return moi;
+      });
+    }
+    const them = r.ketQua;
+    if (them) setKetQua((prev) => (prev ? { ...prev, daDien: [...prev.daDien, ...them.daDien] } : them));
+    const mauId = kq.mau?.id;
+    if (mauId) setLuot((prev) => ({ ...prev, mauId }));
+    batDauNhap("go", false);
+    return r.thongBao;
+  };
+
   /** Ghi số đo lượt thử vào data/sessions/ (chỉ số đếm), hiện ở trang Kết quả thử nghiệm. Trả câu báo thêm */
   const ghiLuot = async (): Promise<string> => {
     const dem = demTab.current;
@@ -361,13 +392,16 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
     saveLock.current = true;
     setSaving(true);
     setClinicalError("");
-    const snapshot = { fields, chiDinh, chiDinhLyDo: clinicalInfo, chiDinhDeCap: noServices ? "khong_chi_dinh" as const : "chua_de_cap" as const, trangThai: trangThai as TrangThai };
+    const snapshot = { fields: doiNguonKhiLuu(fields, oTuMau), chiDinh, chiDinhLyDo: clinicalInfo, chiDinhDeCap: noServices ? "khong_chi_dinh" as const : "chua_de_cap" as const, trangThai: trangThai as TrangThai };
     try {
       const current = bridge.latest().record;
       const response = await luuHoSo(snapshot, { id: current.id, revision: current.revision }, summary || null);
       bridge.publish(response);
       const savedRows = response.snapshot.chiDinh;
       setChiDinh(rows => rows === snapshot.chiDinh ? savedRows : rows);
+      // Ô do mẫu điền đã lưu như bác sĩ nhập: đổi nguồn trên màn hình theo bản vừa lưu
+      setFields(prev => prev === fields ? snapshot.fields : prev);
+      setOTuMau(new Set());
       setBanLuu({ fields: snapshot.fields, chiDinh: savedRows, donThuoc, trangThai: snapshot.trangThai, summary, noServices, clinicalInfo });
       setReviewConfirmed(false); setScopesChosen([]);
       setLastEdit({ nguoi: response.record.audit.updated_by, luc: nowText() });
@@ -512,17 +546,28 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
           </main>
 
           <fieldset disabled={khoa || saving || loadingRecord} className="contents">
-            <TroLyAi
-              bridge={bridge ?? null}
-              dirty={chuaLuu}
-              onDecided={(response) => { finish(response); notify("Đã lưu quyết định về các đề xuất AI. Hãy xem lại phiếu trước khi duyệt."); }}
-              onBatDau={batDauNhap}
-              onGoTo={goTo}
-              onOpenTab={setTab}
-              soChiDinh={chiDinh.length}
-              vanBanDau={kichBan === 3 ? data.trinhDien?.lenh : undefined}
-              hoiThoai={kichBan === 4 ? data.trinhDien?.hoiThoai : undefined}
-            />
+            {/* Tạm đặt ô Lệnh nhanh trên đầu cột Trợ lý; cả cột ghim giữa header và thanh đáy */}
+            <div className="flex flex-col gap-3 self-start lg:sticky lg:top-[calc(var(--cao-dau)+1rem)] lg:max-h-[calc(100vh-var(--cao-dau)-var(--cao-day)-2rem)] lg:overflow-y-auto">
+              <LenhNhanh
+                onDien={apLenh}
+                onChepXuong={bridge ? (text) => setNoiDungThem((prev) => ({ seq: (prev?.seq ?? 0) + 1, text })) : undefined}
+                chuaLuu={chuaLuu}
+                onLuu={bridge ? () => void save() : undefined}
+                saving={saving}
+              />
+              <TroLyAi
+                bridge={bridge ?? null}
+                dirty={chuaLuu}
+                onDecided={(response) => { finish(response); notify("Đã lưu quyết định về các đề xuất AI. Hãy xem lại phiếu trước khi duyệt."); }}
+                onBatDau={batDauNhap}
+                onGoTo={goTo}
+                onOpenTab={setTab}
+                soChiDinh={chiDinh.length}
+                vanBanDau={kichBan === 3 ? data.trinhDien?.lenh : undefined}
+                hoiThoai={kichBan === 4 ? data.trinhDien?.hoiThoai : undefined}
+                noiDungThem={noiDungThem}
+              />
+            </div>
           </fieldset>
         </div>
 

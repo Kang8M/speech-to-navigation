@@ -128,6 +128,7 @@ Muốn thay một tính năng rule bằng LLM thật (ví dụ tóm tắt lịch
 | Gợi ý theo thói quen | `shared/eform/thoi-quen.ts`, `/api/thoi-quen` | `GoiYTheoChanDoan`, `EformScreen` | `ghepGoiY` trả nhóm thói quen trước, bộ mẫu sau, dùng chung cho tab Chỉ định và Đơn thuốc |
 | Gợi ý chữ mờ Tab | `shared/eform/goi-y-tab.ts`, `data/eform/thu-vien.json` | `TextBox`, `ThuVienButton` (`client/eform/fields.tsx`) | `khoCau` gom câu theo ô từ gõ tắt, thói quen, phiếu mẫu, thư viện; `timGoiYTab` chọn câu khớp phần đang gõ |
 | Bộ gõ tắt riêng | `shared/eform/go-tat.ts`, `server/du-lieu/go-tat.ts` | `EformData.goTat`, gợi ý Tab | Đọc `data/go-tat/<tài khoản>.json` (gitignore), chưa có thì bộ giả; chưa gửi cho AI |
+| Ô lệnh nhanh | `client/eform/LenhNhanh.tsx`, `shared/eform/{lenh-nhanh,nguon-mau,ap-lenh}.ts` | `EformScreen` (trên đầu cột Trợ lý) | `xuLyLenh` tách tên mẫu, chi tiết, gõ tắt; `apKetQuaLenh` trả các ô cần đổi, ô do mẫu điền (`oTuMau`), chỉ định chưa có và câu báo. Chạy trên máy, không gọi API; lúc Lưu `doiNguonKhiLuu` đổi ô do mẫu điền thành bác sĩ nhập |
 | Demo luồng dữ liệu | `src/app/demo-luong`, `src/client/demo-luong/`, `src/server/demo-luong/`, `src/shared/clinical/pii/`, `src/shared/demo-luong/types.ts`, `/api/demo-luong/*` | trang `/demo-luong` | Bộ che PII là TS thuần ở `shared` (dùng được cả hai phía); điều phối 5 bước và kho phiếu ở `server`; client đọc stream NDJSON qua `client/demo-luong/api.ts` |
 
 ## Thêm mới thì đặt ở đâu

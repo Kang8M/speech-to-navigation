@@ -2,6 +2,15 @@
 
 Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nhất ở trên cùng. Cách ghi xem `.claude/skills/ghi-tai-lieu/SKILL.md`.
 
+## 2026-11-27
+
+### Sửa test demo luồng `audio: STT trả chữ…` lúc qua lúc hỏng khi máy bận
+- **Loại:** Sửa lỗi (test)
+- **Thay đổi:** Máy STT giả trong `src/app/api/demo-luong/routes.test.ts` trả thêm header `connection: "close"`, mỗi request dùng kết nối mới.
+- **Lý do:** Lớp NER (`goiNer`) và STT cùng gọi máy giả này qua `STT_BACKEND_URL`, nên `fetch` giữ lại kết nối keep-alive từ lần gọi `/ner` để dùng cho lần gọi `/transcribe`. Khi `npm test` chạy nhiều file song song, tiến trình test chậm vài giây, bộ hẹn giờ keep-alive 5 giây phía máy chủ đóng kết nối đúng lúc client dùng lại, client nhận `ECONNRESET` và bước STT báo `loi` thay vì `xong`. Chạy riêng file hoặc `--test-concurrency=1` thì qua. Lỗi lộ ra mỗi lần khi gộp thử các PR #6–#9 (thêm 12 file test chạy song song), và có cả trên `dev` khi máy đang bận. Code thật không đổi.
+- **File:** `src/app/api/demo-luong/routes.test.ts`, `docs/CHANGELOG.md`
+- **Kiểm tra:** `npm test` trên bản gộp thử `dev` + #6–#9: trước khi sửa 459/460 (hỏng cả 3 lần chạy), sau khi sửa 460/460 cả 3 lần chạy.
+
 ## 2026-11-18
 
 ### Đưa hai quy tắc làm việc từ worktree priority-plan-2 vào nhánh

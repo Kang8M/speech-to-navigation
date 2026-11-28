@@ -3,6 +3,7 @@ import fs from "node:fs";
 import { test } from "node:test";
 import { applyClinicalChanges, proposeClinicalChanges, StaleChangeError } from "./changes";
 import { emptyEncounter } from "./schema";
+import { applyEformSnapshot, parseEformSnapshot } from "./eform";
 import type { ClinicalExtraction } from "./api";
 
 const fixture = (name: string) => JSON.parse(fs.readFileSync(`docs/task-2/examples/${name}.example.json`, "utf8"));
@@ -57,4 +58,28 @@ test("repeating an existing service mention adds no order; new orders arrive wit
   assert.ok(applied.chi_dinh.groups.length >= 1);
   const again = proposeClinicalChanges(applied, run("run-5"));
   assert.equal(again.changes.filter(item => item.scope.startsWith("service_order:")).length, 0);
+});
+
+const drugBase = () => applyEformSnapshot(base(), parseEformSnapshot({ fields: {}, chiDinh: [], trangThai: "Đang khám", donThuoc: [
+  { ma: "T-1", ten: "Paracetamol 500mg", ham_luong: "500mg", duong_dung: "Uống", lieu_moi_lan: "1 viên", khi_can: false, so_lan_ngay: "3", thoi_diem: "Sau ăn", so_ngay: "5", so_luong_ke: "", ghi_chu: "", nguon: "bs", ung_vien: [] },
+] }), { now, newId: () => "drug-row-1", services: [], drugs: [{ ma: "T-1", ten: "Paracetamol 500mg" }] });
+
+test("AI không đề xuất thay đổi nào chạm đơn thuốc, kể cả khi hồ sơ đã có đơn", () => {
+  const withDrugs = drugBase();
+  assert.equal(withDrugs.don_thuoc.items.length, 1);
+  for (const draft of ["ai-output", "ai-output-service"]) {
+    const set = proposeClinicalChanges(withDrugs, run(`run-drug-${draft}`, draft));
+    assert.ok(set.changes.length > 0);
+    assert.ok(set.changes.every(item => item.scope !== ("prescription" as string) && !item.field_path.startsWith("/don_thuoc")));
+  }
+});
+
+test("chấp nhận mọi thay đổi của AI vẫn giữ nguyên don_thuoc, kể cả trạng thái duyệt", () => {
+  const withDrugs = drugBase();
+  withDrugs.don_thuoc.items[0].review = { trang_thai: "chap_nhan", reviewer_id: "doctor-demo", reviewed_at: now };
+  const before = structuredClone(withDrugs.don_thuoc);
+  const set = proposeClinicalChanges(withDrugs, run("run-drug-accept", "ai-output-service"));
+  assert.ok(set.changes.length > 0);
+  const result = applyClinicalChanges(withDrugs, set, set.changes.map(item => item.id), context());
+  assert.deepEqual(result.don_thuoc, before);
 });

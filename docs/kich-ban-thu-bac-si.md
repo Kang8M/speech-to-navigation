@@ -21,7 +21,8 @@ Trong khung có ô **Lệnh nhanh** (chạy hoàn toàn trên máy, không gọi
    Bấm Enter. Câu báo bên dưới cho biết đã điền mấy ô, còn mấy chỗ vàng. Nếu tên khớp nhiều mẫu thì bấm chọn mẫu muốn dùng.
 2. Kiểm tra hai tab **Phiếu khám** và **Chỉ định dịch vụ**. Chỗ **vàng** là phải xem lại (ví dụ `[phải|trái|2 bên]` còn chưa chọn). Sửa như sửa phiếu bình thường. Chỗ vàng mà đã đúng thì bấm **✓ Đúng**.
 3. Phần chi tiết mà ô Lệnh nhanh không điền được (hoặc bệnh chưa có mẫu): bấm **Chép xuống** để đưa vào ô **Nội dung buổi khám** của Trợ lý lâm sàng ngay bên dưới, rồi bấm **Che thông tin và tạo bản nháp** và duyệt từng đề xuất (Chấp nhận hoặc Từ chối). Bước này mới gọi AI.
-4. Thấy phiếu ổn thì bấm **Lưu phiếu** (trong ô Lệnh nhanh) hoặc **Lưu phiếu & chỉ định** ở thanh dưới. **Tải lại trang (F5)** trước khi sang kịch bản sau.
+4. Vào tab **Đơn thuốc**. Thuốc của mẫu (nếu mẫu có thuốc) đã vào đơn dưới dạng chưa duyệt. Thêm hoặc sửa thuốc, nhập liều, số lần, số ngày; hoặc tích **Không kê đơn thuốc** nếu không kê. Bấm **Lưu**, rồi duyệt phần **Đơn thuốc** trong khung Duyệt. **In đơn thuốc** là tờ riêng, không có trong **In phiếu khám**.
+5. Thấy phiếu ổn thì bấm **Lưu phiếu** (trong ô Lệnh nhanh) hoặc **Lưu phiếu, chỉ định & đơn thuốc** ở thanh dưới. **Tải lại trang (F5)** trước khi sang kịch bản sau.
 
 Mẫu **chỉ điền vào ô còn trống**: ô đã có chữ (điều dưỡng nhập, anh/chị đã gõ) được giữ nguyên. Gọi lại cùng mẫu thì ô đã đúng không bị điền lại, chỉ định không bị thêm trùng. Ô do mẫu điền được lưu như chữ bác sĩ nhập.
 

@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useEform } from "@/client/eform/EformContext";
-import { moTaLieu } from "@/client/eform/DonThuocTab";
+import { moTaLieu, tongSoLuong } from "@/shared/eform/don-thuoc";
 import { nhanIcd } from "@/client/eform/IcdField";
 import type { DongChiDinh, DongThuoc } from "@/shared/eform/dien-phieu";
 
@@ -34,17 +34,50 @@ function Muc({ nhan, children }: { nhan: string; children: ReactNode }) {
 const TH_IN = "border border-black/60 px-1.5 py-0.5 text-left font-semibold";
 const TD_IN = "border border-black/60 px-1.5 py-0.5 align-top";
 
+export type LoaiBanIn = "phieu-kham" | "don-thuoc";
+
+function dauTrang(coSo: string, phongKham: string) {
+  return (
+    <div className="flex items-start justify-between gap-4 border-b border-black pb-2">
+      <div>
+        <div className="font-bold">VINMEC – Bệnh án điện tử</div>
+        <div>{coSo}</div>
+        <div>{phongKham}</div>
+      </div>
+      <div className="rounded border border-black px-2 py-1 text-center text-[9pt] font-semibold">
+        DỮ LIỆU GIẢ – BẢN MÔ PHỎNG
+        <br />
+        không dùng cho lâm sàng
+      </div>
+    </div>
+  );
+}
+
+function chuKy(ten: string, chucDanh: string) {
+  return (
+    <div className="mt-8 flex justify-end break-inside-avoid">
+      <div className="w-56 text-center">
+        <div>{chucDanh}</div>
+        <div className="h-14" />
+        <div className="font-semibold">{ten}</div>
+      </div>
+    </div>
+  );
+}
+
 /**
- * Bản in của "In ngay": phiếu khám, chỉ định và đơn thuốc trên khổ A4.
+ * Bản in khổ A4: "In phiếu khám" (phiếu khám kèm chỉ định) hoặc "In đơn thuốc", hai tờ riêng.
  * Trên màn hình bị ẩn; khi in thì chỉ khối này hiện (phần còn lại của trang có print:hidden).
  */
-export function BanIn({ chiDinh, donThuoc, trangThai, summary, followUpText, duyet }: { chiDinh: DongChiDinh[]; donThuoc: DongThuoc[]; trangThai: string; summary?: string; followUpText?: string; duyet?: string }) {
+export function BanIn({ loai, chiDinh, donThuoc, trangThai, summary, followUpText, duyet, loiDan = true }: { loai: LoaiBanIn; chiDinh: DongChiDinh[]; donThuoc: DongThuoc[]; trangThai: string; summary?: string; followUpText?: string; duyet?: string; loiDan?: boolean }) {
   const { data, get } = useEform();
   const { ca } = data;
   const sh = ca.sinh_hieu;
   const v = (id: string) => get(id).value.trim();
   const chanDoan = chanDoanChinh(get);
   const diUng = v("di_ung") === "Có" ? [v("di_ung_loai"), v("di_ung_mo_ta")].filter(Boolean).join(": ") || "Có" : v("di_ung");
+
+  const hen = v("hen_tai_kham") === "Có" ? ngayGio(v("ngay_tai_kham")) || followUpText || "Có" : v("hen_tai_kham");
 
   const truong: { nhan: string; noiDung: string }[] = [
     { nhan: "Tóm tắt buổi khám", noiDung: summary ?? "" },
@@ -61,24 +94,68 @@ export function BanIn({ chiDinh, donThuoc, trangThai, summary, followUpText, duy
     { nhan: "Chẩn đoán kèm theo", noiDung: nhanIcd(v("icd_kem_theo"), data.icd10) },
     { nhan: "Hướng điều trị", noiDung: v("huong_dieu_tri") },
     { nhan: "Lời dặn & theo dõi", noiDung: v("loi_dan") },
-    { nhan: "Hẹn tái khám", noiDung: v("hen_tai_kham") === "Có" ? ngayGio(v("ngay_tai_kham")) || followUpText || "Có" : v("hen_tai_kham") },
+    { nhan: "Hẹn tái khám", noiDung: hen },
     { nhan: "Tình trạng ra viện", noiDung: v("tinh_trang_ra_vien") },
   ].filter((item) => item.noiDung);
 
+  if (loai === "don-thuoc") {
+    const kem = nhanIcd(v("icd_kem_theo"), data.icd10);
+    const dan = [{ nhan: "Lời dặn & theo dõi", noiDung: v("loi_dan") }, { nhan: "Hẹn tái khám", noiDung: hen }].filter((item) => loiDan && item.noiDung);
+    return (
+      <div className="hidden bg-white text-[11pt] leading-snug text-black print:block">
+        {dauTrang(ca.co_so, ca.phong_kham)}
+        <h1 className="my-3 text-center text-[15pt] font-bold">ĐƠN THUỐC</h1>
+        {duyet && <p className="mb-2 text-center text-[9pt]">{duyet}</p>}
+        <div className="grid grid-cols-2 gap-x-6 gap-y-0.5">
+          <Muc nhan="Họ tên">{ca.ho_ten}</Muc>
+          <Muc nhan="Giới tính">{ca.gioi_tinh}</Muc>
+          <Muc nhan="PID">{ca.pid}</Muc>
+          <Muc nhan="Mã lượt khám">{ca.ma_luot_kham}</Muc>
+          <Muc nhan="Thời gian khám">{ngayGio(v("thoi_gian_kham"))}</Muc>
+        </div>
+        {ca.canh_bao_di_ung && <p className="mt-1 font-bold">⚠ Cảnh báo dị ứng: {ca.canh_bao_di_ung}</p>}
+        {diUng && <p className="mt-1">Dị ứng (ghi nhận trong hồ sơ): {diUng}</p>}
+        <div className="mt-2 space-y-1">
+          <Muc nhan={chanDoan.nhan}>{[nhanIcd(chanDoan.ma, data.icd10), chanDoan.moTa].filter(Boolean).join(". ")}</Muc>
+          {kem && <Muc nhan="Chẩn đoán kèm theo">{kem}</Muc>}
+        </div>
+        <table className="mt-3 w-full border-collapse text-[10pt]">
+          <thead>
+            <tr>
+              <th className={`${TH_IN} w-8`}>STT</th>
+              <th className={TH_IN}>Tên thuốc, hàm lượng</th>
+              <th className={TH_IN}>Cách dùng</th>
+              <th className={`${TH_IN} w-16`}>Tổng SL</th>
+            </tr>
+          </thead>
+          <tbody>
+            {donThuoc.map((row, i) => (
+              <tr key={`${row.ma}-${row.ten}-${i}`}>
+                <td className={TD_IN}>{i + 1}</td>
+                <td className={TD_IN}>{row.ten}</td>
+                <td className={TD_IN}>{moTaLieu(row, data.canhBao)}</td>
+                <td className={TD_IN}>{tongSoLuong(row, data.canhBao) ?? ""}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {dan.length > 0 && (
+          <div className="mt-3 space-y-1.5">
+            {dan.map((item) => (
+              <Muc key={item.nhan} nhan={item.nhan}>
+                {item.noiDung}
+              </Muc>
+            ))}
+          </div>
+        )}
+        {chuKy(ca.bac_si_kham, "Bác sĩ kê đơn")}
+      </div>
+    );
+  }
+
   return (
     <div className="hidden bg-white text-[11pt] leading-snug text-black print:block">
-      <div className="flex items-start justify-between gap-4 border-b border-black pb-2">
-        <div>
-          <div className="font-bold">VINMEC – Bệnh án điện tử</div>
-          <div>{ca.co_so}</div>
-          <div>{ca.phong_kham}</div>
-        </div>
-        <div className="rounded border border-black px-2 py-1 text-center text-[9pt] font-semibold">
-          DỮ LIỆU GIẢ – BẢN MÔ PHỎNG
-          <br />
-          không dùng cho lâm sàng
-        </div>
-      </div>
+      {dauTrang(ca.co_so, ca.phong_kham)}
 
       <h1 className="my-3 text-center text-[15pt] font-bold">PHIẾU KHÁM NGOẠI TRÚ</h1>
       {duyet && <p className="mb-2 text-center text-[9pt]">{duyet}</p>}
@@ -134,37 +211,7 @@ export function BanIn({ chiDinh, donThuoc, trangThai, summary, followUpText, duy
         </div>
       )}
 
-      {donThuoc.length > 0 && (
-        <div className="mt-4 break-inside-avoid">
-          <h2 className="mb-1 font-bold">ĐƠN THUỐC</h2>
-          <table className="w-full border-collapse text-[10pt]">
-            <thead>
-              <tr>
-                <th className={`${TH_IN} w-8`}>STT</th>
-                <th className={TH_IN}>Tên thuốc</th>
-                <th className={TH_IN}>Cách dùng</th>
-              </tr>
-            </thead>
-            <tbody>
-              {donThuoc.map((row, i) => (
-                <tr key={`${row.ma}-${row.ten}`}>
-                  <td className={TD_IN}>{i + 1}</td>
-                  <td className={TD_IN}>{row.ten}</td>
-                  <td className={TD_IN}>{moTaLieu(row)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      <div className="mt-8 flex justify-end break-inside-avoid">
-        <div className="w-56 text-center">
-          <div>Bác sĩ khám</div>
-          <div className="h-14" />
-          <div className="font-semibold">{ca.bac_si_kham}</div>
-        </div>
-      </div>
+      {chuKy(ca.bac_si_kham, "Bác sĩ khám")}
     </div>
   );
 }

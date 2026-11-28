@@ -4,6 +4,42 @@ Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nh�
 
 ## 2026-11-27
 
+### Kê đơn: tab Đơn thuốc, duyệt riêng và hai bản in (Task 1–11)
+- **Loại:** Tính năng
+- **Thay đổi:** Đưa lại kê đơn vào trang `/` thành tab **Đơn thuốc** (ba tab cùng Phiếu khám và Chỉ định dịch vụ). Bác sĩ tự chọn thuốc (ô Tìm thuốc, gợi ý theo chẩn đoán có bộ mẫu, hoặc thuốc của phiếu mẫu qua Lệnh nhanh, vào đơn ở dạng chưa duyệt), nhập liều, số lần/ngày, số ngày; thuốc "Khi cần" có số lần tối đa; Tổng SL tự tính (liều × số lần × số ngày); liều gõ tắt "1 v" thành "1 viên"; hộp "Không kê đơn thuốc". Hồ sơ lưu khối `don_thuoc` (tối đa 50 dòng), `schema_version` 1.3.0; hồ sơ 1.1.0 và 1.2.0 đọc-chuyển (thêm `don_thuoc` rỗng, không đổi `revision`, bản đã duyệt đủ vẫn đã duyệt đủ). Đơn có phạm vi duyệt riêng `prescription`; cần chọn có/không kê trước khi duyệt. Nút "In ngay" tách thành **In phiếu khám** (không còn mục đơn thuốc) và **In đơn thuốc** (tờ A4 riêng, chỉ có thuốc); thanh đáy gọn ở khổ điện thoại. AI vẫn không kê thuốc: schema AI không có `don_thuoc`/`ke_don`, dòng thuốc chỉ có nguồn `bs` hoặc `xem`, không bao giờ `ai`. Mục "Thói quen kê đơn" trong `docs/cau-truc-du-an.md` vẫn chỉ đọc.
+- **Lý do:** Bác sĩ cần tự kê và in đơn riêng; PR #7 đưa kê đơn ra ngoài phạm vi nên mất phần này. Nguồn: commit d8fa4f8, 5d40321, 6b06182 của nhánh `thanh`, không cherry-pick. Thiết kế: `docs/superpowers/specs/2026-11-27-ke-don-design.md`; kế hoạch: `docs/superpowers/plans/2026-11-27-ke-don.md`. Commit trong đợt: 9e23c27, e778ce1, 0f962a2, 31e5efc, c0b3d3e, 67c3461, 8169cd4, aef215f, 904e151, 30f0e70, 4eb5782 (Task 1–10); Task 11 là tài liệu và kiểm tra.
+- **File:** `config/canh-bao.json`, `config/clinical/{common,encounter}.schema.json`, `src/shared/clinical/{schema,types,approvals,eform,scope,apply-ai,changes}.ts` và test tương ứng, `src/shared/eform/{don-thuoc,dien-phieu,ap-lenh,goi-y,thoi-quen}.ts` và test tương ứng, `src/shared/{types,validate}.ts` và test, `src/server/clinical/{approval-service,service,migrations}.ts` và test, `src/server/demo-luong/store.ts`, `src/client/eform/{DonThuocTab,EformScreen,BanIn,TroLyAi}.tsx`, `src/app/api/thoi-quen/route.ts`, `src/app/globals.css`, `docs/task-2/{README.md,field-mapping.md,ai-contract.md,examples/*.json}`, `docs/cau-truc-du-an.md`, `docs/CLINICAL-WORKFLOW.md`, `docs/kich-ban-thu-bac-si.md`, `README.md`, `CLAUDE.md`, `docs/CHANGELOG.md`.
+- **Kiểm tra:**
+  - Mốc trước Task 1 (`origin/dev` b1fa808): `npm test` 482/482, `npx tsc --noEmit` sạch, `npm run lint` 0 lỗi (6 cảnh báo có sẵn).
+  - Sau Task 11: `npm test` 531/531 pass; `npx tsc --noEmit` sạch; `npm run lint` 0 lỗi, 6 cảnh báo có sẵn; `npm run build` thành công; `npm run eval -- --rule-only` chạy không cần API key và bảng điểm giống hệt mốc b1fa808 (không đổi điểm).
+  - Trình duyệt (`next dev` cổng 3006, dữ liệu giả, Chrome):
+    1. Gợi ý theo J02 (viêm họng cấp) hiện trên tab, "Thêm 2 mục đã chọn" đưa hai dòng vào đơn, không có nhãn "AI" trên dòng thuốc: **PASS**. Ghi chú: sau khi tải lại, dòng thuốc hiện ô "Chọn lại thuốc … AI chưa chắc – chọn hoặc gõ để tìm đúng thuốc…" (nguyên nhân: dòng chưa duyệt mang `nguon: "xem"`, màn hiểu nhầm là "AI chưa chắc"; đã sửa ở đợt sửa sau review bên dưới).
+    2. Liều "1 v", 3 lần/ngày, 5 ngày: Tổng SL hiện 15 (placeholder); "Khi cần" đổi thành "tối đa" và Tổng SL 9 khi 3 × 3 ngày: **PASS**.
+    3. Lưu hiện "Đã lưu phiếu, chỉ định và đơn thuốc, phiên bản 2"; tải lại trang, dòng thuốc và liều còn nguyên: **PASS**.
+    4. Chưa duyệt, "In đơn thuốc" tắt (đã thấy khi chưa có thuốc, tooltip "Đơn chưa có thuốc"; chưa đo riêng trạng thái chưa duyệt có thuốc). Duyệt riêng "Đơn thuốc" thì "In đơn thuốc" bật, "In phiếu khám" vẫn tắt (tooltip "Phiếu còn phần chưa duyệt"): **PASS** (phần bật/tắt). Nội dung bản in chưa xem: **NOT RUN**.
+    5. Duyệt phiếu khám và kết luận: **NOT RUN**, nút duyệt chưa được bấm thành công vì "Cần bác sĩ xác định giai đoạn và chọn mã ICD cho chẩn đoán thuộc phạm vi duyệt" (dữ liệu thử chưa đủ, không sửa thiết kế).
+    6. Sửa lần/ngày sau khi duyệt, lưu: "Đã sửa sau khi duyệt", "In đơn thuốc" tắt: **PASS**. Duyệt lại để bật: **NOT RUN** (phụ thuộc bước 5).
+    7. Không kê đơn thuốc: **NOT RUN**.
+    8. Hồ sơ cũ: **NOT RUN**.
+    9. Trợ lý nội dung không đề xuất thuốc: **NOT RUN**.
+    10. Khổ 375 px: **NOT RUN** (cửa sổ trình duyệt không thu được xuống 375 px; đo được thanh đáy có đủ "BCYT", "In phiếu khám", "In đơn thuốc" trong khung, nhưng trang rộng 840 px so với khung 819 px).
+    11. Lệnh nhanh mẫu có thuốc: **NOT RUN** (Task 9 đã có test thuần, chưa đo trên trình duyệt).
+  - Đợt sửa sau review toàn nhánh (`bfa75cc` trở đi): `npm test` 535/535 pass; `npx tsc --noEmit` sạch; `npm run lint` 0 lỗi, 6 cảnh báo có sẵn; `npm run build` thành công. Thử trình duyệt cổng 3006 (28/11): 11/11 mục đạt, cộng hai mục kiểm tra lại (I1, I2) đạt:
+    - Hai bản in đúng nội dung: phiếu khám không có thuốc, đơn thuốc chỉ có thuốc; "1 v" in thành "1 viên".
+    - "Không kê đơn thuốc" hoạt động đúng; hồ sơ 1.2.0 (bản thử tạm) mở được.
+    - Trợ lý không đề xuất thuốc; Lệnh nhanh thêm thuốc ở trạng thái "chưa duyệt"; dòng thuốc đã lưu không còn chữ "AI".
+    - Thanh đáy không tràn ở 375/700/820/1280 px (đo trong iframe cùng gốc, vì không đổi được kích thước cửa sổ).
+  - Đợt sửa sau review toàn nhánh: (1) dòng thuốc chưa duyệt có mã không còn nhãn "AI chưa chắc" và ô "Chọn lại thuốc"; nhãn riêng "Chưa duyệt" hoặc "Cần chọn đúng thuốc", chỉ dòng cần chọn thuốc mới tính vào "N cần xem lại" (hợp đồng dữ liệu `nguon: "xem"` giữ nguyên); (2) thanh đáy: nhãn nút Lưu dài chỉ hiện từ `lg`, khổ vừa dùng "Lưu phiếu & đơn", nút Lưu được co lại; (3) bản in đơn bung liều gõ tắt ("1 v" thành "1 viên"); (4) Lệnh nhanh báo "Đã thêm N thuốc từ mẫu vào Đơn thuốc, chưa duyệt"; (5) duyệt đơn thuốc chỉ tính chẩn đoán có mã ICD chưa bị loại trừ/phủ định (cùng bộ lọc với duyệt chẩn đoán); (6) test: thông báo mã lạ, accept-all có đề xuất, đơn đã chấp nhận sống sót `applyAiDraft`, điều kiện lời dặn đòi Kết luận, đổi tên test `kemThuoc`; (7) cập nhật `docs/CLINICAL-WORKFLOW.md`, `README.md`, `docs/kich-ban-thu-bac-si.md`, `docs/task-2/{README,field-mapping}.md`.
+- **Ảnh hưởng:** Trang `/` có tab Đơn thuốc và hai nút in thay "In ngay"; hồ sơ 1.1.0 và 1.2.0 vẫn đọc được. Điểm eval không đổi. Các mục trình duyệt đã đo lại ngày 28/11, xem mục Kiểm tra ở trên.
+
+### Thiết kế và kế hoạch "Kê đơn thuốc trở lại" (chưa code)
+- **Loại:** Tài liệu, Thiết kế
+- **Thay đổi:** Thêm bản thiết kế `docs/superpowers/specs/2026-11-27-ke-don-design.md` và kế hoạch 11 task `docs/superpowers/plans/2026-11-27-ke-don.md`: đưa lại tab Đơn thuốc (thuốc dùng khi cần, Tổng SL tự tính), gợi ý thuốc theo chẩn đoán, tách In phiếu khám và In đơn thuốc. Đơn thuốc lưu vào hồ sơ clinical (khối `don_thuoc`, `schema_version` 1.3.0 có đọc-chuyển từ 1.2.0) và là phần duyệt riêng `prescription`. AI vẫn không kê thuốc.
+- **Lý do:** Bác sĩ cần tự kê và in đơn riêng; PR #7 đưa kê đơn ra ngoài phạm vi nên mất cả phần bác sĩ tự kê. Nguồn: các commit d8fa4f8, 5d40321, 6b06182 của nhánh `thanh`.
+- **File:** `docs/superpowers/specs/2026-11-27-ke-don-design.md`, `docs/superpowers/plans/2026-11-27-ke-don.md`, `docs/CHANGELOG.md`
+- **Kiểm tra:** Chỉ tài liệu, chưa sửa code. Mốc trước khi làm trên `origin/dev` b1fa808: `npm test` 482/482 pass, `npx tsc --noEmit` sạch, `npm run lint` 0 lỗi (6 cảnh báo có sẵn).
+- **Ảnh hưởng:** Không đổi hành vi ứng dụng. README, `docs/CLINICAL-WORKFLOW.md`, `CLAUDE.md` sẽ được sửa ở task cuối khi code xong.
+
 ### Trợ lý gọn: ô lệnh nhanh, bong bóng Trợ lý và số đo
 - **Loại:** Tính năng
 - **Thay đổi:** Thêm `src/shared/eform/lenh-nhanh.ts`: `xuLyLenh` tách một dòng lệnh của bác sĩ (tên mẫu + chi tiết + mã gõ tắt) thành kết quả điền: `trong`, `chon_mau` (bí danh trùng, hỏi lại) hoặc `dien`. Thứ tự: tách gõ tắt, tìm mẫu theo phần còn lại, không khớp thì tìm theo chẩn đoán vừa bung từ gõ tắt. `dungMau` điền chỗ trống theo chi tiết (chi tiết rỗng thì giữ nguyên kết quả của mẫu); `phanDuChiTiet` trả các vế chi tiết không điền được chỗ trống nào để bác sĩ tự ghi. Chạy hoàn toàn trên máy, không gọi API hay AI.

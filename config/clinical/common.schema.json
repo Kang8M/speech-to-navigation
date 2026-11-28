@@ -1695,7 +1695,7 @@
         },
         "scope": {
           "type": "string",
-          "pattern": "^(initial_note|conclusion|summary|legacy|service_order:.+)$"
+          "pattern": "^(initial_note|conclusion|summary|prescription|legacy|service_order:.+)$"
         },
         "snapshot": {
           "$ref": "common.schema.json#/$defs/jsonValue"
@@ -1762,6 +1762,129 @@
         "decided_at": {
           "type": "string",
           "format": "date-time"
+        }
+      }
+    },
+    "prescriptionItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "noi_dung",
+        "danh_muc",
+        "chan_doan_ids",
+        "requester_id",
+        "requested_at",
+        "review"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "noi_dung": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "ten_thuoc",
+            "ham_luong",
+            "duong_dung",
+            "lieu_moi_lan",
+            "khi_can",
+            "so_lan_ngay",
+            "thoi_diem",
+            "so_ngay",
+            "so_luong_ke",
+            "ghi_chu"
+          ],
+          "properties": {
+            "ten_thuoc": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "ham_luong": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "duong_dung": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "lieu_moi_lan": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "khi_can": {
+              "type": "boolean"
+            },
+            "so_lan_ngay": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "thoi_diem": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "so_ngay": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "so_luong_ke": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "ghi_chu": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "danh_muc": {
+          "$ref": "common.schema.json#/$defs/catalogMatch"
+        },
+        "chan_doan_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "requester_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "requested_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "review": {
+          "$ref": "common.schema.json#/$defs/review"
         }
       }
     }

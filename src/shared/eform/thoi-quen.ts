@@ -7,7 +7,7 @@ import { chonBoMau, type MauGoiY } from "./goi-y";
 type CotChiDinh = Pick<DongChiDinh, "ma" | "ten" | "so_luong" | "ghi_chu">;
 type CotThuoc = Pick<
   DongThuoc,
-  "ma" | "ten" | "ham_luong" | "duong_dung" | "lieu_moi_lan" | "so_lan_ngay" | "thoi_diem" | "so_ngay" | "ghi_chu"
+  "ma" | "ten" | "ham_luong" | "duong_dung" | "lieu_moi_lan" | "khi_can" | "so_lan_ngay" | "thoi_diem" | "so_ngay" | "so_luong_ke" | "ghi_chu"
 >;
 
 /** Một lần bác sĩ bấm Lưu: chẩn đoán chính và những gì đã chỉ định, kê */
@@ -23,7 +23,7 @@ export interface DonDaKe {
 
 export const COT_CHI_DINH: (keyof CotChiDinh)[] = ["ma", "ten", "so_luong", "ghi_chu"];
 export const COT_THUOC: (keyof CotThuoc)[] = [
-  "ma", "ten", "ham_luong", "duong_dung", "lieu_moi_lan", "so_lan_ngay", "thoi_diem", "so_ngay", "ghi_chu",
+  "ma", "ten", "ham_luong", "duong_dung", "lieu_moi_lan", "khi_can", "so_lan_ngay", "thoi_diem", "so_ngay", "so_luong_ke", "ghi_chu",
 ];
 
 /** Bỏ các cột chỉ dùng trên giao diện (nguồn, ứng viên) trước khi gửi lên lưu */

@@ -1,12 +1,14 @@
 "use client";
 
+import { flushSync } from "react-dom";
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { luuLuotThu } from "@/client/api";
 import { approveScopes, docHoSo, luuHoSo, transitionEncounter, type ClinicalResponse } from "@/client/clinical-api";
-import { BanIn } from "@/client/eform/BanIn";
+import { BanIn, type LoaiBanIn } from "@/client/eform/BanIn";
 import { BongBong } from "@/client/eform/BongBong";
 import { BaoCaoDialog } from "@/client/eform/BaoCaoDialog";
 import { ChiDinhTab } from "@/client/eform/ChiDinhTab";
+import { DonThuocTab } from "@/client/eform/DonThuocTab";
 import type { EncounterBridge } from "@/client/eform/encounter-bridge";
 import { EformContext, MO_PHONG, type EformApi } from "@/client/eform/EformContext";
 import { EformForm } from "@/client/eform/EformForm";
@@ -19,6 +21,7 @@ import { TroLyAi, type TabId } from "@/client/eform/TroLyAi";
 import { apKetQuaLenh } from "@/shared/eform/ap-lenh";
 import type { DongChiDinh, DongThuoc, KetQuaDien } from "@/shared/eform/dien-phieu";
 import { demLuot } from "@/shared/eform/do-luong";
+import { canChonLaiThuoc, chuanHoaNguonThuoc, dieuKienIn, duyetMoiNhat, duyetPhieuMoiNhat } from "@/shared/eform/don-thuoc";
 import type { LenhDien } from "@/shared/eform/lenh-nhanh";
 import { doiNguonKhiLuu } from "@/shared/eform/nguon-mau";
 import { ghepGoiY } from "@/shared/eform/thoi-quen";
@@ -42,6 +45,7 @@ const KHUNG = { "--cao-dau": "5.75rem", "--cao-day": "5.75rem" } as CSSPropertie
 const TABS: { id: TabId; nhan: string }[] = [
   { id: "phieu", nhan: "Phiếu khám" },
   { id: "chi_dinh", nhan: "Chỉ định dịch vụ" },
+  { id: "don_thuoc", nhan: "Đơn thuốc" },
 ];
 
 type TrangThai = ReturnType<typeof projectEform>["trangThai"];
@@ -51,6 +55,7 @@ function scopeLabel(record: Encounter, scope: ApprovalScope): string {
   if (scope === "initial_note") return "Phiếu khám ban đầu";
   if (scope === "conclusion") return "Kết luận";
   if (scope === "summary") return "Tóm tắt buổi khám";
+  if (scope === "prescription") return "Đơn thuốc";
   const item = record.chi_dinh.items.find((row) => `service_order:${row.id}` === scope);
   return `Chỉ định: ${item?.danh_muc.display || item?.noi_dung.ten_dich_vu || "dịch vụ"}`;
 }
@@ -82,6 +87,11 @@ function initFields(values: Record<string, string>): Record<string, Truong> {
 /** Sửa tay vào dữ liệu cũ hoặc phần AI thêm thì chuyển thành "Đã sửa" */
 function afterEdit(nguon: Nguon | null | undefined): Nguon {
   return nguon === "cu" || nguon === "ai" || nguon === "xem" || nguon === "sua" ? "sua" : "bs";
+}
+
+/** Dòng dưới tiêu đề bản in: loại bản duyệt, phiên bản hồ sơ, giờ duyệt (giờ Việt Nam) */
+function banDuyet(nhan: string, revision: number, luc?: string): string {
+  return `${nhan} · phiên bản hồ sơ ${revision}${luc ? ` · duyệt lúc ${new Date(luc).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}` : ""}`;
 }
 
 function nowText(): string {
@@ -139,9 +149,11 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
   const [noServices, setNoServices] = useState(false);
   const [fields, setFields] = useState(dau.fields);
   const [chiDinh, setChiDinh] = useState(dau.chiDinh);
-  const [donThuoc] = useState(dau.donThuoc);
+  const [donThuoc, setDonThuocRaw] = useState(dau.donThuoc);
+  const [khongKeDon, setKhongKeDon] = useState(false);
+  const setDonThuoc = (rows: DongThuoc[]) => { setDonThuocRaw(rows); if (rows.length > 0) setKhongKeDon(false); };
   // Dữ liệu lúc Lưu gần nhất (ban đầu là lúc mở phiếu); khác tham chiếu nghĩa là có thay đổi chưa Lưu
-  const [banLuu, setBanLuu] = useState(() => ({ fields, chiDinh, donThuoc, trangThai: data.ca.trang_thai, summary: "", noServices: false, clinicalInfo: "" }));
+  const [banLuu, setBanLuu] = useState(() => ({ fields, chiDinh, donThuoc, khongKeDon: false, trangThai: data.ca.trang_thai, summary: "", noServices: false, clinicalInfo: "" }));
   const [ketQua, setKetQua] = useState<KetQuaDien | null>(dau.ketQua);
   /** Ô do phiếu mẫu điền, chưa Lưu (để phân biệt với dữ liệu cũ thật cũng mang nguồn "cu"); lúc Lưu đổi thành bác sĩ nhập */
   const [oTuMau, setOTuMau] = useState<ReadonlySet<string>>(() => new Set());
@@ -160,6 +172,7 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
   const [trangThai, setTrangThai] = useState(data.ca.trang_thai);
   const [lastEdit, setLastEdit] = useState(data.ca.chinh_sua_cuoi);
   const [expanded, setExpanded] = useState(false);
+  const [loaiIn, setLoaiIn] = useState<LoaiBanIn>("phieu-kham");
   const [showReport, setShowReport] = useState(false);
   const [toast, setToast] = useState("");
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -189,8 +202,10 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
     setNoServices(response.record.chi_dinh.de_cap === "khong_chi_dinh");
     setClinicalInfo(response.snapshot.chiDinhLyDo ?? "");
     setChiDinh(response.snapshot.chiDinh);
+    setDonThuocRaw(response.snapshot.donThuoc ?? []);
+    setKhongKeDon(response.snapshot.donThuocDeCap === "khong_ke_don");
     setTrangThai(response.snapshot.trangThai);
-    setBanLuu({ fields: response.snapshot.fields, chiDinh: response.snapshot.chiDinh, donThuoc: [], trangThai: response.snapshot.trangThai, summary: response.record.tom_tat ?? "", noServices: response.record.chi_dinh.de_cap === "khong_chi_dinh", clinicalInfo: response.snapshot.chiDinhLyDo ?? "" });
+    setBanLuu({ fields: response.snapshot.fields, chiDinh: response.snapshot.chiDinh, donThuoc: response.snapshot.donThuoc ?? [], khongKeDon: response.snapshot.donThuocDeCap === "khong_ke_don", trangThai: response.snapshot.trangThai, summary: response.record.tom_tat ?? "", noServices: response.record.chi_dinh.de_cap === "khong_chi_dinh", clinicalInfo: response.snapshot.chiDinhLyDo ?? "" });
     setKetQua(null);
     setOTuMau(new Set());
     setDongAi({ tong: 0, khop: 0 });
@@ -263,7 +278,7 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
     }, 50);
   };
 
-  const chuaLuu = fields !== banLuu.fields || chiDinh !== banLuu.chiDinh || trangThai !== banLuu.trangThai || summary !== banLuu.summary || noServices !== banLuu.noServices || clinicalInfo !== banLuu.clinicalInfo;
+  const chuaLuu = fields !== banLuu.fields || chiDinh !== banLuu.chiDinh || donThuoc !== banLuu.donThuoc || khongKeDon !== banLuu.khongKeDon || trangThai !== banLuu.trangThai || summary !== banLuu.summary || noServices !== banLuu.noServices || clinicalInfo !== banLuu.clinicalInfo;
   const bridgeSetDirty = bridge?.setDirty;
   useEffect(() => { bridgeSetDirty?.(chuaLuu); }, [chuaLuu, bridgeSetDirty]);
   const khoa = trangThai === TRANG_THAI_HOAN_THANH || record?.status === "hoan_thanh_kham";
@@ -271,8 +286,15 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
   const required = record ? requiredApprovalScopes(record) : [];
   const duyet = record ? required.map((scope) => ({ scope, state: approvalState(record, scope) })) : [];
   const duyetDu = duyet.length > 0 && duyet.every((item) => item.state === "current");
-  const printable = record && duyetDu && !chuaLuu ? record : null;
-  const banInSnapshot = useMemo(() => (printable ? projectEform(printable) : null), [printable]);
+  const inDuoc = record && !chuaLuu ? record : null;
+  const banInSnapshot = useMemo(() => (inDuoc ? projectEform(inDuoc) : null), [inDuoc]);
+  const dkIn = record ? dieuKienIn(record, chuaLuu) : null;
+  const choIn = (loai: LoaiBanIn) => (loai === "phieu-kham" ? dkIn?.phieu : dkIn?.don)?.ok === true;
+  const inBan = (loai: LoaiBanIn) => {
+    if (!choIn(loai)) return;
+    flushSync(() => setLoaiIn(loai));
+    window.print();
+  };
   const printApi = useMemo<EformApi>(() => (banInSnapshot ? { ...api, get: (id) => banInSnapshot.fields[id] ?? EMPTY } : api), [api, banInSnapshot]);
 
   /** Thao tác ghi lên server: chạy một lần, cập nhật phiên bản hồ sơ và đổ lại phiếu theo kết quả. */
@@ -313,7 +335,8 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
 
   const conXem =
     Object.values(fields).filter((f) => f.nguon === "xem").length +
-    [...chiDinh, ...donThuoc].filter((row) => row.nguon === "xem").length;
+    chiDinh.filter((row) => row.nguon === "xem").length +
+    donThuoc.filter(canChonLaiThuoc).length;
 
   const batDauNhap = (kieuNhap: InputMode, tuCaMau: boolean) =>
     setLuot((prev) =>
@@ -329,10 +352,11 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
 
   /** Ô Lệnh nhanh: áp mẫu và gõ tắt vào phiếu ngay trên máy, trả câu báo */
   const apLenh = (kq: LenhDien): string => {
-    const r = apKetQuaLenh(kq, data, api.get, chiDinh);
+    const r = apKetQuaLenh(kq, data, api.get, chiDinh, donThuoc);
     const daDoi = Object.keys(r.truong);
     if (daDoi.length > 0) setFields((prev) => ({ ...prev, ...r.truong }));
     if (r.chiDinhThem.length > 0) setChiDinh((prev) => [...prev, ...r.chiDinhThem]);
+    if (r.thuocThem.length > 0) setDonThuoc([...donThuoc, ...r.thuocThem]);
     // Ô gõ tắt vừa thay chữ mẫu là chữ bác sĩ, không còn tính là do mẫu điền
     if (daDoi.length > 0) {
       setOTuMau((prev) => {
@@ -344,7 +368,7 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
     // Số đo lượt thử: ô do mẫu, gõ tắt điền không tính là AI điền hay bác sĩ sửa (daDien rỗng); ketQua chỉ để lượt có mẫu vẫn được ghi
     const them = r.ketQua;
     if (them) setKetQua((prev) => prev ?? { ...them, daDien: [] });
-    if (daDoi.length > 0 || r.chiDinhThem.length > 0) {
+    if (daDoi.length > 0 || r.chiDinhThem.length > 0 || r.thuocThem.length > 0) {
       demLenh.current.soLan += 1;
       for (const id of daDoi) demLenh.current.oDoi.add(id);
     }
@@ -403,22 +427,24 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
     saveLock.current = true;
     setSaving(true);
     setClinicalError("");
-    const snapshot = { fields: doiNguonKhiLuu(fields, oTuMau), chiDinh, chiDinhLyDo: clinicalInfo, chiDinhDeCap: noServices ? "khong_chi_dinh" as const : "chua_de_cap" as const, trangThai: trangThai as TrangThai };
+    const snapshot = { fields: doiNguonKhiLuu(fields, oTuMau), chiDinh, chiDinhLyDo: clinicalInfo, chiDinhDeCap: noServices ? "khong_chi_dinh" as const : "chua_de_cap" as const, donThuoc: chuanHoaNguonThuoc(donThuoc).map((row) => ({ ...row, khi_can: Boolean(row.khi_can), so_luong_ke: row.so_luong_ke ?? "" })), donThuocDeCap: donThuoc.length > 0 ? "co_ke_don" as const : khongKeDon ? "khong_ke_don" as const : "chua_de_cap" as const, trangThai: trangThai as TrangThai };
     try {
       const current = bridge.latest().record;
       const response = await luuHoSo(snapshot, { id: current.id, revision: current.revision }, summary || null);
       bridge.publish(response);
       const savedRows = response.snapshot.chiDinh;
       setChiDinh(rows => rows === snapshot.chiDinh ? savedRows : rows);
+      const savedDrugs = response.snapshot.donThuoc ?? [];
+      setDonThuocRaw(rows => rows === donThuoc ? savedDrugs : rows);
       // Ô do mẫu điền đã lưu như bác sĩ nhập: đổi nguồn trên màn hình theo bản vừa lưu
       setFields(prev => prev === fields ? snapshot.fields : prev);
       // Ô còn chỗ [..] chưa điền vẫn là ô do mẫu: giữ trong oTuMau để lần lưu sau (khi đã điền) mới đổi thành chữ bác sĩ
       setOTuMau(new Set([...oTuMau].filter(id => ["cu", "xem"].includes(snapshot.fields[id]?.nguon ?? ""))));
-      setBanLuu({ fields: snapshot.fields, chiDinh: savedRows, donThuoc, trangThai: snapshot.trangThai, summary, noServices, clinicalInfo });
+      setBanLuu({ fields: snapshot.fields, chiDinh: savedRows, donThuoc: savedDrugs, khongKeDon: response.snapshot.donThuocDeCap === "khong_ke_don", trangThai: snapshot.trangThai, summary, noServices, clinicalInfo });
       setReviewConfirmed(false); setScopesChosen([]);
       setLastEdit({ nguoi: response.record.audit.updated_by, luc: nowText() });
       const ghiChu = await ghiLuot();
-      notify(`Đã lưu phiếu và chỉ định, phiên bản ${response.record.revision}.` + ghiChu);
+      notify(`Đã lưu phiếu, chỉ định và đơn thuốc, phiên bản ${response.record.revision}.` + ghiChu);
     } catch (error) {
       setClinicalError(error instanceof Error ? error.message : "Không lưu được hồ sơ.");
     } finally {
@@ -436,11 +462,9 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
   const coGoiY = {
     phieu: false,
     chi_dinh: boMau.some((mau) => mau.chiDinh.length > 0),
-    don_thuoc: false,
+    don_thuoc: boMau.some((mau) => mau.donThuoc.length > 0),
   };
   const khoaThaoTac = saving || loadingRecord || chuaLuu;
-  const duyetMoiNhat = record?.approval_versions.at(-1)?.approved_at;
-
   return (
     <EformContext.Provider value={api}>
       <div
@@ -498,8 +522,7 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
             </div>
 
             <div className="rounded-lg border border-ef-vien bg-white px-4 py-3 text-[13px] text-ef-phu">
-              <p>Phiếu khám và chỉ định dịch vụ · {clinical ? `Bản lưu ${clinical.revision}` : "Chưa có bản lưu"}</p>
-              <p>Bác sĩ kê đơn thuốc bằng quy trình riêng.</p>
+              <p>Phiếu khám, chỉ định dịch vụ và đơn thuốc · {clinical ? `Bản lưu ${clinical.revision}` : "Chưa có bản lưu"}</p>
               {clinical && <button type="button" className={`${BTN_OUTLINE} mt-2`} onClick={reloadSaved} disabled={saving || loadingRecord}>{loadingRecord ? "Đang tải…" : chuaLuu ? "Tải bản lưu (bỏ thay đổi trên màn)" : "Tải bản lưu"}</button>}
             </div>
             {bridge && record && <RecordingSessions sessions={record.recording_sessions} busy={saving || bridge.busy} onDiscard={(session) => { void bridge.discardSession(session).catch((error) => setClinicalError(error instanceof Error ? error.message : "Không bỏ được phần chưa duyệt.")); }} />}
@@ -530,6 +553,7 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
                     </li>
                   ))}
                 </ul>
+                {record.don_thuoc?.de_cap === "chua_de_cap" && <p className="text-xs text-ef-phu">Chưa xác nhận có hay không kê đơn thuốc.</p>}
                 <label className="flex items-start gap-2 text-xs"><input type="checkbox" checked={reviewConfirmed} onChange={event => setReviewConfirmed(event.target.checked)} disabled={khoaThaoTac || khoa} />Tôi đã kiểm tra nội dung các phần đã chọn và các điểm AI đánh dấu.</label>
                 <div className="flex flex-wrap items-center gap-2">
                   <button type="button" className={BTN_OUTLINE} onClick={approveChosen} disabled={khoaThaoTac || khoa || !reviewConfirmed || scopesChosen.length === 0}>Duyệt các phần đã chọn</button>
@@ -553,6 +577,7 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
             {/* fieldset disabled khóa mọi ô nhập và nút bên trong khi phiếu đã hoàn thành */}
             <fieldset disabled={khoa || saving || loadingRecord} className="contents">
               {tab === "phieu" && <EformForm noiSoiEnabled={trangThai === TRANG_THAI_NOI_SOI} />}
+              {tab === "don_thuoc" && <DonThuocTab rows={donThuoc} onChange={setDonThuoc} khongKeDon={khongKeDon} onKhongKeDon={setKhongKeDon} />}
               {tab === "chi_dinh" && <ChiDinhTab rows={chiDinh} onChange={setChiDinh} onSave={save} saving={saving} noServices={noServices} onNoServices={setNoServices} clinicalInfo={clinicalInfo} onClinicalInfo={setClinicalInfo} />}
             </fieldset>
           </main>
@@ -626,24 +651,29 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
             >
               ←<span className="hidden sm:inline"> Quay lại</span>
             </button>
-            <button type="button" className={`${BTN_OUTLINE} whitespace-nowrap`} onClick={() => setShowReport(true)}>
-              Báo cáo y tế
+            <button type="button" aria-label="Báo cáo y tế" className={`${BTN_OUTLINE} whitespace-nowrap`} onClick={() => setShowReport(true)}>
+              <span className="sm:hidden">BCYT</span>
+              <span className="hidden sm:inline">Báo cáo y tế</span>
             </button>
-            <button type="button" className={`${BTN_OUTLINE} whitespace-nowrap`} onClick={() => { if (printable) window.print(); }} disabled={!printable || saving} title="Chỉ in bản đã lưu và đã được bác sĩ duyệt đủ các phần">
-              In ngay
+            <button type="button" className={`${BTN_OUTLINE} whitespace-nowrap`} onClick={() => inBan("phieu-kham")} disabled={!dkIn?.phieu.ok || saving} title={dkIn?.phieu.ok ? "In phiếu khám kèm chỉ định" : (dkIn?.phieu.lyDo ?? "Chưa có hồ sơ")}>
+              In phiếu<span className="hidden md:inline"> khám</span>
             </button>
-            <button type="button" className={`${BTN_CHINH} ml-auto inline-flex flex-1 items-center justify-center gap-2 whitespace-nowrap sm:max-w-sm`} onClick={save} disabled={saving || loadingRecord || khoa}>
-              {saving ? "Đang lưu…" : "Lưu phiếu & chỉ định"}
+            <button type="button" className={`${BTN_OUTLINE} whitespace-nowrap`} onClick={() => inBan("don-thuoc")} disabled={!dkIn?.don.ok || saving} title={dkIn?.don.ok ? "In đơn thuốc" : (dkIn?.don.lyDo ?? "Chưa có hồ sơ")}>
+              In đơn<span className="hidden md:inline"> thuốc</span>
+            </button>
+            <button type="button" className={`${BTN_CHINH} ml-auto inline-flex min-w-0 flex-1 items-center justify-center gap-2 whitespace-nowrap sm:max-w-sm`} onClick={save} disabled={saving || loadingRecord || khoa}>
+              {saving ? "Đang lưu…" : (<><span className="sm:hidden">Lưu</span><span className="hidden sm:inline lg:hidden">Lưu phiếu &amp; đơn</span><span className="hidden lg:inline">Lưu phiếu, chỉ định &amp; đơn thuốc</span></>)}
               {conXem > 0 && (
-                <span className="rounded-full bg-xem-nhat px-2 py-px text-[11px] font-semibold text-xem" title="Số chỗ AI chưa chắc, bác sĩ nên xem lại trước khi Lưu">
-                  {conXem} cần xem lại
+                <span className="rounded-full bg-xem-nhat px-2 py-px text-[11px] font-semibold text-xem" title="Số chỗ cần xem lại (AI chưa chắc hoặc thuốc cần chọn đúng), bác sĩ nên xem lại trước khi Lưu">
+                  {conXem}
+                  <span className="hidden sm:inline"> cần xem lại</span>
                 </span>
               )}
             </button>
             <button
               type="button"
               aria-label="Lên đầu trang"
-              className={BTN_OUTLINE}
+              className={`${BTN_OUTLINE} hidden sm:block`}
               onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
             >
               ↑
@@ -654,9 +684,18 @@ export function EformScreen({ data, kichBan, bridge }: { data: EformData; kichBa
         {showReport && <BaoCaoDialog onClose={() => setShowReport(false)} />}
       </div>
 
-      {printable && banInSnapshot ? (
+      {inDuoc && banInSnapshot && choIn(loaiIn) ? (
         <EformContext.Provider value={printApi}>
-          <BanIn chiDinh={banInSnapshot.chiDinh} donThuoc={[]} trangThai={banInSnapshot.trangThai} summary={printable.tom_tat ?? ""} followUpText={printable.phieu_kham.hen_tai_kham.nguyen_van ?? undefined} duyet={`Bản đã duyệt đủ các phần · phiên bản hồ sơ ${printable.revision}${duyetMoiNhat ? ` · duyệt lúc ${new Date(duyetMoiNhat).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}` : ""}`} />
+          <BanIn
+            loai={loaiIn}
+            chiDinh={banInSnapshot.chiDinh}
+            donThuoc={banInSnapshot.donThuoc ?? []}
+            loiDan={dkIn?.coLoiDan}
+            trangThai={banInSnapshot.trangThai}
+            summary={inDuoc.tom_tat ?? ""}
+            followUpText={inDuoc.phieu_kham.hen_tai_kham.nguyen_van ?? undefined}
+            duyet={loaiIn === "don-thuoc" ? banDuyet("Bản đã duyệt đơn thuốc", inDuoc.revision, duyetMoiNhat(inDuoc, "prescription")) : banDuyet("Bản đã duyệt phiếu khám", inDuoc.revision, duyetPhieuMoiNhat(inDuoc))}
+          />
         </EformContext.Provider>
       ) : <p className="hidden print:block">Hồ sơ đang là bản nháp hoặc còn phần chưa duyệt. Hãy lưu và duyệt đủ các phần trước khi in.</p>}
     </EformContext.Provider>

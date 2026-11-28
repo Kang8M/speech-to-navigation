@@ -274,7 +274,7 @@ export function TroLyAi({ bridge, dirty, onDecided, onBatDau, onOpenTab, soChiDi
           {extraction.draft.phieu_kham.di_ung.trang_thai !== "chua_de_cap" && <p><span className="font-medium">Dị ứng:</span> {[extraction.draft.phieu_kham.di_ung.trang_thai, ...extraction.draft.phieu_kham.di_ung.loai, extraction.draft.phieu_kham.di_ung.mo_ta].filter(Boolean).join(" · ")}</p>}
           {extraction.draft.can_xem_lai.length > 0 && <div><h4 className="font-medium">Cần xem lại</h4><ul className="list-disc space-y-1 pl-5">{extraction.draft.can_xem_lai.map((issue, index) => <li key={`${issue.field_path}-${index}`}>{issue.mo_ta}</li>)}</ul></div>}
           {extraction.draft.bang_chung.length > 0 && <details><summary className="cursor-pointer font-medium">Bằng chứng trích từ nội dung đã lọc</summary><ul className="mt-1 list-disc space-y-1 pl-5">{extraction.draft.bang_chung.map((evidence, index) => <li key={`${evidence.field_path}-${index}`}><span className="text-ef-phu">{evidence.field_path}: </span>“{evidence.trich_doan}”</li>)}</ul></details>}
-          <p className="text-xs text-ef-phu">Đơn thuốc không được tạo tự động; bác sĩ kê toa riêng.</p>
+          <p className="text-xs text-ef-phu">AI không kê thuốc. Đơn thuốc do bác sĩ nhập ở tab Đơn thuốc.</p>
           {encounterId && <ClinicalChanges key={extraction.run_id} encounterId={encounterId} runId={extraction.run_id} latestRevision={() => bridge.latest().record.revision} blockedReason={dirtyReason} onDecided={(response) => { setExtraction(null); onDecided(response); }} />}
         </section>}
         <button type="button" className={NUT_PHU} onClick={() => onOpenTab("chi_dinh")}>{soChiDinh} chỉ định</button>

@@ -60,10 +60,10 @@ export function writeSidecar(store: DemoStore, id: string, value: DemoSidecar) {
   fs.renameSync(temporary, file);
 }
 
-let catalog: { services: CatalogItem[]; icd: { ma: string; ten: string }[] } | undefined;
+let catalog: { services: CatalogItem[]; drugs: CatalogItem[]; icd: { ma: string; ten: string }[] } | undefined;
 /** Danh mục dịch vụ và ICD cho `applyAiDraft`/`applyEformSnapshot`; mã chỉ gán bởi code khớp danh mục. */
 export function demoCatalog() {
-  if (!catalog) { const data = loadEformData(); catalog = { services: data.danhMuc.dichVu, icd: data.icd10 }; }
+  if (!catalog) { const data = loadEformData(); catalog = { services: data.danhMuc.dichVu, drugs: data.danhMuc.thuoc, icd: data.icd10 }; }
   return catalog;
 }
 
@@ -115,8 +115,8 @@ export function applyDoctorFields(record: Encounter, fields: Record<string, stri
     if (error instanceof ZodError) throw new ClinicalError("Giá trị ô không hợp lệ.", 400);
     throw error;
   }
-  const { services, icd } = demoCatalog();
-  try { return applyEformSnapshot(record, input, { now, newId: randomUUID, services, icd }); }
+  const { services, drugs, icd } = demoCatalog();
+  try { return applyEformSnapshot(record, input, { now, newId: randomUUID, services, drugs, icd }); }
   catch (error) {
     if (error instanceof ClinicalError) throw error;
     throw new ClinicalError(error instanceof Error ? error.message : "Không lưu được bản sửa.", 400);

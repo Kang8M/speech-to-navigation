@@ -71,7 +71,7 @@ export function openEncounter(context: EncounterContext, store = repository): Cl
   if (trusted.patientId !== context.patientId) throw new ClinicalError("Ngữ cảnh không khớp bệnh nhân của mã khám.", 409);
   const now = new Date().toISOString();
   const snapshot = parseEformSnapshot({ fields: Object.fromEntries(Object.entries(trusted.data.ca.gia_tri).map(([key, value]) => [key, { value, nguon: "cu" }])), chiDinh: [], trangThai: trusted.data.ca.trang_thai });
-  const initial = applyEformSnapshot(seed(trusted, now), snapshot, { now, newId: randomUUID, services: trusted.data.danhMuc.dichVu, icd: trusted.data.icd10 });
+  const initial = applyEformSnapshot(seed(trusted, now), snapshot, { now, newId: randomUUID, services: trusted.data.danhMuc.dichVu, drugs: trusted.data.danhMuc.thuoc, icd: trusted.data.icd10 });
   const record = store.openByAppointment(initial);
   return readClinicalForActor({ doctorId: trusted.doctorId, facilityId: trusted.facilityId }, record.id, store);
 }
@@ -91,7 +91,7 @@ export function seedNewEncounter(context: EncounterContext, appointmentId: strin
   base.danh_gia_ban_dau = base.danh_gia_ban_dau.map(item => ({ ...item, source_record_id: appointmentId }));
   for (const row of [...base.lich_su, ...base.ket_qua]) row.source_record_id = appointmentId;
   const snapshot = parseEformSnapshot({ fields: {}, chiDinh: [], trangThai: "Đang khám" });
-  return applyEformSnapshot(base, snapshot, { now, newId: randomUUID, services: trusted.data.danhMuc.dichVu, icd: trusted.data.icd10 });
+  return applyEformSnapshot(base, snapshot, { now, newId: randomUUID, services: trusted.data.danhMuc.dichVu, drugs: trusted.data.danhMuc.thuoc, icd: trusted.data.icd10 });
 }
 
 export function listOpenEncounters(actor: ClinicalActor, store = repository): EncounterSummary[] {
@@ -122,7 +122,7 @@ export function saveClinicalForActor(actor: ClinicalActor, value: unknown, store
   }
   const data = encounterContext.data;
   const now = new Date().toISOString();
-  const context = { now, newId: randomUUID, services: data.danhMuc.dichVu, icd: data.icd10 };
+  const context = { now, newId: randomUUID, services: data.danhMuc.dichVu, drugs: data.danhMuc.thuoc, icd: data.icd10 };
   const apply = (base: Encounter) => {
     const record = applyEformSnapshot(base, snapshot, context);
     // Chờ kết quả, tiếp tục và hoàn tất chỉ đổi qua /api/clinical/transition (có kiểm tra duyệt và phiên ghi âm), không đổi bằng lưu phiếu.

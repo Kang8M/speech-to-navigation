@@ -3,14 +3,16 @@ import { createHash, randomUUID } from "node:crypto";
 import { z } from "zod";
 import type { ClinicalActor, ClinicalResponse } from "@/shared/clinical/api";
 import type { Encounter, JsonValue } from "@/shared/clinical/types";
-import { approvalScopeForPath, approvalState, requiredApprovalScopes, scopeProjection, serializeApprovalScope, type ApprovalScope, type ApproveClinicalRequest, type TransitionClinicalRequest } from "@/shared/clinical/approvals";
+import { approvalScopeForPath, approvalState, DON_THUOC_TRONG, requiredApprovalScopes, scopeProjection, serializeApprovalScope, type ApprovalScope, type ApproveClinicalRequest, type TransitionClinicalRequest } from "@/shared/clinical/approvals";
 import { projectEform } from "@/shared/clinical/eform";
+import { computeTotal } from "@/shared/validate";
+import { loadRules } from "@/server/du-lieu/config";
 import { ClinicalError, ClinicalRepository } from "./repository";
 import { resolveEncounterContextForRecord } from "./encounter-context";
 import { loadClinicalRun } from "./extraction";
 
 const repository = new ClinicalRepository();
-const scopeSchema = z.union([z.literal("initial_note"), z.literal("conclusion"), z.literal("summary"), z.string().regex(/^service_order:\S+$/)]);
+const scopeSchema = z.union([z.literal("initial_note"), z.literal("conclusion"), z.literal("summary"), z.literal("prescription"), z.string().regex(/^service_order:\S+$/)]);
 const approvalSchema = z.object({ id: z.uuid(), expected_revision: z.number().int().positive(), scopes: z.array(scopeSchema).min(1).max(202), acknowledged_issues: z.literal(true) }).strict();
 const transitionSchema = z.object({ id: z.uuid(), expected_revision: z.number().int().positive(), action: z.enum(["wait", "resume", "complete"]) }).strict();
 
@@ -26,9 +28,28 @@ function assertOpen(record: Encounter) {
   if (!["dang_kham", "cho_kq_cls"].includes(record.status)) throw new ClinicalError("Lượt khám đã kết thúc; không thể tiếp tục hoặc duyệt bổ sung.", 409);
 }
 
+const isAffirmed = (item: Encounter["chan_doan"][number]) => !["loai_tru", "phu_dinh"].includes(item.noi_dung.muc_do_khang_dinh ?? "");
+
 function validateDiagnoses(record: Encounter, final: boolean) {
-  const diagnoses = record.chan_doan.filter(item => (item.noi_dung.giai_doan === "ra_vien") === final && !["loai_tru", "phu_dinh"].includes(item.noi_dung.muc_do_khang_dinh ?? ""));
+  const diagnoses = record.chan_doan.filter(item => (item.noi_dung.giai_doan === "ra_vien") === final && isAffirmed(item));
   if ((!final && !diagnoses.length) || diagnoses.some(item => !item.noi_dung.mo_ta?.trim() || item.noi_dung.giai_doan === "chua_ro" || !item.icd.code?.trim())) throw new ClinicalError("Cần bác sĩ xác định giai đoạn và chọn mã ICD cho chẩn đoán thuộc phạm vi duyệt.", 422);
+}
+
+function validatePrescription(record: Encounter) {
+  const don = record.don_thuoc ?? DON_THUOC_TRONG;
+  if (don.de_cap === "chua_de_cap") throw new ClinicalError("Hãy xác nhận có hoặc không kê đơn thuốc.", 422);
+  if (don.de_cap === "khong_ke_don") return;
+  if (!record.chan_doan.some(item => isAffirmed(item) && item.icd.code?.trim())) throw new ClinicalError("Cần ít nhất một chẩn đoán có mã ICD trước khi duyệt đơn thuốc.", 422);
+  const rules = loadRules(); const config = rules.tinh_tong;
+  const positive = (value: string | null) => Number(value) > 0;
+  for (const item of don.items) {
+    const content = item.noi_dung;
+    if (!item.danh_muc.code?.trim()) throw new ClinicalError("Cần chọn đúng thuốc trong danh mục trước khi duyệt đơn.", 422);
+    if (!content.lieu_moi_lan?.trim()) throw new ClinicalError("Cần nhập liều mỗi lần cho từng thuốc trước khi duyệt đơn.", 422);
+    if (!content.khi_can && (!positive(content.so_lan_ngay) || !positive(content.so_ngay))) throw new ClinicalError("Thuốc dùng thường xuyên cần số lần mỗi ngày và số ngày lớn hơn 0.", 422);
+    const row = { [config.truong_lieu]: content.lieu_moi_lan, [config.truong_so_lan]: content.so_lan_ngay ?? "", [config.truong_so_ngay]: content.so_ngay ?? "", [config.truong_so_luong_ke]: content.so_luong_ke ?? "" };
+    if (computeTotal(row, rules) === null) throw new ClinicalError("Không xác định được Tổng SL; hãy nhập số lượng kê cho thuốc này.", 422);
+  }
 }
 
 function validateScope(record: Encounter, scope: ApprovalScope) {
@@ -38,6 +59,7 @@ function validateScope(record: Encounter, scope: ApprovalScope) {
     if (record.chi_dinh.de_cap === "chua_de_cap") throw new ClinicalError("Hãy xác nhận có hoặc không chỉ định dịch vụ.", 422);
     return;
   }
+  if (scope === "prescription") { validatePrescription(record); return; }
   if (scope === "summary") {
     if (!record.tom_tat?.trim()) throw new ClinicalError("Chưa có tóm tắt để duyệt.", 422);
     return;
@@ -60,6 +82,7 @@ function sourceScope(record: Encounter, path: string): ApprovalScope[] {
     const item = record.chan_doan[Number(diagnosis[1])];
     return item ? [approvalScopeForPath(`/chan_doan/${item.noi_dung.giai_doan}${diagnosis[2] ?? ""}`)] : [];
   }
+  if (/^\/don_thuoc(\/|$)/.test(path)) return ["prescription"];
   const row = /^\/chi_dinh\/(items|groups)\/(\d+)(\/.*)?$/.exec(path);
   if (row) {
     const items = row[1] === "items" ? record.chi_dinh.items.slice(Number(row[2]), Number(row[2]) + 1) : record.chi_dinh.items.filter(item => item.group_id === record.chi_dinh.groups[Number(row[2])]?.id);
@@ -78,6 +101,7 @@ export function approveScopes(actor: ClinicalActor, value: ApproveClinicalReques
     for (const scope of scopes) validateScope(draft, scope);
     const review = { trang_thai: "chap_nhan", reviewer_id: actor.doctorId, reviewed_at: now } as const;
     for (const item of draft.chan_doan) if (scopes.includes(item.noi_dung.giai_doan === "ra_vien" ? "conclusion" : "initial_note")) item.review = { ...review };
+    if (scopes.includes("prescription")) for (const item of draft.don_thuoc.items) item.review = { ...review };
     for (const item of draft.chi_dinh.items) if (scopes.includes(`service_order:${item.id}`)) { item.review = { ...review }; item.trang_thai = "da_xac_nhan"; }
     for (const source of draft.nguon_du_lieu) if (sourceScope(draft, source.field_path).some(scope => scopes.includes(scope))) source.review = { ...review };
     const snapshot = structuredClone(draft);

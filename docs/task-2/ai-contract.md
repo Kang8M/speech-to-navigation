@@ -1,6 +1,6 @@
 # Hợp đồng transcript → AI → hồ sơ
 
-Phạm vi: ngoại trú TMH, chỉ phiếu khám và chỉ định dịch vụ trong task 2, 3, 4; phiên bản `1.1.0`. Bác sĩ tự kê đơn qua quy trình riêng. Hợp đồng đã được triển khai; endpoint `/api/clinical/extract` thay luồng raw cũ sau privacy ticket.
+Phạm vi: ngoại trú TMH, chỉ phiếu khám và chỉ định dịch vụ trong task 2, 3, 4; phiên bản `1.1.0`. Bác sĩ tự kê đơn ở tab Đơn thuốc; AI không kê thuốc. Hợp đồng đã được triển khai; endpoint `/api/clinical/extract` thay luồng raw cũ sau privacy ticket.
 
 ## 1. Đầu vào
 

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import { test } from "node:test";
 import type { Draft } from "../types";
-import { dienPhieu, gopTruongMoi } from "./dien-phieu";
+import { dienPhieu, gopTruongMoi, laKhiCan } from "./dien-phieu";
 import type { EformData, QuyTacAi, Truong } from "./types";
 
 const quyTac = JSON.parse(fs.readFileSync("data/eform/quy-tac.json", "utf8")) as QuyTacAi;
@@ -22,6 +22,15 @@ test("clinical scope does not copy an initial diagnosis to discharge or fill a p
   assert.equal(result.truong.mo_ta_ra_vien, undefined);
   assert.deepEqual(result.donThuoc, []);
   assert.equal(result.chiDinh[0].so_luong, "");
+});
+
+test("kemThuoc cùng clinicalOnly: có dòng thuốc, giữ mã thuốc của bản nháp", () => {
+  const draft = { ...nhap({}), ke_don: [{ ma_thuoc: "T-GIA-01", ten_thuoc: "Thuốc mẫu" }] };
+  const matches = { ke_don: [{ status: "khop", candidates: [] }] } as never;
+  assert.deepEqual(dienPhieu(draft, matches, DATA, getTu({}), { clinicalOnly: true }).donThuoc, []);
+  const co = dienPhieu(draft, matches, DATA, getTu({}), { clinicalOnly: true, kemThuoc: true }).donThuoc;
+  assert.equal(co.length, 1);
+  assert.equal(co[0].ma, "T-GIA-01");
 });
 
 test("chiOTrong giữ ô có dữ liệu cũ", () => {
@@ -153,3 +162,16 @@ test("gopTruongMoi bỏ ô bị sửa trong lúc chờ AI", () => {
   assert.equal(ra.loi_dan.value, "Giữ khô tai");
 });
 
+
+test("laKhiCan nhận thuốc dùng khi cần theo cờ hoặc thời điểm", () => {
+  assert.equal(laKhiCan({ thoi_diem: "Khi đau" }), true);
+  assert.equal(laKhiCan({ thoi_diem: "Sau ăn" }), false);
+  assert.equal(laKhiCan({ khi_can: true }), true);
+});
+
+test("dienPhieu ánh xạ khi_can và so_luong_ke của dòng thuốc", () => {
+  const draft = { ...nhap({}), ke_don: [{ ten_thuoc: "Thuốc mẫu", thoi_diem: "Khi sốt", so_luong_ke: "6" }] };
+  const kq = dienPhieu(draft, {}, DATA, getTu({}));
+  assert.equal(kq.donThuoc[0].khi_can, true);
+  assert.equal(kq.donThuoc[0].so_luong_ke, "6");
+});

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { test } from "node:test";
-import { parseEncounter } from "../clinical/schema";
+import { migrateEncounter } from "../../server/clinical/migrations";
 import { projectHistoricalEncounter } from "./projection";
 import type { PatientProfile } from "./types";
 
@@ -15,7 +15,7 @@ const patient: PatientProfile = {
 };
 const ctx = { patient, doctor_name: "BS. B", facility_name: "Cơ sở mô phỏng" };
 const load = (n: number) =>
-  parseEncounter(JSON.parse(readFileSync(path.join(process.cwd(), "data", "clinic", "history", `7a1c0001-0000-4000-8000-00000000000${n}.json`), "utf8")));
+  migrateEncounter(JSON.parse(readFileSync(path.join(process.cwd(), "data", "clinic", "history", `7a1c0001-0000-4000-8000-00000000000${n}.json`), "utf8")));
 
 test("projection_has_every_saved_clinical_part_and_no_ai_or_transcript", () => {
   const vm = projectHistoricalEncounter(load(1), ctx);

@@ -23,7 +23,7 @@ test("real form fixture saves clinical data and restores fields, results, vitals
   assert.equal(first.record.sinh_hieu.can_nang.value, data.ca.sinh_hieu.can_nang);
   assert.equal(first.record.ket_qua[0].ngay, "2026-08-14");
   assert.ok(first.record.lich_su.length > 0);
-  assert.equal("don_thuoc" in first.record, false);
+  assert.deepEqual(first.record.don_thuoc, { de_cap: "chua_de_cap", items: [] });
   const restored = readClinical(first.record.id, store);
   assert.equal(restored.snapshot.fields.di_ung_mo_ta.value, data.ca.gia_tri.di_ung_mo_ta);
   restored.snapshot.fields.loi_dan.value = "Tái khám khi cần";
@@ -168,4 +168,37 @@ test("lưu phiếu không đổi trạng thái vòng đời: chờ/hoàn tất c
     assert.equal(saved.record.status, "dang_kham");
     assert.equal(saved.snapshot.trangThai, "Đang khám");
   }
+});
+
+test("lưu đơn thuốc: mã trong danh mục thì lưu vào don_thuoc, mã lạ thì lỗi, lưu không có donThuoc giữ nguyên đơn", () => {
+  const store = new ClinicalRepository(fs.mkdtempSync(path.join(os.tmpdir(), "clinical-rx-save-")));
+  const actor = getDemoClinicalActor();
+  const opened = openEncounter(resolveEncounterContext(actor, "LK-GIA-0456"), store);
+  const drug = loadEformData().danhMuc.thuoc[0];
+  const row = (ma: string) => ({ ma, ten: drug.ten, ham_luong: "", duong_dung: "Uống", lieu_moi_lan: "1 viên", khi_can: false, so_lan_ngay: "3", thoi_diem: "", so_ngay: "5", so_luong_ke: "", ghi_chu: "", nguon: "bs", ung_vien: [] });
+  const save = (snapshot: unknown, revision: number) => saveClinicalForActor(actor, { id: opened.record.id, expected_revision: revision, snapshot }, store);
+  const saved = save({ ...opened.snapshot, donThuoc: [row(drug.ma)] }, 1);
+  assert.equal(saved.record.don_thuoc.de_cap, "co_ke_don");
+  assert.equal(saved.record.don_thuoc.items[0].danh_muc.code, drug.ma);
+  assert.throws(() => save({ ...opened.snapshot, donThuoc: [row("KHONG-CO")] }, saved.record.revision), /danh mục/);
+  const without = { ...saved.snapshot, donThuoc: undefined };
+  const kept = save(without, saved.record.revision);
+  assert.deepEqual(kept.record.don_thuoc.items.map(item => item.id), saved.record.don_thuoc.items.map(item => item.id));
+});
+
+test("chặn AI: chấp nhận mọi đề xuất AI không đổi đơn thuốc đã lưu", () => {
+  const store = new ClinicalRepository(fs.mkdtempSync(path.join(os.tmpdir(), "clinical-rx-ai-")));
+  const actor = getDemoClinicalActor();
+  const a = openEncounter(resolveEncounterContext(actor, "LK-GIA-0456"), store);
+  const drug = loadEformData().danhMuc.thuoc[0];
+  const saved = saveClinicalForActor(actor, { id: a.record.id, expected_revision: 1, snapshot: { ...a.snapshot, donThuoc: [{ ma: drug.ma, ten: drug.ten, ham_luong: "", duong_dung: "Uống", lieu_moi_lan: "1 viên", khi_can: false, so_lan_ngay: "3", thoi_diem: "", so_ngay: "5", so_luong_ke: "", ghi_chu: "", nguon: "bs", ung_vien: [] }] } }, store);
+  const fixture = (name: string) => JSON.parse(fs.readFileSync(`docs/task-2/examples/${name}.example.json`, "utf8"));
+  const run: ClinicalExtraction = { run_id: randomUUID(), draft: fixture("ai-output"), transcript: fixture("transcript"), provider: "mock", model: "rules", prompt_version: "test", created_at: new Date().toISOString(), input_digest: "test", duration_ms: 1,
+    binding: { encounter_id: a.record.id, recording_session_id: randomUUID(), generation: 1, content_revision: 1 } as ClinicalExtraction["binding"] };
+  const getRun = () => run;
+  const set = proposeClinicalChangesForActor(actor, { encounter_id: a.record.id, run_id: run.run_id }, store, getRun);
+  assert.ok(set.changes.length > 0);
+  assert.ok(!set.changes.some(change => change.field_path.startsWith("/don_thuoc")));
+  const decided = decideClinicalChangesForActor(actor, { encounter_id: a.record.id, expected_revision: saved.record.revision, run_id: run.run_id, accepted_ids: set.changes.map(change => change.id), rejected_ids: [] }, store, getRun);
+  assert.deepEqual(decided.record.don_thuoc, saved.record.don_thuoc);
 });

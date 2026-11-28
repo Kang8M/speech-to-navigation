@@ -2,7 +2,7 @@
 // Bộ mẫu chỉ có tên; mã gán ở server bằng src/shared/match.ts, khớp chưa chắc thì dòng được đánh dấu "xem".
 import { matchCatalog } from "../match";
 import type { CatalogItem, VietTat } from "../types";
-import type { DongChiDinh, DongThuoc } from "./dien-phieu";
+import { laKhiCan, type DongChiDinh, type DongThuoc } from "./dien-phieu";
 
 type DongThuocMau = Partial<Omit<DongThuoc, "ma" | "nguon" | "ung_vien">> & { ten: string };
 
@@ -74,9 +74,11 @@ function khopMotBo(m: MauGoiYGoc, danhMuc: { dichVu: CatalogItem[]; thuoc: Catal
         ham_luong: khop.item?.ham_luong ?? dong.ham_luong ?? "",
         duong_dung: dong.duong_dung ?? "",
         lieu_moi_lan: dong.lieu_moi_lan ?? "",
+        khi_can: laKhiCan(dong),
         so_lan_ngay: dong.so_lan_ngay ?? "",
         thoi_diem: dong.thoi_diem ?? "",
         so_ngay: dong.so_ngay ?? "",
+        so_luong_ke: dong.so_luong_ke ?? "",
         ghi_chu: dong.ghi_chu ?? "",
         nguon: khop.status === "khop" ? "ai" : "xem",
         ung_vien: khop.candidates,

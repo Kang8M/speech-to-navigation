@@ -310,8 +310,29 @@ export type ChangeDecision = {
   "decided_at": string;
 };
 
+export type PrescriptionItem = {
+  "id": string;
+  "noi_dung": {
+  "ten_thuoc": string | null;
+  "ham_luong": string | null;
+  "duong_dung": string | null;
+  "lieu_moi_lan": string | null;
+  "khi_can": boolean;
+  "so_lan_ngay": string | null;
+  "thoi_diem": string | null;
+  "so_ngay": string | null;
+  "so_luong_ke": string | null;
+  "ghi_chu": string | null;
+};
+  "danh_muc": CatalogMatch;
+  "chan_doan_ids": Array<string>;
+  "requester_id": string | null;
+  "requested_at": string | null;
+  "review": Review;
+};
+
 export type Encounter = {
-  "schema_version": "1.2.0";
+  "schema_version": "1.3.0";
   "id": string;
   "revision": number;
   "patient_id": string;
@@ -342,6 +363,10 @@ export type Encounter = {
   "de_cap": "chua_de_cap" | "khong_chi_dinh" | "co_chi_dinh";
   "items": Array<ServiceOrder>;
   "groups": Array<ServiceGroup>;
+};
+  "don_thuoc": {
+  "de_cap": "chua_de_cap" | "khong_ke_don" | "co_ke_don";
+  "items": Array<PrescriptionItem>;
 };
   "thong_tin_khac": {
   "chuyen_noi_soi": boolean | null;

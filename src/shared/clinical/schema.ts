@@ -5,7 +5,7 @@ import aiOutput from "../../../config/clinical/ai-output.schema.json";
 import transcript from "../../../config/clinical/transcript.schema.json";
 import type { AiOutput, Encounter, Transcript } from "./types";
 
-export const CLINICAL_SCHEMA_VERSION = "1.2.0" as const;
+export const CLINICAL_SCHEMA_VERSION = "1.3.0" as const;
 type JsonSchema = { [key: string]: unknown; properties?: Record<string, JsonSchema>; type?: string | string[]; enum?: unknown[]; anyOf?: JsonSchema[]; items?: JsonSchema; $ref?: string };
 const definitions = common.$defs as unknown as Record<string, JsonSchema>;
 
@@ -65,6 +65,8 @@ export function parseEncounter(value: unknown): Encounter {
   checkClinical(data.phieu_kham, data.chi_dinh);
   unique(data.chi_dinh.items.map(item => item.id), "chỉ định");
   unique(data.chi_dinh.groups.map(item => item.id), "nhóm chỉ định");
+  requireValid((data.don_thuoc.de_cap === "co_ke_don") === (data.don_thuoc.items.length > 0), "Trạng thái đơn thuốc không khớp danh sách thuốc.");
+  unique(data.don_thuoc.items.map(item => item.id), "dòng thuốc");
   unique(data.chan_doan.map(item => item.id), "chẩn đoán");
   unique(data.recording_sessions.map(item => item.id), "phiên ghi âm");
   unique(data.recording_sessions.map(item => String(item.sequence)), "thứ tự phiên ghi âm");
@@ -93,6 +95,7 @@ export function parseEncounter(value: unknown): Encounter {
     requireValid(item.group_id !== null && groups.has(item.group_id), "Chỉ định không có nhóm hợp lệ.");
     requireValid(item.chan_doan_ids.every(id => diagnoses.has(id)), "Chẩn đoán liên quan không tồn tại.");
   }
+  for (const item of data.don_thuoc.items) requireValid(item.chan_doan_ids.every(id => diagnoses.has(id)), "Chẩn đoán liên quan của dòng thuốc không tồn tại.");
   requireValid(!data.thong_tin_khac.chuyen_noi_soi || data.status === "cho_kq_cls", "Chuyển nội soi cần trạng thái Chờ KQ CLS.");
   requireValid(data.audit.approved_at === null || data.audit.approved_by !== null, "Thiếu người duyệt.");
   return data;

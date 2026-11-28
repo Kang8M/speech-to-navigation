@@ -28,6 +28,7 @@
     "ket_qua",
     "dong_bo_cls_luc",
     "chi_dinh",
+    "don_thuoc",
     "thong_tin_khac",
     "ai_runs",
     "nguon_du_lieu",
@@ -39,7 +40,7 @@
   ],
   "properties": {
     "schema_version": {
-      "const": "1.2.0"
+      "const": "1.3.0"
     },
     "id": {
       "type": "string",
@@ -217,6 +218,30 @@
           "type": "array",
           "items": {
             "$ref": "common.schema.json#/$defs/serviceGroup"
+          }
+        }
+      }
+    },
+    "don_thuoc": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "de_cap",
+        "items"
+      ],
+      "properties": {
+        "de_cap": {
+          "enum": [
+            "chua_de_cap",
+            "khong_ke_don",
+            "co_ke_don"
+          ]
+        },
+        "items": {
+          "type": "array",
+          "maxItems": 50,
+          "items": {
+            "$ref": "common.schema.json#/$defs/prescriptionItem"
           }
         }
       }

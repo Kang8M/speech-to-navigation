@@ -1,6 +1,6 @@
 # Ánh xạ trường phiếu khám và chỉ định dịch vụ → JSON
 
-Task 2, 3, 4 chỉ bao phủ phiếu khám và chỉ định dịch vụ. Bác sĩ tự kê đơn qua quy trình riêng. Dị ứng và thuốc đã/đang dùng là thông tin bệnh sử được giữ; thuốc kê mới không được đưa vào các trường bệnh sử, hướng điều trị hoặc lời dặn.
+Task 2, 3, 4 chỉ bao phủ phiếu khám và chỉ định dịch vụ. Bác sĩ tự kê đơn ở tab Đơn thuốc của eForm (AI không kê). Dị ứng và thuốc đã/đang dùng là thông tin bệnh sử được giữ; thuốc kê mới không được đưa vào các trường bệnh sử, hướng điều trị hoặc lời dặn.
 
 Các đường dẫn dưới đây tương đối với `encounter` trừ khi ghi `identity`. `i`, `j` là vị trí minh họa; khi lưu/merge phải dùng ID dòng. Nguồn **AI** luôn có nghĩa bản nháp cần duyệt và chỉ từ dữ kiện được nói.
 
@@ -105,9 +105,9 @@ Trong bảng này `S = chi_dinh.items[i]`.
 
 Catalog gói tương lai cần `id`, mã, tên, loại cá nhân/chia sẻ, `owner_id`, khoa, version và `items(service_catalog_id, quantity)`. Catalog dịch vụ cần `id`, `code_system`, mã, tên Việt/Anh, alias, nhóm, khoa, trạng thái, version; giá/điều kiện BHYT là nguồn riêng có hiệu lực thời gian. Các catalog hiện có thiếu nhiều thuộc tính này; không giả định đã đầy đủ.
 
-## D. Kê đơn thuốc — ngoài scope
+## D. Kê đơn thuốc — làm ở tab Đơn thuốc, không do AI
 
-Bác sĩ tự chọn thuốc, kê liều, chỉnh/ngừng thuốc, kiểm tra, lưu và in đơn bằng quy trình riêng. Bộ schema này không có `don_thuoc`, `ke_don`, bảng đơn thuốc, mapping màn kê đơn hoặc chức năng AI gợi ý/điền đơn. Tài liệu màn OH trong repo chỉ là tham khảo lịch sử.
+Bác sĩ tự chọn thuốc, kê liều, chỉnh/ngừng thuốc, kiểm tra, lưu và in đơn ở tab Đơn thuốc của eForm (xem `docs/CLINICAL-WORKFLOW.md`, mục Đơn thuốc). `encounter.schema.json` có khối `don_thuoc` (đơn do bác sĩ nhập, duyệt riêng phạm vi `prescription`); bộ schema vẫn không có `ke_don` trong đầu ra AI, bảng đơn thuốc ngoài hồ sơ, mapping màn kê đơn OH hoặc chức năng AI gợi ý/điền đơn. Tài liệu màn OH trong repo chỉ là tham khảo lịch sử.
 
 ## E. Trường hiển thị và thao tác không lưu như dữ kiện lâm sàng
 

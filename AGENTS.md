@@ -1,3 +1,30 @@
+# Làm việc nhiều agent song song
+
+Áp dụng cho mọi agent (Claude, Gemini/Antigravity, Codex…) khi nhiều agent cùng làm trên repo này. `CLAUDE.md` áp dụng y nguyên cho mọi agent, **trừ quy tắc 7** (chia việc cho sub-agent, chỉ dành cho Claude). Agent không có skill `ghi-tai-lieu`/hook `Stop` của Claude thì tự thêm mục vào `docs/CHANGELOG.md` theo đúng mẫu các mục đã có (quy tắc 1).
+
+## Chia việc
+- **Một việc = một agent = một worktree = một nhánh = một PR vào `dev`.** Người điều phối giữ bảng việc (việc, agent, worktree/cổng, file chính, trạng thái). Agent chỉ làm đúng việc được giao, không tự nhận việc khác.
+- Chia sao cho các việc chạy cùng lúc **không sửa chung file**. File buộc phải dùng chung (ví dụ `src/shared/eform/types.ts`, `src/server/du-lieu/eform.ts`) thì chỉ thêm dòng, không sửa hay xếp lại dòng có sẵn. Cần sửa file ngoài danh sách của việc mình thì dừng, hỏi người dùng.
+- Việc phụ thuộc nhau thì làm nối tiếp (PR sau đặt base là nhánh PR trước), không làm song song.
+
+## Worktree
+- Tạo theo quy tắc 6: `git fetch origin` rồi `git worktree add -b <nhánh> ../wt/<tên> origin/dev`. Đặt worktree **ngoài** thư mục repo.
+- Worktree mới chưa có file bị gitignore: chép `.env`/`.env.local` từ repo chính, đưa `models/stt/zipformer-vi/` vào (tải lại hoặc liên kết), chạy `npm ci`, chạy `npx next typegen` trước `npx tsc --noEmit`.
+- Mỗi worktree một cổng riêng: `npm run dev -- -p 3001`, `3002`… Cổng 3000 để cho repo chính. Không chạy hai `next dev` trong cùng một thư mục.
+
+## Commit và PR
+- Chỉ commit trên nhánh của worktree mình. `git add` đúng đường dẫn (không `git add -A`), commit tiếng Việt.
+- Agent **không push, không merge, không rebase, không đụng `dev`/`main`** khi chưa được người dùng đồng ý. Người dùng xem kết quả rồi mới push nhánh và mở PR vào `dev`.
+- Gộp nhiều PR: gộp lần lượt từng PR. Trước mỗi lần gộp, merge `origin/dev` mới nhất vào nhánh, giải xung đột, chạy lại test/lint/build. Xung đột ở `docs/CHANGELOG.md` thì giữ cả hai mục (mục mới hơn ở trên). Chuỗi PR nối tiếp: gộp PR trước vào `dev`, đổi base PR sau sang `dev`, merge `dev` vào nhánh rồi mới gộp.
+- Gộp xong thì xoá worktree và nhánh cục bộ (`git worktree remove`, `git branch -d`). Còn sổ theo dõi trong `.superpowers/` của worktree thì chép ra trước khi xoá.
+
+## An toàn dữ liệu
+- Chỉ dùng dữ liệu giả (quy tắc 2). Không mở lại `/api/extract` (đã khoá); mọi lời gọi AI phải qua luồng che PII (`checkClinicalPrivacy`, `extractClinicalDraft`). AI không kê thuốc (quy tắc 8).
+
+## Xong việc khi
+- `npm test`, `npm run lint`, `npm run build` đều qua (so với mốc của `dev` lúc tạo nhánh), và đã tự thử trên trình duyệt ở cổng của mình nếu việc có giao diện. Không qua sau vài lần sửa thì dừng, ghi lý do.
+- Có mục trong `docs/CHANGELOG.md`, cập nhật bảng việc (trạng thái, commit, cách kiểm tra), rồi báo người dùng.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 ## This is NOT the Next.js you know

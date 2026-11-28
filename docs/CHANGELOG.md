@@ -2,6 +2,15 @@
 
 Mỗi thay đổi, dù nhỏ, đều có một mục ở đây. Mục mới nhất ở trên cùng. Cách ghi xem `.claude/skills/ghi-tai-lieu/SKILL.md`.
 
+## 2026-11-28
+
+### Luật làm việc nhiều agent song song trong AGENTS.md
+- **Loại:** Tài liệu
+- **Thay đổi:** Thêm mục "Làm việc nhiều agent song song" ở đầu `AGENTS.md`: một việc một agent, một worktree, một nhánh từ `dev`, một PR; chia việc không sửa chung file; tạo worktree ngoài repo, cổng riêng (3000 cho repo chính); agent không push/merge/rebase khi chưa được đồng ý; cách gộp nhiều PR và giải xung đột `docs/CHANGELOG.md`; dọn worktree sau khi gộp; dữ liệu giả, AI chỉ qua luồng che PII; tiêu chí xong (test, lint, build, thử trình duyệt, CHANGELOG). `CLAUDE.md` áp dụng cho mọi agent trừ quy tắc 7.
+- **Lý do:** Đợt 27–28/11 chạy Claude và Antigravity song song (PR #6–#14) theo các luật này nhưng luật chỉ nằm trên máy một người; đưa vào repo để agent nào, máy nào cũng đọc được.
+- **File:** `AGENTS.md`, `docs/CHANGELOG.md`.
+- **Kiểm tra:** Chỉ tài liệu, không đổi code. Khối tự sinh của Next.js và GitNexus trong `AGENTS.md` giữ nguyên.
+
 ## 2026-11-27
 
 ### Kê đơn: tab Đơn thuốc, duyệt riêng và hai bản in (Task 1–11)
